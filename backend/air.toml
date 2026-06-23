@@ -1,0 +1,9 @@
+root = "."
+tmp_dir = "tmp"
+
+[build]
+cmd = "go build -o ./tmp/main ."
+bin = "./tmp/main"
+full_bin = "./tmp/main"
+include_ext = ["go", "toml"]
+exclude_dir = ["tmp", "vendor"]
