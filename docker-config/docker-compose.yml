@@ -18,7 +18,7 @@ services:
       retries: 5
 
   golang:
-    build: golang/
+    build: ../backend
     container_name: golang_container
     working_dir: /app
     volumes:
@@ -27,10 +27,22 @@ services:
       - "8080:8080"
     command: air
 
+  react:
+    build: ../frontend
+    container_name: react_container
+    working_dir: /app
+    volumes:
+      - ../frontend:/app
+      - /app/node_modules  # Important : préserve node_modules du conteneur
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - CHOKIDAR_USEPOLLING=true  # Pour le hot-reload avec Docker
+    depends_on:
+      - golang
+    stdin_open: true  # Pour React
+    tty: true         # Pour React
+
 volumes:
   postgres_data:
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ./data/postgres

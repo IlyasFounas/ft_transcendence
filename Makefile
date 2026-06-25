@@ -1,17 +1,18 @@
 .PHONY: up down restart logs ps
 
+DOCKER_COMPOSE= docker-config/docker-compose.yml
+
 up:
-	mkdir -p docker-config/data/postgres
-	docker compose -f docker-config/docker-compose.yml up -d
+	docker compose -f $(DOCKER_COMPOSE) up -d
 
 down:
-	docker compose -f docker-config/docker-compose.yml down
+	docker compose -f $(DOCKER_COMPOSE) down
 
 restart:
-	docker compose -f docker-config/docker-compose.yml restart
+	docker compose -f $(DOCKER_COMPOSE) restart
 
 logs:
-	docker compose -f docker-config/docker-compose.yml logs -f
+	docker compose -f $(DOCKER_COMPOSE) logs -f
 
 ps:
-	docker compose -f docker-config/docker-compose.yml ps
+	docker compose -f $(DOCKER_COMPOSE) ps

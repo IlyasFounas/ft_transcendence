@@ -1,1 +1,16 @@
+# Docker
+docker-config/data/
+
+# Frontend
+frontend/node_modules/
+frontend/.env
+
+# Backend
+backend/tmp/
+backend/go.mod
+backend/go.sum
+
+# Logs
+*.log
+.DS_Store
 .env
