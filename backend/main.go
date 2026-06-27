@@ -1,6 +1,7 @@
 package main
 
 import (
+    "github.com/gin-contrib/cors"
     "github.com/gin-gonic/gin"
 )
 
@@ -17,7 +18,7 @@ func main() {
         MaxAge:           12 * time.Hour,
     })) */
     r.GET("/", func(c *gin.Context) {
-        c.String(200, "Hello from Gin with hot reload")
+        c.String(200, "Hello world from the backend!")
     })
     r.Run(":8080")
 }

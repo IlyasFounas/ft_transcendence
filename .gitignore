@@ -7,8 +7,6 @@ frontend/.env
 
 # Backend
 backend/tmp/
-backend/go.mod
-backend/go.sum
 
 # Logs
 *.log
