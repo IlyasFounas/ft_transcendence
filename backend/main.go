@@ -29,18 +29,8 @@ func main() {
     r := gin.Default() //when you first create a var :=
     db := InitDatabase();
 
-    r.Use(cors.Default())
-    // SHOULD USE THIS CODE INSTEAD OF THE DEFAULT ONE
-    /* r.Use(cors.New(cors.Config{
-        AllowOrigins:     []string{"http://localhost:3000"}, // ✅ Seulement ton frontend
-        AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-        AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
-        ExposeHeaders:    []string{"Content-Length"},
-        AllowCredentials: true, // ✅ Si tu utilises des cookies/auth
-        MaxAge:           12 * time.Hour,
-    })) */
+    r.Use(cors.Default()) // TODO accept only localhost:3000 request
     var myTruc *Truc = &Truc{Title: "Hello"}
-
 
     ft_strcpy(myTruc, "Hello world from the backend!")
     r.GET("/", func(c *gin.Context) {
