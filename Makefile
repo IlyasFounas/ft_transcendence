@@ -29,3 +29,23 @@ logs-frontend:
 
 ps:
 	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_OVERRIDE) ps
+
+# --- Database Migrations ---
+# Migrations = version control for your database schema.
+# Migrations allow us to directly modify the database, based on ORM Go functions
+#   make create_mig       → Create a new migration file
+#   make exec_mig          → Apply pending migrations
+#   make rollback_mig      → Undo the last migration
+#   make status_mig        → Show applied/pending migrations
+create_mig:
+	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_OVERRIDE) exec golang go run cmd/bun/main.go db create_go
+
+exec_mig:
+	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_OVERRIDE) exec golang go run cmd/bun/main.go db migrate
+
+rollback_mig:
+	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_OVERRIDE) exec golang go run cmd/bun/main.go db rollback
+
+status_mig:
+	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_OVERRIDE) exec golang go run cmd/bun/main.go db status
+	

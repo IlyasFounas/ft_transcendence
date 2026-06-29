@@ -14,7 +14,7 @@ import (
 	"github.com/uptrace/bun/extra/bundebug"
     
     // OUR PACKAGE
-    "internal/init_database"
+    "backend/internal/database"
 )
 
 type Truc struct{
@@ -32,7 +32,7 @@ func main() {
     r.Use(cors.Default()) // TODO accept only localhost:3000 request
     var myTruc *Truc = &Truc{Title: "Hello"}
 
-    ft_strcpy(myTruc, "Hello world from the backend!")
+    ft_strcpy(myTruc, "Hello world from the backend!!")
     r.GET("/", func(c *gin.Context) {
         c.String(200, myTruc.Title)
     })

@@ -1,4 +1,4 @@
-package init_database
+package database
 
 import (
 	"context"
@@ -39,8 +39,8 @@ func InitDatabase() *bun.DB {
     db.AddQueryHook(bundebug.NewQueryHook(bundebug.WithVerbose(true)))
 
     // Ping test to check the connection with the db
-    if err := db.Ping(context.Background()); err != nil {
-        panic(fmt.Sprintf("Impossible de se connecter à PostgreSQL: %v", err))
-    }
+    // if err := db.Ping(context.Background()); err != nil {
+    //     panic(fmt.Sprintf("Impossible de se connecter à PostgreSQL: %v", err))
+    // }
 	return db;
 }
