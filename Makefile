@@ -48,4 +48,3 @@ rollback_mig:
 
 status_mig:
 	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_OVERRIDE) exec golang go run cmd/bun/main.go db status
-	

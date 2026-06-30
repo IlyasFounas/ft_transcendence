@@ -1,7 +1,7 @@
 package database
 
 import (
-	"context"
+	// "context"
 	"database/sql"
 	"fmt"
 	"os"
@@ -17,14 +17,14 @@ func buildDSN() string {
         "postgres://%s:%s@%s:%s/%s?sslmode=disable",
         os.Getenv("POSTGRES_USER"),
         os.Getenv("POSTGRES_PASSWORD"),
-        os.Getenv("POSTGRES_HOST"),     // "postgres"
-        os.Getenv("POSTGRES_PORT"),     // "5432"
+        os.Getenv("POSTGRES_HOST"),
+        os.Getenv("POSTGRES_PORT"),
         os.Getenv("POSTGRES_DB"),
     )
 }
 
 func InitDatabase() *bun.DB {
-	ctx := context.Background()
+	// ctx := context.Background()
 
 	// Specify the information for the connection
 	dsn := buildDSN()
