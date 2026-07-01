@@ -35,5 +35,9 @@ services:
     stdin_open: true
     tty: true
 
+  nginx:
+    build: ../nginx
+
+
 volumes:
   postgres_data:

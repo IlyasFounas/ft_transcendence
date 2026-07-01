@@ -1,22 +1,32 @@
 services:
   postgres:
     container_name: postgres_container
-    ports:
-      - "5432:5432"
+    networks:
+      - ft_transcendence
 
   golang:
     container_name: golang_container
     volumes:
       - ../backend:/app
-    ports:
-      - "8080:8080"
+    networks:
+      - ft_transcendence
 
   react:
     container_name: react_container
     volumes:
       - ../frontend:/app
       - /app/node_modules
-    ports:
-      - "3000:3000"
+    networks:
+      - ft_transcendence
     environment:
       CHOKIDAR_USEPOLLING=true
+
+  nginx:
+    ports:
+      - "5130:5130"
+    networks:
+      - ft_transcendence
+
+networks:
+  ft_transcendence:
+    driver: bridge
