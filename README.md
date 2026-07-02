@@ -11,9 +11,18 @@ make logs
 ```
 Or (frontend only)
 ``` 
-make logs-frontend
+make logs-react
 ```
 Or (backend only)
 ``` 
-make logs-backend
+make logs-golang
+```
+
+Now you can acces the website / api from : 
+```
+http://localhost:5130/
+```
+Or 
+```
+http://localhost:5130/api/
 ```

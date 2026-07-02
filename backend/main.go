@@ -11,14 +11,22 @@ import (
     "backend/internal/database"
 )
 
+// Similar to C, we can define structs
 type Truc struct{
     Title string
 }
 
+// We can use pointers to modify data more easily
 func ft_strcpy(t *Truc, to_cpy string) {
     t.Title = to_cpy
 }
 
+/**
+ * Currently, this is a basic main function to test the database connection and
+ * run a basic server on port 8080.
+ * The `exit` function should only be called from `main()` because if called elsewhere,
+ * the garbage collector may not properly free all resources.
+ */
 func main() {
     r := gin.Default() //when you first create a var :=
     db := database.InitDatabase();
