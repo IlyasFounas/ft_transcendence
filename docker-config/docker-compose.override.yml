@@ -1,6 +1,8 @@
 services:
   postgres:
     container_name: postgres_container
+    ports:
+      - "5432:5432"
     networks:
       - ft_transcendence
 
@@ -31,8 +33,18 @@ services:
       - "5130:5130"
     networks:
       - ft_transcendence
+  adminer:
+    image: adminer:latest
+    restart: unless-stopped
+    ports:
+      - "8082:8080"
+    networks:
+      - ft_transcendence
 
 # Simple network that may be enhanced for production
 networks:
   ft_transcendence:
     driver: bridge
+
+
+      

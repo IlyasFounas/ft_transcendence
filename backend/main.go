@@ -37,7 +37,7 @@ func main() {
     if err := db.PingContext(context.Background()); err != nil {
         os.Exit(1)
     }
-    ft_strcpy(myTruc, "Hello world from the backend!")
+    ft_strcpy(myTruc, "Hello world from the backend")
     r.GET("/", func(c *gin.Context) {
         c.String(200, myTruc.Title)
     })
