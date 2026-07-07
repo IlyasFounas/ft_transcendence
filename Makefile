@@ -18,14 +18,27 @@ fclean:
 restart:
 	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_OVERRIDE) restart
 
-logs:
-	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_OVERRIDE) logs -f
+clean:
+	rm -rf dist/ build/ main #put the right folders/files
+
+clean-images: clean
+	@echo "Cleaning images..."
+	docker image prune -af
+
+clean-caches: clean clean-images
+	@echo "Cleaning Go build cache..."
+	go clean -cache -modcache
+	@echo "Cleaning NPM cache..."
+	npm cache clean --force
 
 # --- Logs section ---
 # Here you can call the service you want to see the logs of
 # It is very important in when you are coding, to see the errors/bugs
 # to use it, you have to : 
 # make logs-golang or make logs-react, ect... 
+logs:
+	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_OVERRIDE) logs -f
+
 logs-%:
 	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_OVERRIDE) logs -f  $*
 
