@@ -1,6 +1,7 @@
 root = "."
 tmp_dir = "tmp"
 
+# This section defines how to build and run the server
 [build]
 cmd = "go build -o ./tmp/main ."
 bin = "./tmp/main"

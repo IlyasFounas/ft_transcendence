@@ -1,52 +1,13 @@
-# services:
-#   postgres:
-#     image: postgres:16-alpine
-#     container_name: postgres_container
-#     environment:
-#       POSTGRES_USER: ${POSTGRES_USER}
-#       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-#       POSTGRES_DB: ${POSTGRES_DB}
-#     ports:
-#       - "5432:5432"
-#     volumes:
-#       - postgres_data:/var/lib/postgresql/data
-#     restart: unless-stopped
-#     healthcheck:
-#       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
-#       interval: 5s
-#       timeout: 5s
-#       retries: 5
-
-#   golang:
-#     build: ../backend
-#     container_name: golang_container
-#     working_dir: /app
-#     volumes:
-#       - ../backend:/app
-#     ports:
-#       - "8080:8080"
-#     command: air
-
-#   react:
-#     build: ../frontend
-#     container_name: react_container
-#     working_dir: /app
-#     volumes:
-#       - ../frontend:/app
-#       - /app/node_modules
-#     ports:
-#       - "3000:3000"
-#     environment:
-#       - NODE_ENV: ${NODE_ENV}
-#       - CHOKIDAR_USEPOLLING=true
-#     depends_on:
-#       - golang
-#     stdin_open: true
-#     tty: true
-
-# volumes:
-#   postgres_data:
+# Best practices for Docker management are to use separate docker-compose.yml files:
+# - one for base services that creates the basic containers
+# - one for the dev environment to set up the network, initialize containers with hot reloading, etc. (docker-compose.override.yml)
+# - one for production with compiled code, and nginx listening on ports 443 and 80 (docker-compose.prod.yml)
 services:
+
+  # Basic PostgreSQL container
+  # Docker manages the volume automatically
+  # Only necessary environment variables are provided, not the entire .env file
+  # Healthcheck ensures the database is fully launched
   postgres:
     image: postgres:16-alpine
     environment:
@@ -62,11 +23,26 @@ services:
       timeout: 5s
       retries: 5
 
+  # Golang container to run the backend
+  # `go mod tidy` cleans unused dependencies and optimizes dependencies in go.mod
+  # Air provides hot reload, monitoring all files in backend/
+  # and automatically rebuilds when changes are detected
   golang:
     build: ../backend
     working_dir: /app
     command: sh -c "go mod tidy && air"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
 
+  # React container to run the frontend
+  # Features hot reload
+  # `NODE_ENV` is useful in the code
+  # If `NODE_ENV=development`, allows insecure methods or features/tokens that won't exist in production
+  # so it's useful to check this variable
   react:
     build: ../frontend
     working_dir: /app
@@ -76,6 +52,15 @@ services:
       - golang
     stdin_open: true
     tty: true
+
+  # Nginx acts as a reverse proxy
+  # It routes requests from clients or frontend to the appropriate containers
+  # routing to either localhost:8080/ or localhost:3000/
+  # This is a realistic way to develop, as production uses the same setup
+  # Including it in dev prevents production bugs
+  nginx:
+    build: ../nginx
+
 
 volumes:
   postgres_data:
