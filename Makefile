@@ -45,6 +45,9 @@ logs-%:
 ps:
 	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_OVERRIDE) ps
 
+print_posgres_ip:
+	docker inspect postgres_container | grep IPAddress
+
 # --- Database Migrations ---
 # Migrations = version control for your database schema.
 # Migrations allow us to directly modify the database, based on ORM Go functions

@@ -1,16 +1,10 @@
 package main
 
 import (
-    // EXTERNAL PACKAGE
     "os"
     "context"
-    "net/http"
-    "github.com/gin-contrib/cors"
-    "github.com/gin-gonic/gin"
-    
-    // OUR PACKAGE
     "backend/internal/database"
-    "backend/internal/handlers"
+    "backend/internal/router"
 )
 
 /**
@@ -20,17 +14,16 @@ import (
  * the garbage collector may not properly free all resources.
  */
 func main() {
-    r := gin.Default() //when you first create a var :=
-    db := database.InitDatabase();
-
-    r.Use(cors.Default()) // TODO accept only localhost:3000 request
+    db := database.InitDatabase()
+    
     if err := db.PingContext(context.Background()); err != nil {
         os.Exit(1)
     }
-    user.UserRoute(r)
-    user.GameRoute(r)
-    r.GET("/", func(c *gin.Context) {
-        c.String(http.StatusOK, "hello world from the backend !")
-    })
+
+    r, err := router.InitRouter(db)
+    if err != nil {
+        os.Exit(1)
+    }
+    
     r.Run(":8080")
 }
