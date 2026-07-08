@@ -45,6 +45,9 @@ logs-%:
 ps:
 	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_OVERRIDE) ps
 
+print_posgres_ip:
+	docker inspect postgres_container | grep IPAddress
+
 # --- Database Migrations ---
 # Migrations = version control for your database schema.
 # Migrations allow us to directly modify the database, based on ORM Go functions
@@ -54,6 +57,9 @@ ps:
 #   make status_mig        → Show applied/pending migrations
 create_mig:
 	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_OVERRIDE) exec golang go run cmd/bun/main.go create_go ${NAME}
+
+init_mig:
+	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_OVERRIDE) exec golang go run cmd/bun/main.go init
 
 exec_mig:
 	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_OVERRIDE) exec golang go run cmd/bun/main.go migrate

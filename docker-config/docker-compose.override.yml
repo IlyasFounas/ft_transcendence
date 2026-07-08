@@ -25,10 +25,17 @@ services:
     environment:
       CHOKIDAR_USEPOLLING=true
 
-  # Nginx is the only container exposed to the outside
   nginx:
     ports:
       - "5130:5130"
+    networks:
+      - ft_transcendence
+  
+  adminer:
+    image: adminer:latest
+    restart: unless-stopped
+    ports:
+      - "8082:8080"
     networks:
       - ft_transcendence
 
