@@ -3,7 +3,9 @@ package user
 import (
     // EXTERNAL PACKAGE
     "net/http"
+	"github.com/uptrace/bun"
     "github.com/gin-gonic/gin"
+    "backend/internal/repository"
 )
 
 // Public functions
@@ -17,6 +19,17 @@ func LoginUser(c *gin.Context) {
     password := c.PostForm("password")
 
     c.JSON(http.StatusOK, gin.H{"state": "succesfull connexion", "name": login, "password": password})
+}
+
+func CreateUser(db *bun.DB) gin.HandlerFunc {
+    return func(c *gin.Context) {
+        state := user_repo.CreateUser(c, db)
+        if !state {
+            c.JSON(http.StatusOK, gin.H{"state": "creation failed"})
+        } else {
+            c.JSON(http.StatusOK, gin.H{"state": "successful creation"})
+        }
+    }
 }
 
 // Private functions

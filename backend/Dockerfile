@@ -14,6 +14,10 @@ WORKDIR /app
 
 COPY go.mod go.sum ./
 
+# bcrypt
+RUN --mount=type=cache,target=/root/.cache/go-build \
+    go get golang.org/x/crypto/bcrypt
+
 # Downloads Go modules dependencies to /go/pkg/mod/
 RUN --mount=type=cache,target=/root/.cache/go-build \
     go mod download

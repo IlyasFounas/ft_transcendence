@@ -19,13 +19,14 @@ func InitRouter(db *bun.DB) (*gin.Engine, error) {
 	{
 		public.GET("/", user.HomePage)
 		public.POST("/user/login", user.LoginUser)
+		public.POST("/user/create", user.CreateUser(db))
 	}
 
 	// it's private because only a registred user can access it
 	private := r.Group("/")
 	private.Use(auth.AuthRequired())
 	{
-		private.GET("/user/:id", user.GetUser)
+		private.GET("/profile/:id", user.GetUser)
 	}
 	return r, nil
 }
