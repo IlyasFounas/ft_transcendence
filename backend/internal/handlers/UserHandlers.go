@@ -8,6 +8,16 @@ import (
     "backend/internal/repository"
 )
 
+/**
+ * README:
+ * Handlers make the bridge between the router and the repository functions.
+ * It's important to split different features into different files to improve visibility
+ * and maintainability.
+ *
+ * Basically, the handlers call the repository functions, manage any errors,
+ * and return the result to the frontend (in JSON, plain text, etc.).
+ */
+
 // Public functions
 func HomePage(c *gin.Context) {
     c.String(http.StatusOK, "Hello world from backend !")

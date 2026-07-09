@@ -5,6 +5,7 @@ import (
     "github.com/uptrace/bun"
 )
 
+// this struct represent the Table user in the db
 type User struct {
 	bun.BaseModel `bun:"table:users,alias:u"`
 

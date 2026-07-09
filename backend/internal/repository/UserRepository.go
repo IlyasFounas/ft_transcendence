@@ -7,6 +7,15 @@ import (
     "backend/internal/models"
 	"backend/internal/tools"
 )
+/**
+ * Repositories and migrations are the only places where
+ * you directly interact with the database. Therefore, when working here,
+ * you don't need to check if the database is working or not.
+ *
+ * For more details on how to perform CRUD operations (Create, Read, Update, Delete),
+ * refer to the official documentation:
+ * https://bun.uptrace.dev/guide/golang-orm.html#crud-operations
+ */
 
 func CreateUser(c *gin.Context, db *bun.DB) bool {
 	hashpassword, hashErr := bcrypt.HashPassword(c.PostForm("password"))
