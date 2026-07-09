@@ -13,6 +13,7 @@ type User struct {
 	Username 	string `bun:"name,unique,notnull"`
 	Password 	string `bun:"password,notnull"`
 	Email 		string `bun:"email,unique,notnull"`
+	Is_verified bool `bun:"is_verified,notnull"`
 	OAuth		*oauth2.Token `bun:"oauth,type:json"`
 	Avatar 		*string `bun:"avatar"`
 }

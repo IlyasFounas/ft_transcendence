@@ -18,7 +18,7 @@ func InitRouter(db *bun.DB) (*gin.Engine, error) {
 	public := r.Group("/")
 	{
 		public.GET("/", user.HomePage)
-		public.POST("/user/login", user.LoginUser)
+		public.POST("/user/login", user.LoginUser(db))
 		public.POST("/user/create", user.CreateUser(db))
 	}
 

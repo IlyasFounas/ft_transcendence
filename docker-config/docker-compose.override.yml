@@ -27,7 +27,6 @@ services:
     environment:
       CHOKIDAR_USEPOLLING=true
 
-  # Nginx is the only container exposed to the outside
   nginx:
     ports:
       - "5130:5130"
