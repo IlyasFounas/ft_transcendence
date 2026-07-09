@@ -51,7 +51,7 @@ Follow these steps to properly initialize and access your database:
     make print_postgres_ip
     ```
     Copy the IP address displayed in your terminal.:
-    ![alt text](image-1.png)
+    ![alt text](docker-config/image-1.png)
 
     Open your browser and go to:
     ```
@@ -61,5 +61,5 @@ Follow these steps to properly initialize and access your database:
     Put the IP addr in the Server field.
 
     Fill in the Username, Password, and Database fields using the credentials
-    ![alt text](image-2.png)
+    ![alt text](docker-config/image-2.png)
 
