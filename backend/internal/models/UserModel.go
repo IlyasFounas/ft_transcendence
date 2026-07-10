@@ -3,6 +3,7 @@ package user
 import (
 	"golang.org/x/oauth2"
     "github.com/uptrace/bun"
+	"time"
 )
 
 // this struct represent the Table user in the db
@@ -17,4 +18,5 @@ type User struct {
 	Is_verified bool `bun:"is_verified,notnull"`
 	OAuth		*oauth2.Token `bun:"oauth,type:json"`
 	Avatar 		*string `bun:"avatar"`
+	CreatedAt time.Time `bun:"created_at,default:current_timestamp"`
 }

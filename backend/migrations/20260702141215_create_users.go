@@ -3,7 +3,6 @@ package migrations
 import (
 	"context"
 	"fmt"
-
 	"github.com/uptrace/bun"
     "backend/internal/models"
 )
