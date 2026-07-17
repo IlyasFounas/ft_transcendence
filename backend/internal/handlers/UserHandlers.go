@@ -2,10 +2,14 @@ package user
 
 import (
     // EXTERNAL PACKAGE
+    "os"
+    "time"
+    "strconv"
     "net/http"
 	"github.com/uptrace/bun"
     "github.com/gin-gonic/gin"
     "backend/internal/repository"
+    "github.com/golang-jwt/jwt/v5"
 )
 
 /**
@@ -18,36 +22,70 @@ import (
  * and return the result to the frontend (in JSON, plain text, etc.).
  */
 
-// Auth functions
-func LoginUser(db *bun.DB) gin.HandlerFunc {
-    return func(c *gin.Context) {
-        state, id_user, err := user_repo.LoginUser(c, db)
-        if err != nil {
-            c.JSON(http.StatusInternalServerError, gin.H{"state": "database function failed"})
-        }
-        if !state {
-            c.JSON(http.StatusOK, gin.H{
-                "state": "login failed","id_user": id_user})
-        } else {
-            c.JSON(http.StatusOK, gin.H{
-                "state": "Logged in successfully","id_user": id_user})
-        }
-    }
+type UserClaims struct {
+    Role   string `json:"role"`
+    jwt.RegisteredClaims
 }
 
+// Auth functions
 func CreateUser(db *bun.DB) gin.HandlerFunc {
     return func(c *gin.Context) {
         state, err := user_repo.CreateUser(c, db)
         if err != nil {
             c.JSON(http.StatusInternalServerError, gin.H{
                 "state": "database function failed"})
+            return 
         }
         if !state {
             c.JSON(http.StatusOK, gin.H{
                 "state": "creation failed"})
+            return 
         } else {
+            // generate the jwt token here
+
+            state, userId, err := user_repo.LoginUser(c, db)
+            if err != nil || state != true {
+                c.JSON(http.StatusInternalServerError, gin.H{
+                    "state": "token creation failed, please retry"})
+                return 
+            }
+            claims := UserClaims{
+                Role: "user",
+                RegisteredClaims: jwt.RegisteredClaims{
+                    Subject: strconv.FormatInt(userId, 10),
+                    ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
+                    IssuedAt:  jwt.NewNumericDate(time.Now()),
+                    Issuer:    "golang-api",
+                },
+            }
+            token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+            tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
+            if err != nil {
+                c.JSON(http.StatusInternalServerError, gin.H{
+                    "state": "token creation failed, please retry"})
+                return 
+            }
             c.JSON(http.StatusCreated, gin.H{
-                "state": "successful creation"})
+                "state": "successful creation",
+                "Authorization": tokenString})
+        }
+    }
+}
+
+func LoginUser(db *bun.DB) gin.HandlerFunc {
+    return func(c *gin.Context) {
+        state, userId, err := user_repo.LoginUser(c, db)
+        if err != nil {
+            c.JSON(http.StatusInternalServerError, gin.H{"state": "database function failed"})
+            return 
+        }
+        if !state {
+            c.JSON(http.StatusOK, gin.H{
+                "state": "login failed"})
+        } else {
+            c.JSON(http.StatusOK, gin.H{
+                "state": "Logged in successfully",
+                "userId": userId})
         }
     }
 }

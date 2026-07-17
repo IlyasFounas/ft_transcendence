@@ -13,7 +13,7 @@ import (
  * but it will gradually integrate these features in future commits.
  */
 
-func AuthRequired() gin.HandlerFunc {
+func AuthMiddleWare() gin.HandlerFunc {
   return func(c *gin.Context) {
     // ... check token, session, etc.
     c.Next()
