@@ -41,19 +41,19 @@ func InitRouter(db *bun.DB) (*gin.Engine, error) {
 	private := r.Group("/")
 	private.Use(auth.AuthMiddleWare())
 	{
-		private.GET("/user/get/:id", user.GetUser(db))
-		private.GET("/user/get/name/:id", user.GetName(db))
-		private.GET("/user/get/login/:id", user.GetLogin(db))
-		private.GET("/user/get/email/:id", user.GetEmail(db))
-		private.GET("/user/get/oauth/:id", user.GetOAuth(db))
+		private.GET("/user/get", user.GetUser(db))
+		private.GET("/user/get/name", user.GetName(db))
+		private.GET("/user/get/login", user.GetLogin(db))
+		private.GET("/user/get/email", user.GetEmail(db))
+		private.GET("/user/get/oauth", user.GetOAuth(db))
 		// private.GET("/user/get/avatar/:id", user.GetAvatar(db))
 		
 
 		// PUT = modify a lot of informations
 		// PATCH = modify a specific field
-		private.PATCH("/user/name/:id", user.SetName(db))
-		private.PATCH("/user/login/:id", user.SetLogin(db))
-		private.PATCH("/user/avatar/:id", user.SetAvatar(db))
+		private.PATCH("/user/name", user.SetName(db))
+		private.PATCH("/user/login", user.SetLogin(db))
+		private.PATCH("/user/avatar", user.SetAvatar(db))
 	}
 	return r, nil
 }

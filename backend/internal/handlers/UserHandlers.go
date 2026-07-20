@@ -3,9 +3,11 @@ package user
 import (
     // EXTERNAL PACKAGE
     "os"
+    // "fmt"
     "time"
     "strconv"
     "net/http"
+	"backend/internal/tools"
 	"github.com/uptrace/bun"
     "github.com/gin-gonic/gin"
     "backend/internal/repository"
@@ -41,14 +43,29 @@ func CreateUser(db *bun.DB) gin.HandlerFunc {
                 "state": "creation failed"})
             return 
         } else {
-            // generate the jwt token here
-
-            state, userId, err := user_repo.LoginUser(c, db)
-            if err != nil || state != true {
+            if err := tool.SendEmail(c.PostForm("email")); err != nil {
                 c.JSON(http.StatusInternalServerError, gin.H{
-                    "state": "token creation failed, please retry"})
+                    "state": "failed", "error_message": "code verification sending went wrong"})
                 return 
             }
+            c.JSON(http.StatusCreated, gin.H{
+                "state": "successful creation"})
+        }
+    }
+}
+
+func LoginUser(db *bun.DB) gin.HandlerFunc {
+    return func(c *gin.Context) {
+        state, userId, err := user_repo.LoginUser(c, db)
+        if err != nil {
+            c.JSON(http.StatusInternalServerError, gin.H{"state": "database function failed"})
+            return 
+        }
+        if !state {
+            c.JSON(http.StatusOK, gin.H{
+                "state": "login failed"})
+        } else {
+            // generate the jwt token here
             claims := UserClaims{
                 Role: "user",
                 RegisteredClaims: jwt.RegisteredClaims{
@@ -65,27 +82,9 @@ func CreateUser(db *bun.DB) gin.HandlerFunc {
                     "state": "token creation failed, please retry"})
                 return 
             }
-            c.JSON(http.StatusCreated, gin.H{
-                "state": "successful creation",
-                "Authorization": tokenString})
-        }
-    }
-}
-
-func LoginUser(db *bun.DB) gin.HandlerFunc {
-    return func(c *gin.Context) {
-        state, userId, err := user_repo.LoginUser(c, db)
-        if err != nil {
-            c.JSON(http.StatusInternalServerError, gin.H{"state": "database function failed"})
-            return 
-        }
-        if !state {
-            c.JSON(http.StatusOK, gin.H{
-                "state": "login failed"})
-        } else {
             c.JSON(http.StatusOK, gin.H{
                 "state": "Logged in successfully",
-                "userId": userId})
+                "Authorization": tokenString})
         }
     }
 }
@@ -95,7 +94,7 @@ func GetUser(db *bun.DB) gin.HandlerFunc { //return almost all user infos
     return func(c *gin.Context) {
         userData, err := user_repo.GetUser(c, db)
         if err != nil {
-            c.JSON(http.StatusInternalServerError, gin.H{"state": "database function failed"})
+            c.AbortWithStatusJSON(500, gin.H{"error": "Convertion failed", "error_message": err})
         }
         if userData == nil {
             c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})

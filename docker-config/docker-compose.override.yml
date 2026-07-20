@@ -39,11 +39,16 @@ services:
       - "8082:8080"
     networks:
       - ft_transcendence
+  
+  mailpit:
+    image: axllent/mailpit
+    restart: unless-stopped
+    ports:
+      - "8025:8025"
+    networks:
+      - ft_transcendence
 
 # Simple network that may be enhanced for production
 networks:
   ft_transcendence:
     driver: bridge
-
-
-      

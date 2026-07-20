@@ -2,6 +2,7 @@ package user_repo
 
 import (
 	// "fmt"
+	// "errors"
 	"github.com/uptrace/bun"
     "github.com/gin-gonic/gin"
     "backend/internal/models"
@@ -19,7 +20,7 @@ import (
  */
 
 func CreateUser(c *gin.Context, db *bun.DB) (bool, error) {
-	hashpassword, hashErr := bcrypt.HashPassword(c.PostForm("password"))
+	hashpassword, hashErr := tool.HashPassword(c.PostForm("password"))
 	if hashErr != nil {
 		return false, hashErr
 	}
@@ -53,20 +54,22 @@ func LoginUser(c *gin.Context, db *bun.DB) (bool, int64, error) {
 	if err != nil {
 		return false, 0, err
 	}
-	// fmt.Printf("user login : %s\n", user.Login)
-	if !bcrypt.CheckPasswordHash(password, user.Password) {
+	if !tool.CheckPasswordHash(password, user.Password) {
 		return false, 0, nil
 	}
 	return true, user.ID, nil
 }
 
 func GetUser(c *gin.Context, db *bun.DB) (*user.User, error) {
-	id_user := c.Param("id")
+	userId, cErr := tool.ConvertionUserId(c)
+	if cErr != nil{
+		return nil, cErr
+	}
 	user := new(user.User)
 	err := db.NewSelect().
 			Model(user).
 			Column("id", "name", "email", "is_verified","avatar", "created_at").
-			Where("id = ?", id_user).
+			Where("id = ?", userId).
 			Scan(c)
 	if err != nil {
 		return nil, err
@@ -75,12 +78,15 @@ func GetUser(c *gin.Context, db *bun.DB) (*user.User, error) {
 }
 
 func GetName(c *gin.Context, db *bun.DB) (*string, error) {
-	id_user := c.Param("id")
+	userId, cErr := tool.ConvertionUserId(c)
+	if cErr != nil{
+		return nil, cErr
+	}
 	user := new(user.User)
 	err := db.NewSelect().
 			Model(user).
 			Column("name").
-			Where("id = ?", id_user).
+			Where("id = ?", userId).
 			Scan(c)
 	if err != nil {
 		return nil, err
@@ -89,12 +95,15 @@ func GetName(c *gin.Context, db *bun.DB) (*string, error) {
 }
 
 func GetLogin(c *gin.Context, db *bun.DB) (*string, error) {
-	id_user := c.Param("id")
+	userId, cErr := tool.ConvertionUserId(c)
+	if cErr != nil{
+		return nil, cErr
+	}
 	user := new(user.User)
 	err := db.NewSelect().
 			Model(user).
 			Column("login").
-			Where("id = ?", id_user).
+			Where("id = ?", userId).
 			Scan(c)
 	if err != nil {
 		return nil, err
@@ -103,12 +112,15 @@ func GetLogin(c *gin.Context, db *bun.DB) (*string, error) {
 }
 
 func GetEmail(c *gin.Context, db *bun.DB) (*string, error) {
-	id_user := c.Param("id")
+	userId, cErr := tool.ConvertionUserId(c)
+	if cErr != nil{
+		return nil, cErr
+	}
 	user := new(user.User)
 	err := db.NewSelect().
 			Model(user).
 			Column("email").
-			Where("id = ?", id_user).
+			Where("id = ?", userId).
 			Scan(c)
 	if err != nil {
 		return nil, err
@@ -117,12 +129,15 @@ func GetEmail(c *gin.Context, db *bun.DB) (*string, error) {
 }
 
 func GetOAuth(c *gin.Context, db *bun.DB) (*oauth2.Token, error) {
-	id_user := c.Param("id")
+	userId, cErr := tool.ConvertionUserId(c)
+	if cErr != nil{
+		return nil, cErr
+	}
 	user := new(user.User)
 	err := db.NewSelect().
 			Model(user).
 			Column("oauth").
-			Where("id = ?", id_user).
+			Where("id = ?", userId).
 			Scan(c)
 	if err != nil {
 		return nil, err
@@ -132,7 +147,10 @@ func GetOAuth(c *gin.Context, db *bun.DB) (*oauth2.Token, error) {
 
 // todo: set a limit to change the name (maybe 1 change per month)
 func SetName(c *gin.Context, db *bun.DB) (bool, error) {
-	id_user := c.Param("id")
+	userId, cErr := tool.ConvertionUserId(c)
+	if cErr != nil{
+		return false, cErr
+	}
 	name := c.PostForm("name")
 
 	if len(name) == 0 {
@@ -142,7 +160,7 @@ func SetName(c *gin.Context, db *bun.DB) (bool, error) {
 	_, err := db.NewUpdate().
 		Model(user).
 		Column("name").
-		Where("id = ?", id_user).
+		Where("id = ?", userId).
 		Exec(c)
 	if err != nil {
 		return false, err
@@ -152,7 +170,10 @@ func SetName(c *gin.Context, db *bun.DB) (bool, error) {
 
 // todo: set a limit to change the login (maybe 1 change per month)
 func SetLogin(c *gin.Context, db *bun.DB) (bool, error) {
-	id_user := c.Param("id")
+	userId, cErr := tool.ConvertionUserId(c)
+	if cErr != nil{
+		return false, cErr
+	}
 	login := c.PostForm("login")
 
 	if len(login) == 0 {
@@ -162,7 +183,7 @@ func SetLogin(c *gin.Context, db *bun.DB) (bool, error) {
 	_, err := db.NewUpdate().
 		Model(user).
 		Column("login").
-		Where("id = ?", id_user).
+		Where("id = ?", userId).
 		Exec(c)
 	if err != nil {
 		return false, err
@@ -171,7 +192,10 @@ func SetLogin(c *gin.Context, db *bun.DB) (bool, error) {
 }
 
 func SetAvatar(c *gin.Context, db *bun.DB) (bool, error) {
-	id_user := c.Param("id")
+	userId, cErr := tool.ConvertionUserId(c)
+	if cErr != nil{
+		return false, cErr
+	}
 	avatar := c.PostForm("avatar")
 
 	if len(avatar) == 0 {
@@ -181,7 +205,7 @@ func SetAvatar(c *gin.Context, db *bun.DB) (bool, error) {
 	_, err := db.NewUpdate().
 		Model(user).
 		Column("avatar").
-		Where("id = ?", id_user).
+		Where("id = ?", userId).
 		Exec(c)
 	if err != nil {
 		return false, err
