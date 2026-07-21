@@ -12,7 +12,7 @@ func init() {
 		fmt.Print(" [up migration] ")
 		_, err := db.NewCreateTable().
 			IfNotExists().
-			Model((*user.User)(nil)).
+			Model((*model.User)(nil)).
 			Exec(ctx)
 		if err != nil {
 			return err
@@ -22,7 +22,7 @@ func init() {
 		fmt.Print(" [down migration] ")
 		_, err := db.NewDropTable().
 			IfExists().
-			Model((*user.User)(nil)).
+			Model((*model.User)(nil)).
 			Exec(ctx)
 		if err != nil {
 			return err

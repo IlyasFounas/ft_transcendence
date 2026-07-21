@@ -1,9 +1,9 @@
-package user
+package handler
 
 import (
     // EXTERNAL PACKAGE
     "os"
-    // "fmt"
+    "fmt"
     "time"
     "strconv"
     "net/http"
@@ -32,21 +32,23 @@ type UserClaims struct {
 // Auth functions
 func CreateUser(db *bun.DB) gin.HandlerFunc {
     return func(c *gin.Context) {
-        state, err := user_repo.CreateUser(c, db)
+        user, err := repository.CreateUser(c, db)
         if err != nil {
             c.JSON(http.StatusInternalServerError, gin.H{
                 "state": "database function failed"})
             return 
-        }
-        if !state {
-            c.JSON(http.StatusOK, gin.H{
-                "state": "creation failed"})
-            return 
         } else {
-            if err := tool.SendEmail(c.PostForm("email")); err != nil {
+            aToken, err := repository.CreateAToken(c.Request.Context(), user, db)
+            if err != nil {
+                fmt.Printf("Token creation error message : %s\n", err)
                 c.JSON(http.StatusInternalServerError, gin.H{
-                    "state": "failed", "error_message": "code verification sending went wrong"})
-                return 
+                    "state": "failed", "error_message": "token creation went wrong"})
+                return
+            }
+            if err := tool.SendActivationEmail(c.PostForm("email"), *aToken); err != nil {
+                c.JSON(http.StatusInternalServerError, gin.H{
+                    "state": "failed", "error_message": "link activation sending went wrong"})
+                return
             }
             c.JSON(http.StatusCreated, gin.H{
                 "state": "successful creation"})
@@ -56,14 +58,15 @@ func CreateUser(db *bun.DB) gin.HandlerFunc {
 
 func LoginUser(db *bun.DB) gin.HandlerFunc {
     return func(c *gin.Context) {
-        state, userId, err := user_repo.LoginUser(c, db)
+        state, userId, err := repository.LoginUser(c, db)
         if err != nil {
             c.JSON(http.StatusInternalServerError, gin.H{"state": "database function failed"})
             return 
         }
         if !state {
             c.JSON(http.StatusOK, gin.H{
-                "state": "login failed"})
+                "state": "failed",
+                "error_message": "your account is not activate or your logins are not good"})
         } else {
             // generate the jwt token here
             claims := UserClaims{
@@ -92,7 +95,7 @@ func LoginUser(db *bun.DB) gin.HandlerFunc {
 // Getters
 func GetUser(db *bun.DB) gin.HandlerFunc { //return almost all user infos
     return func(c *gin.Context) {
-        userData, err := user_repo.GetUser(c, db)
+        userData, err := repository.GetUser(c, db)
         if err != nil {
             c.AbortWithStatusJSON(500, gin.H{"error": "Convertion failed", "error_message": err})
         }
@@ -109,7 +112,7 @@ func GetUser(db *bun.DB) gin.HandlerFunc { //return almost all user infos
 
 func GetName(db *bun.DB) gin.HandlerFunc {
     return func(c *gin.Context) {
-        name, err := user_repo.GetName(c, db)
+        name, err := repository.GetName(c, db)
         if err != nil {
             c.JSON(http.StatusInternalServerError, gin.H{"state": "database function failed"})
         }
@@ -124,7 +127,7 @@ func GetName(db *bun.DB) gin.HandlerFunc {
 
 func GetLogin(db *bun.DB) gin.HandlerFunc {
     return func(c *gin.Context) {
-        login, err := user_repo.GetLogin(c, db)
+        login, err := repository.GetLogin(c, db)
         if err != nil {
             c.JSON(http.StatusInternalServerError, gin.H{"state": "database function failed"})
         }
@@ -139,7 +142,7 @@ func GetLogin(db *bun.DB) gin.HandlerFunc {
 
 func GetEmail(db *bun.DB) gin.HandlerFunc {
     return func(c *gin.Context) {
-        email, err := user_repo.GetEmail(c, db)
+        email, err := repository.GetEmail(c, db)
         if err != nil {
             c.JSON(http.StatusInternalServerError, gin.H{"state": "database function failed"})
         }
@@ -154,7 +157,7 @@ func GetEmail(db *bun.DB) gin.HandlerFunc {
 
 func GetOAuth(db *bun.DB) gin.HandlerFunc {
     return func(c *gin.Context) {
-        oauth, err := user_repo.GetOAuth(c, db)
+        oauth, err := repository.GetOAuth(c, db)
         if err != nil {
             c.JSON(http.StatusInternalServerError, gin.H{"state": "database function failed"})
         }
@@ -170,7 +173,7 @@ func GetOAuth(db *bun.DB) gin.HandlerFunc {
 // Setters
 func SetName(db *bun.DB) gin.HandlerFunc {
     return func (c *gin.Context) {
-        state, err := user_repo.SetName(c, db)
+        state, err := repository.SetName(c, db)
         if err != nil {
             c.JSON(http.StatusInternalServerError, gin.H{"state": "database function failed"})
         }
@@ -186,7 +189,7 @@ func SetName(db *bun.DB) gin.HandlerFunc {
 
 func SetLogin(db *bun.DB) gin.HandlerFunc {
     return func (c *gin.Context) {
-        state, err := user_repo.SetLogin(c, db)
+        state, err := repository.SetLogin(c, db)
         if err != nil {
             c.JSON(http.StatusInternalServerError, gin.H{"state": "database function failed"})
         }
@@ -202,7 +205,7 @@ func SetLogin(db *bun.DB) gin.HandlerFunc {
 
 func SetAvatar(db *bun.DB) gin.HandlerFunc {
     return func (c *gin.Context) {
-        state, err := user_repo.SetAvatar(c, db)
+        state, err := repository.SetAvatar(c, db)
         if err != nil {
             c.JSON(http.StatusInternalServerError, gin.H{"state": "database function failed"})
         }

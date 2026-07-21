@@ -1,21 +1,11 @@
 package tool
 
 import (
+	"fmt"
 	"github.com/wneessen/go-mail"
 )
 
-func SendEmail(toEmail string) error {
-	// create the core of the message
-	message := mail.NewMsg()
-	if err := message.From("atlas@example.com"); err != nil {
-		return err
-	}
-	if err := message.To(toEmail); err != nil {
-		return err
-	}
-	message.Subject("Atlas: verification code")
-	message.SetBodyString(mail.TypeTextPlain, "This is your verification code :\n0 0 0 0 0 0\ngo to this url : ....\n")
-
+func SendEmail(toEmail string, message *mail.Msg) error {
 	// send the email with the new client
 	client, err := mail.NewClient("mailpit",
 		mail.WithPort(1025),
@@ -26,6 +16,30 @@ func SendEmail(toEmail string) error {
 		return err
 	}
 	if err := client.DialAndSend(message); err != nil {
+		return err
+	}
+	return nil
+}
+
+func returnActivationLink(activationJWT string) string {
+    return fmt.Sprintf(
+        "This is your activation link: %s\n you have 24 hours before your account gets deleted",
+        activationJWT,
+	)
+}
+
+func SendActivationEmail(toEmail string, activationJWT string) error {
+	// create the message
+	message := mail.NewMsg()
+	if err := message.From("atlas@example.com"); err != nil {
+		return err
+	}
+	if err := message.To(toEmail); err != nil {
+		return err
+	}
+	message.Subject("Atlas: verification code")
+	message.SetBodyString(mail.TypeTextPlain, returnActivationLink(activationJWT))
+	if err := SendEmail(toEmail, message); err != nil {
 		return err
 	}
 	return nil

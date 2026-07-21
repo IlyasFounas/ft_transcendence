@@ -1,4 +1,4 @@
-package user
+package model
 
 import (
 	"golang.org/x/oauth2"

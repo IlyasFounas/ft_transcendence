@@ -1,8 +1,8 @@
-package user_repo
+package repository
 
 import (
 	// "fmt"
-	// "errors"
+	"context"
 	"github.com/uptrace/bun"
     "github.com/gin-gonic/gin"
     "backend/internal/models"
@@ -19,12 +19,12 @@ import (
  * https://bun.uptrace.dev/guide/golang-orm.html#crud-operations
  */
 
-func CreateUser(c *gin.Context, db *bun.DB) (bool, error) {
+func CreateUser(c *gin.Context, db *bun.DB) (*model.User, error) {
 	hashpassword, hashErr := tool.HashPassword(c.PostForm("password"))
 	if hashErr != nil {
-		return false, hashErr
+		return nil, hashErr
 	}
-	user := &user.User{Login: c.PostForm("login"), 
+	user := &model.User{Login: c.PostForm("login"), 
 		Password: hashpassword, 
 		Username: c.PostForm("username"),
 		Email: c.PostForm("email"),
@@ -34,9 +34,9 @@ func CreateUser(c *gin.Context, db *bun.DB) (bool, error) {
 				Model(user).
 				Exec(c)
 	if err != nil {
-		return false, err
+		return nil, err
 	}
-	return true, nil
+	return user, nil
 }
 
 func LoginUser(c *gin.Context, db *bun.DB) (bool, int64, error) {
@@ -46,7 +46,7 @@ func LoginUser(c *gin.Context, db *bun.DB) (bool, int64, error) {
 	if len(login) == 0 || len(password) == 0{
 		return false, 0, nil
 	}
-	user := new(user.User)
+	user := new(model.User)
 	err := db.NewSelect().
 		Model(user).
 		Where("login = ?", login).
@@ -54,18 +54,18 @@ func LoginUser(c *gin.Context, db *bun.DB) (bool, int64, error) {
 	if err != nil {
 		return false, 0, err
 	}
-	if !tool.CheckPasswordHash(password, user.Password) {
+	if !tool.CheckPasswordHash(password, user.Password) || !user.Is_verified {
 		return false, 0, nil
 	}
 	return true, user.ID, nil
 }
 
-func GetUser(c *gin.Context, db *bun.DB) (*user.User, error) {
+func GetUser(c *gin.Context, db *bun.DB) (*model.User, error) {
 	userId, cErr := tool.ConvertionUserId(c)
 	if cErr != nil{
 		return nil, cErr
 	}
-	user := new(user.User)
+	user := new(model.User)
 	err := db.NewSelect().
 			Model(user).
 			Column("id", "name", "email", "is_verified","avatar", "created_at").
@@ -82,7 +82,7 @@ func GetName(c *gin.Context, db *bun.DB) (*string, error) {
 	if cErr != nil{
 		return nil, cErr
 	}
-	user := new(user.User)
+	user := new(model.User)
 	err := db.NewSelect().
 			Model(user).
 			Column("name").
@@ -99,7 +99,7 @@ func GetLogin(c *gin.Context, db *bun.DB) (*string, error) {
 	if cErr != nil{
 		return nil, cErr
 	}
-	user := new(user.User)
+	user := new(model.User)
 	err := db.NewSelect().
 			Model(user).
 			Column("login").
@@ -116,7 +116,7 @@ func GetEmail(c *gin.Context, db *bun.DB) (*string, error) {
 	if cErr != nil{
 		return nil, cErr
 	}
-	user := new(user.User)
+	user := new(model.User)
 	err := db.NewSelect().
 			Model(user).
 			Column("email").
@@ -133,7 +133,7 @@ func GetOAuth(c *gin.Context, db *bun.DB) (*oauth2.Token, error) {
 	if cErr != nil{
 		return nil, cErr
 	}
-	user := new(user.User)
+	user := new(model.User)
 	err := db.NewSelect().
 			Model(user).
 			Column("oauth").
@@ -156,7 +156,7 @@ func SetName(c *gin.Context, db *bun.DB) (bool, error) {
 	if len(name) == 0 {
 		return false, nil
 	}
-	user := &user.User{Username: name}
+	user := &model.User{Username: name}
 	_, err := db.NewUpdate().
 		Model(user).
 		Column("name").
@@ -179,7 +179,7 @@ func SetLogin(c *gin.Context, db *bun.DB) (bool, error) {
 	if len(login) == 0 {
 		return false, nil
 	}
-	user := &user.User{Login: login}
+	user := &model.User{Login: login}
 	_, err := db.NewUpdate().
 		Model(user).
 		Column("login").
@@ -201,7 +201,7 @@ func SetAvatar(c *gin.Context, db *bun.DB) (bool, error) {
 	if len(avatar) == 0 {
 		return false, nil
 	}
-	user := &user.User{Avatar: &avatar}
+	user := &model.User{Avatar: &avatar}
 	_, err := db.NewUpdate().
 		Model(user).
 		Column("avatar").
@@ -211,4 +211,17 @@ func SetAvatar(c *gin.Context, db *bun.DB) (bool, error) {
 		return false, err
 	}
 	return true, nil
+}
+
+func SetIsVerified(ctx context.Context, db *bun.DB, userId int64) error {
+	user := &model.User{Is_verified: true}
+	_, err := db.NewUpdate().
+		Model(user).
+		Column("is_verified").
+		Where("id = ?", userId).
+		Exec(ctx)
+	if err != nil {
+		return err
+	}
+	return nil
 }

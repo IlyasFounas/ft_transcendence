@@ -32,28 +32,30 @@ func InitRouter(db *bun.DB) (*gin.Engine, error) {
 
 	public := r.Group("/")
 	{
-		public.POST("/user/create", user.CreateUser(db))
-		public.POST("/auth/login", user.LoginUser(db))
+		public.POST("/user/create", handler.CreateUser(db))
+		public.POST("/auth/login", handler.LoginUser(db))
+		public.POST("/user/activation", handler.UserActivation(db))
+
 		// public.POST("/auth/logout", user.Logout(db))
 	}
 
 	// it's private because only a registred user can access it
 	private := r.Group("/")
-	private.Use(auth.AuthMiddleWare())
+	private.Use(middleware.AuthMiddleWare())
 	{
-		private.GET("/user/get", user.GetUser(db))
-		private.GET("/user/get/name", user.GetName(db))
-		private.GET("/user/get/login", user.GetLogin(db))
-		private.GET("/user/get/email", user.GetEmail(db))
-		private.GET("/user/get/oauth", user.GetOAuth(db))
+		private.GET("/user/get", handler.GetUser(db))
+		private.GET("/user/get/name", handler.GetName(db))
+		private.GET("/user/get/login", handler.GetLogin(db))
+		private.GET("/user/get/email", handler.GetEmail(db))
+		private.GET("/user/get/oauth", handler.GetOAuth(db))
 		// private.GET("/user/get/avatar/:id", user.GetAvatar(db))
 		
 
 		// PUT = modify a lot of informations
 		// PATCH = modify a specific field
-		private.PATCH("/user/name", user.SetName(db))
-		private.PATCH("/user/login", user.SetLogin(db))
-		private.PATCH("/user/avatar", user.SetAvatar(db))
+		private.PATCH("/user/name", handler.SetName(db))
+		private.PATCH("/user/login", handler.SetLogin(db))
+		private.PATCH("/user/avatar", handler.SetAvatar(db))
 	}
 	return r, nil
 }
