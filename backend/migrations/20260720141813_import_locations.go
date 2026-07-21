@@ -5,12 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"embed"
-
-	models "backend/internal/models"
 	"github.com/uptrace/bun"
+
+	"backend/internal/model"
 )
 
-//go:embed data/locations.json
 var locationsFile embed.FS
 
 type locationImport struct {
@@ -33,12 +32,12 @@ func init() {
 			return fmt.Errorf("parsing seed JSON: %w", err)
 		}
 
-		locations := make([]*models.Location, 0, len(imports))
+		locations := make([]*model.Location, 0, len(imports))
 		for _, item := range imports {
 			if len(item.CountryCode) != 2 {
 				continue
 			}
-			locations = append(locations, &models.Location{
+			locations = append(locations, &model.Location{
 				ID_mplry: item.MapillaryID,
 				Lat:      item.Latitude,
 				Long:     item.Longitude,
@@ -74,7 +73,7 @@ func init() {
 			ids = append(ids, item.MapillaryID)
 		}
 		_, err = db.NewDelete().
-			Model((*models.Location)(nil)).
+			Model((*model.Location)(nil)).
 			Where("id_mapillary IN (?)", bun.In(ids)).
 			Exec(ctx)
 		return err

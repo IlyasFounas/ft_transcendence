@@ -1,4 +1,4 @@
-package locations
+package model
 
 import (
 	"github.com/uptrace/bun"
