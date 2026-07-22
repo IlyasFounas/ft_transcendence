@@ -56,12 +56,13 @@ func UserActivation(ctx context.Context, db *bun.DB,
 }
 
 func SetUsedAt(ctx context.Context, db *bun.DB, userId int64) error {
-    aToken := &model.ActivationToken{UsedAt: &time.Now()}
+    usedAt := time.Now()
+    aToken := &model.ActivationToken{UsedAt: &usedAt}
     _, err := db.NewUpdate().
 		Model(aToken).
-		Column("name").
+		Column("used_at").
 		Where("id = ?", userId).
-		Exec(c)
+		Exec(ctx)
 	if err != nil {
 		return err
 	}
