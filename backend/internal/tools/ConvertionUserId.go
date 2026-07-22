@@ -2,17 +2,13 @@ package tool
 
 import (
 	"errors"
-    "github.com/gin-gonic/gin"
+	"strconv"
 )
 
-func ConvertionUserId(c *gin.Context) (int64, error) {
-	getId, ok := c.Get("userId")
-	if !ok {
-		return 0, errors.New("userId not found in context")
-	}
-	userId, ok := getId.(int64)
-	if !ok {
-		return 0, errors.New("userId not found in context")
-	}
+func ConvertionUserId(userIdString string) (int64, error) {
+    userId, err := strconv.ParseInt(userIdString, 10, 64)
+    if err != nil {
+        return 0, errors.New("conversion failed")
+    }
 	return userId, nil
 }
