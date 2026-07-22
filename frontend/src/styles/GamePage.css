@@ -1,0 +1,19 @@
+.game-container {
+  display: flex;
+  width: 95vw;
+  height: 95vh;
+}
+
+.game-map {
+  flex: 3;
+  /* background-color: #a81515; */
+  padding: 20px;
+  border-right: 3px solid #333;
+}
+
+.game-sidebar {
+  flex: 1;
+  /* background-color: #0f2bca; */
+  padding: 20px;
+  border-left: 3px solid #333;
+}
