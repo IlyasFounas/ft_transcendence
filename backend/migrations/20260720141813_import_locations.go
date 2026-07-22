@@ -10,6 +10,8 @@ import (
 	"backend/internal/model"
 )
 
+// next line is a go directive (go compiler embeds the contents of the file into the binary)
+//go:embed data/locations.json
 var locationsFile embed.FS
 
 type locationImport struct {
