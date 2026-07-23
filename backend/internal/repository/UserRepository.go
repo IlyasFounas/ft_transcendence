@@ -19,7 +19,6 @@ import (
  */
 
 func CreateUser(ctx context.Context, db *bun.DB, user *model.User) (*model.User, error) {
-
 	_, err := db.NewInsert().
 				Model(user).
 				Exec(ctx)
@@ -49,11 +48,7 @@ func LoginUser(ctx context.Context, db *bun.DB,
 	return true, user.ID, nil
 }
 
-func GetUser(ctx context.Context, db *bun.DB, userIdString string) (*model.User, error) {
-	userId, cErr := tool.ConvertionUserId(userIdString)
-	if cErr != nil {
-		return nil, cErr
-	}
+func GetUser(ctx context.Context, db *bun.DB, userId int64) (*model.User, error) {
 	user := new(model.User)
 	err := db.NewSelect().
 			Model(user).
@@ -66,11 +61,7 @@ func GetUser(ctx context.Context, db *bun.DB, userIdString string) (*model.User,
 	return user, nil
 }
 
-func GetName(ctx context.Context, db *bun.DB, userIdString string) (*string, error) {
-	userId, cErr := tool.ConvertionUserId(userIdString)
-	if cErr != nil {
-		return nil, cErr
-	}
+func GetName(ctx context.Context, db *bun.DB, userId int64) (*string, error) {
 	user := new(model.User)
 	err := db.NewSelect().
 			Model(user).
@@ -83,11 +74,7 @@ func GetName(ctx context.Context, db *bun.DB, userIdString string) (*string, err
 	return &user.Username, nil
 }
 
-func GetLogin(ctx context.Context, db *bun.DB, userIdString string) (*string, error) {
-	userId, cErr := tool.ConvertionUserId(userIdString)
-	if cErr != nil{
-		return nil, cErr
-	}
+func GetLogin(ctx context.Context, db *bun.DB, userId int64) (*string, error) {
 	user := new(model.User)
 	err := db.NewSelect().
 			Model(user).
@@ -100,11 +87,7 @@ func GetLogin(ctx context.Context, db *bun.DB, userIdString string) (*string, er
 	return &user.Login, nil
 }
 
-func GetEmail(ctx context.Context, db *bun.DB, userIdString string) (*string, error) {
-	userId, cErr := tool.ConvertionUserId(userIdString)
-	if cErr != nil{
-		return nil, cErr
-	}
+func GetEmail(ctx context.Context, db *bun.DB, userId int64) (*string, error) {
 	user := new(model.User)
 	err := db.NewSelect().
 			Model(user).
@@ -117,11 +100,7 @@ func GetEmail(ctx context.Context, db *bun.DB, userIdString string) (*string, er
 	return &user.Email, nil
 }
 
-func GetOAuth(ctx context.Context, db *bun.DB, userIdString string) (*oauth2.Token, error) {
-	userId, cErr := tool.ConvertionUserId(userIdString)
-	if cErr != nil{
-		return nil, cErr
-	}
+func GetOAuth(ctx context.Context, db *bun.DB, userId int64) (*oauth2.Token, error) {
 	user := new(model.User)
 	err := db.NewSelect().
 			Model(user).
@@ -135,11 +114,7 @@ func GetOAuth(ctx context.Context, db *bun.DB, userIdString string) (*oauth2.Tok
 }
 
 // todo: set a limit to change the name (maybe 1 change per month)
-func SetName(ctx context.Context, db *bun.DB, userIdString string, name string) (bool, error) {
-	userId, cErr := tool.ConvertionUserId(userIdString)
-	if cErr != nil{
-		return false, cErr
-	}
+func SetName(ctx context.Context, db *bun.DB, userId int64, name string) (bool, error) {
 	if len(name) == 0 {
 		return false, nil
 	}
@@ -156,11 +131,7 @@ func SetName(ctx context.Context, db *bun.DB, userIdString string, name string) 
 }
 
 // todo: set a limit to change the login (maybe 1 change per month)
-func SetLogin(ctx context.Context, db *bun.DB, userIdString string, login string) (bool, error) {
-	userId, cErr := tool.ConvertionUserId(userIdString)
-	if cErr != nil{
-		return false, cErr
-	}
+func SetLogin(ctx context.Context, db *bun.DB, userId int64, login string) (bool, error) {
 	if len(login) == 0 {
 		return false, nil
 	}
@@ -176,11 +147,7 @@ func SetLogin(ctx context.Context, db *bun.DB, userIdString string, login string
 	return true, nil
 }
 
-func SetAvatar(ctx context.Context, db *bun.DB, userIdString string, avatar string) (bool, error) {
-	userId, cErr := tool.ConvertionUserId(userIdString)
-	if cErr != nil{
-		return false, cErr
-	}
+func SetAvatar(ctx context.Context, db *bun.DB, userId int64, avatar string) (bool, error) {
 	if len(avatar) == 0 {
 		return false, nil
 	}

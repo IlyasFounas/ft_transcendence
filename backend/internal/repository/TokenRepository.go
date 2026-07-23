@@ -1,40 +1,23 @@
 package repository
 
 import (
-    "os"
     "time"
     "errors"
 	"context"
-    "strconv"
     "backend/internal/models"
 	"github.com/uptrace/bun"
-    "github.com/golang-jwt/jwt/v5"
 )
 
 // CreateActivationToken
-func CreateAToken(ctx context.Context, db *bun.DB, aToken *model.ActivationToken, expiresAt time.Time) (*string, error) {
-    expiresAt := time.Now().Add(24 * time.Hour)
-    claims := jwt.RegisteredClaims{
-            Subject: strconv.FormatInt(user.ID, 10),
-            ExpiresAt: jwt.NewNumericDate(expiresAt),
-            IssuedAt:  jwt.NewNumericDate(time.Now()),
-            Issuer:    "golang-api",
-    }
-    token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-    tokenString, tokenErr := token.SignedString([]byte(os.Getenv("ACTIVATION_JWT_SECRET")))
-    if tokenErr != nil {
-        return nil, tokenErr 
-    }
-    aToken := &model.ActivationToken {UserID: user.ID,
-        Token: tokenString,
-        ExpiresAt: expiresAt }
+func CreateAToken(ctx context.Context, db *bun.DB, aToken *model.ActivationToken,
+    expiresAt time.Time) error {
 	_, err := db.NewInsert().
 			Model(aToken).
 			Exec(ctx)
     if err != nil {
-        return nil, err
+        return err
     }
-	return &tokenString, nil
+	return nil
 }
 
 func UserActivation(ctx context.Context, db *bun.DB,
@@ -69,12 +52,25 @@ func SetUsedAt(ctx context.Context, db *bun.DB, userId int64) error {
 	return nil
 }
 
-func RefreshToken(ctx context.Context, db *bun.DB, userId int64) error {
+func CreateRefreshToken(ctx context.Context, db *bun.DB, rToken *model.RefreshToken) {
+	_, err := db.NewInsert().
+				Model(rToken).
+				Exec(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return rToken, nil
+}
+
+func CheckRefreshToken(ctx context.Context, db *bun.DB, userId int64) error {
     rToken := new(model.RefreshToken)
 	err := db.NewSelect().
-            Model(aToken).
+            Model(rToken).
             Column("id", "user_id", "expires_at", "used_at").
             Where("user_id = ?", userId).
 			Scan(ctx)
-
+	if err != nil {
+		return err
+	}
+	return nil
 }

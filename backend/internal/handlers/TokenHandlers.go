@@ -38,9 +38,32 @@ func UserActivation(db *bun.DB) gin.HandlerFunc {
 	}
 }
 
-func RefreshToken(db *bun.DB) gin.HandlerFunc {
+func CreateRefreshToken(db *bun.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		err := repository.RefreshToken(c.Request.Context(), db, 1)
+		userId, ok := c.Get("userId")
+		if !ok {
+			c.AbortWithStatusJSON(500, gin.H{"state": "failed",
+				"error_message": "The user id doesn't exist"})
+		}
+		rToken := &model.RefreshToken{}
+		err := repository.CreateRefreshToken(c.Request.Context(), db, rToken)
+		if err != nil {
+				c.JSON(http.StatusUnauthorized, gin.H{
+					"state": "failed", "message": "You have to login"})
+		} else {}
+			c.JSON(http.StatusCreated, gin.H{
+				"state": "success", "message": "your token has been refreshed"})
+	}
+}
+
+func CheckRefreshToken(db *bun.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+        userId, ok := c.Get("userId")
+        if !ok {
+            c.AbortWithStatusJSON(500, gin.H{"state": "failed",
+                "error_message": "The user id doesn't exist"})
+        }
+		err := repository.CheckRefreshToken(c.Request.Context(), db, userId.(int64))
 		if err != nil {
 				c.JSON(http.StatusUnauthorized, gin.H{
 					"state": "failed", "message": "You have to login"})
