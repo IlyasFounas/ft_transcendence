@@ -35,7 +35,7 @@ func InitRouter(db *bun.DB) (*gin.Engine, error) {
 		public.POST("/user/create", handler.CreateUser(db))
 		public.POST("/auth/login", handler.LoginUser(db))
 		public.GET("/user/activation", handler.UserActivation(db))
-		public.POST("/auth/refresh", handler.RefreshToken(db))
+		public.GET("/auth/refresh", handler.RefreshToken(db))
 	}
 
 	// it's private because only a registred user can access it

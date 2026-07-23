@@ -5,7 +5,6 @@ import (
     "os"
     "fmt"
     "time"
-    "strconv"
     "net/http"
     "context"
 	"backend/internal/tools"
@@ -13,10 +12,9 @@ import (
     "backend/internal/models"
     "github.com/gin-gonic/gin"
     "backend/internal/repository"
-    "github.com/golang-jwt/jwt/v5"
 	"crypto/rand"
-	// "encoding/hex"
-	// "crypto/sha256"
+	"encoding/hex"
+	"crypto/sha256"
 )
 
 /**
@@ -79,8 +77,9 @@ func CreateUser(db *bun.DB) gin.HandlerFunc {
 func createRefreshToken(ctx context.Context, db *bun.DB, userId int64) error {
 	key := make([]byte, 32)
 	rand.Read(key)
-    fmt.Printf("\n key= %x \n", key)
-	hashToken := "key"
+    encodedKey := hex.EncodeToString(key)
+    hashedKey := sha256.Sum256([]byte(encodedKey))
+	hashToken := fmt.Sprintf("%x", hashedKey)
 	rToken := &model.RefreshToken{
 		HashToken: hashToken,
 		UserID: userId,
@@ -107,22 +106,8 @@ func LoginUser(db *bun.DB) gin.HandlerFunc {
                 "message": "The login or the password is wrong"})
         } else {
             // generate the jwt token here
-            // claims := jwt.RegisteredClaims{
-            //         Subject: strconv.FormatInt(userId, 10),
-            //         ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
-            //         IssuedAt:  jwt.NewNumericDate(time.Now()),
-            //         Issuer:    "golang-api",
-            // }
-            // token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-            // tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
-            // if err != nil {
-            //     c.JSON(http.StatusInternalServerError, gin.H{
-            //         "state": "failed",
-            //         "message": "token creation failed, please retry to login"})
-            //     return 
-            // }
             expiresAt := time.Now().Add(15 * time.Minute)
-            tokenObj, tokenErr := tool.GenerateToken(user.ID, expiresAt, 
+            tokenObj, tokenErr := tool.GenerateToken(userId, expiresAt, 
                 []byte(os.Getenv("JWT_SECRET")))
             if tokenErr != nil {
                 c.JSON(http.StatusInternalServerError, gin.H{
@@ -131,12 +116,11 @@ func LoginUser(db *bun.DB) gin.HandlerFunc {
             }
             if err := createRefreshToken(c.Request.Context(), db, userId); err != nil {
                 c.JSON(http.StatusUnauthorized, gin.H{
-				"state": "failed", "message": err})
+				    "state": "failed", "message": "The refresh token creation failed"})
                 return
             }
             c.JSON(http.StatusOK, gin.H{
                 "state": "success",
-                // "Authorization": tokenString}
                 "Authorization": tokenObj.Token})
         }
     }

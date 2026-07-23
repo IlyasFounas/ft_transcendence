@@ -66,11 +66,13 @@ func RefreshToken(ctx context.Context, db *bun.DB, userId int64) error {
     rToken := new(model.RefreshToken)
 	err := db.NewSelect().
             Model(rToken).
-            Column("id", "user_id", "expires_at", "used_at").
+            Column("id", "user_id", "expires_at").
             Where("user_id = ?", userId).
 			Scan(ctx)
 	if err != nil {
 		return err
-	}
+	} else if rToken.ExpiresAt.Before(time.Now()) {
+        return errors.New("This token has expired, you have to login")
+    }
 	return nil
 }
