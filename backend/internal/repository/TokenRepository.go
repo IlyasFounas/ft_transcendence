@@ -52,17 +52,17 @@ func SetUsedAt(ctx context.Context, db *bun.DB, userId int64) error {
 	return nil
 }
 
-func CreateRefreshToken(ctx context.Context, db *bun.DB, rToken *model.RefreshToken) {
+func CreateRefreshToken(ctx context.Context, db *bun.DB, rToken *model.RefreshToken) error {
 	_, err := db.NewInsert().
 				Model(rToken).
 				Exec(ctx)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return rToken, nil
+	return nil
 }
 
-func CheckRefreshToken(ctx context.Context, db *bun.DB, userId int64) error {
+func RefreshToken(ctx context.Context, db *bun.DB, userId int64) error {
     rToken := new(model.RefreshToken)
 	err := db.NewSelect().
             Model(rToken).

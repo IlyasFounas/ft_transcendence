@@ -7,12 +7,16 @@ import (
     "time"
     "strconv"
     "net/http"
+    "context"
 	"backend/internal/tools"
 	"github.com/uptrace/bun"
     "backend/internal/models"
     "github.com/gin-gonic/gin"
     "backend/internal/repository"
     "github.com/golang-jwt/jwt/v5"
+	"crypto/rand"
+	// "encoding/hex"
+	// "crypto/sha256"
 )
 
 /**
@@ -24,11 +28,6 @@ import (
  * Basically, the handlers call the repository functions, manage any errors,
  * and return the result to the frontend (in JSON, plain text, etc.).
  */
-
-type UserClaims struct {
-    Role   string `json:"role"`
-    jwt.RegisteredClaims
-}
 
 // Auth functions
 func CreateUser(db *bun.DB) gin.HandlerFunc {
@@ -52,7 +51,8 @@ func CreateUser(db *bun.DB) gin.HandlerFunc {
             return
         } else {
             expiresAt := time.Now().Add(24 * time.Hour)
-            tokenObj, tokenErr := tool.GenerateToken(user.ID, expiresAt)
+            tokenObj, tokenErr := tool.GenerateToken(user.ID, expiresAt, 
+                []byte(os.Getenv("ACTIVATION_JWT_SECRET")))
             if tokenErr != nil {
                 c.JSON(http.StatusInternalServerError, gin.H{
                     "state": "failed", "message": "token creation went wrong"})
@@ -76,6 +76,23 @@ func CreateUser(db *bun.DB) gin.HandlerFunc {
     }
 }
 
+func createRefreshToken(ctx context.Context, db *bun.DB, userId int64) error {
+	key := make([]byte, 32)
+	rand.Read(key)
+    fmt.Printf("\n key= %x \n", key)
+	hashToken := "key"
+	rToken := &model.RefreshToken{
+		HashToken: hashToken,
+		UserID: userId,
+		ExpiresAt: time.Now().Add(24 * time.Hour),
+	}
+	err := repository.CreateRefreshToken(ctx, db, rToken)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func LoginUser(db *bun.DB) gin.HandlerFunc {
     return func(c *gin.Context) {
         state, userId, err := repository.LoginUser(c.Request.Context(), db,
@@ -90,26 +107,37 @@ func LoginUser(db *bun.DB) gin.HandlerFunc {
                 "message": "The login or the password is wrong"})
         } else {
             // generate the jwt token here
-            claims := UserClaims{
-                Role: "user",
-                RegisteredClaims: jwt.RegisteredClaims{
-                    Subject: strconv.FormatInt(userId, 10),
-                    ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
-                    IssuedAt:  jwt.NewNumericDate(time.Now()),
-                    Issuer:    "golang-api",
-                },
-            }
-            token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-            tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
-            if err != nil {
+            // claims := jwt.RegisteredClaims{
+            //         Subject: strconv.FormatInt(userId, 10),
+            //         ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
+            //         IssuedAt:  jwt.NewNumericDate(time.Now()),
+            //         Issuer:    "golang-api",
+            // }
+            // token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+            // tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
+            // if err != nil {
+            //     c.JSON(http.StatusInternalServerError, gin.H{
+            //         "state": "failed",
+            //         "message": "token creation failed, please retry to login"})
+            //     return 
+            // }
+            expiresAt := time.Now().Add(15 * time.Minute)
+            tokenObj, tokenErr := tool.GenerateToken(user.ID, expiresAt, 
+                []byte(os.Getenv("JWT_SECRET")))
+            if tokenErr != nil {
                 c.JSON(http.StatusInternalServerError, gin.H{
-                    "state": "failed",
-                    "message": "token creation failed, please retry to login"})
-                return 
+                    "state": "failed", "message": "token creation went wrong"})
+                return
+            }
+            if err := createRefreshToken(c.Request.Context(), db, userId); err != nil {
+                c.JSON(http.StatusUnauthorized, gin.H{
+				"state": "failed", "message": err})
+                return
             }
             c.JSON(http.StatusOK, gin.H{
                 "state": "success",
-                "Authorization": tokenString})
+                // "Authorization": tokenString}
+                "Authorization": tokenObj.Token})
         }
     }
 }

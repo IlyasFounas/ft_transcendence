@@ -1,14 +1,13 @@
 package tool
 
 import (
-	"os"
 	"time"
 	"strconv"
     "backend/internal/models"
     "github.com/golang-jwt/jwt/v5"
 )
 
-func GenerateToken(userId int64, expiresAt time.Time) (*model.ActivationToken, error) {
+func GenerateToken(userId int64, expiresAt time.Time, secretKey []byte) (*model.ActivationToken, error) {
 	claims := jwt.RegisteredClaims{
             Subject: strconv.FormatInt(userId, 10),
             ExpiresAt: jwt.NewNumericDate(expiresAt),
@@ -16,7 +15,7 @@ func GenerateToken(userId int64, expiresAt time.Time) (*model.ActivationToken, e
             Issuer:    "golang-api",
     }
     token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-    tokenString, tokenErr := token.SignedString([]byte(os.Getenv("ACTIVATION_JWT_SECRET")))
+    tokenString, tokenErr := token.SignedString(secretKey)
     if tokenErr != nil {
         return nil, tokenErr 
     }
