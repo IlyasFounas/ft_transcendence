@@ -97,7 +97,7 @@ func LoginUser(db *bun.DB) gin.HandlerFunc {
             if err != nil {
                 c.JSON(http.StatusInternalServerError, gin.H{
                     "state": "failed",
-                    "message": "token creation failed, please retry"})
+                    "message": "token creation failed, please retry to login"})
                 return 
             }
             c.JSON(http.StatusOK, gin.H{

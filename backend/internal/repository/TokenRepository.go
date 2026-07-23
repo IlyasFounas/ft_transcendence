@@ -12,7 +12,7 @@ import (
 )
 
 // CreateActivationToken
-func CreateAToken(ctx context.Context, user *model.User, db *bun.DB) (*string, error) {
+func CreateAToken(ctx context.Context, db *bun.DB, aToken *model.ActivationToken, expiresAt time.Time) (*string, error) {
     expiresAt := time.Now().Add(24 * time.Hour)
     claims := jwt.RegisteredClaims{
             Subject: strconv.FormatInt(user.ID, 10),
@@ -67,4 +67,14 @@ func SetUsedAt(ctx context.Context, db *bun.DB, userId int64) error {
 		return err
 	}
 	return nil
+}
+
+func RefreshToken(ctx context.Context, db *bun.DB, userId int64) error {
+    rToken := new(model.RefreshToken)
+	err := db.NewSelect().
+            Model(aToken).
+            Column("id", "user_id", "expires_at", "used_at").
+            Where("user_id = ?", userId).
+			Scan(ctx)
+
 }

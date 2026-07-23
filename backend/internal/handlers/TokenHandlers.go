@@ -37,3 +37,17 @@ func UserActivation(db *bun.DB) gin.HandlerFunc {
 		}
 	}
 }
+
+func RefreshToken(db *bun.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		err := repository.RefreshToken(c.Request.Context(), db, 1)
+		if err != nil {
+				c.JSON(http.StatusUnauthorized, gin.H{
+					"state": "failed", "message": "You have to login"})
+		} else {
+			
+            c.JSON(http.StatusCreated, gin.H{
+                "state": "success", "message": "your token has been refreshed"})
+		}
+	}
+}
