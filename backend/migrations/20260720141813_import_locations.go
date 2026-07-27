@@ -40,7 +40,7 @@ func init() {
 				continue
 			}
 			locations = append(locations, &model.Location{
-				ID_mplry: item.MapillaryID,
+				MID: item.MapillaryID,
 				Lat:      item.Latitude,
 				Long:     item.Longitude,
 				CC:       item.CountryCode,
