@@ -12,6 +12,8 @@ services:
       - ../backend:/app
     networks:
       - ft_transcendence
+    env_file:
+      - ../backend/.env
 
   # CHOKIDAR enables hot reload for the frontend
   # CHOKIDAR_USEPOLLING=true allows the dev environment to run on different OS (Windows, macOS), but this option uses more resources
