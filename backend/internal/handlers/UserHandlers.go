@@ -6,15 +6,11 @@ import (
     "fmt"
     "time"
     "net/http"
-    "context"
 	"backend/internal/tools"
 	"github.com/uptrace/bun"
     "backend/internal/models"
     "github.com/gin-gonic/gin"
     "backend/internal/repository"
-	"crypto/rand"
-	"encoding/hex"
-	"crypto/sha256"
 )
 
 /**
@@ -27,24 +23,6 @@ import (
  * and return the result to the frontend (in JSON, plain text, etc.).
  */
 
-func createRefreshToken(ctx context.Context, db *bun.DB, userId int64) error {
-	key := make([]byte, 32)
-	rand.Read(key)
-    encodedKey := hex.EncodeToString(key)
-    hashedKey := sha256.Sum256([]byte(encodedKey))
-	hashToken := fmt.Sprintf("%x", hashedKey)
-	rToken := &model.RefreshToken{
-		HashToken: hashToken,
-		UserID: userId,
-		ExpiresAt: time.Now().Add(24 * time.Hour),
-	}
-	err := repository.CreateRefreshToken(ctx, db, rToken)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func createActivationtoken(c *gin.Context, db *bun.DB, expiresAt time.Time,
         userId int64) error {          
     tokenObj, tokenErr := tool.GenerateToken(userId, expiresAt, 
@@ -54,7 +32,14 @@ func createActivationtoken(c *gin.Context, db *bun.DB, expiresAt time.Time,
             "state": "failed", "message": "token creation went wrong"})
         return tokenErr
     }
-    err := repository.CreateAToken(c.Request.Context(), db, tokenObj, expiresAt)
+    err := repository.DeleteActivationToken(c.Request.Context(), db, userId) 
+    if err != nil {
+        fmt.Printf("Token creation error message : %s\n", err)
+        c.JSON(http.StatusInternalServerError, gin.H{
+            "state": "failed", "message": "token creation went wrong"})
+        return err
+    }
+    err = repository.CreateAToken(c.Request.Context(), db, tokenObj, expiresAt)
     if err != nil {
         fmt.Printf("Token creation error message : %s\n", err)
         c.JSON(http.StatusInternalServerError, gin.H{
@@ -90,29 +75,9 @@ func CreateUser(db *bun.DB) gin.HandlerFunc {
             return
         } else {
             expiresAt := time.Now().Add(24 * time.Hour)
-            // tokenObj, tokenErr := tool.GenerateToken(user.ID, expiresAt, 
-            //     []byte(os.Getenv("ACTIVATION_JWT_SECRET")))
-            // if tokenErr != nil {
-            //     c.JSON(http.StatusInternalServerError, gin.H{
-            //         "state": "failed", "message": "token creation went wrong"})
-            //     return
-            // }
-            // err := repository.CreateAToken(c.Request.Context(), db, tokenObj, expiresAt)
-            // if err != nil {
-            //     fmt.Printf("Token creation error message : %s\n", err)
-            //     c.JSON(http.StatusInternalServerError, gin.H{
-            //         "state": "failed", "message": "token creation went wrong"})
-            //     return
-            // }
-
             if err := createActivationtoken(c, db, expiresAt, user.ID); err != nil {
                 return 
             }
-            // if err := tool.SendActivationEmail(c.PostForm("email"), tokenObj.Token); err != nil {
-            //     c.JSON(http.StatusInternalServerError, gin.H{
-            //         "state": "failed", "message": "link activation sending went wrong"})
-            //     return
-            // }
             c.JSON(http.StatusCreated, gin.H{
                 "state": "success", "message": "you just receive an activation link on your email"})
         }
@@ -149,14 +114,16 @@ func LoginUser(db *bun.DB) gin.HandlerFunc {
                     "state": "failed", "message": "token creation went wrong"})
                 return
             }
-            if err := createRefreshToken(c.Request.Context(), db, userId); err != nil {
+            encodedKey, rTokenErr := CreateRefreshToken(c.Request.Context(), db, userId)
+            if rTokenErr != nil {
                 c.JSON(http.StatusUnauthorized, gin.H{
 				    "state": "failed", "message": "The refresh token creation failed"})
                 return
             }
             c.JSON(http.StatusOK, gin.H{
                 "state": "success",
-                "Authorization": tokenObj.Token})
+                "Authorization": tokenObj.Token,
+                "Refresh-Token": encodedKey})
         }
     }
 }

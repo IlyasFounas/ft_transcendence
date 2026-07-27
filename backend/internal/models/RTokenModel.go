@@ -12,6 +12,7 @@ type RefreshToken struct {
     HashToken	string     `bun:"hash_token,notnull,unique"`
     UserID		int64       `bun:"user_id,notnull"`
     ExpiresAt	time.Time  `bun:"expires_at,notnull"`
+    UsedAt		*time.Time `bun:"used_at"`
 
     User *User `bun:"rel:belongs-to,join:user_id=id"`
 }
