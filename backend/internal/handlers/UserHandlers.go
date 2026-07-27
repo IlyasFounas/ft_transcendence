@@ -27,7 +27,48 @@ import (
  * and return the result to the frontend (in JSON, plain text, etc.).
  */
 
-// Auth functions
+func createRefreshToken(ctx context.Context, db *bun.DB, userId int64) error {
+	key := make([]byte, 32)
+	rand.Read(key)
+    encodedKey := hex.EncodeToString(key)
+    hashedKey := sha256.Sum256([]byte(encodedKey))
+	hashToken := fmt.Sprintf("%x", hashedKey)
+	rToken := &model.RefreshToken{
+		HashToken: hashToken,
+		UserID: userId,
+		ExpiresAt: time.Now().Add(24 * time.Hour),
+	}
+	err := repository.CreateRefreshToken(ctx, db, rToken)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func createActivationtoken(c *gin.Context, db *bun.DB, expiresAt time.Time,
+        userId int64) error {          
+    tokenObj, tokenErr := tool.GenerateToken(userId, expiresAt, 
+        []byte(os.Getenv("ACTIVATION_JWT_SECRET")))
+    if tokenErr != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{
+            "state": "failed", "message": "token creation went wrong"})
+        return tokenErr
+    }
+    err := repository.CreateAToken(c.Request.Context(), db, tokenObj, expiresAt)
+    if err != nil {
+        fmt.Printf("Token creation error message : %s\n", err)
+        c.JSON(http.StatusInternalServerError, gin.H{
+            "state": "failed", "message": "token creation went wrong"})
+        return err
+    }
+    if err := tool.SendActivationEmail(c.PostForm("email"), tokenObj.Token); err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{
+            "state": "failed", "message": "link activation sending went wrong"})
+        return err
+    }
+    return nil
+}
+
 func CreateUser(db *bun.DB) gin.HandlerFunc {
     return func(c *gin.Context) {
         hashpassword, hashErr := tool.HashPassword(c.PostForm("password"))
@@ -49,54 +90,48 @@ func CreateUser(db *bun.DB) gin.HandlerFunc {
             return
         } else {
             expiresAt := time.Now().Add(24 * time.Hour)
-            tokenObj, tokenErr := tool.GenerateToken(user.ID, expiresAt, 
-                []byte(os.Getenv("ACTIVATION_JWT_SECRET")))
-            if tokenErr != nil {
-                c.JSON(http.StatusInternalServerError, gin.H{
-                    "state": "failed", "message": "token creation went wrong"})
-                return
+            // tokenObj, tokenErr := tool.GenerateToken(user.ID, expiresAt, 
+            //     []byte(os.Getenv("ACTIVATION_JWT_SECRET")))
+            // if tokenErr != nil {
+            //     c.JSON(http.StatusInternalServerError, gin.H{
+            //         "state": "failed", "message": "token creation went wrong"})
+            //     return
+            // }
+            // err := repository.CreateAToken(c.Request.Context(), db, tokenObj, expiresAt)
+            // if err != nil {
+            //     fmt.Printf("Token creation error message : %s\n", err)
+            //     c.JSON(http.StatusInternalServerError, gin.H{
+            //         "state": "failed", "message": "token creation went wrong"})
+            //     return
+            // }
+
+            if err := createActivationtoken(c, db, expiresAt, user.ID); err != nil {
+                return 
             }
-            err := repository.CreateAToken(c.Request.Context(), db, tokenObj, expiresAt)
-            if err != nil {
-                fmt.Printf("Token creation error message : %s\n", err)
-                c.JSON(http.StatusInternalServerError, gin.H{
-                    "state": "failed", "message": "token creation went wrong"})
-                return
-            }
-            if err := tool.SendActivationEmail(c.PostForm("email"), tokenObj.Token); err != nil {
-                c.JSON(http.StatusInternalServerError, gin.H{
-                    "state": "failed", "message": "link activation sending went wrong"})
-                return
-            }
+            // if err := tool.SendActivationEmail(c.PostForm("email"), tokenObj.Token); err != nil {
+            //     c.JSON(http.StatusInternalServerError, gin.H{
+            //         "state": "failed", "message": "link activation sending went wrong"})
+            //     return
+            // }
             c.JSON(http.StatusCreated, gin.H{
                 "state": "success", "message": "you just receive an activation link on your email"})
         }
     }
 }
 
-func createRefreshToken(ctx context.Context, db *bun.DB, userId int64) error {
-	key := make([]byte, 32)
-	rand.Read(key)
-    encodedKey := hex.EncodeToString(key)
-    hashedKey := sha256.Sum256([]byte(encodedKey))
-	hashToken := fmt.Sprintf("%x", hashedKey)
-	rToken := &model.RefreshToken{
-		HashToken: hashToken,
-		UserID: userId,
-		ExpiresAt: time.Now().Add(24 * time.Hour),
-	}
-	err := repository.CreateRefreshToken(ctx, db, rToken)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func LoginUser(db *bun.DB) gin.HandlerFunc {
     return func(c *gin.Context) {
         state, userId, err := repository.LoginUser(c.Request.Context(), db,
             c.PostForm("login"), c.PostForm("password"))
-        if err != nil {
+        if err != nil && userId != 0 {
+            expiresAt := time.Now().Add(24 * time.Hour)
+            if err := createActivationtoken(c, db, expiresAt, userId); err != nil {
+                return 
+            }
+            c.JSON(http.StatusInternalServerError, gin.H{"state": "failed",
+                "message": "an verification mail has been sent"})
+            return
+        } else if err != nil {
             c.JSON(http.StatusInternalServerError, gin.H{"state": "failed"})
             return 
         }

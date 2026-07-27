@@ -34,7 +34,7 @@ func InitRouter(db *bun.DB) (*gin.Engine, error) {
 	{
 		public.POST("/user/create", handler.CreateUser(db))
 		public.POST("/auth/login", handler.LoginUser(db))
-		public.GET("/user/activation", handler.UserActivation(db))
+		public.GET("/user/activation", handler.ActivationToken(db))
 		public.GET("/auth/refresh", handler.RefreshToken(db))
 	}
 

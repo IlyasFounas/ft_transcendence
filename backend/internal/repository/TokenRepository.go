@@ -20,7 +20,7 @@ func CreateAToken(ctx context.Context, db *bun.DB, aToken *model.ActivationToken
 	return nil
 }
 
-func UserActivation(ctx context.Context, db *bun.DB,
+func ActivationToken(ctx context.Context, db *bun.DB,
     tokenString string) (*model.ActivationToken, error) {
     aToken := new(model.ActivationToken)
 	err := db.NewSelect().
@@ -44,7 +44,7 @@ func SetUsedAt(ctx context.Context, db *bun.DB, userId int64) error {
     _, err := db.NewUpdate().
 		Model(aToken).
 		Column("used_at").
-		Where("id = ?", userId).
+		Where("user_id = ?", userId).
 		Exec(ctx)
 	if err != nil {
 		return err

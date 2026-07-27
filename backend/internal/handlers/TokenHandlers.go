@@ -13,13 +13,14 @@ import (
     "github.com/golang-jwt/jwt/v5"
 )
 
-func UserActivation(db *bun.DB) gin.HandlerFunc {
+// this function send an email to the client, to activate his account
+func ActivationToken(db *bun.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		tokenString := c.Query("token")
-		aToken, err := repository.UserActivation(c.Request.Context(), db, tokenString)
+		aToken, err := repository.ActivationToken(c.Request.Context(), db, tokenString)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
-            	"state": "failed", "message": "account activation went wrong"})
+				"state": "failed", "message": "account activation went wrong"})
 			return
 		} else {
 			fmt.Printf("%d\n", aToken.UserID)
@@ -41,6 +42,7 @@ func UserActivation(db *bun.DB) gin.HandlerFunc {
 	}
 }
 
+// we start a token in the db, to refresh a short connection token that we give to the client
 func RefreshToken(db *bun.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
     	tokenString := c.GetHeader("Authorization")

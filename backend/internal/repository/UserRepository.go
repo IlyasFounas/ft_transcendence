@@ -2,6 +2,7 @@ package repository
 
 import (
 	// "fmt"
+	"errors"
 	"context"
 	"github.com/uptrace/bun"
     "backend/internal/models"
@@ -42,8 +43,10 @@ func LoginUser(ctx context.Context, db *bun.DB,
 	if err != nil {
 		return false, 0, err
 	}
-	if !tool.CheckPasswordHash(password, user.Password) || !user.Is_verified {
-		return false, 0, nil
+	if !tool.CheckPasswordHash(password, user.Password) {
+
+	} else if !user.Is_verified {
+		return false, user.ID, errors.New("The user has not verified his email")
 	}
 	return true, user.ID, nil
 }
