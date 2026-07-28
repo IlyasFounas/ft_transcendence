@@ -24,7 +24,7 @@ func ActivationToken(db *bun.DB) gin.HandlerFunc {
 		tokenString := c.Query("token")
 		aToken, err := repository.ActivationToken(c.Request.Context(), db, tokenString)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError,
+			c.JSON(http.StatusUnauthorized,
 				gin.H{"message": "account activation went wrong"})
 			return
 		} else {
@@ -41,7 +41,7 @@ func ActivationToken(db *bun.DB) gin.HandlerFunc {
 					gin.H{"message": "user activation failed, contact the support"})
 				return 
 			}
-            c.JSON(http.StatusCreated,
+            c.JSON(http.StatusOK,
 				gin.H{"message": "your account has been activated"})
 		}
 	}
@@ -74,7 +74,6 @@ func RefreshToken(db *bun.DB) gin.HandlerFunc {
 		hashToken := fmt.Sprintf("%x", hashedKey)
 		rToken, err := repository.RefreshToken(c.Request.Context(), db, hashToken)
 		if err != nil {
-			fmt.Printf("\n\n%s\n\n\n", err)
 			c.JSON(http.StatusUnauthorized, gin.H{"message": "You have to login"})
 			return 
 		} else {
@@ -88,14 +87,14 @@ func RefreshToken(db *bun.DB) gin.HandlerFunc {
             newToken, tokenErr := tool.GenerateToken(rToken.UserID, expiresAt, 
                 []byte(os.Getenv("JWT_SECRET")))
             if tokenErr != nil {
-                c.JSON(http.StatusInternalServerError,
-					gin.H{"message": "token creation went wrong"})
+                c.JSON(http.StatusUnauthorized,
+					gin.H{"message": "You have to login"})
                 return
             }
             encodedKey, rTokenErr := CreateRefreshToken(c.Request.Context(), db, rToken.UserID)
             if rTokenErr != nil {
                 c.JSON(http.StatusUnauthorized,
-					gin.H{"message": "The refresh token creation failed"})
+					gin.H{"message": "You have to login"})
                 return
             }
             c.JSON(http.StatusOK,gin.H{

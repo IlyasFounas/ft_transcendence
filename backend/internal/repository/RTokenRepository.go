@@ -30,7 +30,7 @@ func RefreshToken(ctx context.Context, db *bun.DB,
 	if err != nil {
 		return nil, err
 	} else if rToken.ExpiresAt.Before(time.Now()) {
-        return nil, errors.New("This token has expired, you have to login")
+        return nil, errors.New("You have to login")
     }
 	return rToken, nil
 }

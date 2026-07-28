@@ -28,7 +28,7 @@ func createActivationToken(c *gin.Context, db *bun.DB, expiresAt time.Time,
     tokenObj, tokenErr := tool.GenerateToken(userId, expiresAt, 
         []byte(os.Getenv("ACTIVATION_JWT_SECRET")))
     if tokenErr != nil {
-        c.JSON(http.StatusInternalServerError,
+        c.JSON(http.StatusUnauthorized,
             gin.H{"message": "token creation went wrong"})
         return tokenErr
     }
