@@ -5,7 +5,7 @@ RUN --mount=type=cache,target=/var/cache/apk \
     apk add git make gcc musl-dev
 
 RUN --mount=type=cache,target=/root/.cache/go-build \
-    go install github.com/air-verse/air@latest
+    go install github.com/air-verse/air@v1.52.3
 
 # Adds /go/bin to PATH to access Go-installed binaries like air
 ENV PATH=$PATH:/go/bin
