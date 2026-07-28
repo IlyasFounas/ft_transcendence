@@ -23,7 +23,7 @@ import (
  * and return the result to the frontend (in JSON, plain text, etc.).
  */
 
-func createActivationtoken(c *gin.Context, db *bun.DB, expiresAt time.Time,
+func createActivationToken(c *gin.Context, db *bun.DB, expiresAt time.Time,
         userId int64) error {          
     tokenObj, tokenErr := tool.GenerateToken(userId, expiresAt, 
         []byte(os.Getenv("ACTIVATION_JWT_SECRET")))
@@ -75,7 +75,7 @@ func CreateUser(db *bun.DB) gin.HandlerFunc {
             return
         } else {
             expiresAt := time.Now().Add(24 * time.Hour)
-            if err := createActivationtoken(c, db, expiresAt, user.ID); err != nil {
+            if err := createActivationToken(c, db, expiresAt, user.ID); err != nil {
                 return 
             }
             c.JSON(http.StatusCreated, gin.H{
@@ -90,7 +90,7 @@ func LoginUser(db *bun.DB) gin.HandlerFunc {
             c.PostForm("login"), c.PostForm("password"))
         if err != nil && userId != 0 {
             expiresAt := time.Now().Add(24 * time.Hour)
-            if err := createActivationtoken(c, db, expiresAt, userId); err != nil {
+            if err := createActivationToken(c, db, expiresAt, userId); err != nil {
                 return 
             }
             c.JSON(http.StatusInternalServerError, gin.H{"state": "failed",

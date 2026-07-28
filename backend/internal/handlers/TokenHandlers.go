@@ -57,7 +57,7 @@ func CreateRefreshToken(ctx context.Context, db *bun.DB,
 	rToken := &model.RefreshToken{
 		HashToken: hashToken,
 		UserID: userId,
-		ExpiresAt: time.Now().Add(24 * time.Hour),
+		ExpiresAt: time.Now().Add(7 * 24 * time.Hour),
 	}
 	err := repository.CreateRefreshToken(ctx, db, rToken)
 	if err != nil {
@@ -93,9 +93,16 @@ func RefreshToken(db *bun.DB) gin.HandlerFunc {
                     "state": "failed", "message": "token creation went wrong"})
                 return
             }
-            c.JSON(http.StatusCreated, gin.H{
+            encodedKey, rTokenErr := CreateRefreshToken(c.Request.Context(), db, rToken.UserID)
+            if rTokenErr != nil {
+                c.JSON(http.StatusUnauthorized, gin.H{
+				    "state": "failed", "message": "The refresh token creation failed"})
+                return
+            }
+            c.JSON(http.StatusOK, gin.H{
                 "state": "success",
-				"Authorization": newToken.Token})
+				"Authorization": newToken.Token,
+                "Refresh-Token": encodedKey})
 		}
 	}
 }
