@@ -7,7 +7,6 @@ import (
     "github.com/gin-gonic/gin"
     
     // OUR PACKAGE
-    "backend/internal/handlers"
     "backend/internal/middleware"
 )
 
@@ -30,29 +29,14 @@ func InitRouter(db *bun.DB) (*gin.Engine, error) {
     r := gin.Default() //when you first create a var :=
     r.Use(cors.Default()) // TODO accept only localhost:3000 request
 
-	public := r.Group("/")
-	{
-		public.POST("/user/create", handler.CreateUser(db))
-		public.POST("/auth/login", handler.LoginUser(db))
-		public.GET("/user/activation", handler.ActivationToken(db))
-		public.GET("/auth/refresh", handler.RefreshToken(db))
-	}
 
-	// it's private because only a registred user can access it
+	public := r.Group("/")
+    RegisterUserPublicRoutes(public, db)
+    RegisterAuthPublicRoutes(public, db)
+
 	private := r.Group("/")
 	private.Use(middleware.AuthMiddleWare())
-	{
-		private.GET("/user/get", handler.GetUser(db))
-		private.GET("/user/get/name", handler.GetName(db))
-		private.GET("/user/get/login", handler.GetLogin(db))
-		private.GET("/user/get/email", handler.GetEmail(db))
-		private.GET("/user/get/oauth", handler.GetOAuth(db))
+    RegisterUserPrivateRoutes(private, db)
 
-		// PUT = modify a lot of informations
-		// PATCH = modify a specific field
-		private.PATCH("/user/name", handler.SetName(db))
-		private.PATCH("/user/login", handler.SetLogin(db))
-		private.PATCH("/user/avatar", handler.SetAvatar(db))
-	}
 	return r, nil
 }
