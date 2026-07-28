@@ -28,27 +28,27 @@ func createActivationToken(c *gin.Context, db *bun.DB, expiresAt time.Time,
     tokenObj, tokenErr := tool.GenerateToken(userId, expiresAt, 
         []byte(os.Getenv("ACTIVATION_JWT_SECRET")))
     if tokenErr != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{
-            "state": "failed", "message": "token creation went wrong"})
+        c.JSON(http.StatusInternalServerError,
+            gin.H{"message": "token creation went wrong"})
         return tokenErr
     }
     err := repository.DeleteActivationToken(c.Request.Context(), db, userId) 
     if err != nil {
         fmt.Printf("Token creation error message : %s\n", err)
-        c.JSON(http.StatusInternalServerError, gin.H{
-            "state": "failed", "message": "token creation went wrong"})
+        c.JSON(http.StatusInternalServerError,
+            gin.H{"message": "token creation went wrong"})
         return err
     }
     err = repository.CreateAToken(c.Request.Context(), db, tokenObj, expiresAt)
     if err != nil {
         fmt.Printf("Token creation error message : %s\n", err)
-        c.JSON(http.StatusInternalServerError, gin.H{
-            "state": "failed", "message": "token creation went wrong"})
+        c.JSON(http.StatusInternalServerError,
+            gin.H{"message": "token creation went wrong"})
         return err
     }
     if err := tool.SendActivationEmail(c.PostForm("email"), tokenObj.Token); err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{
-            "state": "failed", "message": "link activation sending went wrong"})
+        c.JSON(http.StatusInternalServerError,
+            gin.H{"message": "link activation sending went wrong"})
         return err
     }
     return nil
@@ -58,8 +58,8 @@ func CreateUser(db *bun.DB) gin.HandlerFunc {
     return func(c *gin.Context) {
         hashpassword, hashErr := tool.HashPassword(c.PostForm("password"))
         if hashErr != nil {
-            c.JSON(http.StatusInternalServerError, gin.H{
-                "state": "failed", "message": "password encryption failed"})
+            c.JSON(http.StatusInternalServerError,
+                gin.H{"message": "password encryption failed"})
             return
         }
         userObj := &model.User{Login: c.PostForm("login"), 
@@ -70,16 +70,16 @@ func CreateUser(db *bun.DB) gin.HandlerFunc {
         
         user, err := repository.CreateUser(c.Request.Context(), db, userObj)
         if err != nil {
-            c.JSON(http.StatusInternalServerError, gin.H{
-                "state": "failed", "message": "database exection failed"})
+            c.JSON(http.StatusInternalServerError,
+                gin.H{"message": "database execution failed"})
             return
         } else {
             expiresAt := time.Now().Add(24 * time.Hour)
             if err := createActivationToken(c, db, expiresAt, user.ID); err != nil {
                 return 
             }
-            c.JSON(http.StatusCreated, gin.H{
-                "state": "success", "message": "you just receive an activation link on your email"})
+            c.JSON(http.StatusCreated,
+                gin.H{"message": "you just receive an activation link on your email"})
         }
     }
 }
@@ -93,37 +93,34 @@ func LoginUser(db *bun.DB) gin.HandlerFunc {
             if err := createActivationToken(c, db, expiresAt, userId); err != nil {
                 return 
             }
-            c.JSON(http.StatusInternalServerError, gin.H{"state": "failed",
-                "message": "an verification mail has been sent"})
+            c.JSON(http.StatusInternalServerError,
+                gin.H{"message": "an verification mail has been sent"})
             return
         } else if err != nil {
             c.JSON(http.StatusInternalServerError, gin.H{"state": "failed"})
             return 
         }
         if !state {
-            c.JSON(http.StatusOK, gin.H{
-                "state": "failed",
-                "message": "The login or the password is wrong"})
+            c.JSON(http.StatusOK,
+                gin.H{"message": "The login or the password is wrong"})
         } else {
             // generate the jwt token here
             expiresAt := time.Now().Add(15 * time.Minute)
             tokenObj, tokenErr := tool.GenerateToken(userId, expiresAt, 
                 []byte(os.Getenv("JWT_SECRET")))
             if tokenErr != nil {
-                c.JSON(http.StatusInternalServerError, gin.H{
-                    "state": "failed", "message": "token creation went wrong"})
+                c.JSON(http.StatusInternalServerError,
+                    gin.H{"message": "token creation went wrong"})
                 return
             }
             encodedKey, rTokenErr := CreateRefreshToken(c.Request.Context(), db, userId)
             if rTokenErr != nil {
-                c.JSON(http.StatusUnauthorized, gin.H{
-				    "state": "failed", "message": "The refresh token creation failed"})
+                c.JSON(http.StatusInternalServerError,
+                    gin.H{"message": "The refresh token creation failed"})
                 return
             }
-            c.JSON(http.StatusOK, gin.H{
-                "state": "success",
-                "Authorization": tokenObj.Token,
-                "Refresh-Token": encodedKey})
+            c.JSON(http.StatusOK,
+                gin.H{"Authorization": tokenObj.Token, "Refresh-Token": encodedKey})
         }
     }
 }
@@ -133,19 +130,19 @@ func GetUser(db *bun.DB) gin.HandlerFunc { //return almost all user infos
     return func(c *gin.Context) {
         userId, ok := c.Get("userId")
         if !ok {
-            c.AbortWithStatusJSON(500, gin.H{"state": "failed",
-                "error_message": "The user id doesn't exist"})
+            c.AbortWithStatusJSON(500,
+                gin.H{"message": "The user id doesn't exist"})
         }
         userData, err := repository.GetUser(c.Request.Context(), db, userId.(int64))
         if err != nil {
-            c.AbortWithStatusJSON(500, gin.H{"state": "failed", "error_message": err})
+            c.AbortWithStatusJSON(500, gin.H{"message": err})
         }
         if userData == nil {
-            c.JSON(http.StatusNotFound, gin.H{"state": "failed", "message": "The user doesn't exist"})
+            c.JSON(http.StatusNotFound,
+                gin.H{"message": "The user doesn't exist"})
         } else {
-            c.JSON(http.StatusOK, gin.H{
-            "state": "success",
-            "user":  userData,
+            c.JSON(http.StatusOK,
+                gin.H{"message": "success", "user":  userData,
         })
         }
     }
@@ -155,19 +152,18 @@ func GetName(db *bun.DB) gin.HandlerFunc {
     return func(c *gin.Context) {
         userId, ok := c.Get("userId")
         if !ok {
-            c.AbortWithStatusJSON(500, gin.H{"state": "failed",
-                "error_message": "The user id doesn't exist"})
+            c.AbortWithStatusJSON(500,
+                gin.H{"message": "The user id doesn't exist"})
         }
         name, err := repository.GetName(c.Request.Context(), db, userId.(int64))
         if err != nil {
-            c.JSON(http.StatusInternalServerError, gin.H{"state": "failed"})
+            c.JSON(http.StatusInternalServerError, gin.H{"message": "failed"})
         }
         if name == nil {
-            c.JSON(http.StatusNotFound, gin.H{"state": "failed"})
+            c.JSON(http.StatusNotFound, gin.H{"message": "failed"})
         } else {
-            c.JSON(http.StatusOK, gin.H{
-            "state": "success",
-            "name":  name})
+            c.JSON(http.StatusOK,
+                gin.H{"message": "success", "name":  name})
         }
     }
 }
@@ -176,19 +172,17 @@ func GetLogin(db *bun.DB) gin.HandlerFunc {
     return func(c *gin.Context) {
         userId, ok := c.Get("userId")
         if !ok {
-            c.AbortWithStatusJSON(500, gin.H{"state": "failed",
-                "error_message": "The user id doesn't exist"})
+            c.AbortWithStatusJSON(http.StatusInternalServerError,
+                gin.H{"message": "The user id doesn't exist"})
         }
         login, err := repository.GetLogin(c.Request.Context(), db, userId.(int64))
         if err != nil {
-            c.JSON(http.StatusInternalServerError, gin.H{"state": "failed"})
+            c.JSON(http.StatusInternalServerError, gin.H{"message": "failed"})
         }
         if login == nil {
-            c.JSON(http.StatusNotFound, gin.H{"stsate": "failed"})
+            c.JSON(http.StatusNotFound, gin.H{"message": "failed"})
         } else {
-            c.JSON(http.StatusOK, gin.H{
-            "state": "success",
-            "login":  login})
+            c.JSON(http.StatusOK, gin.H{"message": "success", "login":  login})
         }
     }
 }
@@ -197,19 +191,17 @@ func GetEmail(db *bun.DB) gin.HandlerFunc {
     return func(c *gin.Context) {
         userId, ok := c.Get("userId")
         if !ok {
-            c.AbortWithStatusJSON(500, gin.H{"state": "failed",
-                "error_message": "The user id doesn't exist"})
+            c.AbortWithStatusJSON(http.StatusInternalServerError,
+                gin.H{"message": "The user id doesn't exist"})
         }
         email, err := repository.GetEmail(c.Request.Context(), db, userId.(int64))
         if err != nil {
-            c.JSON(http.StatusInternalServerError, gin.H{"state": "failed"})
+            c.JSON(http.StatusInternalServerError, gin.H{"message": "failed"})
         }
         if email == nil {
-            c.JSON(http.StatusNotFound, gin.H{"state": "failed", "message": "the user have no email"})
+            c.JSON(http.StatusNotFound, gin.H{"message": "the user have no email"})
         } else {
-            c.JSON(http.StatusOK, gin.H{
-            "state": "success",
-            "email":  email})
+            c.JSON(http.StatusOK, gin.H{"message": "success", "email":  email})
         }
     }
 }
@@ -218,18 +210,18 @@ func GetOAuth(db *bun.DB) gin.HandlerFunc {
     return func(c *gin.Context) {
         userId, ok := c.Get("userId")
         if !ok {
-            c.AbortWithStatusJSON(500, gin.H{"state": "failed",
-                "error_message": "The user id doesn't exist"})
+            c.AbortWithStatusJSON(http.StatusInternalServerError,
+                gin.H{"message": "The user id doesn't exist"})
         }
         oauth, err := repository.GetOAuth(c.Request.Context(), db, userId.(int64))
         if err != nil {
-            c.JSON(http.StatusInternalServerError, gin.H{"state": "failed"})
+            c.JSON(http.StatusInternalServerError, gin.H{"message": "failed"})
         }
         if oauth == nil {
-            c.JSON(http.StatusNotFound, gin.H{"state": "failed", "message":  "oauth not found"})
+            c.JSON(http.StatusNotFound, gin.H{"message":  "oauth not found"})
         } else {
             c.JSON(http.StatusOK, gin.H{
-            "state": "success",
+            "message": "success",
             "OAuth":  oauth})
         }
     }
@@ -240,19 +232,17 @@ func SetName(db *bun.DB) gin.HandlerFunc {
     return func (c *gin.Context) {
         userId, ok := c.Get("userId")
         if !ok {
-            c.AbortWithStatusJSON(500, gin.H{"state": "failed",
-                "error_message": "The user id doesn't exist"})
+            c.AbortWithStatusJSON(http.StatusInternalServerError,
+                gin.H{"message": "The user id doesn't exist"})
         }
         state, err := repository.SetName(c.Request.Context(), db, userId.(int64), c.PostForm("name"))
         if err != nil {
-            c.JSON(http.StatusInternalServerError, gin.H{"state": "failed"})
+            c.JSON(http.StatusInternalServerError, gin.H{"message": "failed"})
         }
         if !state {
-            c.JSON(http.StatusOK, gin.H{
-                "state": "failed"})
+            c.JSON(http.StatusOK, gin.H{"message": "failed"})
         } else {
-             c.JSON(http.StatusOK, gin.H{
-                "state": "success"})
+             c.JSON(http.StatusOK, gin.H{"message": "success"})
         }
     }
 }
@@ -261,19 +251,17 @@ func SetLogin(db *bun.DB) gin.HandlerFunc {
     return func (c *gin.Context) {
         userId, ok := c.Get("userId")
         if !ok {
-            c.AbortWithStatusJSON(500, gin.H{"state": "failed",
-                "error_message": "The user id doesn't exist"})
+            c.AbortWithStatusJSON(http.StatusInternalServerError,
+                gin.H{"message": "The user id doesn't exist"})
         }
         state, err := repository.SetLogin(c.Request.Context(), db, userId.(int64), c.PostForm("login"))
         if err != nil {
-            c.JSON(http.StatusInternalServerError, gin.H{"state": "database function failed"})
+            c.JSON(http.StatusInternalServerError, gin.H{"message": "database function failed"})
         }
         if !state {
-            c.JSON(http.StatusOK, gin.H{
-                "state": "failed"})
+            c.JSON(http.StatusOK, gin.H{"message": "failed"})
         } else {
-             c.JSON(http.StatusOK, gin.H{
-                "state": "success"})
+             c.JSON(http.StatusOK, gin.H{"message": "success"})
         }
     }
 }
@@ -282,19 +270,18 @@ func SetAvatar(db *bun.DB) gin.HandlerFunc {
     return func (c *gin.Context) {
         userId, ok := c.Get("userId")
         if !ok {
-            c.AbortWithStatusJSON(500, gin.H{"state": "failed",
-                "error_message": "The user id doesn't exist"})
+            c.AbortWithStatusJSON(http.StatusInternalServerError,
+                gin.H{"message": "The user id doesn't exist"})
         }
         state, err := repository.SetAvatar(c.Request.Context(), db, userId.(int64), c.PostForm("avatar"))
         if err != nil {
-            c.JSON(http.StatusInternalServerError, gin.H{"state": "database function failed"})
+            c.JSON(http.StatusInternalServerError,
+                gin.H{"message": "database function failed"})
         }
         if !state {
-            c.JSON(http.StatusOK, gin.H{
-                "state": "failed"})
+            c.JSON(http.StatusOK, gin.H{"message": "failed"})
         } else {
-             c.JSON(http.StatusOK, gin.H{
-                "state": "success"})
+             c.JSON(http.StatusOK, gin.H{"message": "success"})
         }
     }
 }

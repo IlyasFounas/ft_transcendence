@@ -24,25 +24,25 @@ func ActivationToken(db *bun.DB) gin.HandlerFunc {
 		tokenString := c.Query("token")
 		aToken, err := repository.ActivationToken(c.Request.Context(), db, tokenString)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"state": "failed", "message": "account activation went wrong"})
+			c.JSON(http.StatusInternalServerError,
+				gin.H{"message": "account activation went wrong"})
 			return
 		} else {
 			fmt.Printf("%d\n", aToken.UserID)
 			err = repository.SetUsedAt(c.Request.Context(), db, aToken.UserID)
 			if err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{
-					"state": "failed", "message": "you already used this link"})
+				c.JSON(http.StatusInternalServerError,
+					gin.H{"message": "you already used this link"})
 				return
 			}
 			err = repository.SetIsVerified(c.Request.Context(), db, aToken.UserID)
 			if err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{
-					"state": "failed", "message": "user activation failed, contact the support"})
+				c.JSON(http.StatusInternalServerError,
+					gin.H{"message": "user activation failed, contact the support"})
 				return 
 			}
-            c.JSON(http.StatusCreated, gin.H{
-                "state": "success", "message": "your account has been activated"})
+            c.JSON(http.StatusCreated,
+				gin.H{"message": "your account has been activated"})
 		}
 	}
 }
@@ -75,34 +75,33 @@ func RefreshToken(db *bun.DB) gin.HandlerFunc {
 		rToken, err := repository.RefreshToken(c.Request.Context(), db, hashToken)
 		if err != nil {
 			fmt.Printf("\n\n%s\n\n\n", err)
-			c.JSON(http.StatusUnauthorized, gin.H{
-				"state": "failed", "message": "You have to login"})
+			c.JSON(http.StatusUnauthorized, gin.H{"message": "You have to login"})
 			return 
 		} else {
 			err = repository.SetRefreshUsedAt(c.Request.Context(), db, hashToken)
 			if err != nil {
-				c.JSON(http.StatusUnauthorized, gin.H{
-					"state": "failed", "message": "You have to login"})
+				c.JSON(http.StatusUnauthorized,
+					gin.H{"message": "You have to login"})
 				return 
 			}
             expiresAt := time.Now().Add(15 * time.Minute)
             newToken, tokenErr := tool.GenerateToken(rToken.UserID, expiresAt, 
                 []byte(os.Getenv("JWT_SECRET")))
             if tokenErr != nil {
-                c.JSON(http.StatusInternalServerError, gin.H{
-                    "state": "failed", "message": "token creation went wrong"})
+                c.JSON(http.StatusInternalServerError,
+					gin.H{"message": "token creation went wrong"})
                 return
             }
             encodedKey, rTokenErr := CreateRefreshToken(c.Request.Context(), db, rToken.UserID)
             if rTokenErr != nil {
-                c.JSON(http.StatusUnauthorized, gin.H{
-				    "state": "failed", "message": "The refresh token creation failed"})
+                c.JSON(http.StatusUnauthorized,
+					gin.H{"message": "The refresh token creation failed"})
                 return
             }
-            c.JSON(http.StatusOK, gin.H{
-                "state": "success",
+            c.JSON(http.StatusOK,gin.H{
+				"message": "success",
 				"Authorization": newToken.Token,
-                "Refresh-Token": encodedKey})
+				"Refresh-Token": encodedKey})
 		}
 	}
 }
