@@ -130,13 +130,13 @@ func GetUser(db *bun.DB) gin.HandlerFunc { //return almost all user infos
     return func(c *gin.Context) {
         userId, ok := c.Get("userId")
         if !ok {
-            c.JSON(http.StatusInternalServerError,
+            c.JSON(http.StatusUnauthorized,
                 gin.H{"message": "The userId is empty"})
             return
         }
         userData, err := repository.GetUser(c.Request.Context(), db, userId.(int64))
         if err != nil {
-            c.JSON(http.StatusInternalServerError, gin.H{"message": "The user doesn't exist"})
+            c.JSON(http.StatusInternalServerError, gin.H{"message": "Something went wrong"})
             return
         }
         if userData == nil {
@@ -155,15 +155,15 @@ func GetName(db *bun.DB) gin.HandlerFunc {
     return func(c *gin.Context) {
         userId, ok := c.Get("userId")
         if !ok {
-            c.AbortWithStatusJSON(500,
-                gin.H{"message": "The user id doesn't exist"})
+            c.JSON(http.StatusUnauthorized,
+                gin.H{"message": "The user id is empty"})
         }
         name, err := repository.GetName(c.Request.Context(), db, userId.(int64))
         if err != nil {
-            c.JSON(http.StatusInternalServerError, gin.H{"message": "failed"})
+            c.JSON(http.StatusInternalServerError, gin.H{"message": "Something went wrong"})
         }
         if name == nil {
-            c.JSON(http.StatusNotFound, gin.H{"message": "failed"})
+            c.JSON(http.StatusNotFound, gin.H{"message": "The user doesn't have a name"})
         } else {
             c.JSON(http.StatusOK,
                 gin.H{"message": "success", "name":  name})
@@ -175,15 +175,15 @@ func GetLogin(db *bun.DB) gin.HandlerFunc {
     return func(c *gin.Context) {
         userId, ok := c.Get("userId")
         if !ok {
-            c.AbortWithStatusJSON(http.StatusInternalServerError,
-                gin.H{"message": "The user id doesn't exist"})
+            c.JSON(http.StatusUnauthorized,
+                gin.H{"message": "The user id is empty"})
         }
         login, err := repository.GetLogin(c.Request.Context(), db, userId.(int64))
         if err != nil {
-            c.JSON(http.StatusInternalServerError, gin.H{"message": "failed"})
+            c.JSON(http.StatusInternalServerError, gin.H{"message": "Something went wrong"})
         }
         if login == nil {
-            c.JSON(http.StatusNotFound, gin.H{"message": "failed"})
+            c.JSON(http.StatusNotFound, gin.H{"message": "The user doesn't have a login"})
         } else {
             c.JSON(http.StatusOK, gin.H{"message": "success", "login":  login})
         }
@@ -194,15 +194,15 @@ func GetEmail(db *bun.DB) gin.HandlerFunc {
     return func(c *gin.Context) {
         userId, ok := c.Get("userId")
         if !ok {
-            c.AbortWithStatusJSON(http.StatusInternalServerError,
-                gin.H{"message": "The user id doesn't exist"})
+            c.JSON(http.StatusUnauthorized,
+                gin.H{"message": "The user id is empty"})
         }
         email, err := repository.GetEmail(c.Request.Context(), db, userId.(int64))
         if err != nil {
             c.JSON(http.StatusInternalServerError, gin.H{"message": "failed"})
         }
         if email == nil {
-            c.JSON(http.StatusNotFound, gin.H{"message": "the user have no email"})
+            c.JSON(http.StatusNotFound, gin.H{"message": "The user doesn't have a email"})
         } else {
             c.JSON(http.StatusOK, gin.H{"message": "success", "email":  email})
         }
@@ -213,15 +213,15 @@ func GetOAuth(db *bun.DB) gin.HandlerFunc {
     return func(c *gin.Context) {
         userId, ok := c.Get("userId")
         if !ok {
-            c.AbortWithStatusJSON(http.StatusInternalServerError,
-                gin.H{"message": "The user id doesn't exist"})
+            c.JSON(http.StatusUnauthorized,
+                gin.H{"message": "The user id is empty"})
         }
         oauth, err := repository.GetOAuth(c.Request.Context(), db, userId.(int64))
         if err != nil {
             c.JSON(http.StatusInternalServerError, gin.H{"message": "failed"})
         }
         if oauth == nil {
-            c.JSON(http.StatusNotFound, gin.H{"message":  "oauth not found"})
+            c.JSON(http.StatusNotFound, gin.H{"message": "The user doesn't have a oauth"})
         } else {
             c.JSON(http.StatusOK, gin.H{
             "message": "success",
@@ -235,15 +235,15 @@ func SetName(db *bun.DB) gin.HandlerFunc {
     return func (c *gin.Context) {
         userId, ok := c.Get("userId")
         if !ok {
-            c.AbortWithStatusJSON(http.StatusInternalServerError,
-                gin.H{"message": "The user id doesn't exist"})
+            c.JSON(http.StatusUnauthorized,
+                gin.H{"message": "The user id is empty"})
         }
         state, err := repository.SetName(c.Request.Context(), db, userId.(int64), c.PostForm("name"))
         if err != nil {
             c.JSON(http.StatusInternalServerError, gin.H{"message": "failed"})
         }
         if !state {
-            c.JSON(http.StatusOK, gin.H{"message": "failed"})
+            c.JSON(http.StatusOK, gin.H{"message": "The username has not been modified"})
         } else {
              c.JSON(http.StatusOK, gin.H{"message": "success"})
         }
@@ -254,15 +254,15 @@ func SetLogin(db *bun.DB) gin.HandlerFunc {
     return func (c *gin.Context) {
         userId, ok := c.Get("userId")
         if !ok {
-            c.AbortWithStatusJSON(http.StatusInternalServerError,
-                gin.H{"message": "The user id doesn't exist"})
+            c.JSON(http.StatusUnauthorized,
+                gin.H{"message": "The user id is empty"})
         }
         state, err := repository.SetLogin(c.Request.Context(), db, userId.(int64), c.PostForm("login"))
         if err != nil {
-            c.JSON(http.StatusInternalServerError, gin.H{"message": "database function failed"})
+            c.JSON(http.StatusInternalServerError, gin.H{"message": "failed"})
         }
         if !state {
-            c.JSON(http.StatusOK, gin.H{"message": "failed"})
+            c.JSON(http.StatusOK, gin.H{"message": "The login has not been modified"})
         } else {
              c.JSON(http.StatusOK, gin.H{"message": "success"})
         }
@@ -273,16 +273,15 @@ func SetAvatar(db *bun.DB) gin.HandlerFunc {
     return func (c *gin.Context) {
         userId, ok := c.Get("userId")
         if !ok {
-            c.AbortWithStatusJSON(http.StatusInternalServerError,
-                gin.H{"message": "The user id doesn't exist"})
+            c.JSON(http.StatusUnauthorized,
+                gin.H{"message": "The user id is empty"})
         }
         state, err := repository.SetAvatar(c.Request.Context(), db, userId.(int64), c.PostForm("avatar"))
         if err != nil {
-            c.JSON(http.StatusInternalServerError,
-                gin.H{"message": "database function failed"})
+            c.JSON(http.StatusInternalServerError, gin.H{"message": "failed"})
         }
         if !state {
-            c.JSON(http.StatusOK, gin.H{"message": "failed"})
+            c.JSON(http.StatusOK, gin.H{"message": "The avatar has not been modified"})
         } else {
              c.JSON(http.StatusOK, gin.H{"message": "success"})
         }
