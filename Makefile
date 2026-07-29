@@ -1,10 +1,15 @@
 .PHONY: up down restart logs logs-backend logs-frontend ps stop clean init_mig create_mig exec_mig rollback_mig status_mig
 
-DOCKER_COMPOSE = docker-config/docker-compose.yml
 DOCKER_COMPOSE_OVERRIDE = docker-config/docker-compose.override.yml
+DOCKER_COMPOSE_PROD = docker-config/docker-compose.prod.yml
+DOCKER_COMPOSE = docker-config/docker-compose.yml
 
 up:
 	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_OVERRIDE) up -d
+	make print_posgres_ip
+
+prod:
+	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_PROD) up -d
 	make print_posgres_ip
 
 down:

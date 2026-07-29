@@ -9,6 +9,7 @@ services:
   # For Golang and React, volumes mount the code directories (backend and frontend)
   # since the containers execute the code
   golang:
+    command: sh -c "go mod tidy && air"
     container_name: golang_container
     volumes:
       - ../backend:/app
@@ -32,6 +33,7 @@ services:
       - "5130:5130"
     networks:
       - ft_transcendence
+
   adminer:
     image: adminer:latest
     restart: unless-stopped

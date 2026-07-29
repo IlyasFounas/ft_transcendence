@@ -24,7 +24,6 @@ func AuthMiddleWare() gin.HandlerFunc {
     claims := jwt.MapClaims{}
     _, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
         return []byte(os.Getenv("JWT_SECRET")), nil })
-
     if err != nil {
       fmt.Printf("%s\n", err)
       c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "unauthorized"})
