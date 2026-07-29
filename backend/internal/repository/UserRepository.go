@@ -1,11 +1,12 @@
-package user_repo
+package repository
 
 import (
-	"fmt"
+	// "fmt"
+	"context"
 	"github.com/uptrace/bun"
-    "github.com/gin-gonic/gin"
     "backend/internal/models"
 	"backend/internal/tools"
+	"golang.org/x/oauth2"
 )
 /**
  * Repositories and migrations are the only places where
@@ -17,37 +18,193 @@ import (
  * https://bun.uptrace.dev/guide/golang-orm.html#crud-operations
  */
 
-func CreateUser(c *gin.Context, db *bun.DB) bool {
-	hashpassword, hashErr := bcrypt.HashPassword(c.PostForm("password"))
-	if hashErr != nil {
-		return false
-	}
-	user := &user.User{Login: c.PostForm("login"), 
-		Password: hashpassword, 
-		Username: c.PostForm("username"),
-		Email: c.PostForm("email"),
-		Is_verified: false}
-	_, err := db.NewInsert().Model(user).Exec(c)
+func CreateUser(ctx context.Context, db *bun.DB, user *model.User) (*model.User, error) {
+
+	_, err := db.NewInsert().
+				Model(user).
+				Exec(ctx)
 	if err != nil {
-		return false
+		return nil, err
 	}
-	return true
+	return user, nil
 }
 
-func LoginUser(c *gin.Context, db *bun.DB) (bool, int64) {
-	login := c.PostForm("login")
-	password := c.PostForm("password")
-	user := new(user.User)
+func LoginUser(ctx context.Context, db *bun.DB,
+	login string, password string) (bool, int64, error) {
+
+	if len(login) == 0 || len(password) == 0{
+		return false, 0, nil
+	}
+	user := new(model.User)
 	err := db.NewSelect().
 		Model(user).
 		Where("login = ?", login).
-		Scan(c)
+		Scan(ctx)
 	if err != nil {
-		return false, 0
+		return false, 0, err
 	}
-	fmt.Printf("user login : %s\n", user.Login)
-	if !bcrypt.CheckPasswordHash(password, user.Password) {
-		return false, 0
+	if !tool.CheckPasswordHash(password, user.Password) || !user.Is_verified {
+		return false, 0, nil
 	}
-	return true, user.ID
+	return true, user.ID, nil
+}
+
+func GetUser(ctx context.Context, db *bun.DB, userIdString string) (*model.User, error) {
+	userId, cErr := tool.ConvertionUserId(userIdString)
+	if cErr != nil {
+		return nil, cErr
+	}
+	user := new(model.User)
+	err := db.NewSelect().
+			Model(user).
+			Column("id", "name", "email", "is_verified","avatar", "created_at").
+			Where("id = ?", userId).
+			Scan(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
+func GetName(ctx context.Context, db *bun.DB, userIdString string) (*string, error) {
+	userId, cErr := tool.ConvertionUserId(userIdString)
+	if cErr != nil {
+		return nil, cErr
+	}
+	user := new(model.User)
+	err := db.NewSelect().
+			Model(user).
+			Column("name").
+			Where("id = ?", userId).
+			Scan(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return &user.Username, nil
+}
+
+func GetLogin(ctx context.Context, db *bun.DB, userIdString string) (*string, error) {
+	userId, cErr := tool.ConvertionUserId(userIdString)
+	if cErr != nil{
+		return nil, cErr
+	}
+	user := new(model.User)
+	err := db.NewSelect().
+			Model(user).
+			Column("login").
+			Where("id = ?", userId).
+			Scan(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return &user.Login, nil
+}
+
+func GetEmail(ctx context.Context, db *bun.DB, userIdString string) (*string, error) {
+	userId, cErr := tool.ConvertionUserId(userIdString)
+	if cErr != nil{
+		return nil, cErr
+	}
+	user := new(model.User)
+	err := db.NewSelect().
+			Model(user).
+			Column("email").
+			Where("id = ?", userId).
+			Scan(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return &user.Email, nil
+}
+
+func GetOAuth(ctx context.Context, db *bun.DB, userIdString string) (*oauth2.Token, error) {
+	userId, cErr := tool.ConvertionUserId(userIdString)
+	if cErr != nil{
+		return nil, cErr
+	}
+	user := new(model.User)
+	err := db.NewSelect().
+			Model(user).
+			Column("oauth").
+			Where("id = ?", userId).
+			Scan(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return user.OAuth, nil
+}
+
+// todo: set a limit to change the name (maybe 1 change per month)
+func SetName(ctx context.Context, db *bun.DB, userIdString string, name string) (bool, error) {
+	userId, cErr := tool.ConvertionUserId(userIdString)
+	if cErr != nil{
+		return false, cErr
+	}
+	if len(name) == 0 {
+		return false, nil
+	}
+	user := &model.User{Username: name}
+	_, err := db.NewUpdate().
+		Model(user).
+		Column("name").
+		Where("id = ?", userId).
+		Exec(ctx)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+// todo: set a limit to change the login (maybe 1 change per month)
+func SetLogin(ctx context.Context, db *bun.DB, userIdString string, login string) (bool, error) {
+	userId, cErr := tool.ConvertionUserId(userIdString)
+	if cErr != nil{
+		return false, cErr
+	}
+	if len(login) == 0 {
+		return false, nil
+	}
+	user := &model.User{Login: login}
+	_, err := db.NewUpdate().
+		Model(user).
+		Column("login").
+		Where("id = ?", userId).
+		Exec(ctx)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+func SetAvatar(ctx context.Context, db *bun.DB, userIdString string, avatar string) (bool, error) {
+	userId, cErr := tool.ConvertionUserId(userIdString)
+	if cErr != nil{
+		return false, cErr
+	}
+	if len(avatar) == 0 {
+		return false, nil
+	}
+	user := &model.User{Avatar: &avatar}
+	_, err := db.NewUpdate().
+		Model(user).
+		Column("avatar").
+		Where("id = ?", userId).
+		Exec(ctx)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+func SetIsVerified(ctx context.Context, db *bun.DB, userId int64) error {
+	user := &model.User{Is_verified: true}
+	_, err := db.NewUpdate().
+		Model(user).
+		Column("is_verified").
+		Where("id = ?", userId).
+		Exec(ctx)
+	if err != nil {
+		return err
+	}
+	return nil
 }

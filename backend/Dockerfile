@@ -22,6 +22,9 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
 RUN --mount=type=cache,target=/root/.cache/go-build \
     go mod download
 
+RUN --mount=type=cache,target=/root/.cache/go-build \
+    go get github.com/wneessen/go-mail
+
 EXPOSE 8080
 
 COPY . .

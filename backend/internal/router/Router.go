@@ -20,6 +20,10 @@ import (
  *
  * Note that endpoints under the private group are only accessible
  * when the user is authenticated.
+ * 
+ * The difference between PUT and PATCH in the database: 
+ * PUT = modify a lot of field
+ * PATCH = modify a unique field
  */
 
 func InitRouter(db *bun.DB) (*gin.Engine, error) {
@@ -28,16 +32,30 @@ func InitRouter(db *bun.DB) (*gin.Engine, error) {
 
 	public := r.Group("/")
 	{
-		public.GET("/", user.HomePage)
-		public.POST("/user/login", user.LoginUser(db))
-		public.POST("/user/create", user.CreateUser(db))
+		public.POST("/user/create", handler.CreateUser(db))
+		public.POST("/auth/login", handler.LoginUser(db))
+		public.GET("/user/activation", handler.UserActivation(db))
+
+		// public.POST("/auth/logout", user.Logout(db))
 	}
 
 	// it's private because only a registred user can access it
 	private := r.Group("/")
-	private.Use(auth.AuthRequired())
+	private.Use(middleware.AuthMiddleWare())
 	{
-		private.GET("/profile/:id", user.GetUser)
+		private.GET("/user/get", handler.GetUser(db))
+		private.GET("/user/get/name", handler.GetName(db))
+		private.GET("/user/get/login", handler.GetLogin(db))
+		private.GET("/user/get/email", handler.GetEmail(db))
+		private.GET("/user/get/oauth", handler.GetOAuth(db))
+		// private.GET("/user/get/avatar/:id", user.GetAvatar(db))
+		
+
+		// PUT = modify a lot of informations
+		// PATCH = modify a specific field
+		private.PATCH("/user/name", handler.SetName(db))
+		private.PATCH("/user/login", handler.SetLogin(db))
+		private.PATCH("/user/avatar", handler.SetAvatar(db))
 	}
 	return r, nil
 }
