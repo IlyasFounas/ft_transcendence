@@ -63,10 +63,12 @@ services:
   # routing to either localhost:8080/ or localhost:3000/
   # This is a realistic way to develop, as production uses the same setup
   # Including it in dev prevents production bugs
+  # nginx:
+  #   build:
+  #     context: ../nginx
+  #     target: ${ENV}
   nginx:
-    build:
-      context: ../nginx
-      target: ${ENV}
+    build: ../nginx
 
 
 volumes:

@@ -10,7 +10,6 @@ FROM base AS dev
 # Installs build essentials: git (for go mod), make, gcc and musl-dev (for CGO)
 RUN --mount=type=cache,target=/var/cache/apk \
     apk add git make gcc musl-dev
-
 RUN --mount=type=cache,target=/root/.cache/go-build \
     go install github.com/air-verse/air@v1.52.3
 # bcrypt
@@ -22,14 +21,14 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
 RUN --mount=type=cache,target=/root/.cache/go-build \
     go get github.com/wneessen/go-mail
 EXPOSE 8080
-
+CMD ["sh", "-c", "go mod tidy && air"]
 
 FROM base AS build
 RUN go get golang.org/x/crypto/bcrypt
 RUN go mod download
 RUN go get github.com/wneessen/go-mail
-# should compile the program ?
+RUN go run 
 
 FROM build AS prod
 EXPOSE 8080
-# CMD maybe ?
+CMD ["sh", "-c", "go mod tidy && air"]
