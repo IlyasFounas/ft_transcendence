@@ -1,6 +1,12 @@
 package router
 
 import (
+	// EXTERNAL PACKAGE
+	// "log" // TEMPORARY TEST SHUTDOWN
+	// "net/http" // TEMPORARY TEST SHUTDOWN
+	// "time" // TEMPORARY TEST SHUTDOWN
+
+	// OUR PACKAGE
 	"github.com/gin-gonic/gin"
 	"backend/internal/handler"
 )
@@ -9,6 +15,13 @@ func registerLocationRoutes(r *gin.Engine, h *handler.LocationHandler) {
 	// Public user
 	public := r.Group("/")
 	{
+		// // TEMPORARY TEST ROUTE FOR GRACEFUL SHUTDOWN
+		// public.GET("locations/slow", func(c *gin.Context) {
+        // 	log.Println("[Request] Started processing slow endpoint...")
+        // 	time.Sleep(5 * time.Second) // Simulates heavy work
+        // 	c.String(http.StatusOK, "Finished!")
+        // 	log.Println("[Request] Completed slow endpoint.")
+    	// })
 		public.POST("/locations", h.AddLocations) // TODO: put in admin group when admin exists
 		public.GET("/locations/:id", h.GetLocationByID)
 		public.GET("/locations/mapillary/:mid", h.GetLocationByMID)

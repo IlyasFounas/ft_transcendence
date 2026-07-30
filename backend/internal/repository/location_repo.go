@@ -7,51 +7,88 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
+	"time"
+	"sync"
 
 	"github.com/uptrace/bun"
-
 	"backend/internal/model"
 )
 
 var ErrLocationNotFound = errors.New("location not found")
+var ErrLocationNotSet = errors.New("location path env variable not set")
 
 // LocationRepository is a repo for managing locations in the database and synchronizing with a JSON file.
 type LocationRepository struct {
-	db       *bun.DB
-	filePath string
+	db      *bun.DB
+	logPath string
+	logChannel chan LogEvent
+	wg      sync.WaitGroup // Enables to wait that the worker finished to write everything
 }
 
-func NewLocationRepository(db *bun.DB, filePath string) *LocationRepository {
-	return &LocationRepository{db: db, filePath: filePath}
+func NewLocationRepository(db *bun.DB) (*LocationRepository, error) {
+	logPath := os.Getenv("LOCATION_FILE_PATH")
+	if logPath == "" {
+		return nil, ErrLocationNotSet
+	}
+
+	repo := &LocationRepository{
+		db:      db,
+		logPath: logPath,
+		logChannel: make(chan LogEvent, 200),
+	}
+
+	repo.wg.Add(1) // Signals that a goroutine will be started
+	go repo.startLogWorker()
+
+	return repo, nil
 }
 
-// syncFile re-reads the entire table and rewrites the JSON file accordingly.
-// Called after each successful mutation (create/patch/delete).
-func (r *LocationRepository) syncFile(ctx context.Context) error {
-	locs, err := r.GetAll(ctx)
-	if err != nil {
-		return fmt.Errorf("reading locations for file sync: %w", err)
+type LogEvent struct {
+	Timestamp	time.Time		`json:"timestamp"`
+	Action		string			`json:"action"` // CREATE, PATCH, DELETE
+	Location	*model.Location	`json:"location,omitempty"`
+}
+
+// Method to call when shutting down the server
+func (r *LocationRepository) Close() {
+	close(r.logChannel) // 1. Disable new sends and signal the end of the stream
+	r.wg.Wait()      // 2. Block until all remaining events are written
+}
+
+func (r *LocationRepository) startLogWorker() {
+	defer r.wg.Done() // Indicate that the worker has finished when it exits the loop
+
+	// 'range' stops automatically as soon as the channel is closed (in Close())
+	for event := range r.logChannel {
+		if err := r.appendJSONL(event); err != nil {
+			fmt.Printf("Error writing to JSONL: %v\n", err)
+		}
+	}
+}
+
+// appendJSONL adds an event in JSONL format and creates the parent directory if needed
+func (r *LocationRepository) appendJSONL(event LogEvent) error {
+	// Ensures the parent directory exists
+	if err := os.MkdirAll(filepath.Dir(r.logPath), 0755); err != nil {
+		return fmt.Errorf("creating log directory: %w", err)
 	}
 
-	data, err := json.MarshalIndent(locs, "", "  ")
+	f, err := os.OpenFile(r.logPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
-		return fmt.Errorf("marshaling locations: %w", err)
+		return fmt.Errorf("opening log file: %w", err)
+	}
+	defer f.Close()
+
+	data, err := json.Marshal(event)
+	if err != nil {
+		return fmt.Errorf("marshaling log event: %w", err)
 	}
 
-	if err := os.WriteFile(r.filePath, data, 0644); err != nil {
-		return fmt.Errorf("writing locations file: %w", err)
+	if _, err := f.Write(append(data, '\n')); err != nil {
+		return fmt.Errorf("writing to log file: %w", err)
 	}
 	return nil
-}
-
-// GetAll — all locations used internally for synchronization and exposed if needed
-func (r *LocationRepository) GetAll(ctx context.Context) ([]*model.Location, error) {
-	var locs []*model.Location
-	err := r.db.NewSelect().Model(&locs).Scan(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return locs, nil
 }
 
 // CREATE - add multiple locations to the database, ignores duplicates based on Mapillary ID. Returns the number of new locations added.
@@ -74,11 +111,15 @@ func (r *LocationRepository) BulkCreate(ctx context.Context, locations []*model.
 	}
 
 	if affected > 0 {
-		if err := r.syncFile(ctx); err != nil {
-			return int(affected), err // means insertion in DB succeeded, but file synchronization failed
+		// loop of logging for each created location
+		for _, loc := range locations {
+			r.logChannel <-LogEvent{
+				Timestamp: time.Now().UTC(),
+				Action:    "CREATE",
+				Location:  loc,
+			}
 		}
 	}
-
 	return int(affected), nil
 }
 
@@ -181,7 +222,13 @@ func (r *LocationRepository) patch(ctx context.Context, whereClause string, wher
 		return ErrLocationNotFound
 	}
 
-	return r.syncFile(ctx)
+	r.logChannel <-LogEvent{
+		Timestamp: time.Now().UTC(),
+		Action: "PATCH",
+		Location: patch,
+	}
+
+	return nil
 }
 
 // DELETE (using internal ID)
@@ -196,6 +243,19 @@ func (r *LocationRepository) DeleteByMapillaryID(ctx context.Context, mid int64)
 
 // delete — private helper function for common deletion logic
 func (r *LocationRepository) delete(ctx context.Context, whereClause string, whereArg any) error {
+	//Save the location before deletion for logging
+	loc := new(model.Location)
+	err := r.db.NewSelect().
+		Model(loc).
+		Where(whereClause, whereArg).
+		Scan(ctx)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return ErrLocationNotFound
+		}
+		return err
+	}
+	// Perform the deletion
 	res, err := r.db.NewDelete().
 		Model((*model.Location)(nil)).
 		Where(whereClause, whereArg).
@@ -204,6 +264,7 @@ func (r *LocationRepository) delete(ctx context.Context, whereClause string, whe
 		return err
 	}
 
+	// Check if any row was deleted
 	affected, err := res.RowsAffected()
 	if err != nil {
 		return err
@@ -212,5 +273,11 @@ func (r *LocationRepository) delete(ctx context.Context, whereClause string, whe
 		return ErrLocationNotFound
 	}
 
-	return r.syncFile(ctx)
+	// Log the deletion
+	r.logChannel <-LogEvent{
+		Timestamp: time.Now().UTC(),
+		Action:    "DELETE",
+		Location: loc,
+	}
+	return nil
 }
