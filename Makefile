@@ -3,13 +3,14 @@
 DOCKER_COMPOSE_OVERRIDE = docker-config/docker-compose.override.yml
 DOCKER_COMPOSE_PROD = docker-config/docker-compose.prod.yml
 DOCKER_COMPOSE = docker-config/docker-compose.yml
+ENV_PROD = docker-config/.env.prod
 
 up:
 	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_OVERRIDE) up -d
 	make print_posgres_ip
 
 prod:
-	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_PROD) up -d
+	docker compose --env-file $(ENV_PROD) -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_PROD) up -d
 	make print_posgres_ip
 
 down:

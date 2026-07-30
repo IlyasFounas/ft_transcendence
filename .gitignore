@@ -12,3 +12,4 @@ backend/tmp/
 *.log
 .DS_Store
 .env
+.env.prod

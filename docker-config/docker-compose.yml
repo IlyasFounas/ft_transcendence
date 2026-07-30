@@ -40,6 +40,9 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   # React container to run the frontend
   # Features hot reload
@@ -68,7 +71,11 @@ services:
   #     context: ../nginx
   #     target: ${ENV}
   nginx:
-    build: ../nginx
+    build:
+      context: ../nginx
+      target: ${ENV}
+    depends_on:
+      - golang
 
 
 volumes:
