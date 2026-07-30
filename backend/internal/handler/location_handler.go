@@ -67,7 +67,7 @@ func (h *LocationHandler) GetLocationByID(c *gin.Context) {
 			return
 		}
 		log.Printf("Error getting location %d: %v", id, err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "error getting location"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get location"})
 		return
 	}
 
@@ -91,7 +91,7 @@ func (h *LocationHandler) GetLocationByMID(c *gin.Context) {
 			return
 		}
 		log.Printf("Error getting location by mapillary_id %d: %v", mid, err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "error getting location"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get location"})
 		return
 	}
 
@@ -109,7 +109,7 @@ func (h *LocationHandler) GetRandomLocation(c *gin.Context) {
 			return
 		}
 		log.Printf("Error getting random location: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "error getting random location"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get random location"})
 		return
 	}
 
@@ -133,7 +133,7 @@ func (h *LocationHandler) GetRandomLocationByCC(c *gin.Context) {
 			return
 		}
 		log.Printf("Error getting random location for country %s: %v", cc, err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "error getting random location"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get random location"})
 		return
 	}
 
@@ -168,7 +168,7 @@ func (h *LocationHandler) UpdateLocationByID(c *gin.Context) {
 			return
 		}
 		log.Printf("Error patching location %d: %v", id, err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "error updating location"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not update location"})
 		return
 	}
 
@@ -203,7 +203,7 @@ func (h *LocationHandler) UpdateLocationByMID(c *gin.Context) {
 			return
 		}
 		log.Printf("Error patching location by mapillary_id %d: %v", mid, err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "error updating location"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not update location"})
 		return
 	}
 
@@ -237,7 +237,7 @@ func (h *LocationHandler) AddLocations(c *gin.Context) {
 	inserted, err := h.repo.BulkCreate(ctx, inputs)
 	if err != nil {
 		log.Printf("Error creating locations: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "error creating locations"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not create locations"})
 		return
 	}
 
@@ -263,7 +263,7 @@ func (h *LocationHandler) DeleteLocation(c *gin.Context) {
 			return
 		}
 		log.Printf("Error deleting location %d: %v", id, err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "error deleting location"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not delete location"})
 		return
 	}
 
@@ -286,7 +286,7 @@ func (h *LocationHandler) DeleteLocationByMID(c *gin.Context) {
 			return
 		}
 		log.Printf("Error deleting location by mapillary_id %d: %v", mid, err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "error deleting location"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not delete location"})
 		return
 	}
 
