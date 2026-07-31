@@ -18,8 +18,8 @@ fclean:
 restart:
 	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_OVERRIDE) restart
 
-clean:
-	rm -rf dist/ build/ main #put the right folders/files
+# clean:
+# 	rm -rf dist/ build/ main #put the right folders/files
 
 clean-images: clean
 	@echo "Cleaning images..."
