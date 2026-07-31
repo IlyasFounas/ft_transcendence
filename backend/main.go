@@ -19,10 +19,12 @@ import (
 )
 
 /**
- * Currently, this is a basic main function to test the database connection and
- * run a basic server on port 8080.
- * The `exit` function should only be called from `main()` because if called elsewhere,
- * the garbage collector may not properly free all resources.
+ * Initializes the database, repositories, handlers and router, then starts
+ * the HTTP server on :8080 in a goroutine. Waits for SIGINT/SIGTERM to
+ * trigger a graceful shutdown (server drains active requests, then the
+ * repository is closed). Fatal errors use log.Fatalf, which calls
+ * os.Exit(1) internally — so it must only be called from main(), otherwise
+ * deferred cleanup and graceful shutdown would be skipped.
  */
 func main() {
 	// 1. Connection to the database
