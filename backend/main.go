@@ -1,8 +1,8 @@
 package main
 
 import (
-    // EXTERNAL PACKAGE
-    "context"
+	// EXTERNAL PACKAGE
+	"context"
 	"errors"
 	"log"
 	"net/http"
@@ -11,7 +11,7 @@ import (
 	"syscall"
 	"time"
 
-    // OUR PACKAGE
+	// OUR PACKAGE
 	"backend/internal/database"
 	"backend/internal/handler"
 	"backend/internal/repository"
@@ -25,7 +25,7 @@ import (
  * the garbage collector may not properly free all resources.
  */
 func main() {
-    // 1. Connection to the database
+	// 1. Connection to the database
 	db := database.InitDatabase()
 	defer func() {
 		if err := db.Close(); err != nil {

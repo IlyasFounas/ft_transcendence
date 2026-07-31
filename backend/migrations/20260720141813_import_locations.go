@@ -2,9 +2,9 @@ package migrations
 
 import (
 	"context"
+	"embed"
 	"encoding/json"
 	"fmt"
-	"embed"
 	"github.com/uptrace/bun"
 
 	"backend/internal/model"
@@ -40,10 +40,10 @@ func init() {
 				continue
 			}
 			locations = append(locations, &model.Location{
-				MID: &item.MapillaryID,
-				Lat:      &item.Latitude,
-				Long:     &item.Longitude,
-				CC:       &item.CountryCode,
+				MID:  &item.MapillaryID,
+				Lat:  &item.Latitude,
+				Long: &item.Longitude,
+				CC:   &item.CountryCode,
 			})
 		}
 

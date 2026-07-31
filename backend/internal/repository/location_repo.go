@@ -8,11 +8,11 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"time"
 	"sync"
+	"time"
 
-	"github.com/uptrace/bun"
 	"backend/internal/model"
+	"github.com/uptrace/bun"
 )
 
 var ErrLocationNotFound = errors.New("location not found")
@@ -20,10 +20,10 @@ var ErrLocationNotSet = errors.New("location path env variable not set")
 
 // LocationRepository is a repo for managing locations in the database and synchronizing with a JSON file.
 type LocationRepository struct {
-	db      *bun.DB
-	logPath string
+	db         *bun.DB
+	logPath    string
 	logChannel chan LogEvent
-	wg      sync.WaitGroup // Enables to wait that the worker finished to write everything
+	wg         sync.WaitGroup // Enables to wait that the worker finished to write everything
 }
 
 func NewLocationRepository(db *bun.DB) (*LocationRepository, error) {
@@ -33,8 +33,8 @@ func NewLocationRepository(db *bun.DB) (*LocationRepository, error) {
 	}
 
 	repo := &LocationRepository{
-		db:      db,
-		logPath: logPath,
+		db:         db,
+		logPath:    logPath,
 		logChannel: make(chan LogEvent, 200),
 	}
 
@@ -45,15 +45,15 @@ func NewLocationRepository(db *bun.DB) (*LocationRepository, error) {
 }
 
 type LogEvent struct {
-	Timestamp	time.Time		`json:"timestamp"`
-	Action		string			`json:"action"` // CREATE, PATCH, DELETE
-	Location	*model.Location	`json:"location,omitempty"`
+	Timestamp time.Time       `json:"timestamp"`
+	Action    string          `json:"action"` // CREATE, PATCH, DELETE
+	Location  *model.Location `json:"location,omitempty"`
 }
 
 // Method to call when shutting down the server
 func (r *LocationRepository) Close() {
 	close(r.logChannel) // 1. Disable new sends and signal the end of the stream
-	r.wg.Wait()      // 2. Block until all remaining events are written
+	r.wg.Wait()         // 2. Block until all remaining events are written
 }
 
 func (r *LocationRepository) startLogWorker() {
@@ -113,7 +113,7 @@ func (r *LocationRepository) BulkCreate(ctx context.Context, locations []*model.
 	if affected > 0 {
 		// loop of logging for each created location
 		for _, loc := range locations {
-			r.logChannel <-LogEvent{
+			r.logChannel <- LogEvent{
 				Timestamp: time.Now().UTC(),
 				Action:    "CREATE",
 				Location:  loc,
@@ -222,10 +222,10 @@ func (r *LocationRepository) patch(ctx context.Context, whereClause string, wher
 		return ErrLocationNotFound
 	}
 
-	r.logChannel <-LogEvent{
+	r.logChannel <- LogEvent{
 		Timestamp: time.Now().UTC(),
-		Action: "PATCH",
-		Location: patch,
+		Action:    "PATCH",
+		Location:  patch,
 	}
 
 	return nil
@@ -274,10 +274,10 @@ func (r *LocationRepository) delete(ctx context.Context, whereClause string, whe
 	}
 
 	// Log the deletion
-	r.logChannel <-LogEvent{
+	r.logChannel <- LogEvent{
 		Timestamp: time.Now().UTC(),
 		Action:    "DELETE",
-		Location: loc,
+		Location:  loc,
 	}
 	return nil
 }

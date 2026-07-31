@@ -4,11 +4,11 @@ import (
 	"context"
 	"os"
 
-	"backend/migrations"
 	"backend/internal/database"
+	"backend/migrations"
 
-	"github.com/uptrace/bun/migrate"
 	migratorCli "github.com/iambpn/bun-migrator-cli"
+	"github.com/uptrace/bun/migrate"
 )
 
 func main() {
