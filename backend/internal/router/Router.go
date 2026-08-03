@@ -34,9 +34,8 @@ func InitRouter(db *bun.DB) (*gin.Engine, error) {
 	{
 		public.POST("/user/create", handler.CreateUser(db))
 		public.POST("/auth/login", handler.LoginUser(db))
-		public.GET("/user/activation", handler.UserActivation(db))
-
-		// public.POST("/auth/logout", user.Logout(db))
+		public.GET("/user/activation", handler.ActivationToken(db))
+		public.GET("/auth/refresh", handler.RefreshToken(db))
 	}
 
 	// it's private because only a registred user can access it
@@ -48,8 +47,6 @@ func InitRouter(db *bun.DB) (*gin.Engine, error) {
 		private.GET("/user/get/login", handler.GetLogin(db))
 		private.GET("/user/get/email", handler.GetEmail(db))
 		private.GET("/user/get/oauth", handler.GetOAuth(db))
-		// private.GET("/user/get/avatar/:id", user.GetAvatar(db))
-		
 
 		// PUT = modify a lot of informations
 		// PATCH = modify a specific field

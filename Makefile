@@ -5,6 +5,7 @@ DOCKER_COMPOSE_OVERRIDE = docker-config/docker-compose.override.yml
 
 up:
 	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_OVERRIDE) up -d
+	make print_posgres_ip
 
 down:
 	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_OVERRIDE) down
@@ -58,6 +59,7 @@ print_posgres_ip:
 	
 init_mig:
 	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_OVERRIDE) exec golang go run cmd/bun/main.go init
+
 create_mig:
 	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_OVERRIDE) exec golang go run cmd/bun/main.go create_go ${NAME}
 
