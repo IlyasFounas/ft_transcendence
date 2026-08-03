@@ -6,10 +6,10 @@ import (
 	"github.com/gin-gonic/gin"
 
 	// OUR PACKAGE
-	"backend/internal/handler"
+	"backend/internal/handlers"
 )
 
-func NewRouter(h *handler.Handler) *gin.Engine {
+func NewRouter(h *handlers.Handlers) *gin.Engine {
 	r := gin.Default()    //when you first create a var :=
 	r.Use(cors.Default()) // TODO: global middleware now but accept only localhost:3000 request
 

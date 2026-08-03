@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"github.com/uptrace/bun"
 
-	"backend/internal/model/locations"
+	"backend/internal/models/locations"
 )
 
 // next line is a go directive (go compiler embeds the contents of the file into the binary)

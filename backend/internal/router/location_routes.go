@@ -7,11 +7,11 @@ import (
 	// "time" // TEMPORARY TEST SHUTDOWN
 
 	// OUR PACKAGE
-	"backend/internal/handler"
+	"backend/internal/handlers"
 	"github.com/gin-gonic/gin"
 )
 
-func registerLocationRoutes(r *gin.Engine, h *handler.LocationHandler) {
+func registerLocationRoutes(r *gin.Engine, h *handlers.LocationHandler) {
 	// Public user
 	public := r.Group("/")
 	{

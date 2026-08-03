@@ -1,4 +1,4 @@
-package repository
+package repositories
 
 import (
 	"context"
@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	"backend/internal/model/locations"
+	"backend/internal/models/locations"
 	"github.com/uptrace/bun"
 )
 

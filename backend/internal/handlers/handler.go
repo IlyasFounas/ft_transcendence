@@ -1,13 +1,13 @@
-package handler
+package handlers
 
-type Handler struct {
+type Handlers struct {
 	Location *LocationHandler
 	// User *UserHandler
 }
 
 // NewHandlers instanciates and assembles all the handlers
-func NewHandler(locationRepo LocationGetter) *Handler {
-	return &Handler{
+func NewHandlers(locationRepo LocationGetter) *Handlers {
+	return &Handlers{
 		Location: NewLocationHandler(locationRepo),
 		// User: NewUserHandler(userRepo),
 	}

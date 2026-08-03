@@ -13,8 +13,8 @@ import (
 
 	// OUR PACKAGE
 	"backend/internal/database"
-	"backend/internal/handler"
-	"backend/internal/repository"
+	"backend/internal/handlers"
+	"backend/internal/repositories"
 	"backend/internal/router"
 )
 
@@ -40,20 +40,23 @@ func main() {
 	}
 
 	// 2. Instanciation of repositories
-	locationRepo, err := repository.NewLocationRepository(db)
+	locationRepo, err := repositories.NewLocationRepository(db)
 	if err != nil {
 		log.Fatalf("Failed to initialize location repo: %v", err)
 	}
 
 	// 3. Instanciation of handlers
-	handlers := handler.NewHandler(locationRepo)
+	h := handlers.NewHandlers(locationRepo)
 
 	// 4. Router setup
-	r := router.NewRouter(handlers)
+	r := router.NewRouter(h)
 
 	srv := &http.Server{
 		Addr:    ":8080",
 		Handler: r,
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 15 * time.Second,
+		IdleTimeout:  120 * time.Second,
 	}
 
 	// 5. Run the server in a goroutine to allow graceful shutdown
@@ -80,7 +83,7 @@ func main() {
 	}
 
 	// 8. Final cleanup of the asynchronous logs buffer
-	log.Println("Closing repository and flushing logs...")
+	log.Println("Closing locationsrepository and flushing logs...")
 	locationRepo.Close()
 
 	log.Println("Application closed properly.")

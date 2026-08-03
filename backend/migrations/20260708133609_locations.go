@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/uptrace/bun"
 
-	"backend/internal/model/locations"
+	"backend/internal/models/locations"
 )
 
 func init() {

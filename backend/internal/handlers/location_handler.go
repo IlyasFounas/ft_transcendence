@@ -1,4 +1,4 @@
-package handler
+package handlers
 
 import (
 	"context"
@@ -9,8 +9,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"backend/internal/model/locations"
-	"backend/internal/repository"
+	"backend/internal/models/locations"
+	"backend/internal/repositories"
 )
 
 // LocationGetter — methods expected from the repository by the handler
@@ -62,7 +62,7 @@ func (h *LocationHandler) GetLocationByID(c *gin.Context) {
 
 	loc, err := h.repo.GetByID(ctx, id)
 	if err != nil {
-		if errors.Is(err, repository.ErrLocationNotFound) {
+		if errors.Is(err, repositories.ErrLocationNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "location not found"})
 			return
 		}
@@ -86,7 +86,7 @@ func (h *LocationHandler) GetLocationByMID(c *gin.Context) {
 
 	loc, err := h.repo.GetByMapillaryID(ctx, mid)
 	if err != nil {
-		if errors.Is(err, repository.ErrLocationNotFound) {
+		if errors.Is(err, repositories.ErrLocationNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "location not found"})
 			return
 		}
@@ -104,7 +104,7 @@ func (h *LocationHandler) GetRandomLocation(c *gin.Context) {
 
 	loc, err := h.repo.GetRandom(ctx)
 	if err != nil {
-		if errors.Is(err, repository.ErrLocationNotFound) {
+		if errors.Is(err, repositories.ErrLocationNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "no locations available"})
 			return
 		}
@@ -128,7 +128,7 @@ func (h *LocationHandler) GetRandomLocationByCC(c *gin.Context) {
 
 	loc, err := h.repo.GetRandomByCountryCode(ctx, cc)
 	if err != nil {
-		if errors.Is(err, repository.ErrLocationNotFound) {
+		if errors.Is(err, repositories.ErrLocationNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "no locations for this country"})
 			return
 		}
@@ -163,7 +163,7 @@ func (h *LocationHandler) UpdateLocationByID(c *gin.Context) {
 	}
 
 	if err := h.repo.PatchByID(ctx, id, &patch); err != nil {
-		if errors.Is(err, repository.ErrLocationNotFound) {
+		if errors.Is(err, repositories.ErrLocationNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "location not found"})
 			return
 		}
@@ -198,7 +198,7 @@ func (h *LocationHandler) UpdateLocationByMID(c *gin.Context) {
 	}
 
 	if err := h.repo.PatchByMapillaryID(ctx, mid, &patch); err != nil {
-		if errors.Is(err, repository.ErrLocationNotFound) {
+		if errors.Is(err, repositories.ErrLocationNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "location not found"})
 			return
 		}
@@ -258,7 +258,7 @@ func (h *LocationHandler) DeleteLocation(c *gin.Context) {
 	}
 
 	if err := h.repo.DeleteByID(ctx, id); err != nil {
-		if errors.Is(err, repository.ErrLocationNotFound) {
+		if errors.Is(err, repositories.ErrLocationNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "location not found"})
 			return
 		}
@@ -281,7 +281,7 @@ func (h *LocationHandler) DeleteLocationByMID(c *gin.Context) {
 	}
 
 	if err := h.repo.DeleteByMapillaryID(ctx, mid); err != nil {
-		if errors.Is(err, repository.ErrLocationNotFound) {
+		if errors.Is(err, repositories.ErrLocationNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "location not found"})
 			return
 		}
