@@ -2,6 +2,7 @@ package router
 
 import (
     // EXTERNAL PACKAGE
+    "os"
 	"github.com/uptrace/bun"
     "github.com/gin-contrib/cors"
     "github.com/gin-gonic/gin"
@@ -26,10 +27,18 @@ import (
  */
 
 func InitRouter(db *bun.DB) (*gin.Engine, error) {
-    r := gin.Default() //when you first create a var :=
-    r.Use(cors.Default()) // TODO accept only localhost:3000 request
-
-
+    r := gin.Default()
+    env := os.Getenv("ENV")
+    if len(env) != 0 && env == "prod" {
+        r.Use(cors.New(cors.Config{
+            AllowOrigins:     []string{"http://react:80/"},
+            AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "PATCH"},
+            ExposeHeaders:    []string{"Content-Length"},
+            AllowCredentials: true,
+        }))
+    } else {    
+        r.Use(cors.Default())
+    }
 	public := r.Group("/")
     RegisterUserPublicRoutes(public, db)
     RegisterAuthPublicRoutes(public, db)

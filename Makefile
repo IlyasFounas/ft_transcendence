@@ -11,7 +11,6 @@ up:
 
 prod:
 	docker compose --env-file $(ENV_PROD) -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_PROD) up -d
-	make print_posgres_ip
 
 down:
 	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_OVERRIDE) down

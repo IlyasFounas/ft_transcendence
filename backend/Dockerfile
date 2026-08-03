@@ -3,6 +3,7 @@ FROM golang:1.25-alpine AS base
 ENV PATH=$PATH:/go/bin
 WORKDIR /app
 COPY go.mod go.sum ./
+COPY entrypoint.sh ./
 COPY . .
 
 FROM base AS dev
@@ -20,9 +21,14 @@ CMD ["sh", "-c", "air"]
 FROM base AS build
 RUN go mod download
 RUN go build -o /golang_api
+RUN go build -o /bun_migrator ./cmd/bun
 
 FROM golang:1.25-alpine AS prod
 WORKDIR /app
 EXPOSE 5130
 COPY --from=build /golang_api .
-CMD ["/app/golang_api"]
+COPY --from=build /bun_migrator .
+COPY --from=build /app/entrypoint.sh .
+COPY --from=base /app/migrations ./migrations
+RUN chmod +x /app/entrypoint.sh
+ENTRYPOINT ["/app/entrypoint.sh"]

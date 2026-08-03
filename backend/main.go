@@ -5,6 +5,7 @@ import (
     "context"
     "backend/internal/database"
     "backend/internal/router"
+    "github.com/gin-gonic/gin"
 )
 
 /**
@@ -14,16 +15,18 @@ import (
  * the garbage collector may not properly free all resources.
  */
 func main() {
+    env := os.Getenv("ENV")
+    if (len(env) != 0 && env == "prod") {
+        gin.SetMode(gin.ReleaseMode)
+    }
     db := database.InitDatabase()
     
     if err := db.PingContext(context.Background()); err != nil {
         os.Exit(1)
     }
-
     r, err := router.InitRouter(db)
     if err != nil {
         os.Exit(1)
     }
-    
     r.Run(":8080")
 }

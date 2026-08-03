@@ -45,7 +45,7 @@ func createActivationToken(c *gin.Context, db *bun.DB, expiresAt time.Time,
             gin.H{"message": "Send a new activation link"})
         return err
     }
-    // we maybe want to ue goroutine for this especially for sending emails
+    // we maybe want to use goroutine for this especially for sending emails
     if err := tool.SendActivationEmail(c.PostForm("email"), tokenObj.Token); err != nil {
         c.JSON(http.StatusInternalServerError,
             gin.H{"message": "Send a new activation link"})

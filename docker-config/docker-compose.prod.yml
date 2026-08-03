@@ -11,6 +11,8 @@ services:
     networks:
       - app
       - database
+    environment:
+      RESEND_API_KEY: ${RESEND_API_KEY}
 
   react:
     container_name: react_container
