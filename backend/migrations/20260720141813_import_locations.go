@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"github.com/uptrace/bun"
 
-	"backend/internal/model"
+	"backend/internal/model/locations"
 )
 
 // next line is a go directive (go compiler embeds the contents of the file into the binary)
@@ -34,12 +34,12 @@ func init() {
 			return fmt.Errorf("parsing seed JSON: %w", err)
 		}
 
-		locations := make([]*model.Location, 0, len(imports))
+		locationList := make([]*locations.Location, 0, len(imports))
 		for _, item := range imports {
 			if len(item.CountryCode) != 2 {
 				continue
 			}
-			locations = append(locations, &model.Location{
+			locationList = append(locationList, &locations.Location{
 				MID:  &item.MapillaryID,
 				Lat:  &item.Latitude,
 				Long: &item.Longitude,
@@ -47,12 +47,12 @@ func init() {
 			})
 		}
 
-		if len(locations) == 0 {
+		if len(locationList) == 0 {
 			return nil
 		}
 
 		_, err = db.NewInsert().
-			Model(&locations).
+			Model(&locationList).
 			On("CONFLICT (id_mapillary) DO NOTHING").
 			Exec(ctx)
 		if err != nil {
@@ -75,7 +75,7 @@ func init() {
 			ids = append(ids, item.MapillaryID)
 		}
 		_, err = db.NewDelete().
-			Model((*model.Location)(nil)).
+			Model((*locations.Location)(nil)).
 			Where("id_mapillary IN (?)", bun.In(ids)).
 			Exec(ctx)
 		return err

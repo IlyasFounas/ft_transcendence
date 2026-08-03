@@ -11,7 +11,7 @@ import (
 	"sync"
 	"time"
 
-	"backend/internal/model"
+	"backend/internal/model/locations"
 	"github.com/uptrace/bun"
 )
 
@@ -45,9 +45,9 @@ func NewLocationRepository(db *bun.DB) (*LocationRepository, error) {
 }
 
 type LogEvent struct {
-	Timestamp time.Time       `json:"timestamp"`
-	Action    string          `json:"action"` // CREATE, PATCH, DELETE
-	Location  *model.Location `json:"location,omitempty"`
+	Timestamp time.Time           `json:"timestamp"`
+	Action    string              `json:"action"` // CREATE, PATCH, DELETE
+	Location  *locations.Location `json:"location,omitempty"`
 }
 
 // Method to call when shutting down the server
@@ -92,7 +92,7 @@ func (r *LocationRepository) appendJSONL(event LogEvent) error {
 }
 
 // CREATE - add multiple locations to the database, ignores duplicates based on Mapillary ID. Returns the number of new locations added.
-func (r *LocationRepository) BulkCreate(ctx context.Context, locations []*model.Location) (int, error) {
+func (r *LocationRepository) BulkCreate(ctx context.Context, locations []*locations.Location) (int, error) {
 	if len(locations) == 0 {
 		return 0, nil
 	}
@@ -124,8 +124,8 @@ func (r *LocationRepository) BulkCreate(ctx context.Context, locations []*model.
 }
 
 // READ (using internal ID)
-func (r *LocationRepository) GetByID(ctx context.Context, id int64) (*model.Location, error) {
-	loc := new(model.Location)
+func (r *LocationRepository) GetByID(ctx context.Context, id int64) (*locations.Location, error) {
+	loc := new(locations.Location)
 	err := r.db.NewSelect().Model(loc).Where("id = ?", id).Scan(ctx)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -137,8 +137,8 @@ func (r *LocationRepository) GetByID(ctx context.Context, id int64) (*model.Loca
 }
 
 // READ (using Mapillary ID)
-func (r *LocationRepository) GetByMapillaryID(ctx context.Context, mid int64) (*model.Location, error) {
-	loc := new(model.Location)
+func (r *LocationRepository) GetByMapillaryID(ctx context.Context, mid int64) (*locations.Location, error) {
+	loc := new(locations.Location)
 	err := r.db.NewSelect().Model(loc).Where("id_mapillary = ?", mid).Scan(ctx)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -150,8 +150,8 @@ func (r *LocationRepository) GetByMapillaryID(ctx context.Context, mid int64) (*
 }
 
 // READ - random location
-func (r *LocationRepository) GetRandom(ctx context.Context) (*model.Location, error) {
-	loc := new(model.Location)
+func (r *LocationRepository) GetRandom(ctx context.Context) (*locations.Location, error) {
+	loc := new(locations.Location)
 	err := r.db.NewSelect().Model(loc).OrderExpr("RANDOM()").Limit(1).Scan(ctx)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -163,8 +163,8 @@ func (r *LocationRepository) GetRandom(ctx context.Context) (*model.Location, er
 }
 
 // READ — random location filtered by country code
-func (r *LocationRepository) GetRandomByCountryCode(ctx context.Context, cc string) (*model.Location, error) {
-	loc := new(model.Location)
+func (r *LocationRepository) GetRandomByCountryCode(ctx context.Context, cc string) (*locations.Location, error) {
+	loc := new(locations.Location)
 	err := r.db.NewSelect().Model(loc).Where("country_code = ?", cc).OrderExpr("RANDOM()").Limit(1).Scan(ctx)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -176,19 +176,19 @@ func (r *LocationRepository) GetRandomByCountryCode(ctx context.Context, cc stri
 }
 
 // PATCH (using internal ID)
-func (r *LocationRepository) PatchByID(ctx context.Context, id int64, patch *model.Location) error {
+func (r *LocationRepository) PatchByID(ctx context.Context, id int64, patch *locations.Location) error {
 	return r.patch(ctx, "id = ?", id, patch)
 }
 
 // PATCH (using Mapillary ID)
-func (r *LocationRepository) PatchByMapillaryID(ctx context.Context, mid int64, patch *model.Location) error {
+func (r *LocationRepository) PatchByMapillaryID(ctx context.Context, mid int64, patch *locations.Location) error {
 	return r.patch(ctx, "id_mapillary = ?", mid, patch)
 }
 
 // patch — private helper function to update a location based on a where clause and patch data. Only updates fields that are not null.
-func (r *LocationRepository) patch(ctx context.Context, whereClause string, whereArg any, patch *model.Location) error {
+func (r *LocationRepository) patch(ctx context.Context, whereClause string, whereArg any, patch *locations.Location) error {
 	query := r.db.NewUpdate().
-		Model((*model.Location)(nil)).
+		Model((*locations.Location)(nil)).
 		Where(whereClause, whereArg)
 
 	hasChange := false
@@ -244,7 +244,7 @@ func (r *LocationRepository) DeleteByMapillaryID(ctx context.Context, mid int64)
 // delete — private helper function for common deletion logic
 func (r *LocationRepository) delete(ctx context.Context, whereClause string, whereArg any) error {
 	//Save the location before deletion for logging
-	loc := new(model.Location)
+	loc := new(locations.Location)
 	err := r.db.NewSelect().
 		Model(loc).
 		Where(whereClause, whereArg).
@@ -257,7 +257,7 @@ func (r *LocationRepository) delete(ctx context.Context, whereClause string, whe
 	}
 	// Perform the deletion
 	res, err := r.db.NewDelete().
-		Model((*model.Location)(nil)).
+		Model((*locations.Location)(nil)).
 		Where(whereClause, whereArg).
 		Exec(ctx)
 	if err != nil {

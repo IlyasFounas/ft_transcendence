@@ -58,7 +58,7 @@ func main() {
 
 	// 5. Run the server in a goroutine to allow graceful shutdown
 	go func() {
-		log.Println("Starting server on :8080...")
+		log.Println("Starting server and listening on :8080...")
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Fatalf("Unexpected error from HTTP server: %v", err)
 		}

@@ -9,19 +9,19 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"backend/internal/model"
+	"backend/internal/model/locations"
 	"backend/internal/repository"
 )
 
 // LocationGetter — methods expected from the repository by the handler
 type LocationGetter interface {
-	GetByID(ctx context.Context, id int64) (*model.Location, error)
-	GetByMapillaryID(ctx context.Context, mid int64) (*model.Location, error)
-	GetRandom(ctx context.Context) (*model.Location, error)
-	GetRandomByCountryCode(ctx context.Context, cc string) (*model.Location, error)
-	PatchByID(ctx context.Context, id int64, patch *model.Location) error
-	PatchByMapillaryID(ctx context.Context, mid int64, patch *model.Location) error
-	BulkCreate(ctx context.Context, locations []*model.Location) (int, error)
+	GetByID(ctx context.Context, id int64) (*locations.Location, error)
+	GetByMapillaryID(ctx context.Context, mid int64) (*locations.Location, error)
+	GetRandom(ctx context.Context) (*locations.Location, error)
+	GetRandomByCountryCode(ctx context.Context, cc string) (*locations.Location, error)
+	PatchByID(ctx context.Context, id int64, patch *locations.Location) error
+	PatchByMapillaryID(ctx context.Context, mid int64, patch *locations.Location) error
+	BulkCreate(ctx context.Context, locations []*locations.Location) (int, error)
 	DeleteByID(ctx context.Context, id int64) error
 	DeleteByMapillaryID(ctx context.Context, mid int64) error
 }
@@ -34,16 +34,16 @@ func NewLocationHandler(repo LocationGetter) *LocationHandler {
 	return &LocationHandler{repo: repo}
 }
 
-// validationStatus translates a model validation error into an HTTP status code and message
+// validationStatus translates a locations validation error into an HTTP status code and message
 func validationStatus(err error) (int, string) {
 	switch {
-	case errors.Is(err, model.ErrMissingFields):
+	case errors.Is(err, locations.ErrMissingFields):
 		return http.StatusBadRequest, "missing required fields"
-	case errors.Is(err, model.ErrInvalidLatitude):
+	case errors.Is(err, locations.ErrInvalidLatitude):
 		return http.StatusBadRequest, "invalid latitude"
-	case errors.Is(err, model.ErrInvalidLongitude):
+	case errors.Is(err, locations.ErrInvalidLongitude):
 		return http.StatusBadRequest, "invalid longitude"
-	case errors.Is(err, model.ErrInvalidCountryCode):
+	case errors.Is(err, locations.ErrInvalidCountryCode):
 		return http.StatusBadRequest, "invalid country code"
 	default:
 		return http.StatusBadRequest, "invalid payload"
@@ -150,7 +150,7 @@ func (h *LocationHandler) UpdateLocationByID(c *gin.Context) {
 		return
 	}
 
-	var patch model.Location
+	var patch locations.Location
 	if err := c.ShouldBindJSON(&patch); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid payload"})
 		return
@@ -185,7 +185,7 @@ func (h *LocationHandler) UpdateLocationByMID(c *gin.Context) {
 		return
 	}
 
-	var patch model.Location
+	var patch locations.Location
 	if err := c.ShouldBindJSON(&patch); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid payload"})
 		return
@@ -214,7 +214,7 @@ func (h *LocationHandler) UpdateLocationByMID(c *gin.Context) {
 func (h *LocationHandler) AddLocations(c *gin.Context) {
 	ctx := c.Request.Context()
 
-	var inputs []*model.Location
+	var inputs []*locations.Location
 	if err := c.ShouldBindJSON(&inputs); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid payload"})
 		return
