@@ -50,7 +50,6 @@ func returnActivationLink(activationJWT string) string {
 
 func SendActivationEmail(toEmail string, activationJWT string) error {
 	// create the message
-
 	env := os.Getenv("ENV")
 	subject := "Atlas: verification code"
 	html := returnActivationLink(activationJWT)
