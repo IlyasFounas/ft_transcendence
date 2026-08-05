@@ -1,7 +1,6 @@
 package database
 
 import (
-	// "context"
 	"database/sql"
 	"fmt"
 	"os"
@@ -13,14 +12,14 @@ import (
 )
 
 func buildDSN() string {
-    return fmt.Sprintf(
-        "postgres://%s:%s@%s:%s/%s?sslmode=disable",
-        os.Getenv("POSTGRES_USER"),
-        os.Getenv("POSTGRES_PASSWORD"),
-        os.Getenv("POSTGRES_HOST"),
-        os.Getenv("POSTGRES_PORT"),
-        os.Getenv("POSTGRES_DB"),
-    )
+	return fmt.Sprintf(
+		"postgres://%s:%s@%s:%s/%s?sslmode=disable",
+		os.Getenv("POSTGRES_USER"),
+		os.Getenv("POSTGRES_PASSWORD"),
+		os.Getenv("POSTGRES_HOST"),
+		os.Getenv("POSTGRES_PORT"),
+		os.Getenv("POSTGRES_DB"),
+	)
 }
 
 func InitDatabase() *bun.DB {
@@ -33,13 +32,13 @@ func InitDatabase() *bun.DB {
 
 	// Create a Bun db on top of it
 	db := bun.NewDB(pgdb, pgdialect.New())
-	
-	// Optional: Print queries during development
-    db.AddQueryHook(bundebug.NewQueryHook(bundebug.WithVerbose(true)))
 
-    // Ping test to check the connection with the db
-    // if err := db.Ping(context.Background()); err != nil {
-    //     panic(fmt.Sprintf("Impossible de se connecter à PostgreSQL: %v", err))
-    // }
-	return db;
+	// Optional: Print queries during development
+	db.AddQueryHook(bundebug.NewQueryHook(bundebug.WithVerbose(true)))
+
+	// Ping test to check the connection with the db
+	// if err := db.Ping(context.Background()); err != nil {
+	//     panic(fmt.Sprintf("Impossible to connect to PostgreSQL: %v", err))
+	// }
+	return db
 }

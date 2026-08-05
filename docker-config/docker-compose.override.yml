@@ -14,6 +14,9 @@ services:
       - ../backend:/app
     networks:
       - ft_transcendence
+    # env_file:
+    #   - ../backend/.env
+    # stop_grace_period: 15s //possible option to set a longer period for graceful shutdown if necessary
 
   # CHOKIDAR enables hot reload for the frontend
   # CHOKIDAR_USEPOLLING=true allows the dev environment to run on different OS (Windows, macOS), but this option uses more resources
@@ -32,7 +35,7 @@ services:
       - "5130:5130"
     networks:
       - ft_transcendence
-
+  
   adminer:
     image: adminer:latest
     restart: unless-stopped
