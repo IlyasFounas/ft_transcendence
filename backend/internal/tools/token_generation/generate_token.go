@@ -1,4 +1,4 @@
-package tool
+package token_generation
 
 import (
 	"backend/internal/models/users/tokens"

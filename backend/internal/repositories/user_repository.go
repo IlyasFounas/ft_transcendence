@@ -2,7 +2,7 @@ package repositories
 
 import (
 	"backend/internal/models/users"
-	"backend/internal/tools"
+	"backend/internal/tools/encryption"
 	"context"
 	"errors"
 	"github.com/uptrace/bun"
@@ -51,7 +51,7 @@ func (r *UserRepository) LoginUser(ctx context.Context,
 	if err != nil {
 		return false, 0, err
 	}
-	if !tool.CheckPasswordHash(password, user.Password) {
+	if !encryption.CheckPasswordHash(password, user.Password) {
 		// TODO: add something like "return false, user.ID, nil" ??
 	} else if !user.Is_verified {
 		return false, user.ID, errors.New("The user has not verified his email")

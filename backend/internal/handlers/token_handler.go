@@ -15,7 +15,7 @@ import (
 
 	"backend/internal/models/users/tokens"
 	"backend/internal/repositories"
-	"backend/internal/tools"
+	"backend/internal/tools/token_generation"
 )
 
 type TokenHandler struct {
@@ -89,7 +89,7 @@ func (h *TokenHandler) RefreshToken() gin.HandlerFunc {
 			return
 		}
 		expiresAt := time.Now().Add(15 * time.Minute)
-		newToken, tokenErr := tool.GenerateToken(rToken.UserID, expiresAt,
+		newToken, tokenErr := token_generation.GenerateToken(rToken.UserID, expiresAt,
 			[]byte(os.Getenv("JWT_SECRET")))
 		if tokenErr != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{

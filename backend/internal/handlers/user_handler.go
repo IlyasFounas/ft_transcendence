@@ -10,7 +10,9 @@ import (
 
 	"backend/internal/models/users"
 	"backend/internal/repositories"
-	"backend/internal/tools"
+	"backend/internal/tools/encryption"
+	"backend/internal/tools/mailing"
+	"backend/internal/tools/token_generation"
 )
 
 /**
@@ -34,7 +36,7 @@ func NewUserHandler(userRepo *repositories.UserRepository, tokenRepo *repositori
 
 func (h *UserHandler) createActivationToken(c *gin.Context, expiresAt time.Time,
 	userId int64) error {
-	tokenObj, tokenErr := tool.GenerateToken(userId, expiresAt,
+	tokenObj, tokenErr := token_generation.GenerateToken(userId, expiresAt,
 		[]byte(os.Getenv("ACTIVATION_JWT_SECRET")))
 	if tokenErr != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -55,7 +57,7 @@ func (h *UserHandler) createActivationToken(c *gin.Context, expiresAt time.Time,
 			"state": "failed", "message": "token creation went wrong"})
 		return err
 	}
-	if err := tool.SendActivationEmail(c.PostForm("email"), tokenObj.Token); err != nil {
+	if err := mailing.SendActivationEmail(c.PostForm("email"), tokenObj.Token); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"state": "failed", "message": "link activation sending went wrong"})
 		return err
@@ -65,7 +67,7 @@ func (h *UserHandler) createActivationToken(c *gin.Context, expiresAt time.Time,
 
 func (h *UserHandler) CreateUser() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		hashpassword, hashErr := tool.HashPassword(c.PostForm("password"))
+		hashpassword, hashErr := encryption.HashPassword(c.PostForm("password"))
 		if hashErr != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"state": "failed", "message": "password encryption failed"})
@@ -116,7 +118,7 @@ func (h *UserHandler) LoginUser() gin.HandlerFunc {
 		} else {
 			// generate the jwt token here
 			expiresAt := time.Now().Add(15 * time.Minute)
-			tokenObj, tokenErr := tool.GenerateToken(userId, expiresAt,
+			tokenObj, tokenErr := token_generation.GenerateToken(userId, expiresAt,
 				[]byte(os.Getenv("JWT_SECRET")))
 			if tokenErr != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{

@@ -13,8 +13,6 @@ type Handlers struct {
 
 // NewHandlers instanciates and assembles all the handlers
 func NewHandlers(repo *repositories.Repositories) *Handlers {
-	// TokenHandler est créé en premier pour pouvoir être injecté dans UserHandler,
-	// qui en a besoin pour générer les refresh tokens sans dupliquer la logique.
 	tokenHandler := NewTokenHandler(repo.User, repo.Token)
 	return &Handlers{
 		Location: NewLocationHandler(repo.Location),

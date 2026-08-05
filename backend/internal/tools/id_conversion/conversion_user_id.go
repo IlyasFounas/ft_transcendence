@@ -1,11 +1,12 @@
-package tool
+package id_conversion
 
 import (
 	"errors"
 	"strconv"
 )
 
-func ConvertionUserId(userIdString string) (int64, error) {
+//TODO: not used, to be deleted ?
+func ConversionUserId(userIdString string) (int64, error) {
 	userId, err := strconv.ParseInt(userIdString, 10, 64)
 	if err != nil {
 		return 0, errors.New("conversion failed")
