@@ -41,6 +41,7 @@ services:
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
       ENV: ${ENV}
+      LOCATION_FILE_PATH: ${LOCATION_FILE_PATH}
     depends_on:
       postgres:
         condition: service_healthy
