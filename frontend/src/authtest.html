@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Création de compte</title>
+</head>
+<body>
+    <h2>Créer un compte</h2>
+
+    <!-- Formulaire de création -->
+    <form action="/api/user/create" method="POST">
+        <div>
+            <label for="login">Login :</label>
+            <input type="text" id="login" name="login" required>
+        </div>
+        <div>
+            <label for="password">Mot de passe :</label>
+            <input type="password" id="password" name="password" required>
+        </div>
+        <div>
+            <label for="username">Nom d’utilisateur :</label>
+            <input type="text" id="username" name="username" required>
+        </div>
+        <div>
+            <label for="email">Email :</label>
+            <input type="email" id="email" name="email" required>
+        </div>
+        <button type="submit" function="">guess</button>
+    </form>
+
+    <!-- Bouton Google Auth (redirige vers l’authentification Google) -->
+    <div style="margin-top: 1rem;">
+        <a href="/auth/google" role="button">S’inscrire avec Google</a>
+    </div>
+</body>
+</html>

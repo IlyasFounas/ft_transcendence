@@ -46,5 +46,4 @@ func registerLocationRoutes(r *gin.Engine, h *handlers.LocationHandler) {
 	// 	// {
 
 	// 	// }
-	// 	return r, nil
 }

@@ -1,6 +1,8 @@
 services:
   postgres:
     container_name: postgres_container
+    ports:
+      - "5432:5432"
     networks:
       - ft_transcendence
 
@@ -39,6 +41,14 @@ services:
     restart: unless-stopped
     ports:
       - "8082:8080"
+    networks:
+      - ft_transcendence
+  
+  mailpit:
+    image: axllent/mailpit
+    restart: unless-stopped
+    ports:
+      - "8025:8025"
     networks:
       - ft_transcendence
 

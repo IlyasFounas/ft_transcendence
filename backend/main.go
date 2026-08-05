@@ -34,26 +34,24 @@ func main() {
 			log.Printf("Error during BDD closure: %v", err)
 		}
 	}()
-
 	if err := db.PingContext(context.Background()); err != nil {
 		log.Fatalf("Unable to reach the database: %v", err)
 	}
 
 	// 2. Instanciation of repositories
-	locationRepo, err := repositories.NewLocationRepository(db)
+	repo, err := repositories.NewRepositories(db)
 	if err != nil {
 		log.Fatalf("Failed to initialize location repo: %v", err)
 	}
 
 	// 3. Instanciation of handlers
-	h := handlers.NewHandlers(locationRepo)
+	h := handlers.NewHandlers(repo)
 
 	// 4. Router setup
 	r := router.NewRouter(h)
-
 	srv := &http.Server{
-		Addr:    ":8080",
-		Handler: r,
+		Addr:         ":8080",
+		Handler:      r,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 15 * time.Second,
 		IdleTimeout:  120 * time.Second,
@@ -71,20 +69,17 @@ func main() {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
-
 	log.Println("Shutdown signal received. Beginning graceful shutdown...")
 
 	// 7. Shutdown the server with a timeout context
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-
 	if err := srv.Shutdown(ctx); err != nil {
 		log.Printf("Error during forced shutdown of HTTP server: %v", err)
 	}
 
 	// 8. Final cleanup of the asynchronous logs buffer
-	log.Println("Closing locationsrepository and flushing logs...")
-	locationRepo.Close()
-
+	log.Println("Closing location repository and flushing logs...")
+	repo.Location.Close()
 	log.Println("Application closed properly.")
 }
