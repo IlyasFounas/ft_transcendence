@@ -1,13 +1,14 @@
 package repositories
 
 import (
-	"errors"
-	"context"
-	"github.com/uptrace/bun"
-    "backend/internal/models/users"
+	"backend/internal/models/users"
 	"backend/internal/tools"
+	"context"
+	"errors"
+	"github.com/uptrace/bun"
 	"golang.org/x/oauth2"
 )
+
 /**
  * Repositories and migrations are the only places where
  * you directly interact with the database. Therefore, when working here,
@@ -19,7 +20,7 @@ import (
  */
 
 type UserRepository struct {
-	db         *bun.DB
+	db *bun.DB
 }
 
 func NewUserRepository(db *bun.DB) *UserRepository {
@@ -28,8 +29,8 @@ func NewUserRepository(db *bun.DB) *UserRepository {
 
 func (r *UserRepository) CreateUser(ctx context.Context, user *users.User) (*users.User, error) {
 	_, err := r.db.NewInsert().
-				Model(user).
-				Exec(ctx)
+		Model(user).
+		Exec(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +40,7 @@ func (r *UserRepository) CreateUser(ctx context.Context, user *users.User) (*use
 func (r *UserRepository) LoginUser(ctx context.Context,
 	login string, password string) (bool, int64, error) {
 
-	if len(login) == 0 || len(password) == 0{
+	if len(login) == 0 || len(password) == 0 {
 		return false, 0, nil
 	}
 	user := new(users.User)
@@ -61,10 +62,10 @@ func (r *UserRepository) LoginUser(ctx context.Context,
 func (r *UserRepository) GetUser(ctx context.Context, userId int64) (*users.User, error) {
 	user := new(users.User)
 	err := r.db.NewSelect().
-			Model(user).
-			Column("id", "name", "email", "is_verified","avatar", "created_at").
-			Where("id = ?", userId).
-			Scan(ctx)
+		Model(user).
+		Column("id", "name", "email", "is_verified", "avatar", "created_at").
+		Where("id = ?", userId).
+		Scan(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -74,10 +75,10 @@ func (r *UserRepository) GetUser(ctx context.Context, userId int64) (*users.User
 func (r *UserRepository) GetName(ctx context.Context, userId int64) (*string, error) {
 	user := new(users.User)
 	err := r.db.NewSelect().
-			Model(user).
-			Column("name").
-			Where("id = ?", userId).
-			Scan(ctx)
+		Model(user).
+		Column("name").
+		Where("id = ?", userId).
+		Scan(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -87,10 +88,10 @@ func (r *UserRepository) GetName(ctx context.Context, userId int64) (*string, er
 func (r *UserRepository) GetLogin(ctx context.Context, userId int64) (*string, error) {
 	user := new(users.User)
 	err := r.db.NewSelect().
-			Model(user).
-			Column("login").
-			Where("id = ?", userId).
-			Scan(ctx)
+		Model(user).
+		Column("login").
+		Where("id = ?", userId).
+		Scan(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -100,10 +101,10 @@ func (r *UserRepository) GetLogin(ctx context.Context, userId int64) (*string, e
 func (r *UserRepository) GetEmail(ctx context.Context, userId int64) (*string, error) {
 	user := new(users.User)
 	err := r.db.NewSelect().
-			Model(user).
-			Column("email").
-			Where("id = ?", userId).
-			Scan(ctx)
+		Model(user).
+		Column("email").
+		Where("id = ?", userId).
+		Scan(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -113,10 +114,10 @@ func (r *UserRepository) GetEmail(ctx context.Context, userId int64) (*string, e
 func (r *UserRepository) GetOAuth(ctx context.Context, userId int64) (*oauth2.Token, error) {
 	user := new(users.User)
 	err := r.db.NewSelect().
-			Model(user).
-			Column("oauth").
-			Where("id = ?", userId).
-			Scan(ctx)
+		Model(user).
+		Column("oauth").
+		Where("id = ?", userId).
+		Scan(ctx)
 	if err != nil {
 		return nil, err
 	}

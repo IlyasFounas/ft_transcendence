@@ -139,7 +139,7 @@ func (h *UserHandler) LoginUser() gin.HandlerFunc {
 
 // Getters
 func (h *UserHandler) GetUser() gin.HandlerFunc {
-    //return almost all user infos
+	//return almost all user infos
 	return func(c *gin.Context) {
 		userId, ok := c.Get("userId")
 		if !ok {

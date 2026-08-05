@@ -1,10 +1,10 @@
 package migrations
 
 import (
+	"backend/internal/models/users"
 	"context"
 	"fmt"
 	"github.com/uptrace/bun"
-    "backend/internal/models/users"
 )
 
 func init() {

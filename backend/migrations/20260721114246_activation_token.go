@@ -1,15 +1,15 @@
 package migrations
 
 import (
+	"backend/internal/models/users/tokens"
 	"context"
 	"fmt"
 	"github.com/uptrace/bun"
-    "backend/internal/models/users/tokens"
 )
 
 func init() {
 	Migrations.MustRegister(func(ctx context.Context, db *bun.DB) error {
-		fmt.Print(" [up migration] ")		
+		fmt.Print(" [up migration] ")
 		_, err := db.NewCreateTable().
 			IfNotExists().
 			Model((*tokens.ActivationToken)(nil)).
