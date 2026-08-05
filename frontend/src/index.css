@@ -6,7 +6,6 @@
 
 	/* --- MISC --- */
 		--font-main: "Rajdhani", sans-serif;
-		--spacing: 1px;
 
 	/* --- COLORS --- */
 		--color-primary: #35DFFF;
@@ -40,6 +39,21 @@
 		--text-heading-small--font-weight: 600;
 		--text-heading-small--letter-spacing: 0.02em;
 
+		--text-caption-large: 18px;
+		--text-caption-large--line-height: 24px;
+		--text-caption-large--font-weight: 600;
+		--text-caption-large--letter-spacing: 0.02em;
+		
+		--text-caption-medium: 14px;
+		--text-caption-medium--line-height: 20px;
+		--text-caption-medium--font-weight: 600;
+		--text-caption-medium--letter-spacing: 0.02em;
+		
+		--text-caption-small: 10px;
+		--text-caption-small--line-height: 14px;
+		--text-caption-small--font-weight: 600;
+		--text-caption-small--letter-spacing: 0.04em;
+
 		--text-body-primary: 14px;
 		--text-body-primary--line-height: 20px;
 		--text-body-primary--font-weight: 600;
@@ -55,7 +69,15 @@
 	body {
 		color: var(--color-text-primary);
 		font-family: var(--font-main);
-		text-transform: uppercase;
 	}
 }
 
+:root {
+  --button-gradient-start: #07192E;
+  --button-gradient-middle: #0D3A61;
+  --button-gradient-end: #07192E;
+
+  --button-gradient-pressed-start: #030B17;
+  --button-gradient-pressed-middle: #082743;
+  --button-gradient-pressed-end: #030B17;
+}

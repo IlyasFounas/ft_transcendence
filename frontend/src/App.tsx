@@ -1,21 +1,24 @@
 import { useState } from 'react'
-import Button from './components/Button/Button.tsx'
+import SecondaryButton from './components/Button/SecondaryButton.tsx'
+import PrimaryButton from './components/Button/PrimaryButton.tsx'
 
 import './App.css'
 
 function App() {
 
   return (
-    <div className="w-500 h-500 bg-black">
-		<Button>Play</Button>
-		<Button disabled>Play</Button>
-
-		<Button icon={<span>→</span>}>
-        Avec icon
-      </Button>
-	  <Button disabled icon={<span>→</span>}>
-        Avec icon
-      </Button>
+    <div className="w-2000 h-2000 bg-black g-50 p-25 flex flex-row" >
+		<div className="flex flex-col p-25">
+			<PrimaryButton size="large" subtitle="Launch a new operation">Start Mission</PrimaryButton>
+			<PrimaryButton size="medium" subtitle="Launch a new operation">Start Mission</PrimaryButton>
+			<PrimaryButton size="small" subtitle="Launch a new operation">Start Mission</PrimaryButton>
+		</div>
+		<div className="flex flex-col p-25">
+			<PrimaryButton size="large">Join Operation</PrimaryButton>
+			<PrimaryButton size="medium">Join Operation</PrimaryButton>
+			<PrimaryButton size="small">Join Operation</PrimaryButton>
+		</div>
+		
     </div>
   )
 }

@@ -1,11 +1,11 @@
-type ButtonProps = {
-	children: React.ReactNode;
+import type { BaseButtonProps } from "./button.types";
+
+interface SecondaryButtonProps extends BaseButtonProps {
 	icon?: React.ReactNode;
-	onClick?: () => void;
-	disabled?: boolean;
 }
 
-export default function Button({ children, onClick, icon, disabled }: ButtonProps) {
+
+export default function SecondaryButton({ children, onClick, icon, disabled }: SecondaryButtonProps) {
   return (
 	<button 
 	 	disabled={disabled}
@@ -13,7 +13,7 @@ export default function Button({ children, onClick, icon, disabled }: ButtonProp
 		className="
 			inline-flex items-center justify-center
 			
-			px-24 py-16 gap-8 m-8
+			px-[24px] py-[16px] gap-8 m-8
 			
 			rounded-lg
 			border border-primary
