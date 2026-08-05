@@ -13,9 +13,8 @@ var (
 	ErrInvalidCountryCode = errors.New("invalid country code")
 )
 
-// Location sert à la fois de modèle bun (colonnes DB) et de payload JSON pour les requêtes de création et de patch.
-// Tous les champs de données sont des pointeurs pour pouvoir distinguer
-// "champ non fourni" (nil) de "champ fourni" — nécessaire pour un PATCH partiel.
+// Location is a struct that serves as both a bun model (DB columns) and a JSON payload for create and patch requests.
+// All data fields are pointers to be able to distinguish "field not provided" (nil) from "field provided" — necessary for a partial PATCH.
 type Location struct {
 	bun.BaseModel `bun:"table:locations,alias:l" json:"-"`
 
@@ -26,7 +25,7 @@ type Location struct {
 	CC   *string  `bun:"country_code,type:varchar(2),notnull" json:"country_code,omitempty"`
 }
 
-// ValidateForCreate : utilisée sur POST — tous les champs doivent être présents et valides
+// ValidateForCreate : used for POST — all fields must be present and valid
 func (l *Location) ValidateForCreate() error {
 	if l.MID == nil || l.Lat == nil || l.Long == nil || l.CC == nil {
 		return ErrMissingFields
@@ -34,12 +33,12 @@ func (l *Location) ValidateForCreate() error {
 	return l.validateRanges()
 }
 
-// ValidateForPatch : utilisée sur PATCH — seuls les champs fournis (non-nil) sont validés
+// ValidateForPatch : used for PATCH — only the provided fields (non-nil) are validated
 func (l *Location) ValidateForPatch() error {
 	return l.validateRanges()
 }
 
-// validateRanges ne vérifie QUE les champs non-nil — comportement partagé create/patch
+// validateRanges only checks the non-nil fields — shared behavior between create and patch
 func (l *Location) validateRanges() error {
 	if l.Lat != nil && (*l.Lat < -90 || *l.Lat > 90) {
 		return ErrInvalidLatitude

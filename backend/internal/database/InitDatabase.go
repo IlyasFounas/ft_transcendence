@@ -39,7 +39,7 @@ func InitDatabase() *bun.DB {
 
 	// Ping test to check the connection with the db
 	// if err := db.Ping(context.Background()); err != nil {
-	//     panic(fmt.Sprintf("Impossible de se connecter à PostgreSQL: %v", err))
+	//     panic(fmt.Sprintf("Impossible to connect to PostgreSQL: %v", err))
 	// }
 	return db
 }
