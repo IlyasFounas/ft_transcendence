@@ -1,10 +1,10 @@
 package migrations
 
 import (
+	"backend/internal/models/users"
 	"context"
 	"fmt"
 	"github.com/uptrace/bun"
-    "backend/internal/models"
 )
 
 func init() {
@@ -12,7 +12,7 @@ func init() {
 		fmt.Print(" [up migration] ")
 		_, err := db.NewCreateTable().
 			IfNotExists().
-			Model((*model.User)(nil)).
+			Model((*users.User)(nil)).
 			Exec(ctx)
 		if err != nil {
 			return err
@@ -22,7 +22,7 @@ func init() {
 		fmt.Print(" [down migration] ")
 		_, err := db.NewDropTable().
 			IfExists().
-			Model((*model.User)(nil)).
+			Model((*users.User)(nil)).
 			Exec(ctx)
 		if err != nil {
 			return err
