@@ -26,12 +26,16 @@ import (
  */
 type UserHandler struct {
 	userRepo     *repositories.UserRepository
-	tokenRepo    *repositories.TokenRepository
+	aTokenRepo    *repositories.ActivationTokenRepository
 	tokenHandler *TokenHandler
 }
 
-func NewUserHandler(userRepo *repositories.UserRepository, tokenRepo *repositories.TokenRepository, tokenHandler *TokenHandler) *UserHandler {
-	return &UserHandler{userRepo: userRepo, tokenRepo: tokenRepo, tokenHandler: tokenHandler}
+func NewUserHandler(userRepo *repositories.UserRepository,
+	aTokenRepo *repositories.ActivationTokenRepository,
+	tokenHandler *TokenHandler) *UserHandler {
+	return &UserHandler{userRepo: userRepo, 
+		aTokenRepo: aTokenRepo,
+		tokenHandler: tokenHandler}
 }
 
 func (h *UserHandler) createActivationToken(c *gin.Context, expiresAt time.Time,
@@ -43,13 +47,13 @@ func (h *UserHandler) createActivationToken(c *gin.Context, expiresAt time.Time,
             gin.H{"message": "Send a new activation link"})
 		return tokenErr
 	}
-	err := h.tokenRepo.DeleteActivationToken(c.Request.Context(), userId)
+	err := h.aTokenRepo.DeleteActivationToken(c.Request.Context(), userId)
 	if err != nil {
         c.JSON(http.StatusInternalServerError,
             gin.H{"message": "Send a new activation link"})
 		return err
 	}
-	err = h.tokenRepo.CreateAToken(c.Request.Context(), tokenObj, expiresAt)
+	err = h.aTokenRepo.CreateAToken(c.Request.Context(), tokenObj, expiresAt)
 	if err != nil {
         fmt.Printf("Token creation error message : %s\n", err)
         c.JSON(http.StatusInternalServerError,

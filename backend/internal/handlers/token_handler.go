@@ -20,24 +20,29 @@ import (
 
 type TokenHandler struct {
 	userRepo  *repositories.UserRepository
-	tokenRepo *repositories.TokenRepository
+	aTokenRepo *repositories.ActivationTokenRepository
+	rTokenRepo *repositories.RefreshTokenRepository
 }
 
-func NewTokenHandler(userRepo *repositories.UserRepository, tokenRepo *repositories.TokenRepository) *TokenHandler {
-	return &TokenHandler{userRepo: userRepo, tokenRepo: tokenRepo}
+func NewTokenHandler(userRepo *repositories.UserRepository, 
+	aTokenRepo *repositories.ActivationTokenRepository, 
+	rTokenRepo *repositories.RefreshTokenRepository) *TokenHandler {
+	return &TokenHandler{userRepo: userRepo,
+		aTokenRepo: aTokenRepo,
+		rTokenRepo: rTokenRepo}
 }
 
 // this function send an email to the client, to activate his account
 func (h *TokenHandler) ActivationToken() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		tokenString := c.Query("token")
-		aToken, err := h.tokenRepo.ActivationToken(c.Request.Context(), tokenString)
+		aToken, err := h.aTokenRepo.ActivationToken(c.Request.Context(), tokenString)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized,
 				gin.H{"message": "account activation went wrong"})
 			return
 		}
-		if err := h.tokenRepo.SetUsedAt(c.Request.Context(), aToken.UserID); err != nil {
+		if err := h.aTokenRepo.SetUsedAt(c.Request.Context(), aToken.UserID); err != nil {
 			c.JSON(http.StatusInternalServerError,
 				gin.H{"message": "you already used this link"})
 			return
@@ -65,7 +70,7 @@ func (h *TokenHandler) CreateRefreshToken(ctx context.Context, userId int64) (st
 		UserID:    userId,
 		ExpiresAt: time.Now().Add(7 * 24 * time.Hour),
 	}
-	if err := h.tokenRepo.CreateRefreshToken(ctx, rToken); err != nil {
+	if err := h.rTokenRepo.CreateRefreshToken(ctx, rToken); err != nil {
 		return "", err
 	}
 	return encodedKey, nil
@@ -77,12 +82,12 @@ func (h *TokenHandler) RefreshToken() gin.HandlerFunc {
 		encodedKey := c.GetHeader("Refresh-Token")
 		hashedKey := sha256.Sum256([]byte(encodedKey))
 		hashToken := fmt.Sprintf("%x", hashedKey)
-		rToken, err := h.tokenRepo.RefreshToken(c.Request.Context(), hashToken)
+		rToken, err := h.rTokenRepo.RefreshToken(c.Request.Context(), hashToken)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"message": "You have to login"})
 			return
 		}
-		if err := h.tokenRepo.SetRefreshUsedAt(c.Request.Context(), hashToken); err != nil {
+		if err := h.rTokenRepo.SetRefreshUsedAt(c.Request.Context(), hashToken); err != nil {
 			c.JSON(http.StatusUnauthorized,
 				gin.H{"message": "You have to login"})
 			return

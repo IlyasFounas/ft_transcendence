@@ -13,10 +13,10 @@ type Handlers struct {
 
 // NewHandlers instanciates and assembles all the handlers
 func NewHandlers(repo *repositories.Repositories) *Handlers {
-	tokenHandler := NewTokenHandler(repo.User, repo.Token)
+	tokenHandler := NewTokenHandler(repo.User, repo.AToken, repo.RToken)
 	return &Handlers{
 		Location: NewLocationHandler(repo.Location),
-		User:     NewUserHandler(repo.User, repo.Token, tokenHandler),
+		User:     NewUserHandler(repo.User, repo.AToken, tokenHandler),
 		Token:    tokenHandler,
 	}
 }
