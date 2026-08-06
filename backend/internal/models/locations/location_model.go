@@ -18,8 +18,8 @@ var (
 type Location struct {
 	bun.BaseModel `bun:"table:locations,alias:l" json:"-"`
 
-	ID   int64    `bun:"id,pk,autoincrement" json:"id,omitempty"`
-	MID  *int64   `bun:"id_mapillary,unique,notnull" json:"mapillary_id,omitempty"`
+	ID   int64    `bun:"location_id,pk,autoincrement" json:"id,omitempty"`
+	MID  *int64   `bun:"mapillary_id,unique,notnull" json:"mapillary_id,omitempty"`
 	Lat  *float64 `bun:"latitude,notnull" json:"latitude,omitempty"`
 	Long *float64 `bun:"longitude,notnull" json:"longitude,omitempty"`
 	CC   *string  `bun:"country_code,type:varchar(2),notnull" json:"country_code,omitempty"`

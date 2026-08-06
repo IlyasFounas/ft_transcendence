@@ -53,7 +53,7 @@ func init() {
 
 		_, err = db.NewInsert().
 			Model(&locationList).
-			On("CONFLICT (id_mapillary) DO NOTHING").
+			On("CONFLICT (mapillary_id) DO NOTHING").
 			Exec(ctx)
 		if err != nil {
 			return fmt.Errorf("inserting seed locations: %w", err)
@@ -70,13 +70,13 @@ func init() {
 		if err := json.Unmarshal(data, &imports); err != nil {
 			return err
 		}
-		ids := make([]int64, 0, len(imports))
+		location_ids := make([]int64, 0, len(imports))
 		for _, item := range imports {
-			ids = append(ids, item.MapillaryID)
+			location_ids = append(location_ids, item.MapillaryID)
 		}
 		_, err = db.NewDelete().
 			Model((*locations.Location)(nil)).
-			Where("id_mapillary IN (?)", bun.In(ids)).
+			Where("mapillary_id IN (?)", bun.In(location_ids)).
 			Exec(ctx)
 		return err
 	})

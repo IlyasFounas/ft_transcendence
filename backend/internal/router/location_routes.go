@@ -23,13 +23,13 @@ func registerLocationRoutes(r *gin.Engine, h *handlers.LocationHandler) {
 		// 	log.Println("[Request] Completed slow endpoint.")
 		// })
 		public.POST("/locations", h.AddLocations) // TODO: put in admin group when admin exists
-		public.GET("/locations/:id", h.GetLocationByID)
+		public.GET("/locations/:location_id", h.GetLocationByID)
 		public.GET("/locations/mapillary/:mid", h.GetLocationByMID)
 		public.GET("/locations/random", h.GetRandomLocation)
 		public.GET("/locations/random/country/:cc", h.GetRandomLocationByCC)
-		public.PATCH("/locations/:id", h.UpdateLocationByID)              // TODO: admin
+		public.PATCH("/locations/:location_id", h.UpdateLocationByID)     // TODO: admin
 		public.PATCH("/locations/mapillary/:mid", h.UpdateLocationByMID)  // TODO: admin
-		public.DELETE("/locations/:id", h.DeleteLocation)                 // TODO: admin
+		public.DELETE("/locations/:location_id", h.DeleteLocation)        // TODO: admin
 		public.DELETE("/locations/mapillary/:mid", h.DeleteLocationByMID) // TODO: admin
 	}
 

@@ -15,14 +15,14 @@ import (
 
 // LocationGetter — methods expected from the repository by the handler
 type LocationGetter interface {
-	GetByID(ctx context.Context, id int64) (*locations.Location, error)
+	GetByID(ctx context.Context, location_id int64) (*locations.Location, error)
 	GetByMapillaryID(ctx context.Context, mid int64) (*locations.Location, error)
 	GetRandom(ctx context.Context) (*locations.Location, error)
 	GetRandomByCountryCode(ctx context.Context, cc string) (*locations.Location, error)
-	PatchByID(ctx context.Context, id int64, patch *locations.Location) error
+	PatchByID(ctx context.Context, location_id int64, patch *locations.Location) error
 	PatchByMapillaryID(ctx context.Context, mid int64, patch *locations.Location) error
 	BulkCreate(ctx context.Context, locations []*locations.Location) (int, error)
-	DeleteByID(ctx context.Context, id int64) error
+	DeleteByID(ctx context.Context, location_id int64) error
 	DeleteByMapillaryID(ctx context.Context, mid int64) error
 }
 
@@ -50,23 +50,23 @@ func validationStatus(err error) (int, string) {
 	}
 }
 
-// GET /locations/:id
+// GET /locations/:location_id
 func (h *LocationHandler) GetLocationByID(c *gin.Context) {
 	ctx := c.Request.Context()
 
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	location_id, err := strconv.ParseInt(c.Param("location_id"), 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid location id"})
 		return
 	}
 
-	loc, err := h.repo.GetByID(ctx, id)
+	loc, err := h.repo.GetByID(ctx, location_id)
 	if err != nil {
 		if errors.Is(err, repositories.ErrLocationNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "location not found"})
 			return
 		}
-		log.Printf("Error getting location %d: %v", id, err)
+		log.Printf("Error getting location %d: %v", location_id, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get location"})
 		return
 	}
@@ -140,13 +140,13 @@ func (h *LocationHandler) GetRandomLocationByCC(c *gin.Context) {
 	c.JSON(http.StatusOK, loc)
 }
 
-// PATCH /locations/:id
+// PATCH /locations/:location_id
 func (h *LocationHandler) UpdateLocationByID(c *gin.Context) {
 	ctx := c.Request.Context()
 
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	location_id, err := strconv.ParseInt(c.Param("location_id"), 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid location_id"})
 		return
 	}
 
@@ -162,12 +162,12 @@ func (h *LocationHandler) UpdateLocationByID(c *gin.Context) {
 		return
 	}
 
-	if err := h.repo.PatchByID(ctx, id, &patch); err != nil {
+	if err := h.repo.PatchByID(ctx, location_id, &patch); err != nil {
 		if errors.Is(err, repositories.ErrLocationNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "location not found"})
 			return
 		}
-		log.Printf("Error patching location %d: %v", id, err)
+		log.Printf("Error patching location %d: %v", location_id, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not update location"})
 		return
 	}
@@ -247,22 +247,22 @@ func (h *LocationHandler) AddLocations(c *gin.Context) {
 	})
 }
 
-// DELETE /locations/:id
+// DELETE /locations/:location_id
 func (h *LocationHandler) DeleteLocation(c *gin.Context) {
 	ctx := c.Request.Context()
 
-	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	location_id, err := strconv.ParseInt(c.Param("location_id"), 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid location_id"})
 		return
 	}
 
-	if err := h.repo.DeleteByID(ctx, id); err != nil {
+	if err := h.repo.DeleteByID(ctx, location_id); err != nil {
 		if errors.Is(err, repositories.ErrLocationNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "location not found"})
 			return
 		}
-		log.Printf("Error deleting location %d: %v", id, err)
+		log.Printf("Error deleting location %d: %v", location_id, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not delete location"})
 		return
 	}

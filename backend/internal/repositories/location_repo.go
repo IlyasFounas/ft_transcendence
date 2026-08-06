@@ -99,7 +99,7 @@ func (r *LocationRepository) BulkCreate(ctx context.Context, locations []*locati
 
 	res, err := r.db.NewInsert().
 		Model(&locations).
-		On("CONFLICT (id_mapillary) DO NOTHING").
+		On("CONFLICT (mapillary_id) DO NOTHING").
 		Exec(ctx)
 	if err != nil {
 		return 0, err
@@ -124,9 +124,9 @@ func (r *LocationRepository) BulkCreate(ctx context.Context, locations []*locati
 }
 
 // READ (using internal ID)
-func (r *LocationRepository) GetByID(ctx context.Context, id int64) (*locations.Location, error) {
+func (r *LocationRepository) GetByID(ctx context.Context, location_id int64) (*locations.Location, error) {
 	loc := new(locations.Location)
-	err := r.db.NewSelect().Model(loc).Where("id = ?", id).Scan(ctx)
+	err := r.db.NewSelect().Model(loc).Where("location_id = ?", location_id).Scan(ctx)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrLocationNotFound
@@ -139,7 +139,7 @@ func (r *LocationRepository) GetByID(ctx context.Context, id int64) (*locations.
 // READ (using Mapillary ID)
 func (r *LocationRepository) GetByMapillaryID(ctx context.Context, mid int64) (*locations.Location, error) {
 	loc := new(locations.Location)
-	err := r.db.NewSelect().Model(loc).Where("id_mapillary = ?", mid).Scan(ctx)
+	err := r.db.NewSelect().Model(loc).Where("mapillary_id = ?", mid).Scan(ctx)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrLocationNotFound
@@ -176,13 +176,13 @@ func (r *LocationRepository) GetRandomByCountryCode(ctx context.Context, cc stri
 }
 
 // PATCH (using internal ID)
-func (r *LocationRepository) PatchByID(ctx context.Context, id int64, patch *locations.Location) error {
-	return r.patch(ctx, "id = ?", id, patch)
+func (r *LocationRepository) PatchByID(ctx context.Context, location_id int64, patch *locations.Location) error {
+	return r.patch(ctx, "location_id = ?", location_id, patch)
 }
 
 // PATCH (using Mapillary ID)
 func (r *LocationRepository) PatchByMapillaryID(ctx context.Context, mid int64, patch *locations.Location) error {
-	return r.patch(ctx, "id_mapillary = ?", mid, patch)
+	return r.patch(ctx, "mapillary_id = ?", mid, patch)
 }
 
 // patch — private helper function to update a location based on a where clause and patch data. Only updates fields that are not null.
@@ -232,13 +232,13 @@ func (r *LocationRepository) patch(ctx context.Context, whereClause string, wher
 }
 
 // DELETE (using internal ID)
-func (r *LocationRepository) DeleteByID(ctx context.Context, id int64) error {
-	return r.delete(ctx, "id = ?", id)
+func (r *LocationRepository) DeleteByID(ctx context.Context, location_id int64) error {
+	return r.delete(ctx, "location_id = ?", location_id)
 }
 
 // DELETE (using Mapillary ID)
 func (r *LocationRepository) DeleteByMapillaryID(ctx context.Context, mid int64) error {
-	return r.delete(ctx, "id_mapillary = ?", mid)
+	return r.delete(ctx, "mapillary_id = ?", mid)
 }
 
 // delete — private helper function for common deletion logic
