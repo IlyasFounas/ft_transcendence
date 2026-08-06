@@ -11,7 +11,7 @@ export default function SecondaryButton({ children, onClick, icon, disabled }: S
 	 	disabled={disabled}
 		onClick={onClick}
 		className="
-			inline-flex items-center justify-center
+			inline-flex w-fit items-center justify-center
 			
 			px-[24px] py-[16px] gap-8 m-8
 			
@@ -28,6 +28,17 @@ export default function SecondaryButton({ children, onClick, icon, disabled }: S
 			uppercase
 
 			cursor-pointer
+			transition-transform
+			duration-200
+			ease-out
+
+			enabled:hover:scale-[1.05]
+			enabled:hover:brightness-110
+ 			enabled:hover:drop-shadow-[0_0_10px_rgba(40,215,255,0.5)]
+
+			enabled:active:scale-[0.98]
+			enabled:active:drop-shadow-none
+			enabled:active:opacity-75
 
 			disabled:border-border-default
 			disabled:outline-border-default

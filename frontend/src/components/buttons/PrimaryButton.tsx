@@ -32,7 +32,7 @@ const buttonShapes = {
   small: SmallButtonSvg,
 };
 
-export default function PrimaryButton({ children, onClick, subtitle, disabled, size = "large", state = "default"}: PrimaryButtonProps) {
+export default function PrimaryButton({ children, onClick, subtitle, disabled, size = "large"}: PrimaryButtonProps) {
 	
 	const styles = sizeStyles[size];
 
@@ -42,6 +42,8 @@ export default function PrimaryButton({ children, onClick, subtitle, disabled, s
 
   	return (
 		<button
+		disabled = {disabled}
+		onClick = {onClick}
 		className={`
 			group
 			relative
@@ -50,12 +52,15 @@ export default function PrimaryButton({ children, onClick, subtitle, disabled, s
 			transition-transform
 			duration-200
 			ease-out
-			hover:scale-[1.02]
-			active:scale-[0.98]
+			enabled:hover:scale-[1.02]
+			enabled:active:scale-[0.98]
 
-			active:[--button-gradient-start:#07192E]
-			active:[--button-gradient-middle:#010101]
-			active:[--button-gradient-end:#07192E]
+			enabled:active:[--button-gradient-start:#07192E]
+			enabled:active:[--button-gradient-middle:#010101]
+			enabled:active:[--button-gradient-end:#07192E]
+
+			disabled:cursor-default
+    		disabled:opacity-40
 			${styles.container}
 		`}
 		>
@@ -65,11 +70,13 @@ export default function PrimaryButton({ children, onClick, subtitle, disabled, s
 		transition-all
 		duration-200
 		ease-out
-		group-hover:brightness-125
-		group-hover:drop-shadow-[0_0_20px_rgba(40,215,255,0.5)]
-		
-		group-active:brightness-100
-   		group-active:drop-shadow-none"
+		group-enabled:group-hover:brightness-125
+ 		group-enabled:group-hover:drop-shadow-[0_0_20px_rgba(40,215,255,0.5)]
+  		group-enabled:group-active:brightness-100
+  		group-enabled:group-active:drop-shadow-none
+
+		group-disabled:brightness-100
+        group-disabled:drop-shadow-none"
   	/>
 		<div className=" relative flex h-full flex-col items-center justify-center">
 			<span className={`text-primary uppercase ${titleClass}`}>
