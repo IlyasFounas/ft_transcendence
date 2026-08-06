@@ -27,7 +27,6 @@ func InitDatabase() *bun.DB {
 
 	// Specify the information for the connection
 	dsn := buildDSN()
-
 	// Connect to the PostgreSQL database
 	pgdb := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(dsn)))
 
