@@ -9,6 +9,7 @@ type Handlers struct {
 	Location *LocationHandler
 	User     *UserHandler
 	Token    *TokenHandler
+	Game	 *GameHandler
 }
 
 // NewHandlers instanciates and assembles all the handlers
@@ -18,5 +19,6 @@ func NewHandlers(repo *repositories.Repositories) *Handlers {
 		Location: NewLocationHandler(repo.Location),
 		User:     NewUserHandler(repo.User, repo.AToken, tokenHandler),
 		Token:    tokenHandler,
+		Game:     NewGameHandler(),
 	}
 }

@@ -26,7 +26,7 @@ import (
  */
 type UserHandler struct {
 	userRepo     *repositories.UserRepository
-	aTokenRepo    *repositories.ActivationTokenRepository
+	aTokenRepo   *repositories.ActivationTokenRepository
 	tokenHandler *TokenHandler
 }
 

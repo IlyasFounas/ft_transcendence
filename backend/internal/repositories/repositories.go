@@ -23,5 +23,6 @@ func NewRepositories(db *bun.DB) (*Repositories, error) {
 		User:     NewUserRepository(db),
 		AToken:   NewActivationTokenRepository(db),
 		RToken:   NewRefreshTokenRepository(db),
+		Game:     NewGameRepository(db),
 	}, nil
 }
