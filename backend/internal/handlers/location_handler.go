@@ -172,7 +172,7 @@ func (h *LocationHandler) UpdateLocationByID(c *gin.Context) {
 		return
 	}
 
-	c.Status(http.StatusNoContent)
+	c.Status(http.StatusOK)
 }
 
 // PATCH /locations/mapillary/:mid
@@ -207,7 +207,7 @@ func (h *LocationHandler) UpdateLocationByMID(c *gin.Context) {
 		return
 	}
 
-	c.Status(http.StatusNoContent)
+	c.Status(http.StatusOK)
 }
 
 // POST /locations
