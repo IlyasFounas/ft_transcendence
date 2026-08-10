@@ -25,3 +25,28 @@ func (r *GameRepository) CreateGame(ctx context.Context, game *games.Game) (*gam
 	}
 	return game, nil
 }
+
+func (r *GameRepository) GetGame(ctx context.Context, game_id int64) (*games.Game, error){
+	game := new(games.Game)
+	err := r.db.NewSelect().
+		Model(game).
+		Where("id = ?", game_id).
+		Scan(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return game, nil
+}
+
+func (r *GameRepository) GetMode(ctx context.Context, game_id int64) (string, error){
+	game := new(games.Game)
+	err := r.db.NewSelect().
+		Model(game).
+		Columns("mode").
+		Where("id = ?", game_id).
+		Scan(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return game.Mode, nil
+}

@@ -7,8 +7,9 @@ import (
 type Repositories struct {
 	Location *LocationRepository
 	User     *UserRepository
-	AToken    *ActivationTokenRepository
-	RToken    *RefreshTokenRepository
+	AToken 	 *ActivationTokenRepository
+	RToken   *RefreshTokenRepository
+	Game     *GameRepository
 }
 
 // NewRepositories instanciates and assembles all the repositories
