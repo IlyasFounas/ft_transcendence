@@ -11,9 +11,9 @@ export default function SecondaryButton({ children, onClick, icon, disabled }: S
 	 	disabled={disabled}
 		onClick={onClick}
 		className="
-			inline-flex w-fit items-center justify-center
+			inline-flex w-fit h-[60px] items-center justify-center
 			
-			px-[24px] py-[16px] gap-8 m-8
+			px-[24px] py-[16px] gap-3 m-8
 			
 			rounded-lg
 			border border-primary
