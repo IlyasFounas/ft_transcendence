@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import GamePage from './pages/GamePage'
+import GamePage from './pages/game/GamePage'
 import Home from './pages/HomePage' 
 
 function App(){
