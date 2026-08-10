@@ -9,9 +9,10 @@
 
 	/* --- COLORS --- */
 		--color-primary: #35DFFF;
+    --color-background-base: #000000;
 		--color-surface-base: #020A14;
 		--color-surface-elevated: #07192E;
-		--color-border-default: #1E4D78;
+		--color-border-default: rgb(30 77 120 / 30%);
 		--color-text-primary: #FFFFFF;
 		--color-text-secondary: #6E8AA5;
 		--color-status-green: #39FF6D;
