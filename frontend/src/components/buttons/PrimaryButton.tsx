@@ -64,20 +64,20 @@ export default function PrimaryButton({ children, onClick, subtitle, disabled, s
 			${styles.container}
 		`}
 		>
-  	<Shape className="
-		absolute inset-0 
-		w-full h-full
-		transition-all
-		duration-200
-		ease-out
-		group-enabled:group-hover:brightness-125
- 		group-enabled:group-hover:drop-shadow-[0_0_20px_rgba(40,215,255,0.5)]
-  		group-enabled:group-active:brightness-100
-  		group-enabled:group-active:drop-shadow-none
+  		<Shape className="
+			absolute inset-0 
+			w-full h-full
+			transition-all
+			duration-200
+			ease-out
+			group-enabled:group-hover:brightness-125
+			group-enabled:group-hover:drop-shadow-[0_0_20px_rgba(40,215,255,0.5)]
+			group-enabled:group-active:brightness-100
+			group-enabled:group-active:drop-shadow-none
 
-		group-disabled:brightness-100
-        group-disabled:drop-shadow-none"
-  	/>
+			group-disabled:brightness-100
+			group-disabled:drop-shadow-none"
+  		/>
 		<div className=" relative flex h-full flex-col items-center justify-center">
 			<span className={`text-primary uppercase ${titleClass}`}>
 			{children}
