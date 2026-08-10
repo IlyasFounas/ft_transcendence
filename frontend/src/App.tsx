@@ -37,7 +37,7 @@ function App() {
 			<div className="flex flex-row m-8 gap-8">
 				<Avatar></Avatar>
 				<Avatar size={90}></Avatar>
-				<Avatar size={90} borderColor="#FFB800"></Avatar>
+				<Avatar size={70} borderColor="#FFB800"></Avatar>
 			</div>
 		</div>
 		<div className="flex flex_row">
