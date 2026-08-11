@@ -16,6 +16,11 @@ function App() {
         dateTime="12 JUN 2026 21:38"
         points={8562}
       />
+      <OperationHistoryRow
+        operationId="OP-004542"
+        dateTime="12 JUN 2026 21:39"
+        points={81025}
+      />
 	</div>
   )
 }
