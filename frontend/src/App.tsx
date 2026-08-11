@@ -1,26 +1,11 @@
-import { useState } from 'react'
-
-import OperationHistoryRow from './components/rows/OperationHistoryRow.tsx'
+import OperationHistory from './components/cards/OperationHistory.tsx'
+import { operations } from "./data/operations";
 
 function App() {
 
   return (
 	< div className="w-full min-h-screen bg-white">
-      <OperationHistoryRow
-        operationId="OP-004540"
-        dateTime="12 JUN 2026 21:35"
-        points={2025}
-      />
-      <OperationHistoryRow
-        operationId="OP-004541"
-        dateTime="12 JUN 2026 21:38"
-        points={8562}
-      />
-      <OperationHistoryRow
-        operationId="OP-004542"
-        dateTime="12 JUN 2026 21:39"
-        points={81025}
-      />
+      <OperationHistory operations={operations}/>
 	</div>
   )
 }

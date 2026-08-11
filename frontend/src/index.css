@@ -73,6 +73,30 @@
 	}
 }
 
+@layer components {
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #1E4D78 #020A14;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: #020A14;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #1E4D78;
+    border-radius: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #35DFFF;
+  }
+}
+
 :root {
   --button-gradient-start: #07192E;
   --button-gradient-middle: #0D3A61;
