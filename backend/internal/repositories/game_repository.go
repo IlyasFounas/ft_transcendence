@@ -26,7 +26,7 @@ func (r *GameRepository) CreateGame(ctx context.Context, game *games.Game) (*gam
 	return game, nil
 }
 
-func (r *GameRepository) GetGame(ctx context.Context, game_id int64) (*games.Game, error){
+func (r *GameRepository) Game(ctx context.Context, game_id int64) (*games.Game, error){
 	game := new(games.Game)
 	err := r.db.NewSelect().
 		Model(game).
@@ -38,7 +38,7 @@ func (r *GameRepository) GetGame(ctx context.Context, game_id int64) (*games.Gam
 	return game, nil
 }
 
-func (r *GameRepository) GetTitle(ctx context.Context, game_id int64) (string, error){
+func (r *GameRepository) Title(ctx context.Context, game_id int64) (string, error){
 	game := new(games.Game)
 	err := r.db.NewSelect().
 		Model(game).
@@ -51,7 +51,7 @@ func (r *GameRepository) GetTitle(ctx context.Context, game_id int64) (string, e
 	return game.Title, nil
 }
 
-func (r *GameRepository) GetMode(ctx context.Context, game_id int64) (string, error){
+func (r *GameRepository) Mode(ctx context.Context, game_id int64) (string, error){
 	game := new(games.Game)
 	err := r.db.NewSelect().
 		Model(game).
@@ -64,7 +64,20 @@ func (r *GameRepository) GetMode(ctx context.Context, game_id int64) (string, er
 	return game.Mode, nil
 }
 
-func (r *GameRepository) GetTimer(ctx context.Context, game_id int64) (int64, error){
+func (r *GameRepository) Difficulty(ctx context.Context, game_id int64) (string, error){
+	game := new(games.Game)
+	err := r.db.NewSelect().
+		Model(game).
+		Column("difficulty").
+		Where("id = ?", game_id).
+		Scan(ctx)
+	if err != nil {
+		return "", err
+	}
+	return game.Difficulty, nil
+}
+
+func (r *GameRepository) Timer(ctx context.Context, game_id int64) (int64, error){
 	game := new(games.Game)
 	err := r.db.NewSelect().
 		Model(game).
@@ -77,7 +90,7 @@ func (r *GameRepository) GetTimer(ctx context.Context, game_id int64) (int64, er
 	return game.Timer, nil
 }
 
-func (r *GameRepository) GetRoundNb(ctx context.Context, game_id int64) (int64, error){
+func (r *GameRepository) RoundNb(ctx context.Context, game_id int64) (int64, error){
 	game := new(games.Game)
 	err := r.db.NewSelect().
 		Model(game).
@@ -90,7 +103,7 @@ func (r *GameRepository) GetRoundNb(ctx context.Context, game_id int64) (int64, 
 	return game.RoundNb, nil
 }
 
-func (r *GameRepository) GetFinished(ctx context.Context, game_id int64) (bool, error){
+func (r *GameRepository) Finished(ctx context.Context, game_id int64) (bool, error){
 	game := new(games.Game)
 	err := r.db.NewSelect().
 		Model(game).
@@ -103,7 +116,7 @@ func (r *GameRepository) GetFinished(ctx context.Context, game_id int64) (bool, 
 	return game.Finished, nil
 }
 
-func (r *GameRepository) GetPlayerNb(ctx context.Context, game_id int64) (int64, error){
+func (r *GameRepository) PlayerNb(ctx context.Context, game_id int64) (int64, error){
 	game := new(games.Game)
 	err := r.db.NewSelect().
 		Model(game).
@@ -116,7 +129,7 @@ func (r *GameRepository) GetPlayerNb(ctx context.Context, game_id int64) (int64,
 	return game.PlayerNb, nil
 }
 
-func (r *GameRepository) GetCreatedAt(ctx context.Context, game_id int64) (time.Time, error){
+func (r *GameRepository) CreatedAt(ctx context.Context, game_id int64) (time.Time, error){
 	game := new(games.Game)
 	err := r.db.NewSelect().
 		Model(game).
@@ -135,6 +148,90 @@ func (r *GameRepository) SetTitle(ctx context.Context, game_id int64,
 	_, err := r.db.NewUpdate().
 		Model(game).
 		Column("title").
+		Where("id = ?", game_id).
+		Exec(ctx)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *GameRepository) SetMode(ctx context.Context, game_id int64, 
+	mode string) error {
+	game := &games.Game{Mode: mode}
+	_, err := r.db.NewUpdate().
+		Model(game).
+		Column("mode").
+		Where("id = ?", game_id).
+		Exec(ctx)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *GameRepository) SetDifficulty(ctx context.Context, game_id int64, 
+	difficulty string) error {
+	game := &games.Game{Difficulty: difficulty}
+	_, err := r.db.NewUpdate().
+		Model(game).
+		Column("difficulty").
+		Where("id = ?", game_id).
+		Exec(ctx)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *GameRepository) SetTimer(ctx context.Context, game_id int64, 
+	timer int64) error {
+	game := &games.Game{Timer: timer}
+	_, err := r.db.NewUpdate().
+		Model(game).
+		Column("timer").
+		Where("id = ?", game_id).
+		Exec(ctx)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *GameRepository) SetRoundNb(ctx context.Context, game_id int64, 
+	round_nb int64) error {
+	game := &games.Game{RoundNb: round_nb}
+	_, err := r.db.NewUpdate().
+		Model(game).
+		Column("round_nb").
+		Where("id = ?", game_id).
+		Exec(ctx)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *GameRepository) SetFinished(ctx context.Context, game_id int64, 
+	finished bool) error {
+	game := &games.Game{Finished: finished}
+	_, err := r.db.NewUpdate().
+		Model(game).
+		Column("finished").
+		Where("id = ?", game_id).
+		Exec(ctx)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *GameRepository) SetPlayerNb(ctx context.Context, game_id int64, 
+	player_nb int64) error {
+	game := &games.Game{PlayerNb: player_nb}
+	_, err := r.db.NewUpdate().
+		Model(game).
+		Column("player_nb").
 		Where("id = ?", game_id).
 		Exec(ctx)
 	if err != nil {

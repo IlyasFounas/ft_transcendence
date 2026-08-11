@@ -12,6 +12,7 @@ type Game struct {
 	ID			int64 		`bun:"id,pk,autoincrement"`
 	Title		string 		`bun:"title"`
 	Mode		string 		`bun:"mode"`
+	Difficulty	string 		`bun:"difficulty"`
 	Timer		int64 		`bun:"timer,notnull"`
 	RoundNb 	int64 		`bun:"round_nb,notnull,check:round_nb <> 0"`
 	Finished	bool 		`bun:"finished"`
