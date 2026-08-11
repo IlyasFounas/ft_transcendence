@@ -1,6 +1,7 @@
 import '../../styles/GamePage.css'
 
 import LoadStreetView from './StreetView/LoadStreetView'
+import Load2DMap from './2DMap/Load2DMap.tsx'
 
 export default function GamePage() {
   return (
@@ -11,6 +12,7 @@ export default function GamePage() {
       </div>
       <div className="game-sidebar">
         <h3>Game Info</h3>
+        <Load2DMap latitude={45.782429} longitude={4.745860} />
       </div>
     </div>
   )
