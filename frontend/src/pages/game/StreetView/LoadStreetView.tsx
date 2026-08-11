@@ -1,3 +1,5 @@
+import 'mapillary-js/dist/mapillary.css';
+
 import { useEffect } from 'react';
 import { Viewer } from 'mapillary-js';
 
