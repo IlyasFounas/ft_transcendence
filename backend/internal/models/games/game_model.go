@@ -18,4 +18,16 @@ type Game struct {
 	Finished	bool 		`bun:"finished"`
 	PlayerNb	int64 		`bun:"player_nb,notnull,check player_nb <> 0`
 	CreatedAt   time.Time	`bun:"created_at,default:current_timestamp"`
+
+	Lobby 		[]*Lobby  `bun:"rel:has-many,join:id=game_id"`
+}
+
+type Lobby struct {
+	bun.BaseModel `bun:"lobby,alias:lo"`
+
+	ID 			int64 `bun:"id,pk,autoincrement"`
+	UserId  	int64 `bun:"user_id,pk"`
+	GameId  	int64 `bun:"game_id,pk"`
+		
+	Game 		*Game `bun:"rel:has-one,join:game_id=id"`
 }
