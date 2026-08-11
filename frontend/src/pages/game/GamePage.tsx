@@ -6,7 +6,8 @@ export default function GamePage() {
   return (
     <div className="game-container">
       <div className="game-map">
-        <LoadStreetView/><h2>Mapillary Street View</h2>
+        <h3>Mapillary Street View</h3>
+        <LoadStreetView id="271688394642360" moving={false} zooming={true} panning={true} />
       </div>
       <div className="game-sidebar">
         <h3>Game Info</h3>
