@@ -1,16 +1,11 @@
 import Avatar from "../primitives/Avatar";
-
-interface UserProfileProps {
-    username: string;
-    role: string;
-    avatar: string;
-}
+import type { UserProps } from "../../types/user";
 
 export default function UserProfile({
     username,
     role,
     avatar,
-}: UserProfileProps) {
+}: UserProps) {
     return (
         <div className="flex items-center gap-4">
             <Avatar avatar={avatar} size={45}/>
