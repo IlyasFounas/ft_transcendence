@@ -1,4 +1,4 @@
-import type { Operation } from "../types/operation";
+import type { Operation } from "../types/operation.types";
 
 export const operations: Operation[] = [
     {

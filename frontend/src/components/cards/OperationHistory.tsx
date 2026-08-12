@@ -1,5 +1,5 @@
 import OperationHistoryRow from "../rows/OperationHistoryRow";
-import type { Operation } from "../../types/operation";
+import type { Operation } from "../../types/operation.types";
 
 interface OperationHistoryProps {
     operations: Operation[];

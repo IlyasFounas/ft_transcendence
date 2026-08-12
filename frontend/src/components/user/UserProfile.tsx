@@ -1,5 +1,5 @@
 import Avatar from "../primitives/Avatar";
-import type { UserProps } from "../../types/user";
+import type { UserProps } from "../../types/user.types";
 
 export default function UserProfile({
     username,

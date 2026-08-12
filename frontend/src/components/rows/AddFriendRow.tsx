@@ -1,6 +1,6 @@
 import UserProfile from "../user/UserProfile";
 import SmallButton from "../buttons/SmallButton";
-import type { UserProps } from "../../types/user";
+import type { UserProps } from "../../types/user.types";
 
 export default function AddFriendRow({
     username,
