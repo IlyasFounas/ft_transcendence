@@ -11,10 +11,12 @@ import (
 
 type GameHandler struct {
 	gameRepo *repositories.GameRepository
+	lobbyRepo *repositories.LobbyRepository
 } 
 
-func NewGameHandler(gameRepo *repositories.GameRepository) *GameHandler {
-	return &GameHandler{gameRepo: gameRepo}
+func NewGameHandler(gameRepo *repositories.GameRepository,
+	lobbyRepo *repositories.lobbyRepository) *GameHandler {
+	return &GameHandler{gameRepo: gameRepo, lobbyRepo: lobbyRepo}
 }
 
 func (h *GameHandler) CreateGame() gin.HandlerFunc {

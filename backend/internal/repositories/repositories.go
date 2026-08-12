@@ -10,6 +10,7 @@ type Repositories struct {
 	AToken 	 *ActivationTokenRepository
 	RToken   *RefreshTokenRepository
 	Game     *GameRepository
+	Lobby    *LobbyRepository
 }
 
 // NewRepositories instanciates and assembles all the repositories
@@ -25,5 +26,6 @@ func NewRepositories(db *bun.DB) (*Repositories, error) {
 		AToken:   NewActivationTokenRepository(db),
 		RToken:   NewRefreshTokenRepository(db),
 		Game:     NewGameRepository(db),
+		Lobby:    NewLobbyRepository(db),
 	}, nil
 }
