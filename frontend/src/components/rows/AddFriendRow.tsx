@@ -1,17 +1,12 @@
 import UserProfile from "../user/UserProfile";
 import SmallButton from "../buttons/SmallButton";
-
-interface AddFriendRowProps {
-    username: string;
-    role: string;
-    avatar: string;
-}
+import type { UserProps } from "../../types/user";
 
 export default function AddFriendRow({
     username,
     role,
     avatar,
-}: AddFriendRowProps) {
+}: UserProps) {
     return (
         <div className="
             flex
