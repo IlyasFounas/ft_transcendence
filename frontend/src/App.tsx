@@ -17,16 +17,16 @@ function App() {
       <SmallButton onClick={() => console.log("clicked")}>Add Friend</SmallButton>
       <SmallButton variant='danger'>remove</SmallButton>
       <SmallButton
-          variant="primary"
-          disabled
+        variant="primary"
+        disabled
       >
-          Add Friend
+        Add Friend
       </SmallButton>
       <SmallButton
-          variant="danger"
-          disabled
+        variant="danger"
+        disabled
       >
-          Add Friend
+        Add Friend
       </SmallButton>
       <AddFriendRow username="agent tommy" role="Field Analyst" avatar='/avatars/avatar1.png'/>
       <AddFriendRow username="agent tommy" role="Field Analyst" avatar='/avatars/avatar1.png'/>

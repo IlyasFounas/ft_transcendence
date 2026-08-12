@@ -30,9 +30,9 @@ export default function FriendListRow({
             "
         >
             <UserProfile 
-            username={username}
-            role={role}
-            avatar={avatar}
+                username={username}
+                role={role}
+                avatar={avatar}
             />
             <UserStatus status={status}/>
             <div className="text-center">
@@ -44,7 +44,7 @@ export default function FriendListRow({
                 </div>
             </div>
             <SmallButton variant="danger" onClick={onRemove}>
-                remove
+                Remove
             </SmallButton>
         </div>
     );
