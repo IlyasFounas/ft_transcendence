@@ -15,48 +15,52 @@ type GameHandler struct {
 } 
 
 func NewGameHandler(gameRepo *repositories.GameRepository,
-	lobbyRepo *repositories.lobbyRepository) *GameHandler {
+	lobbyRepo *repositories.LobbyRepository) *GameHandler {
 	return &GameHandler{gameRepo: gameRepo, lobbyRepo: lobbyRepo}
+}
+
+func initGameObj(c *gin.Context) (*games.Game, error) {
+	timer, err := strconv.ParseInt(c.PostForm("timer"), 10, 64)
+	if err != nil {
+		return nil, err;
+	}
+	round_nb, err := strconv.ParseInt(c.PostForm("round_nb"), 10, 64)
+	if err != nil {
+		return nil, err;
+	}
+	player_nb, err := strconv.ParseInt(c.PostForm("player_nb"), 10, 64)
+	if err != nil {
+		return nil, err;
+	}
+	if timer > 120 {
+		timer = 120
+	} else if (timer < 10) {
+		timer = 10
+	}
+	if round_nb > 2 {
+		round_nb = 2
+	}
+	if player_nb > 2 {
+		player_nb = 2
+	}
+	gameObj := &games.Game{Title: "default",
+		Mode: c.PostForm("mode"),
+		Difficulty: "easy",
+		Timer: timer,
+		RoundNb: round_nb,
+		Finished: false,
+		PlayerNb: player_nb}
+	return gameObj, nil
 }
 
 func (h *GameHandler) CreateGame() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		timer, err := strconv.ParseInt(c.PostForm("timer"), 10, 64)
+		gameObj, err := initGameObj(c)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized,
-				gin.H{"message": "the creation of the game failed, try again"})
+				gin.H{"message": "the game initiation failed"})
 			return ;
 		}
-		round_nb, err := strconv.ParseInt(c.PostForm("round_nb"), 10, 64)
-		if err != nil {
-			c.JSON(http.StatusUnauthorized,
-				gin.H{"message": "the creation of the game failed, try again"})
-			return ;
-		}
-		player_nb, err := strconv.ParseInt(c.PostForm("player_nb"), 10, 64)
-		if err != nil {
-			c.JSON(http.StatusUnauthorized,
-				gin.H{"message": "the creation of the game failed, try again"})
-			return ;
-		}
-		if timer > 120 {
-			timer = 120
-		} else if (timer < 10) {
-			timer = 10
-		}
-		if round_nb > 2 {
-			round_nb = 2
-		}
-		if player_nb > 2 {
-			player_nb = 2
-		}
-		gameObj := &games.Game{Title: "default",
-			Mode: c.PostForm("mode"),
-			Difficulty: "easy",
-			Timer: timer,
-			RoundNb: round_nb,
-			Finished: false,
-			PlayerNb: player_nb}
 		game, err := h.gameRepo.CreateGame(c.Request.Context(), gameObj)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized,
@@ -65,6 +69,39 @@ func (h *GameHandler) CreateGame() gin.HandlerFunc {
 		}
         c.JSON(http.StatusOK,
 			gin.H{"message": "the game is launching", "game_id": game.ID})
+	}
+}
+
+func (h *GameHandler) CreateLobby() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userId, ok := c.Get("userId")
+		if !ok {
+            c.JSON(http.StatusUnauthorized,
+                gin.H{"message": "The userId is empty"})
+            return
+		}
+		gameObj, err := initGameObj(c)
+		if err != nil {
+            c.JSON(http.StatusUnauthorized,
+				gin.H{"message": "the game initiation failed"})
+            return
+		}
+		game, err := h.gameRepo.CreateGame(c.Request.Context(), gameObj)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized,
+				gin.H{"message": "the creation of the game failed, try again"})
+			return ;
+		}		
+		lobbyObj := &games.Lobby{UserId: userId.(int64),
+								GameId: game.ID}
+		lobby, err := h.lobbyRepo.CreateLobby(c.Request.Context(), lobbyObj)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized,
+				gin.H{"message": "the creation of the lobby failed, try again"})
+			return ;
+		}
+		c.JSON(http.StatusOK,
+			gin.H{"message": "success", "lobby_id": lobby.ID})
 	}
 }
 
