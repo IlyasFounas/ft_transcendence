@@ -7,6 +7,7 @@ import FriendRequestRow from './components/rows/FriendRequestRow.tsx';
 import StatusBadge from './components/primitives/StatusBadge.tsx';
 import UserStatus from './components/user/UserStatus.tsx';
 import FriendListRow from './components/rows/FriendListRow.tsx';
+import FriendChatRow from './components/rows/FriendChatRow.tsx';
 
 function App() {
 
@@ -39,7 +40,7 @@ function App() {
       <FriendListRow username="agent tommy" role="Field Analyst" avatar='/avatars/avatar1.png' status='online' rank={233}/>  
       <FriendListRow username="agent tommy" role="Field Analyst" avatar='/avatars/avatar1.png' status='in-mission' rank={1212}/>  
       <FriendListRow username="agent tommy" role="Field Analyst" avatar='/avatars/avatar1.png' status='offline' rank={33}/>  
-
+      <FriendChatRow />
   </div>
   )
 }
