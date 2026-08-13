@@ -12,7 +12,7 @@ import FriendChatRow from './components/rows/FriendChatRow.tsx';
 function App() {
 
   return (
-	< div className="w-full min-h-screen bg-black">
+	< div className="w-full min-h-screen bg-white">
       <OperationHistory operations={operations}/>
       <UserProfile username="agent tommy" role="Field Analyst" avatar='/avatars/avatar1.png'/>
       <SmallButton onClick={() => console.log("clicked")}>Add Friend</SmallButton>
@@ -40,7 +40,9 @@ function App() {
       <FriendListRow username="agent tommy" role="Field Analyst" avatar='/avatars/avatar1.png' status='online' rank={233}/>  
       <FriendListRow username="agent tommy" role="Field Analyst" avatar='/avatars/avatar1.png' status='in-mission' rank={1212}/>  
       <FriendListRow username="agent tommy" role="Field Analyst" avatar='/avatars/avatar1.png' status='offline' rank={33}/>  
-      <FriendChatRow />
+      <FriendChatRow username="agent tommy" role="Field Analyst" avatar='/avatars/avatar1.png' lastMessage="make[1]: Entering directory '/home/spunyapr/commoncore/ft_transcendence/ft_transcendence'" timestamp='03.45pm' status='online'/>
+      <FriendChatRow username="agent tommy" role="Field Analyst" avatar='/avatars/avatar1.png' lastMessage="make[1]: Entering directory '/home/spunyapr/commoncore/ft_transcendence/ft_transcendence'" timestamp='03.45pm' status='offline'/>
+      <FriendChatRow username="agent tommy" role="Field Analyst" avatar='/avatars/avatar1.png' lastMessage="make[1]: Entering directory '/home/spunyapr/commoncore/ft_transcendence/ft_transcendence'" timestamp='03.45pm' status='in-mission'/>
   </div>
   )
 }
