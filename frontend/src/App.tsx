@@ -8,6 +8,8 @@ import StatusBadge from './components/primitives/StatusBadge.tsx';
 import UserStatus from './components/user/UserStatus.tsx';
 import FriendListRow from './components/rows/FriendListRow.tsx';
 import FriendChatRow from './components/rows/FriendChatRow.tsx';
+import AuthenticationCard from './components/cards/AuthenticationCard.tsx';
+import AuthenticationWelcome from './components/Authentication/AuthenticationWelcome.tsx';
 
 function App() {
 
@@ -43,6 +45,9 @@ function App() {
       <FriendChatRow username="agent tommy" role="Field Analyst" avatar='/avatars/avatar1.png' lastMessage="make[1]: Entering directory '/home/spunyapr/commoncore/ft_transcendence/ft_transcendence'" timestamp='03.45pm' status='online'/>
       <FriendChatRow username="agent tommy" role="Field Analyst" avatar='/avatars/avatar1.png' lastMessage="make[1]: Entering directory '/home/spunyapr/commoncore/ft_transcendence/ft_transcendence'" timestamp='03.45pm' status='offline'/>
       <FriendChatRow username="agent tommy" role="Field Analyst" avatar='/avatars/avatar1.png' lastMessage="make[1]: Entering directory '/home/spunyapr/commoncore/ft_transcendence/ft_transcendence'" timestamp='03.45pm' status='in-mission'/>
+      <AuthenticationCard>
+        <AuthenticationWelcome />
+      </AuthenticationCard>
   </div>
   )
 }
