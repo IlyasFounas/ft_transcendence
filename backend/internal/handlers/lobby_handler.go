@@ -17,3 +17,4 @@ func NewLobbyHandler(gameRepo *repositories.GameRepository,
 	lobbyRepo *repositories.LobbyRepository) *LobbyHandler {
 	return &LobbyHandler{gameRepo: gameRepo, lobbyRepo: lobbyRepo}
 }
+

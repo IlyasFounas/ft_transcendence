@@ -24,3 +24,17 @@ func (r *LobbyRepository) CreateLobby(ctx context.Context,
 	}
 	return lobby, nil
 }
+
+func (r *LobbyRepository) SetGameId(ctx context.Context, lobby_id int64, 
+	game_id int64) error {
+	lobby := &games.Lobby{GameId: game_id}
+	_, err := r.db.NewUpdate().
+		Model(lobby).
+		Column("game_id").
+		Where("id = ?", lobby_id).
+		Exec(ctx)
+	if err != nil {
+		return err
+	}
+	return nil
+}

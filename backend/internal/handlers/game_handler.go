@@ -1,12 +1,13 @@
 package handlers
 
 import (
-	// "fmt"
+	"fmt"
 	"strconv"
 	"net/http"
 	"github.com/gin-gonic/gin"
 	"backend/internal/models/games"
 	"backend/internal/repositories"
+	"backend/internal/tools/join_code"
 )
 
 type GameHandler struct {
@@ -80,28 +81,44 @@ func (h *GameHandler) CreateLobby() gin.HandlerFunc {
                 gin.H{"message": "The userId is empty"})
             return
 		}
-		gameObj, err := initGameObj(c)
-		if err != nil {
-            c.JSON(http.StatusUnauthorized,
-				gin.H{"message": "the game initiation failed"})
-            return
+		lobbyObj := &games.Lobby{UserId: userId.(int64)}
+		for i := 0; i < 50; i++ {
+			joinCode, err := join_code.RandGenerate()
+			if err != nil {
+				c.JSON(http.StatusUnauthorized,
+					gin.H{"message": "failed"})
+				return ;
+			}
+			lobbyObj.JoinCode = joinCode
+			lobby, err := h.lobbyRepo.CreateLobby(c.Request.Context(), lobbyObj)
+			// fmt.Printf("\n\n\nlobby_id = %d\n", lobby.ID)
+			if err == nil {
+				gameObj, err := initGameObj(c)
+				if err != nil {
+					c.JSON(http.StatusUnauthorized,
+						gin.H{"message": "the game initiation failed"})
+					return
+				}
+				game, err := h.gameRepo.CreateGame(c.Request.Context(), gameObj)
+				if err != nil {
+					c.JSON(http.StatusUnauthorized,
+						gin.H{"message": "the creation of the game failed, try again"})
+					return ;
+				}
+				err = h.lobbyRepo.SetGameId(c.Request.Context(), lobby.ID, game.ID)
+				if err != nil {
+					c.JSON(http.StatusUnauthorized,
+						gin.H{"message": "the lobby can not be updated, try again"})
+				}
+				c.JSON(http.StatusOK,
+					gin.H{"message": "success", "lobby_id": lobby.ID})
+				return ;
+			}
+			fmt.Println("The join code already exist, currently retrying...\n")				
 		}
-		game, err := h.gameRepo.CreateGame(c.Request.Context(), gameObj)
-		if err != nil {
-			c.JSON(http.StatusUnauthorized,
-				gin.H{"message": "the creation of the game failed, try again"})
-			return ;
-		}		
-		lobbyObj := &games.Lobby{UserId: userId.(int64),
-								GameId: game.ID}
-		lobby, err := h.lobbyRepo.CreateLobby(c.Request.Context(), lobbyObj)
-		if err != nil {
-			c.JSON(http.StatusUnauthorized,
-				gin.H{"message": "the creation of the lobby failed, try again"})
-			return ;
-		}
-		c.JSON(http.StatusOK,
-			gin.H{"message": "success", "lobby_id": lobby.ID})
+		c.JSON(http.StatusUnauthorized,
+			gin.H{"message": "the creation of the lobby failed, try again"})
+		return ;
 	}
 }
 

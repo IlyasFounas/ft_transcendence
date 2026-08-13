@@ -26,8 +26,9 @@ type Lobby struct {
 	bun.BaseModel `bun:"lobby,alias:lo"`
 
 	ID 			int64 `bun:"id,pk,autoincrement"`
-	UserId  	int64 `bun:"user_id,pk"`
-	GameId  	int64 `bun:"game_id,pk"`
-		
+	UserId  	int64 `bun:"user_id"`
+	GameId  	int64 `bun:"game_id"`
+	JoinCode  	string `bun:"join_code,unique"`
+
 	Game 		*Game `bun:"rel:has-one,join:game_id=id"`
 }
