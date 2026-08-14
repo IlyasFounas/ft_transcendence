@@ -19,7 +19,7 @@ export default function AuthenticationSignUp ({
         console.log(password);
         //need to add functions later
         // validate fields / send data to back / handle success or error
-    }
+    };
 
     return (
         <div className="
@@ -34,11 +34,12 @@ export default function AuthenticationSignUp ({
             <Input label="username" type="text" value={username} onChange={setUsername}/>
             <Input label="password" type="password" value={password} onChange={setPassword}/>
             <PrimaryButton size="small" onClick={handleSignUp}>sign up</PrimaryButton>
-            <div 
-                 className="
+            <button
+                type="button"
+                className="
                     text-text-primary
                     underline
-                    text-body-primary
+                    text-heading-small
                     cursor-pointer
                     transition
                     duration-150
@@ -50,7 +51,7 @@ export default function AuthenticationSignUp ({
                 onClick={onLogin}
             >
                 Already have an account?
-            </div>
+            </button>
         </div>
     );
 }
