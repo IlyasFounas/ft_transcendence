@@ -35,6 +35,7 @@ export default function AuthenticationWelcome ({
                     hover:shadow-[0_0_12px_rgba(255,255,255,0.35)]
                     hover:scale-[1.02]
                     active:scale-[0.98]
+                    cursor-pointer
                     "
                     onClick={onGoogleLogin}
                 >
@@ -60,6 +61,7 @@ export default function AuthenticationWelcome ({
                     hover:shadow-[0_0_12px_rgba(53,223,255,0.35)]
                     hover:scale-[1.02]
                     active:scale-[0.98]
+                    cursor-pointer
                     "
                     onClick={onEmailSignUp}
                 >
