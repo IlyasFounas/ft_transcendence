@@ -31,23 +31,6 @@ export default function AuthenticationLogin ({
             <Input label="email" type="email" value={email} onChange={setEmail}/>
             <Input label="password" type="password" value={password} onChange={setPassword}/>
             <PrimaryButton size="small" onClick={handleLogin}>log in</PrimaryButton>
-            {/* <div 
-                 className="
-                    text-text-primary
-                    underline
-                    text-body-primary
-                    cursor-pointer
-                    transition
-                    duration-150
-                    hover:brightness-125
-                    hover:drop-shadow-[0_0_6px_rgba(53,223,255,0.5)]
-                    hover:scale-[1.02]
-                    active:scale-[0.98]
-                "
-                onClick={onBackToOptions}
-            >
-                Back to sign-in options
-            </div> */}
             <button
                 type="button"
                 className="
