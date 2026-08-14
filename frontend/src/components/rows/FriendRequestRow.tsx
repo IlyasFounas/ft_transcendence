@@ -46,7 +46,7 @@ export default function FriendRequestRow({
                         hover:drop-shadow-[0_0_6px_#35DFFF]
                     "
                 >
-                    <X size={24} />
+                    <X size={24} className="cursor-pointer" />
                 </button>
             </div>
         </div>

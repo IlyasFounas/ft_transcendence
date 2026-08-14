@@ -46,6 +46,7 @@ export default function SmallButton({
             uppercase
             text-body-primary
             transition
+            cursor-pointer
             duration-150
             disabled:opacity-40
             disabled:cursor-default
