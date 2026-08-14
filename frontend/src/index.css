@@ -73,6 +73,16 @@
 	}
 }
 
+/* Browser autofill */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-text-fill-color: var(--color-text-primary);
+  -webkit-box-shadow: 0 0 0 1000px var(--color-surface-elevated) inset;
+  box-shadow: 0 0 0 1000px var(--color-surface-elevated) inset;
+}
+
 @layer components {
   .custom-scrollbar {
     scrollbar-width: thin;
