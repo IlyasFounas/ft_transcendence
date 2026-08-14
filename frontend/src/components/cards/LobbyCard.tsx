@@ -17,7 +17,7 @@ export default function LobbyCard({
 		outline outline-1 outline-offset-[-1px] outline-cyan-800/30
 		flex items-center justify-between px-[16px] uppercase">
   			<div className="flex items-center gap-[12px]">
-			<Avatar size="45"/>
+			<Avatar size={45}/>
 			<div className="flex flex-col px-[10px]">
 	  			<span className="text-heading-small text-text-primary">
 	   				{username}
