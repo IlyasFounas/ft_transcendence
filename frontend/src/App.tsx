@@ -9,9 +9,9 @@ import UserStatus from './components/user/UserStatus.tsx';
 import FriendListRow from './components/rows/FriendListRow.tsx';
 import FriendChatRow from './components/rows/FriendChatRow.tsx';
 import AuthenticationCard from './components/cards/AuthenticationCard.tsx';
-import AuthenticationWelcome from './components/Authentication/AuthenticationWelcome.tsx';
+import AuthenticationWelcome from './components/authentication/AuthenticationWelcome.tsx';
 import Input from './components/primitives/Input.tsx';
-import AuthenticationSignUp from './components/Authentication/AuthenticationSignUp.tsx';
+import AuthenticationSignUp from './components/authentication/AuthenticationSignUp.tsx';
 
 function App() {
 
