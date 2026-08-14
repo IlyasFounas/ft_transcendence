@@ -1,26 +1,86 @@
+import { Mail } from "lucide-react"
 import PrimaryButton from "../buttons/PrimaryButton";
 
-export default function AuthenticationWelcome () {
+interface AuthenticationWelcomeProps {
+    onGoogleLogin?: () => void;
+    onEmailSignUp?: () => void;
+    onEmailLogin?: () => void;
+}
+
+export default function AuthenticationWelcome ({
+    onGoogleLogin,
+    onEmailSignUp,
+    onEmailLogin,
+}: AuthenticationWelcomeProps) {
     return (
         <div className="
             flex
             flex-col
             gap-[50px]
-            py-[50px]
             "
         >
             <div className="flex flex-col gap-[30px]">
-                <button className="flex h-[62px] bg-white rounded-2xl text-black text-heading-medium items-center justify-center">Continue with Google</button>
-                <button className="flex h-[62px] bg-primary rounded-2xl text-black text-heading-medium items-center justify-center">Continue with Email</button>
+                <button className="
+                    flex
+                    h-[62px]
+                    items-center
+                    justify-center
+                    gap-2
+                    rounded-2xl
+                    bg-white
+                    text-black
+                    text-heading-medium
+                    transition
+                    duration-200
+                    hover:shadow-[0_0_12px_rgba(255,255,255,0.35)]
+                    hover:scale-[1.02]
+                    active:scale-[0.98]
+                    "
+                    onClick={onGoogleLogin}
+                >
+                    <img
+                        src="icons/gmail.svg"
+                        alt=""
+                        className="w-5 h-5"
+                    />
+                    <span>Continue with Google</span>
+                </button>
+                <button className="
+                    flex
+                    h-[62px]
+                    items-center
+                    justify-center
+                    gap-2
+                    rounded-2xl
+                    bg-primary
+                    text-black
+                    text-heading-medium
+                    transition
+                    duration-200
+                    hover:shadow-[0_0_12px_rgba(53,223,255,0.35)]
+                    hover:scale-[1.02]
+                    active:scale-[0.98]
+                    "
+                    onClick={onEmailSignUp}
+                >
+                    <Mail size={20} />
+                    <span>Continue with Email</span>
+                </button>
             </div>
             <div className="flex gap-[16px] items-center">
-                <hr className="w-full border-t border-text-secondary"></hr>
-                <span className="text-body-primary text-text-secondary uppercase">or</span>
-                <hr className="w-full border-t border-text-secondary"></hr>
+                <hr className="w-full border-t border-text-secondary" />
+                <span className="text-body-primary text-text-secondary uppercase">
+                    or
+                </span>
+                <hr className="w-full border-t border-text-secondary" />
             </div>
             <div className="flex items-center justify-between">
-                <div className="text-heading-small text-text-primary">Already have an account ?</div>
-                <PrimaryButton size="small">Login</PrimaryButton>
+                <div className="text-heading-small text-text-primary">
+                    Already have an account ?
+                </div>
+                <PrimaryButton size="small" onClick={onEmailLogin}>
+                    Login
+                </PrimaryButton>
             </div>
         </div>
     );
