@@ -91,7 +91,6 @@ func (h *GameHandler) CreateLobby() gin.HandlerFunc {
 			}
 			lobbyObj.JoinCode = joinCode
 			lobby, err := h.lobbyRepo.CreateLobby(c.Request.Context(), lobbyObj)
-			// fmt.Printf("\n\n\nlobby_id = %d\n", lobby.ID)
 			if err == nil {
 				gameObj, err := initGameObj(c)
 				if err != nil {
