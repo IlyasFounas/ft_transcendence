@@ -12,6 +12,7 @@ import AuthenticationCard from './components/cards/AuthenticationCard.tsx';
 import AuthenticationWelcome from './components/authentication/AuthenticationWelcome.tsx';
 import Input from './components/primitives/Input.tsx';
 import AuthenticationSignUp from './components/authentication/AuthenticationSignUp.tsx';
+import AuthenticationLogin from './components/authentication/AuthenticationLogin.tsx';
 
 function App() {
 
@@ -53,6 +54,9 @@ function App() {
       <Input label="Email" type="sdsdsl" placeholder='example@mail.com'></Input>
       <AuthenticationCard>
         <AuthenticationSignUp />
+      </AuthenticationCard>
+      <AuthenticationCard>
+        <AuthenticationLogin />
       </AuthenticationCard>
   </div>
   )
