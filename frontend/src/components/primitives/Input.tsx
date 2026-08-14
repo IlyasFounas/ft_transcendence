@@ -17,7 +17,7 @@ export default function Input ({
 }: InputProps) {
 
     return (
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3 w-full">
             <label className="text-heading-medium text-text-secondary uppercase">
                 {label}
             </label>
