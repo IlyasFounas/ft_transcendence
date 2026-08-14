@@ -14,8 +14,8 @@ services:
       - ../backend:/app
     networks:
       - ft_transcendence
-    env_file:
-      - ../backend/.env
+    # env_file:
+    #   - ../backend/.env
     # stop_grace_period: 15s //possible option to set a longer period for graceful shutdown if necessary
 
   # CHOKIDAR enables hot reload for the frontend
@@ -28,7 +28,7 @@ services:
     networks:
       - ft_transcendence
     environment:
-      CHOKIDAR_USEPOLLING=true
+      - CHOKIDAR_USEPOLLING=true
 
   nginx:
     ports:

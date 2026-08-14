@@ -7,7 +7,8 @@ import (
 type Repositories struct {
 	Location *LocationRepository
 	User     *UserRepository
-	Token    *TokenRepository
+	AToken    *ActivationTokenRepository
+	RToken    *RefreshTokenRepository
 }
 
 // NewRepositories instanciates and assembles all the repositories
@@ -20,6 +21,7 @@ func NewRepositories(db *bun.DB) (*Repositories, error) {
 	return &Repositories{
 		Location: locationRepo,
 		User:     NewUserRepository(db),
-		Token:    NewTokenRepository(db),
+		AToken:   NewActivationTokenRepository(db),
+		RToken:   NewRefreshTokenRepository(db),
 	}, nil
 }

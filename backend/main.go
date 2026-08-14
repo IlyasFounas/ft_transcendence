@@ -16,6 +16,7 @@ import (
 	"backend/internal/handlers"
 	"backend/internal/repositories"
 	"backend/internal/router"
+	"github.com/gin-gonic/gin"
 )
 
 /**
@@ -27,6 +28,10 @@ import (
  * deferred cleanup and graceful shutdown would be skipped.
  */
 func main() {
+    env := os.Getenv("ENV")
+    if (len(env) != 0 && env == "prod") {
+        gin.SetMode(gin.ReleaseMode)
+    }
 	// 1. Connection to the database
 	db := database.InitDatabase()
 	defer func() {

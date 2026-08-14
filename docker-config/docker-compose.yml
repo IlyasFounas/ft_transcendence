@@ -28,9 +28,10 @@ services:
   # Air provides hot reload, monitoring all files in backend/
   # and automatically rebuilds when changes are detected
   golang:
-    build: ../backend
+    build:
+      context: ../backend
+      target: ${ENV}
     working_dir: /app
-    command: sh -c "go mod tidy && air"
     environment:
       ACTIVATION_JWT_SECRET: ${ACTIVATION_JWT_SECRET}
       JWT_SECRET: ${JWT_SECRET}
@@ -39,6 +40,11 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
+      ENV: ${ENV}
+      LOCATION_FILE_PATH: ${LOCATION_FILE_PATH}
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   # React container to run the frontend
   # Features hot reload
@@ -46,10 +52,12 @@ services:
   # If `NODE_ENV=development`, allows insecure methods or features/tokens that won't exist in production
   # so it's useful to check this variable
   react:
-    build: ../frontend
+    build:
+      context: ../frontend 
+      target: ${ENV}
     working_dir: /app
     environment:
-      NODE_ENV: ${NODE_ENV}
+      ENV: ${ENV}
     depends_on:
       - golang
     stdin_open: true
@@ -60,8 +68,16 @@ services:
   # routing to either localhost:8080/ or localhost:3000/
   # This is a realistic way to develop, as production uses the same setup
   # Including it in dev prevents production bugs
+  # nginx:
+  #   build:
+  #     context: ../nginx
+  #     target: ${ENV}
   nginx:
-    build: ../nginx
+    build:
+      context: ../nginx
+      target: ${ENV}
+    depends_on:
+      - golang
 
 
 volumes:
