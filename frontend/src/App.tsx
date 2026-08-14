@@ -10,11 +10,13 @@ import FriendListRow from './components/rows/FriendListRow.tsx';
 import FriendChatRow from './components/rows/FriendChatRow.tsx';
 import AuthenticationCard from './components/cards/AuthenticationCard.tsx';
 import AuthenticationWelcome from './components/Authentication/AuthenticationWelcome.tsx';
+import Input from './components/primitives/Input.tsx';
+import AuthenticationSignUp from './components/Authentication/AuthenticationSignUp.tsx';
 
 function App() {
 
   return (
-	< div className="w-full min-h-screen bg-white">
+	< div className="w-full min-h-screen bg-black">
       <OperationHistory operations={operations}/>
       <UserProfile username="agent tommy" role="Field Analyst" avatar='/avatars/avatar1.png'/>
       <SmallButton onClick={() => console.log("clicked")}>Add Friend</SmallButton>
@@ -47,6 +49,10 @@ function App() {
       <FriendChatRow username="agent tommy" role="Field Analyst" avatar='/avatars/avatar1.png' lastMessage="make[1]: Entering directory '/home/spunyapr/commoncore/ft_transcendence/ft_transcendence'" timestamp='03.45pm' status='in-mission'/>
       <AuthenticationCard>
         <AuthenticationWelcome />
+      </AuthenticationCard>
+      <Input label="Email" type="sdsdsl" placeholder='example@mail.com'></Input>
+      <AuthenticationCard>
+        <AuthenticationSignUp />
       </AuthenticationCard>
   </div>
   )
