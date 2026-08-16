@@ -58,3 +58,28 @@ func (h *LobbyHandler) JoinLobby() gin.HandlerFunc {
 			gin.H{"message": "success"})
 	}
 }
+
+func (h *LobbyHandler) LeaveLobby() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userId, ok := c.Get("userId")
+		if !ok {
+			c.JSON(http.StatusUnauthorized, 
+				gin.H{"message": "failed"})
+			return
+		}
+		lobby, err := h.lobbyRepo.LeaveLobby(c.Request.Context(), userId.(int64));
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, 
+				gin.H{"message": "failed"})
+			return
+		}
+		err = h.lobbyRepo.RemoveLobby(c.Request.Context(), lobby)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized,
+				gin.H{"message": err})
+			return
+		}
+		c.JSON(http.StatusOK, 
+			gin.H{"message": "success"})
+	}
+}

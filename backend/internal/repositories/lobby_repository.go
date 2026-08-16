@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"errors"
 	"context"
 	"github.com/uptrace/bun"
 	"backend/internal/models/games"
@@ -36,6 +37,23 @@ func (r *LobbyRepository) JoinLobby(ctx context.Context,
 	return nil
 }
 
+func (r *LobbyRepository) LeaveLobby(ctx context.Context,
+	userId int64) (*games.Lobby, error) {
+	lobby := new(games.Lobby)
+	err := r.db.NewSelect().
+		Model(lobby).
+		Relation("Game", func(q *bun.SelectQuery) *bun.SelectQuery {
+			return q.Where("finished = false")
+		}).
+		Where("lo.user_id = ?", userId).
+		Scan(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return lobby, nil
+}
+
+// basic crud
 func (r *LobbyRepository) Lobby(ctx context.Context,
 	joinCode string) (*games.Lobby, error) {
 	lobby := new(games.Lobby)
@@ -85,6 +103,24 @@ func (r *LobbyRepository) SetGameId(ctx context.Context, lobby_id int64,
 		Exec(ctx)
 	if err != nil {
 		return err
+	}
+	return nil
+}
+
+func (r *LobbyRepository) RemoveLobby(ctx context.Context, lobby *games.Lobby) error {
+	res, err := r.db.NewDelete().
+		Model(lobby).
+		WherePK().
+		Exec(ctx)
+	if err != nil {
+		return err
+	}
+	rows, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rows == 0 {
+		return errors.New("You are not in a lobby")
 	}
 	return nil
 }
