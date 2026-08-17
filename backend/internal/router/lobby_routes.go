@@ -13,6 +13,7 @@ func registerLobbyRoutes(r *gin.Engine, h *handlers.GameHandler,
 	{
 		private.POST("/lobby/create", h.CreateLobby())
 		private.POST("/lobby/join", hl.JoinLobby())
-		private.GET("/lobby/leave", hl.LeaveLobby())
+		private.DELETE("/lobby/leave", hl.LeaveLobby())
+		private.DELETE("/lobby/remove/:username", hl.RemovePlayer())
 	}
 }

@@ -59,6 +59,7 @@ func (r *UserRepository) LoginUser(ctx context.Context,
 	return true, user.ID, nil
 }
 
+// Getters
 func (r *UserRepository) GetUser(ctx context.Context, userId int64) (*users.User, error) {
 	user := new(users.User)
 	err := r.db.NewSelect().
@@ -124,6 +125,21 @@ func (r *UserRepository) GetOAuth(ctx context.Context, userId int64) (*oauth2.To
 	return user.OAuth, nil
 }
 
+func (r *UserRepository) UserByName(ctx context.Context,
+	username string) (*users.User, error) {
+	user := new(users.User)
+	err := r.db.NewSelect().
+		Model(user).
+		Column("id", "name", "email", "is_verified", "avatar", "created_at").
+		Where("name = ?", username).
+		Scan(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
+// Setters
 // todo: set a limit to change the name (maybe 1 change per month)
 func (r *UserRepository) SetName(ctx context.Context, userId int64, name string) (bool, error) {
 	if len(name) == 0 {

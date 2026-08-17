@@ -3,14 +3,16 @@ package router
 import (
 	"backend/internal/handlers"
 	"github.com/gin-gonic/gin"
-	// "backend/internal/middleware"
+	"backend/internal/middleware"
 )
 
 func registerGameRoutes(r *gin.Engine, h *handlers.GameHandler) {
+	public := r.Group("/")
+	public.POST("/game/create", h.CreateGame())
+	
 	private := r.Group("/")
-	// private.use(middleware.AuthMiddleWare())
+	private.Use(middleware.AuthMiddleWare())
 	{
-		private.POST("/game/create", h.CreateGame())
 		private.GET("/game/:id", h.Game())
 		private.GET("/game/:id/title", h.Title())
 		private.GET("/game/:id/mode", h.Mode())

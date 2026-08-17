@@ -37,15 +37,13 @@ func (r *LobbyRepository) JoinLobby(ctx context.Context,
 	return nil
 }
 
-func (r *LobbyRepository) LeaveLobby(ctx context.Context,
-	userId int64) (*games.Lobby, error) {
+func (r *LobbyRepository) LobbyUserGameId(ctx context.Context,
+	userId int64, gameId int64) (*games.Lobby, error) {
 	lobby := new(games.Lobby)
 	err := r.db.NewSelect().
 		Model(lobby).
-		Relation("Game", func(q *bun.SelectQuery) *bun.SelectQuery {
-			return q.Where("finished = false")
-		}).
-		Where("lo.user_id = ?", userId).
+		Where("user_id = ?", userId).
+		Where("game_id = ?", gameId).
 		Scan(ctx)
 	if err != nil {
 		return nil, err
@@ -53,7 +51,23 @@ func (r *LobbyRepository) LeaveLobby(ctx context.Context,
 	return lobby, nil
 }
 
-// basic crud
+func (r *LobbyRepository) LobbyUser(ctx context.Context,
+	userId int64) (*games.Lobby, error) {
+	lobby := new(games.Lobby)
+	err := r.db.NewSelect().
+		Model(lobby).
+		Where("user_id = ?", userId).
+		Relation("Game", func(q *bun.SelectQuery) *bun.SelectQuery {
+			return q.Where("finished = false")
+		}).
+		Scan(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return lobby, nil
+}
+
+// Getters
 func (r *LobbyRepository) Lobby(ctx context.Context,
 	joinCode string) (*games.Lobby, error) {
 	lobby := new(games.Lobby)
@@ -93,6 +107,23 @@ func (r *LobbyRepository) LobbyPlayerNb(ctx context.Context,
 	return count, nil
 }
 
+func (r *LobbyRepository) ActualLobby(ctx context.Context,
+	user_id int64) (*games.Lobby, error) {
+	lobby := new(games.Lobby)
+	err := r.db.NewSelect().
+		Model(lobby).
+		Relation("Game", func(q *bun.SelectQuery) *bun.SelectQuery {
+			return q.Where("finished = false")
+		}).
+		Where("lo.user_id = ?", user_id).
+		Scan(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return lobby, nil
+}
+
+// Setters
 func (r *LobbyRepository) SetGameId(ctx context.Context, lobby_id int64, 
 	game_id int64) error {
 	lobby := &games.Lobby{GameId: game_id}
@@ -107,7 +138,9 @@ func (r *LobbyRepository) SetGameId(ctx context.Context, lobby_id int64,
 	return nil
 }
 
-func (r *LobbyRepository) RemoveLobby(ctx context.Context, lobby *games.Lobby) error {
+// Delete
+func (r *LobbyRepository) RemoveLobby(ctx context.Context, 
+	lobby *games.Lobby) error {
 	res, err := r.db.NewDelete().
 		Model(lobby).
 		WherePK().
@@ -124,3 +157,4 @@ func (r *LobbyRepository) RemoveLobby(ctx context.Context, lobby *games.Lobby) e
 	}
 	return nil
 }
+

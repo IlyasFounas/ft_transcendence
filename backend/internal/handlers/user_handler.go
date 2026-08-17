@@ -60,9 +60,22 @@ func (h *UserHandler) createActivationToken(c *gin.Context, expiresAt time.Time,
             gin.H{"message": "Send a new activation link"})
 		return err
 	}
-	if err := mailing.SendActivationEmail(c.PostForm("email"), tokenObj.Token); err != nil {
-        c.JSON(http.StatusInternalServerError,
-            gin.H{"message": "Send a new activation link"})
+	email := c.PostForm("email")
+	if len(email) == 0 {
+		emailString, err := h.userRepo.GetEmail(c.Request.Context(), userId)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError,
+				gin.H{"message": "can't find the email"})
+			return err
+		}
+		err = mailing.SendActivationEmail(*emailString, tokenObj.Token);
+	} else {
+		err = mailing.SendActivationEmail(email, tokenObj.Token);
+	}
+	if err != nil {
+		c.JSON(http.StatusInternalServerError,
+			gin.H{"message": "Send a new activation link"})
+		fmt.Printf("\n%s\n", err)
 		return err
 	}
 	return nil
@@ -76,10 +89,22 @@ func (h *UserHandler) CreateUser() gin.HandlerFunc {
                 gin.H{"message": "Something went wrong"})
 			return
 		}
-		userObj := &users.User{Login: c.PostForm("login"),
+		login := c.PostForm("login")
+		username := c.PostForm("username")
+		email := c.PostForm("email")
+		if len(login) == 0 || len(username) == 0 ||
+			len(email) == 0 {
+		    c.JSON(http.StatusBadRequest,
+                gin.H{"message": "failed"})
+			return
+		}
+		if len(username) == 0 {
+		    username = "player"	
+		}
+		userObj := &users.User{Login: login,
 			Password:    hashpassword,
-			Username:    c.PostForm("username"),
-			Email:       c.PostForm("email"),
+			Username:    username,
+			Email:       email,
 			Is_verified: false}
 
 		user, err := h.userRepo.CreateUser(c.Request.Context(), userObj)
@@ -107,11 +132,12 @@ func (h *UserHandler) LoginUser() gin.HandlerFunc {
 			if err := h.createActivationToken(c, expiresAt, userId); err != nil {
 				return
 			}
-			c.JSON(http.StatusInternalServerError,
+			c.JSON(http.StatusOK,
                 gin.H{"message": "The activation link has been sent on your email"})
             return
 		} else if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"state": "failed"})
+			c.JSON(http.StatusInternalServerError,
+				gin.H{"state": "failed"})
 			return
 		}
 		if !state {
@@ -248,6 +274,20 @@ func (h *UserHandler) GetOAuth() gin.HandlerFunc {
             "message": "success",
             "OAuth":  oauth})
         }
+	}
+}
+
+func (h *UserHandler) UserByName() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		username := c.Param("username")
+		user, err := h.userRepo.UserByName(c.Request.Context(), username)
+		if err != nil {
+			c.JSON(http.StatusBadRequest,
+				gin.H{"message": "failed"})
+			return		
+		}
+		c.JSON(http.StatusOK,
+			gin.H{"message": "success", "user": user})
 	}
 }
 

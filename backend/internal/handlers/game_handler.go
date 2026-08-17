@@ -87,37 +87,41 @@ func (h *GameHandler) CreateLobby() gin.HandlerFunc {
 			if err != nil {
 				c.JSON(http.StatusUnauthorized,
 					gin.H{"message": "failed"})
-				return ;
+				return
 			}
 			lobbyObj.JoinCode = joinCode
 			lobby, err := h.lobbyRepo.CreateLobby(c.Request.Context(), lobbyObj)
 			if err == nil {
 				gameObj, err := initGameObj(c)
 				if err != nil {
+					h.lobbyRepo.RemoveLobby(c.Request.Context(), lobby)
 					c.JSON(http.StatusUnauthorized,
 						gin.H{"message": "the game initiation failed"})
 					return
 				}
 				game, err := h.gameRepo.CreateGame(c.Request.Context(), gameObj)
 				if err != nil {
+					h.lobbyRepo.RemoveLobby(c.Request.Context(), lobby)
 					c.JSON(http.StatusUnauthorized,
 						gin.H{"message": "the creation of the game failed, try again"})
-					return ;
+					return
 				}
 				err = h.lobbyRepo.SetGameId(c.Request.Context(), lobby.ID, game.ID)
 				if err != nil {
+					h.lobbyRepo.RemoveLobby(c.Request.Context(), lobby)
 					c.JSON(http.StatusUnauthorized,
 						gin.H{"message": "the lobby can not be updated, try again"})
+					return
 				}
 				c.JSON(http.StatusOK,
 					gin.H{"message": "success", "lobby_id": lobby.ID})
-				return ;
+				return
 			}
 			fmt.Println("The join code already exist, currently retrying...\n")				
 		}
 		c.JSON(http.StatusUnauthorized,
 			gin.H{"message": "the creation of the lobby failed, try again"})
-		return ;
+		return
 	}
 }
 
