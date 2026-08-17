@@ -69,10 +69,10 @@ export function SilverPodium({className})
 	);
 }
 
-export function BronzePodium()
+export function BronzePodium({className})
 {
 	return (
-		<svg width="287" height="372" viewBox="0 0 287 372" fill="none" xmlns="http://www.w3.org/2000/svg">
+		<svg className={className} width="287" height="372" viewBox="0 0 287 372" fill="none" xmlns="http://www.w3.org/2000/svg">
 			<g opacity="0.8" filter="url(#filter0_ddd_412_471)">
 			<path d="M44.0625 43.5L52.125 36H234.875L243.275 43.8141L251 51V319.125L242.938 328.059L235.771 336H51.2292L43.7516 327.714L36 319.125V51L44.0625 43.5Z" fill="#020A14"/>
 			<path d="M234.482 37L242.594 44.5459L250 51.4346V318.74L242.195 327.389L235.326 335H51.6738L44.4941 327.044L37 318.74V51.4346L44.7432 44.2324L52.5176 37H234.482Z" stroke="url(#paint0_linear_412_471)" stroke-width="2"/>
@@ -140,10 +140,10 @@ export function BronzePodium()
 	);
 }
 
-export function GoldPodium()
+export function GoldPodium({className})
 {
 	return (
-		<svg width="312" height="422" viewBox="0 0 312 422" fill="none" xmlns="http://www.w3.org/2000/svg">
+		<svg className={className} width="312" height="422" viewBox="0 0 312 422" fill="none" xmlns="http://www.w3.org/2000/svg">
 			<g opacity="0.8" filter="url(#filter0_ddd_412_456)">
 			<path d="M45 44.7501L54 36.0001H258L267.377 45.1165L276 53.5001V366.313L267 376.735L259 386H53L44.6529 376.333L36 366.313V53.5001L45 44.7501Z" fill="#020A14"/>
 			<path d="M257.594 37L266.68 45.834L275 53.9219V365.94L266.243 376.082L258.543 385H53.457L45.4102 375.68L37 365.94V53.9219L45.6973 45.4668L54.4062 37H257.594Z" stroke="url(#paint0_linear_412_456)" stroke-width="2"/>

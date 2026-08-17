@@ -1,4 +1,4 @@
-interface StatusBadgeProps {
+export interface StatusBadgeProps {
   status: "ready" | "waiting";
 }
 

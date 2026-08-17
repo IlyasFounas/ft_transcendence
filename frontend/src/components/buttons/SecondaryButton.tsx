@@ -3,17 +3,17 @@ import type { BaseButtonProps } from "./button.types";
 interface SecondaryButtonProps extends BaseButtonProps {
 	active?: boolean;
 	icon?: React.ReactNode;
+	className?: string;
 }
 
-
-export default function SecondaryButton({ children, onClick, icon, active }: SecondaryButtonProps) {
+export default function SecondaryButton({ children, onClick, icon, active, className }: SecondaryButtonProps) {
   return (
 	<button 
 		onClick={onClick}
 		className={`
-			inline-flex w-fit h-[60px] items-center justify-center
+			inline-flex w-fit min-h-[60px] items-center justify-center
 			
-			px-[24px] py-[16px] gap-3 m-8
+			px-[24px] py-[16px] gap-3
 			
 			rounded-lg
 			border border-primary
@@ -41,18 +41,19 @@ export default function SecondaryButton({ children, onClick, icon, active }: Sec
 			active:opacity-75
 			
 			${active
-        ? `
+		? `
 			text-text-primary
-            border-border-active
-            outline-border-active
-            shadow-[0px_0px_16px_0px_rgba(40,215,255,0.5)]
-        `
-        : `
-            border-border-default
-            outline-border-default
-            text-text-secondary
-            shadow-[0px_0px_16px_0px_rgba(30,77,120,0.15)]
-        `}
+			border-border-active
+			outline-border-active
+			shadow-[0px_0px_16px_0px_rgba(40,215,255,0.5)]
+		`
+		: `
+			border-border-default
+			outline-border-default
+			text-text-secondary
+			shadow-[0px_0px_16px_0px_rgba(30,77,120,0.15)]
+		`}
+			${className}
 			`}
 	>
 		{icon}

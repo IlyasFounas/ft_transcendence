@@ -11,6 +11,7 @@
 		--color-primary: #35DFFF;
 		--color-surface-base: #020A14;
 		--color-surface-elevated: #07192E;
+		--color-surface-title: #010305;
 		--color-border-default: #1E4D78;
 		--color-text-primary: #FFFFFF;
 		--color-text-secondary: #6E8AA5;
@@ -67,6 +68,7 @@
 
 @layer base {
 	body {
+		background-color: var(--color-surface-base);
 		color: var(--color-text-primary);
 		font-family: var(--font-main);
 	}
@@ -80,15 +82,4 @@
   --button-gradient-pressed-start: #030B17;
   --button-gradient-pressed-middle: #082743;
   --button-gradient-pressed-end: #030B17;
-}
-
-.hexagon {
-  clip-path: polygon(
-	50% 0,
-	100% 25%,
-    100% 75%,
-    50% 100%,
-    0% 75%,
-    0% 25%
-  );
 }

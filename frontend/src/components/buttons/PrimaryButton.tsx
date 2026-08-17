@@ -1,26 +1,30 @@
 import type { BaseButtonProps } from "./button.types";
 import { SmallButtonSvg, MediumButtonSvg, LargeButtonSvg } from "./ButtonShape";
+
 interface PrimaryButtonProps extends BaseButtonProps {
 	subtitle?: string;
 	size?: "small" | "medium" | "large";
+	className?: string;
 }
 
 const sizeStyles = {
   small: {
-    container: "w-[254px] h-[98px]",
+    container: "w-full max-w-[254px] aspect-[254/98]",
     title: "text-heading-small",
     subtitle: "text-caption-small",
   },
+
   medium: {
-    container: "w-[394px] h-[124px]",
+    container: "w-full max-w-[394px] aspect-[394/124]",
     title: {
       default: "text-heading-large",
       withSubtitle: "text-heading-medium",
     },
     subtitle: "text-caption-medium",
   },
+
   large: {
-    container: "w-[534px] h-[159px]",
+    container: "w-full max-w-[534px] aspect-[534/159]",
     title: "text-hero",
     subtitle: "text-caption-large",
   },
@@ -32,7 +36,7 @@ const buttonShapes = {
   small: SmallButtonSvg,
 };
 
-export default function PrimaryButton({ children, onClick, subtitle, disabled, size = "large"}: PrimaryButtonProps) {
+export default function PrimaryButton({ children, onClick, subtitle, disabled, size = "large", className = ""}: PrimaryButtonProps) {
 	
 	const styles = sizeStyles[size];
 
@@ -62,6 +66,7 @@ export default function PrimaryButton({ children, onClick, subtitle, disabled, s
 			disabled:cursor-default
     		disabled:opacity-40
 			${styles.container}
+			${className}
 		`}
 		>
   		<Shape className="

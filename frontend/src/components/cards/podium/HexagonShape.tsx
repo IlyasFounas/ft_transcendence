@@ -2,10 +2,12 @@ import { useId } from "react";
 
 type AvatarHexagonProps = {
 	avatar?: string;
+	className?: string;
 };
 
 export function BronzeAvatarHexagon({
 	avatar = "avatars/avatar1.png",
+	className,
 	}: AvatarHexagonProps)
 {
 	const uid = useId().replace(/:/g, "");
@@ -14,7 +16,7 @@ export function BronzeAvatarHexagon({
 
 
 	return (
-		<svg width="100" height="110" viewBox="0 0 100 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+		<svg className={className} width="100" height="110" viewBox="0 0 100 110" fill="none" xmlns="http://www.w3.org/2000/svg">
 			<g filter="url(#filter0_d_412_477)">
 			<path d="M82.2816 36.1543V73.8447L49.641 92.6895L17.0004 73.8447V36.1543L49.641 17.3096L82.2816 36.1543Z" stroke="url(#paint0_linear_412_477)" stroke-width="4" shape-rendering="crispEdges"/>
 			</g>
@@ -64,6 +66,7 @@ export function BronzeAvatarHexagon({
 
 export function SilverAvatarHexagon({
 	avatar = "avatars/avatar1.png",
+	className,
 	}: AvatarHexagonProps)
 {
 	const uid = useId().replace(/:/g, "");
@@ -71,7 +74,7 @@ export function SilverAvatarHexagon({
 	const clipId = `hex-avatar-clip-${uid}`;
 
 	return (
-		<svg width="100" height="110" viewBox="0 0 100 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+		<svg className={className} width="100" height="110" viewBox="0 0 100 110" fill="none" xmlns="http://www.w3.org/2000/svg">
 			<g filter="url(#filter0_d_412_447)">
 			<path d="M82.2816 36.1543V73.8447L49.641 92.6895L17.0004 73.8447V36.1543L49.641 17.3096L82.2816 36.1543Z" stroke="url(#paint0_linear_412_447)" stroke-width="4" shape-rendering="crispEdges"/>
 			</g>
@@ -120,13 +123,14 @@ export function SilverAvatarHexagon({
 
 export function GoldAvatarHexagon({
   avatar = "avatars/avatar1.png",
+  className,
 }: AvatarHexagonProps) {
   const uid = useId().replace(/:/g, "");
   const filterId = `hex-avatar-glow-${uid}`;
   const clipId = `hex-avatar-clip-${uid}`;
 
   return (
-    <svg width="104" height="115" viewBox="0 0 104 115" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg className={className} width="104" height="115" viewBox="0 0 104 115" fill="none" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <filter id={filterId} x="0" y="0" width="103.612" height="115" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
           <feFlood floodOpacity="0" result="BackgroundImageFix" />
