@@ -2,7 +2,6 @@ package haversine
 
 import (
 	"math"
-	"fmt"
 )
 
 type Coordinates struct {
@@ -23,8 +22,6 @@ func degreesToRadians(degrees float64) float64 {
 
 // Distance calculates the distance in meters and feet between two coordinates using the Haversine formula
 func Distance(p1, p2 Coordinates) (m, ft float64) {
-	fmt.Println("earthRadiusMeters =", earthRadiusMeters)
-	fmt.Println("earthRadiusFeet =", earthRadiusFeet)
 	lat1 := degreesToRadians(p1.Lat)
 	lon1 := degreesToRadians(p1.Lon)
 	lat2 := degreesToRadians(p2.Lat)
