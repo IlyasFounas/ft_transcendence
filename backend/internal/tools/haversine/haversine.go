@@ -11,8 +11,9 @@ type Coordinates struct {
 
 // Constants for the radius of the Earth in meters and feet
 const (
-	earthRadiusMeters = 6371088 // median radius of the Earth in meters
-	earthRadiusFeet = 20902520 // 6371088 * 3.28084 > meters to feet conversion
+	EarthDiameterMeters = 12742176 // median diameter of the Earth in meters
+	EarthRadiusMeters = 6371088 // median radius of the Earth in meters
+	EarthRadiusFeet = 20902520 // 6371088 * 3.28084 > meters to feet conversion
 )
 
 // Converts from degrees to radians
@@ -38,8 +39,8 @@ func Distance(p1, p2 Coordinates) (m, ft float64) {
 	// radians to central angle: 
 	centralAngle := 2 * math.Atan2(math.Sqrt(hav0), math.Sqrt(1-hav0))
  
-	m = centralAngle * earthRadiusMeters
-	ft = centralAngle * earthRadiusFeet
+	m = centralAngle * EarthRadiusMeters
+	ft = centralAngle * EarthRadiusFeet
 
 	return m, ft
 }

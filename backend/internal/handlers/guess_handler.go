@@ -76,6 +76,28 @@ func (h *GuessHandler) AddGuess(c *gin.Context) {
 	createdGuess.Distance = &dist // store distance in meters
 
 	// TODO calculate score based on distance and multipliers/dividers (time, cc, streaks)
+	
+	score := haversine.EarthDiameterMeters - m
+	score = score / haversine.EarthDiameterMeters * 1000 //put score on base 1000 (ex: if the distance is 0, the score is 1000, if the distance is 12742176, the score is 0)
+	createdGuess.Score = int64(score)
+
+	//multiplier time left (0 to 1, based on time max being one, and time min being zero, and time left being the difference between the time the time at the moment of validating guess and the time max)
+	// TODO implement multiplier time left
+
+	createdGuess.CountryFound = true
+	// multiplier correct country code
+	if createdGuess.CountryFound == true {
+		createdGuess.Score *= 2
+	}
+
+	// multiplier for streaks (if less than 1000 meters, then add 1 to the streak, if more than 1000 meters, then reset the streak to 0)
+	if dist < 1000 && createdGuess.CountryFound == true {
+		createdGuess.Streak += 1
+		createdGuess.Score *= createdGuess.Streak
+	} else if (dist >= 1000 || createdGuess.CountryFound == false) {
+		createdGuess.Streak = 0
+	}
+
 	c.JSON(http.StatusCreated, createdGuess)
 }
 

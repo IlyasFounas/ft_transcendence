@@ -15,9 +15,9 @@ type Guess struct {
 	Long			*float64		`bun:"longitude" json:"longitude,omitempty"`
 	CC				string			`bun:"country_code,type:varchar(2)"`
 	Distance		*int64			`bun:"distance"`
-	// CountryFound	bool			`bun:"country_found, default:false"`
-	// Streak			int64			`bun:"streak,default:0"`
+	CountryFound 	bool			`bun:"country_found,default:false"`
 	// TimeTaken		time.Time		`bun:"time_taken,default:0"`
+	Streak			int64			`bun:"streak,default:0"`
 	Score			int64			`bun:"score,notnull"`
 	// RoundId			int64			`bun:"round_id,notnull,unique"`
 	// UserId			int64			`bun:"user_id,notnull, unique"`
