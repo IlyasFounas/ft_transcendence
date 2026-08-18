@@ -22,8 +22,20 @@ import ChatBoxCard from './components/cards/ChatBox.tsx';
 import GameSummaryCard from './components/cards/GameResultCard.tsx';
 import SummaryResultCard from './components/cards/SummaryResultCard.tsx'
 import Podium from './components/cards/podium/Podium.tsx';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import GamePage from './pages/game/GamePage'
+import Home from './pages/HomePage' 
 
-function App() {
+
+/*  <Router>
+      <Routes>
+        <Route path="/" element={<Home/>} />
+        <Route path="/game" element={<GamePage/>} />
+      </Routes>
+    </Router> */
+
+
+function App(){
   return (
     <div className="w-full min-h-screen bg-black p-8 text-white">
 

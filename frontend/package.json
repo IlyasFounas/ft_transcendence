@@ -11,14 +11,18 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",
+    "leaflet": "^1.9.4",
     "lucide-react": "^1.31.0",
+    "mapillary-js": "^4.1.2",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
+    "react-router-dom": "^7.18.2",
     "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@svgr/plugin-svgo": "^8.1.0",
+    "@types/leaflet": "^1.9.22",
     "@types/node": "^24.13.2",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",

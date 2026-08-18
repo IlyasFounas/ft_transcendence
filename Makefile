@@ -1,11 +1,16 @@
-.PHONY: up down restart logs logs-backend logs-frontend ps stop clean init_mig create_mig exec_mig rollback_mig status_mig
+.PHONY: up down restart logs logs-backend logs-frontend ps stop clean create_mig init_mig exec_mig rollback_mig status_mig
 
-DOCKER_COMPOSE = docker-config/docker-compose.yml
 DOCKER_COMPOSE_OVERRIDE = docker-config/docker-compose.override.yml
+DOCKER_COMPOSE_PROD = docker-config/docker-compose.prod.yml
+DOCKER_COMPOSE = docker-config/docker-compose.yml
+ENV_PROD = docker-config/.env.prod
 
 up:
 	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_OVERRIDE) up -d
 	make print_posgres_ip
+
+prod:
+	docker compose --env-file $(ENV_PROD) -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_PROD) up -d
 
 down:
 	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_OVERRIDE) down
@@ -19,8 +24,8 @@ fclean:
 restart:
 	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_OVERRIDE) restart
 
-clean:
-	rm -rf dist/ build/ main #put the right folders/files
+# clean:
+# 	rm -rf dist/ build/ main #put the right folders/files
 
 clean-images: clean
 	@echo "Cleaning images..."
@@ -56,12 +61,11 @@ print_posgres_ip:
 #   make exec_mig          → Apply pending migrations
 #   make rollback_mig      → Undo the last migration
 #   make status_mig        → Show applied/pending migrations
-	
-init_mig:
-	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_OVERRIDE) exec golang go run cmd/bun/main.go init
-
 create_mig:
 	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_OVERRIDE) exec golang go run cmd/bun/main.go create_go ${NAME}
+
+init_mig:
+	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_OVERRIDE) exec golang go run cmd/bun/main.go init
 
 exec_mig:
 	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_OVERRIDE) exec golang go run cmd/bun/main.go migrate

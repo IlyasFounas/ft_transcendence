@@ -3,6 +3,7 @@ package middleware
 import (
     "os"
     "fmt"
+    "net/http"
     "strconv"
     "github.com/gin-gonic/gin"
     "github.com/golang-jwt/jwt/v5"
@@ -23,15 +24,14 @@ func AuthMiddleWare() gin.HandlerFunc {
     claims := jwt.MapClaims{}
     _, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
         return []byte(os.Getenv("JWT_SECRET")), nil })
-
     if err != nil {
       fmt.Printf("%s\n", err)
-      c.AbortWithStatusJSON(401, gin.H{"state": "failed", "error_message": "unauthorized"})
+      c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "unauthorized"})
       return
     }
     id, err := strconv.ParseInt(claims["sub"].(string), 10, 64)
     if err != nil {
-      c.AbortWithStatusJSON(401, gin.H{"state": "failed", "error_message": "invalid token"})
+      c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "invalid token"})
       return
     }
     c.Set("userId", id)
