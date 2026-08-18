@@ -2,6 +2,7 @@ package haversine
 
 import (
 	"math"
+	"fmt"
 )
 
 type Coordinates struct {
@@ -11,8 +12,8 @@ type Coordinates struct {
 
 // Constants for the radius of the Earth in meters and feet
 const (
-	earthRadiusMeters = 6371000
-	earthRadiusFeet = 3958 * 5280
+	earthRadiusMeters = 6371088 // median radius of the Earth in meters
+	earthRadiusFeet = 20902520 // 6371088 * 3.28084 > meters to feet conversion
 )
 
 // Converts from degrees to radians
@@ -22,6 +23,8 @@ func degreesToRadians(degrees float64) float64 {
 
 // Distance calculates the distance in meters and feet between two coordinates using the Haversine formula
 func Distance(p1, p2 Coordinates) (m, ft float64) {
+	fmt.Println("earthRadiusMeters =", earthRadiusMeters)
+	fmt.Println("earthRadiusFeet =", earthRadiusFeet)
 	lat1 := degreesToRadians(p1.Lat)
 	lon1 := degreesToRadians(p1.Lon)
 	lat2 := degreesToRadians(p2.Lat)

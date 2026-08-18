@@ -76,7 +76,6 @@ func (h *GuessHandler) AddGuess(c *gin.Context) {
 	createdGuess.Distance = &dist // store distance in meters
 
 	// TODO calculate score based on distance and multipliers/dividers (time, cc, streaks)
-	score
 	c.JSON(http.StatusCreated, createdGuess)
 }
 
