@@ -11,8 +11,8 @@ type Guess struct {
 	bun.BaseModel `bun:"table:guesses,alias:g"`
 
 	ID				int64			`bun:"guess_id,pk,autoincrement"`
-	Lat				*float64		`bun:"latitude"` // pointer to allow knowing if values have been set or not, so if user has guessed or not
-	Long			*float64		`bun:"longitude"`
+	Lat				*float64		`bun:"latitude" json:"latitude,omitempty"` // pointer to allow knowing if values have been set or not, so if user has guessed or not
+	Long			*float64		`bun:"longitude" json:"longitude,omitempty"`
 	CC				string			`bun:"country_code,type:varchar(2)"`
 	Distance		*int64			`bun:"distance"`
 	// CountryFound	bool			`bun:"country_found, default:false"`

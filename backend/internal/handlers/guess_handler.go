@@ -7,6 +7,7 @@ import (
 	"log"
 	"strconv"
 	"github.com/gin-gonic/gin"
+	"backend/internal/tools/haversine"
 	"backend/internal/models/guesses"
 	"backend/internal/repositories"
 )
@@ -57,8 +58,25 @@ func (h *GuessHandler) AddGuess(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not create guess"})
 		return
 	}
-	// TODO calculate distance based on lat + long compared to actual location
+
+	if createdGuess.Lat == nil || createdGuess.Long == nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "latitude and longitude must be provided"})
+        return
+    }
+	
+	// Calculates distance based on lat + long compared to actual location
+	base := haversine.Coordinates{Lat: 51.45, Lon: 1.15}  // TODO replace with actual location coordinates from the database using the round_id>location_id
+    guessCoords := haversine.Coordinates{Lat: *createdGuess.Lat, Lon: *createdGuess.Long,}
+
+    m, ft := haversine.Distance(base, guessCoords)
+	_ = ft // currently not used, but can be returned if needed
+	//TODO add an option to choose between m and ft in the request body
+
+	dist := int64(m) // convert to int64 for storage
+	createdGuess.Distance = &dist // store distance in meters
+
 	// TODO calculate score based on distance and multipliers/dividers (time, cc, streaks)
+	score
 	c.JSON(http.StatusCreated, createdGuess)
 }
 
@@ -66,19 +84,19 @@ func (h *GuessHandler) AddGuess(c *gin.Context) {
 func (h *GuessHandler) GetGuessByID(c *gin.Context) {
 	ctx := c.Request.Context()
 
-	guess_id, err := strconv.ParseInt(c.Param("guess_id"), 10, 64)
+	guessID, err := strconv.ParseInt(c.Param("guess_id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid guess id"})
 		return
 	}
 
-	loc, err := h.repo.GetByID(ctx, guess_id)
+	loc, err := h.repo.GetByID(ctx, guessID)
 	if err != nil {
 		if errors.Is(err, repositories.ErrGuessNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "guess not found"})
 			return
 		}
-		log.Printf("Error getting guess %d: %v", guess_id, err)
+		log.Printf("Error getting guess %d: %v", guessID, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get guess"})
 		return
 	}
@@ -90,30 +108,30 @@ func (h *GuessHandler) GetGuessByID(c *gin.Context) {
 func (h *GuessHandler) GetGuessCoordinates(c *gin.Context) {
 	ctx := c.Request.Context()
 
-	guess_id, err := strconv.ParseInt(c.Param("guess_id"), 10, 64)
+	guessID, err := strconv.ParseInt(c.Param("guess_id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid guess id"})
 		return
 	}
 
-	lat, err := h.repo.GetLatitudeByID(ctx, guess_id)
+	lat, err := h.repo.GetLatitudeByID(ctx, guessID)
 	if err != nil {
 		if errors.Is(err, repositories.ErrGuessNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "guess not found"})
 			return
 		}
-		log.Printf("Error getting latitude for guess %d: %v", guess_id, err)
+		log.Printf("Error getting latitude for guess %d: %v", guessID, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get latitude for guess"})
 		return
 	}
 
-	long, err := h.repo.GetLongitudeByID(ctx, guess_id)
+	long, err := h.repo.GetLongitudeByID(ctx, guessID)
 	if err != nil {
 		if errors.Is(err, repositories.ErrGuessNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "guess not found"})
 			return
 		}
-		log.Printf("Error getting longitude for guess %d: %v", guess_id, err)
+		log.Printf("Error getting longitude for guess %d: %v", guessID, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get longitude for guess"})
 		return
 	}
@@ -125,19 +143,19 @@ func (h *GuessHandler) GetGuessCoordinates(c *gin.Context) {
 func (h *GuessHandler) GetGuessLatitude(c *gin.Context) {
 	ctx := c.Request.Context()
 
-	guess_id, err := strconv.ParseInt(c.Param("guess_id"), 10, 64)
+	guessID, err := strconv.ParseInt(c.Param("guess_id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid guess id"})
 		return
 	}
 
-	lat, err := h.repo.GetLatitudeByID(ctx, guess_id)
+	lat, err := h.repo.GetLatitudeByID(ctx, guessID)
 	if err != nil {
 		if errors.Is(err, repositories.ErrGuessNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "guess not found"})
 			return
 		}
-		log.Printf("Error getting latitude for guess %d: %v", guess_id, err)
+		log.Printf("Error getting latitude for guess %d: %v", guessID, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get latitude for guess"})
 		return
 	}
@@ -149,19 +167,19 @@ func (h *GuessHandler) GetGuessLatitude(c *gin.Context) {
 func (h *GuessHandler) GetGuessLongitude(c *gin.Context) {
 	ctx := c.Request.Context()
 
-	guess_id, err := strconv.ParseInt(c.Param("guess_id"), 10, 64)
+	guessID, err := strconv.ParseInt(c.Param("guess_id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid guess id"})
 		return
 	}
 
-	long, err := h.repo.GetLongitudeByID(ctx, guess_id)
+	long, err := h.repo.GetLongitudeByID(ctx, guessID)
 	if err != nil {
 		if errors.Is(err, repositories.ErrGuessNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "guess not found"})
 			return
 		}
-		log.Printf("Error getting longitude for guess %d: %v", guess_id, err)
+		log.Printf("Error getting longitude for guess %d: %v", guessID, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get longitude for guess"})
 		return
 	}
@@ -173,19 +191,19 @@ func (h *GuessHandler) GetGuessLongitude(c *gin.Context) {
 func (h *GuessHandler) GetGuessCountryCode(c *gin.Context) {
 	ctx := c.Request.Context()
 
-	guess_id, err := strconv.ParseInt(c.Param("guess_id"), 10, 64)
+	guessID, err := strconv.ParseInt(c.Param("guess_id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid guess id"})
 		return
 	}
 
-	cc, err := h.repo.GetCountryCodeByID(ctx, guess_id)
+	cc, err := h.repo.GetCountryCodeByID(ctx, guessID)
 	if err != nil {
 		if errors.Is(err, repositories.ErrGuessNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "guess not found"})
 			return
 		}
-		log.Printf("Error getting country code for guess %d: %v", guess_id, err)
+		log.Printf("Error getting country code for guess %d: %v", guessID, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get country code for guess"})
 		return
 	}
@@ -197,19 +215,19 @@ func (h *GuessHandler) GetGuessCountryCode(c *gin.Context) {
 func (h *GuessHandler) GetGuessDistance(c *gin.Context) {
 	ctx := c.Request.Context()
 
-	guess_id, err := strconv.ParseInt(c.Param("guess_id"), 10, 64)
+	guessID, err := strconv.ParseInt(c.Param("guess_id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid guess id"})
 		return
 	}
 
-	dist, err := h.repo.GetDistanceByID(ctx, guess_id)
+	dist, err := h.repo.GetDistanceByID(ctx, guessID)
 	if err != nil {
 		if errors.Is(err, repositories.ErrGuessNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "guess not found"})
 			return
 		}
-		log.Printf("Error getting distance for guess %d: %v", guess_id, err)
+		log.Printf("Error getting distance for guess %d: %v", guessID, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get distance for guess"})
 		return
 	}
@@ -221,19 +239,19 @@ func (h *GuessHandler) GetGuessDistance(c *gin.Context) {
 func (h *GuessHandler) GetGuessScore(c *gin.Context) {
 	ctx := c.Request.Context()
 
-	guess_id, err := strconv.ParseInt(c.Param("guess_id"), 10, 64)
+	guessID, err := strconv.ParseInt(c.Param("guess_id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid guess id"})
 		return
 	}
 
-	score, err := h.repo.GetScoreByID(ctx, guess_id)
+	score, err := h.repo.GetScoreByID(ctx, guessID)
 	if err != nil {
 		if errors.Is(err, repositories.ErrGuessNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "guess not found"})
 			return
 		}
-		log.Printf("Error getting score for guess %d: %v", guess_id, err)
+		log.Printf("Error getting score for guess %d: %v", guessID, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get score for guess"})
 		return
 	}
@@ -245,19 +263,19 @@ func (h *GuessHandler) GetGuessScore(c *gin.Context) {
 func (h *GuessHandler) DeleteGuessByID(c *gin.Context) {
 	ctx := c.Request.Context()
 
-	guess_id, err := strconv.ParseInt(c.Param("guess_id"), 10, 64)
+	guessID, err := strconv.ParseInt(c.Param("guess_id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid guess id"})
 		return
 	}
 
-	err = h.repo.DeleteByID(ctx, guess_id)
+	err = h.repo.DeleteByID(ctx, guessID)
 	if err != nil {
 		if errors.Is(err, repositories.ErrGuessNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "guess not found"})
 			return
 		}
-		log.Printf("Error deleting guess %d: %v", guess_id, err)
+		log.Printf("Error deleting guess %d: %v", guessID, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not delete guess"})
 		return
 	}
