@@ -5,7 +5,6 @@ import PrimaryButton from "../components/buttons/PrimaryButton";
 import SecondaryButton from "../components/buttons/SecondaryButton";
 import MissionSettingsCard from "../components/cards/MissionSettingsCard";
 
-
 export default function LobbyPage()
 {
 	return (
@@ -46,7 +45,8 @@ export default function LobbyPage()
 					lg:row-start-3
 					lg:max-w-none
 				">
-					<SecondaryButton className="w-full">
+					<SecondaryButton className="
+						w-full ">
 						Leave Room
 					</SecondaryButton>
 
