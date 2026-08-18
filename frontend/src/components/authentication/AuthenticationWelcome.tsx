@@ -16,6 +16,7 @@ export default function AuthenticationWelcome ({
         <div className="
             flex
             flex-col
+            w-full
             gap-[50px]
             "
         >

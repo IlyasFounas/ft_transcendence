@@ -36,7 +36,7 @@ export default function AuthenticationSignUp ({
             <Input label="username" type="text" value={username} onChange={setUsername}/>
             <Input label="password" type="password" value={password} onChange={setPassword}/>
 
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between w-full">
                 <button
                     type="button"
                     className="
