@@ -7,6 +7,7 @@ interface Player {
   id: string;
   username: string;
   role: string;
+  avatar: string;
   status: StatusBadgeProps["status"];
 }
 
@@ -43,6 +44,7 @@ export default function LobbyList({className, listOfPlayers}: LobbyListProps)
       				username={player.username}
       				role={player.role}
       				status={player.status}
+					avatar={player.avatar}
     			/>
   			))}
 			</div>

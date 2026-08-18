@@ -13,6 +13,15 @@ import AuthenticationWelcome from './components/authentication/AuthenticationWel
 import Input from './components/primitives/Input.tsx';
 import AuthenticationSignUp from './components/authentication/AuthenticationSignUp.tsx';
 import AuthenticationLogin from './components/authentication/AuthenticationLogin.tsx';
+import PrimaryButton from './components/buttons/PrimaryButton.tsx';
+import SecondaryButton from './components/buttons/SecondaryButton.tsx';
+import Avatar from './components/primitives/Avatar.tsx';
+import GameResultCard from './components/cards/GameResultCard.tsx';
+import LobbyTestPage from './components/cards/LobbyTestPage.tsx';
+import ChatBoxCard from './components/cards/ChatBox.tsx';
+import GameSummaryCard from './components/cards/GameResultCard.tsx';
+import SummaryResultCard from './components/cards/SummaryResultCard.tsx'
+import Podium from './components/cards/podium/Podium.tsx';
 
 function App() {
   return (
@@ -225,6 +234,106 @@ function App() {
         </AuthenticationCard>
       </section>
 
+	  <section className="mb-10">
+        <h2 className="mb-4 text-xl font-bold">
+          Primary Button - without subtitles
+        </h2>
+        <PrimaryButton>Join Operation</PrimaryButton>
+      </section>
+
+	  <section className="mb-10">
+        <h2 className="mb-4 text-xl font-bold">
+          Primary Button - with subtitles
+        </h2>
+        <PrimaryButton subtitle="Launch a new operation">Start Mission</PrimaryButton>
+      </section>
+
+	   <section className="mb-10">
+        <h2 className="mb-4 text-xl font-bold">
+          Secondary Button - Inactive
+        </h2>
+        <SecondaryButton>Play</SecondaryButton>
+      </section>
+
+	   <section className="mb-10">
+        <h2 className="mb-4 text-xl font-bold">
+          Secondary Button - Active
+        </h2>
+        <SecondaryButton active={true}>Play</SecondaryButton>
+      </section>
+
+	  <section className="mb-10">
+        <h2 className="mb-4 text-xl font-bold">
+          Secondary Button - Active
+        </h2>
+        <SecondaryButton active={true}>Play</SecondaryButton>
+      </section>
+
+	  <section className="mb-10">
+        <h2 className="mb-4 text-xl font-bold">
+			Avatar
+        </h2>
+		<Avatar avatar="/avatars/avatar1.png"></Avatar>
+      </section>
+
+	   <section className="mb-10">
+        <h2 className="mb-4 text-xl font-bold">
+			Game Result Card
+        </h2>
+			<GameResultCard rank={2} distance={256} points={1000} ></GameResultCard>
+      </section>
+
+	   <section className="mb-10">
+        <h2 className="mb-4 text-xl font-bold">
+			Lobby Card
+        </h2>
+			<LobbyTestPage></LobbyTestPage>
+      </section>
+
+	  <section className="mb-10">
+        <h2 className="mb-4 text-xl font-bold">
+			ChatBox - Received
+        </h2>
+			<ChatBoxCard variant="received" message="Hello ! How are you doing?" time="02.12 PM"></ChatBoxCard>
+      </section>
+
+
+	  <section className="mb-10">
+        <h2 className="mb-4 text-xl font-bold">
+			ChatBox - Sent
+        </h2>
+			<ChatBoxCard variant="sent" message="I'm good, how r u?" time="02.11 PM"></ChatBoxCard>
+      </section>
+
+	   <section className="mb-10">
+        <h2 className="mb-4 text-xl font-bold">
+			Summary Result Roll
+        </h2>
+			<SummaryResultCard rank={2}
+  			player={{ username: "Agent Tommy", role: "Field Analyst", avatar: "/avatars/avatar1.png" }}
+ 			 rounds={[ {round: 1, points: 1820,}, {round: 1, points: 1245,},{round: 1, points: 180, },{round: 1, points: 1896,},{round: 1, points: 1200,}, ]}></SummaryResultCard>
+      </section>
+
+	  <section className="mb-10">
+        <h2 className="mb-4 text-xl font-bold">
+			Podium Card - Gold
+        </h2>
+			<Podium color="gold" username="Agent Tommy" title="Field Analyst" points={2.563}></Podium>
+      </section>
+
+	    <section className="mb-10">
+        <h2 className="mb-4 text-xl font-bold">
+			Podium Card - Silver
+        </h2>
+			<Podium color="silver" username="Agent Tommy" title="Field Analyst" points={2.563}></Podium>
+      </section>
+
+	    <section className="mb-10">
+        <h2 className="mb-4 text-xl font-bold">
+			Podium Card - Bronze
+        </h2>
+			<Podium color="bronze" username="Agent Tommy" title="Field Analyst" points={2.563}></Podium>
+      </section>
     </div>
   );
 }
