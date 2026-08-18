@@ -3,6 +3,7 @@ package repositories
 import (
 	"errors"
 	"context"
+	"database/sql"
 	"github.com/uptrace/bun"
 	"backend/internal/models/games"
 )
@@ -46,6 +47,9 @@ func (r *LobbyRepository) LobbyUserGameId(ctx context.Context,
 		Where("game_id = ?", gameId).
 		Scan(ctx)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
 		return nil, err
 	}
 	return lobby, nil
@@ -108,19 +112,34 @@ func (r *LobbyRepository) LobbyPlayerNb(ctx context.Context,
 }
 
 func (r *LobbyRepository) ActualLobby(ctx context.Context,
-	user_id int64) (*games.Lobby, error) {
+	userId int64) (*games.Lobby, error) {
 	lobby := new(games.Lobby)
 	err := r.db.NewSelect().
 		Model(lobby).
 		Relation("Game", func(q *bun.SelectQuery) *bun.SelectQuery {
 			return q.Where("finished = false")
 		}).
-		Where("lo.user_id = ?", user_id).
+		Where("lo.user_id = ?", userId).
 		Scan(ctx)
 	if err != nil {
 		return nil, err
 	}
 	return lobby, nil
+}
+
+func (r *LobbyRepository) IsAllowedToRemove(ctx context.Context,
+	userId int64, gameId int64) (string, error) {
+	lobby := new(games.Lobby)
+	err := r.db.NewSelect().
+		Model(lobby).
+		Column("join_code").
+		Where("user_id = ?", userId).
+		Where("game_id = ?", gameId).
+		Scan(ctx)
+	if err != nil {
+		return "", err
+	}
+	return lobby.JoinCode, nil
 }
 
 // Setters

@@ -37,6 +37,18 @@ func (h *LobbyHandler) JoinLobby() gin.HandlerFunc {
 				gin.H{"message": "failed"})
 			return
 		}
+		lobby, err := h.lobbyRepo.LobbyUserGameId(c.Request.Context(),
+			userId.(int64), gameId)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized,
+				gin.H{"message": "Can't find the actual lobby"})
+			return
+		}
+		if lobby != nil {
+			c.JSON(http.StatusUnauthorized,
+				gin.H{"message": "You can't join the lobby twice"})
+			return
+		}
 		playerNb, err := h.lobbyRepo.LobbyPlayerNb(c.Request.Context(), gameId)
 		if err != nil{
 			c.JSON(http.StatusUnauthorized,
@@ -109,22 +121,22 @@ func (h *LobbyHandler) RemovePlayer() gin.HandlerFunc {
 				gin.H{"message": "cant't get the user by name"})
 			return
 		}
-		ok, err = h.lobbyRepo.IsAllowedToRemove(c.Request.Context(),
-			userId.(int64), user)
+		lobby, err := h.lobbyRepo.ActualLobby(c.Request.Context(), user.ID)
+		if err != nil {
+			c.JSON(http.StatusBadRequest,
+				gin.H{"message": "failed"})
+			return
+		}
+		joinCode, err := h.lobbyRepo.IsAllowedToRemove(c.Request.Context(),
+			userId.(int64), lobby.GameId)
 		if err != nil {
 			c.JSON(http.StatusBadRequest,
 				gin.H{"message": "cant't get the lobby"})
 			return
 		}
-		if !ok {
+		if len(joinCode) == 0 {
 			c.JSON(http.StatusUnauthorized,
 				gin.H{"message": "you're not allowed to remove the player"})
-			return
-		}
-		lobby, err := h.lobbyRepo.ActualLobby(c.Request.Context(), user.ID)
-		if err != nil {
-			c.JSON(http.StatusBadRequest,
-				gin.H{"message": "failed"})
 			return
 		}
 		err = h.lobbyRepo.RemoveLobby(c.Request.Context(), lobby)
