@@ -9,10 +9,10 @@
 
 	/* --- COLORS --- */
 		--color-primary: #35DFFF;
+    	--color-background-base: #000000;
 		--color-surface-base: #020A14;
 		--color-surface-elevated: #07192E;
-		--color-surface-title: #010305;
-		--color-border-default: #1E4D78;
+		--color-border-default: rgb(30 77 120 / 30%);
 		--color-text-primary: #FFFFFF;
 		--color-text-secondary: #6E8AA5;
 		--color-status-green: #39FF6D;
@@ -72,6 +72,40 @@
 		color: var(--color-text-primary);
 		font-family: var(--font-main);
 	}
+}
+
+/* Browser autofill */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-text-fill-color: var(--color-text-primary);
+  -webkit-box-shadow: 0 0 0 1000px var(--color-surface-elevated) inset;
+  box-shadow: 0 0 0 1000px var(--color-surface-elevated) inset;
+}
+
+@layer components {
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #1E4D78 #020A14;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: #020A14;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #1E4D78;
+    border-radius: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #35DFFF;
+  }
 }
 
 :root {
