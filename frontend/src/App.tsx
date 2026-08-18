@@ -1,19 +1,18 @@
-import { useState } from 'react'
-import Avatar from './components/primitives/Avatar'
-import LobbyPage from './pages/LobbyPage'
-import RoomCodeCard from './components/cards/RoomCodeCard'
-import Panel from './components/primitives/Panel'
-import LobbyTestPage from './components/cards/LobbyTestPage'
-import PrimaryButton from './components/buttons/PrimaryButton'
-import Podium from './components/cards/podium/Podium'
-import EmptyLobbyRoll from './components/cards/EmptyLobbyRoll'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import GamePage from './pages/game/GamePage'
+import Home from './pages/HomePage' 
+import ComponentsPage from './pages/ComponentsPage';
 
 function App() {
-
   return (
-	<div>
-		<LobbyPage></LobbyPage>
-	</div>
+    <Router>
+      <Routes>
+        <Route path="/" element={<Home/>} />
+        <Route path="/game" element={<GamePage/>} />
+        <Route path="/components" element={<ComponentsPage/>} />
+      </Routes>
+    </Router>
   )
 }
-export default App
+
+export default App;

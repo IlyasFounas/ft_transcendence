@@ -1,0 +1,34 @@
+services:
+  postgres:
+    container_name: postgres_container
+    networks:
+      - database
+
+  # For Golang and React, volumes mount the code directories (backend and frontend)
+  # since the containers execute the code
+  golang:
+    container_name: golang_container
+    networks:
+      - app
+      - database
+    environment:
+      RESEND_API_KEY: ${RESEND_API_KEY}
+
+  react:
+    container_name: react_container
+    networks:
+      - app
+
+  nginx:
+    ports:
+      - "443:443"
+      - "80:80"
+    networks:
+      - app
+
+# Simple network that may be enhanced for production
+networks:
+  app:
+    driver: bridge
+  database:
+    driver: bridge

@@ -35,7 +35,7 @@ export default function GameSummaryCard({
 				{rank}
 			</div>
 			<div className="flex items-center gap-[12px] px-[50px]">
-						<Avatar size={45}/>
+						<Avatar avatar={player.avatar} size={45}/>
 						<div className="flex flex-col px-[10px]">
 							<span className="text-heading-small text-text-primary">
 								{player.username}

@@ -8,6 +8,7 @@ interface Player {
   id: string;
   username: string;
   role: string;
+  avatar: string;
   status: StatusBadgeProps["status"];
   avatar: string;
 }
