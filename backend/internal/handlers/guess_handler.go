@@ -42,6 +42,38 @@ func NewGuessHandler(repo GuessGetter) *GuessHandler {
 	return &GuessHandler{repo: repo}
 }
 
+// Calculates distance based on lat + long compared to actual location
+func calculateDistance(location, guessCoords haversine.Coordinates) (int64) {
+	m, ft := haversine.Distance(location, guessCoords)
+	_ = ft // currently not used, but can be returned if needed
+	//TODO add an option to choose between m and ft in the request body
+
+	dist := int64(m) // convert to int64 for storage
+	return dist
+}
+
+// Calculate score based on distance and multipliers/dividers (time, cc, streaks)
+func calculateScore(createdGuess *guesses.Guess) () {
+	distance := haversine.EarthDiameterMeters - createdGuess.Distance
+	createdGuess.Score = distance * 1000 / haversine.EarthDiameterMeters //put score on base 1000 (ex: if the distance is 0, the score is 1000, if the distance is 12742176, the score is 0)
+
+	//multiplier time left (0 to 1, based on time max being one, and time min being zero, and time left being the difference between the time the time at the moment of validating guess and the time max)
+	// TODO implement multiplier time left
+
+	// multiplier correct country code
+	if createdGuess.CountryFound == true {
+		createdGuess.Score *= 2
+	}
+
+	// multiplier for streaks (if less than 1000 meters, then add 1 to the streak, if more than 1000 meters, then reset the streak to 0)
+	if createdGuess.Distance < 1000 && createdGuess.CountryFound == true {
+		createdGuess.Streak += 1
+		createdGuess.Score *= createdGuess.Streak
+	} else if createdGuess.Distance >= 1000 || createdGuess.CountryFound == false {
+		createdGuess.Streak = 0
+	} 
+}
+
 // POST /guesses
 func (h *GuessHandler) AddGuess(c *gin.Context) {
 	ctx := c.Request.Context()
@@ -64,40 +96,10 @@ func (h *GuessHandler) AddGuess(c *gin.Context) {
         return
     }
 	
-	// Calculates distance based on lat + long compared to actual location
-	base := haversine.Coordinates{Lat: 51.45, Lon: 1.15}  // TODO replace with actual location coordinates from the database using the round_id>location_id
-    guessCoords := haversine.Coordinates{Lat: *createdGuess.Lat, Lon: *createdGuess.Long,}
+	createdGuess.Distance = calculateDistance(haversine.Coordinates{Lat: 51.45, Lon: 1.15}, haversine.Coordinates{Lat: *createdGuess.Lat, Lon: *createdGuess.Long})
+	// TODO replace with actual location coordinates from the database using the round_id>location_id
 
-    m, ft := haversine.Distance(base, guessCoords)
-	_ = ft // currently not used, but can be returned if needed
-	//TODO add an option to choose between m and ft in the request body
-
-	dist := int64(m) // convert to int64 for storage
-	createdGuess.Distance = &dist // store distance in meters
-
-	// TODO calculate score based on distance and multipliers/dividers (time, cc, streaks)
-	
-	score := haversine.EarthDiameterMeters - m
-	score = score / haversine.EarthDiameterMeters * 1000 //put score on base 1000 (ex: if the distance is 0, the score is 1000, if the distance is 12742176, the score is 0)
-	createdGuess.Score = int64(score)
-
-	//multiplier time left (0 to 1, based on time max being one, and time min being zero, and time left being the difference between the time the time at the moment of validating guess and the time max)
-	// TODO implement multiplier time left
-
-	createdGuess.CountryFound = true
-	// multiplier correct country code
-	if createdGuess.CountryFound == true {
-		createdGuess.Score *= 2
-	}
-
-	// multiplier for streaks (if less than 1000 meters, then add 1 to the streak, if more than 1000 meters, then reset the streak to 0)
-	if dist < 1000 && createdGuess.CountryFound == true {
-		createdGuess.Streak += 1
-		createdGuess.Score *= createdGuess.Streak
-	} else if (dist >= 1000 || createdGuess.CountryFound == false) {
-		createdGuess.Streak = 0
-	}
-
+	calculateScore(createdGuess)
 	c.JSON(http.StatusCreated, createdGuess)
 }
 
