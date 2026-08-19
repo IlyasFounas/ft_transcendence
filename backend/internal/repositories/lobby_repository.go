@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"time"
 	"errors"
 	"context"
 	"database/sql"
@@ -16,6 +17,7 @@ func NewLobbyRepository(db *bun.DB) *LobbyRepository {
 	return &LobbyRepository{db: db}
 }
 
+// Specific functions
 func (r *LobbyRepository) CreateLobby(ctx context.Context,
 	lobby *games.Lobby) (*games.Lobby, error){
 	_, err := r.db.NewInsert().
@@ -38,13 +40,15 @@ func (r *LobbyRepository) JoinLobby(ctx context.Context,
 	return nil
 }
 
-func (r *LobbyRepository) LobbyUserGameId(ctx context.Context,
+// return the actual lobby of the userid and gameid
+func (r *LobbyRepository) ActualLobbyGameId(ctx context.Context,
 	userId int64, gameId int64) (*games.Lobby, error) {
 	lobby := new(games.Lobby)
 	err := r.db.NewSelect().
 		Model(lobby).
 		Where("user_id = ?", userId).
 		Where("game_id = ?", gameId).
+		Where("left_at IS NULL").
 		Scan(ctx)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -55,17 +59,22 @@ func (r *LobbyRepository) LobbyUserGameId(ctx context.Context,
 	return lobby, nil
 }
 
-func (r *LobbyRepository) LobbyUser(ctx context.Context,
+// return the actual lobby / game the user is in
+func (r *LobbyRepository) ActualLobby(ctx context.Context,
 	userId int64) (*games.Lobby, error) {
 	lobby := new(games.Lobby)
 	err := r.db.NewSelect().
 		Model(lobby).
-		Where("user_id = ?", userId).
-		Relation("Game", func(q *bun.SelectQuery) *bun.SelectQuery {
-			return q.Where("finished = false")
-		}).
+		// Relation("Game", func(q *bun.SelectQuery) *bun.SelectQuery {
+		// 	return q.Where("finished = false")
+		// }).
+		Where("lo.user_id = ?", userId).
+		Where("lo.left_at IS NULL").
 		Scan(ctx)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
 		return nil, err
 	}
 	return lobby, nil
@@ -77,7 +86,7 @@ func (r *LobbyRepository) Lobby(ctx context.Context,
 	lobby := new(games.Lobby)
 	err := r.db.NewSelect().
 		Model(lobby).
-		Where("join_code = ?", joinCode).
+		Where("join_code = ?", &joinCode).
 		Scan(ctx)
 	if err != nil {
 		return nil, err
@@ -91,7 +100,7 @@ func (r *LobbyRepository) GameIdLobby(ctx context.Context,
 	err := r.db.NewSelect().
 		Model(lobby).
 		Column("game_id").
-		Where("join_code = ?", joinCode).
+		Where("join_code = ?", &joinCode).
 		Scan(ctx)
 	if err != nil {
 		return 0, err
@@ -99,11 +108,13 @@ func (r *LobbyRepository) GameIdLobby(ctx context.Context,
 	return lobby.GameId, nil
 }
 
+// Get the number of players in the lobby
 func (r *LobbyRepository) LobbyPlayerNb(ctx context.Context,
 	gameId int64) (int, error) {
 	count, err := r.db.NewSelect().
 		Model((*games.Lobby)(nil)).
 		Where("game_id = ?", gameId).
+		Where("left_at IS NULL").
 		Count(ctx)
 	if err != nil {
 		return 0, err
@@ -111,24 +122,8 @@ func (r *LobbyRepository) LobbyPlayerNb(ctx context.Context,
 	return count, nil
 }
 
-func (r *LobbyRepository) ActualLobby(ctx context.Context,
-	userId int64) (*games.Lobby, error) {
-	lobby := new(games.Lobby)
-	err := r.db.NewSelect().
-		Model(lobby).
-		Relation("Game", func(q *bun.SelectQuery) *bun.SelectQuery {
-			return q.Where("finished = false")
-		}).
-		Where("lo.user_id = ?", userId).
-		Scan(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return lobby, nil
-}
-
-func (r *LobbyRepository) IsAllowedToRemove(ctx context.Context,
-	userId int64, gameId int64) (string, error) {
+func (r *LobbyRepository) IsCreator(ctx context.Context,
+	userId int64, gameId int64) (bool, error) {
 	lobby := new(games.Lobby)
 	err := r.db.NewSelect().
 		Model(lobby).
@@ -137,9 +132,23 @@ func (r *LobbyRepository) IsAllowedToRemove(ctx context.Context,
 		Where("game_id = ?", gameId).
 		Scan(ctx)
 	if err != nil {
-		return "", err
+		return false, err
 	}
-	return lobby.JoinCode, nil
+	return lobby.IsCreator, nil
+}
+
+func (r *LobbyRepository) AllPlayers(ctx context.Context,
+	gameId int64) ([]*games.Lobby, error) {
+	var lobbies []*games.Lobby
+	err := r.db.NewSelect().
+		Model(&lobbies).
+		Where("game_id = ?", gameId).
+		Where("left_at IS NULL").
+		Scan(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return lobbies, nil
 }
 
 // Setters
@@ -149,6 +158,35 @@ func (r *LobbyRepository) SetGameId(ctx context.Context, lobby_id int64,
 	_, err := r.db.NewUpdate().
 		Model(lobby).
 		Column("game_id").
+		Where("id = ?", lobby_id).
+		Exec(ctx)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *LobbyRepository) SetLeftAt(ctx context.Context,
+	lobby_id int64) error {
+	actualTime := time.Now()
+	lobby := &games.Lobby{LeftAt: &actualTime}
+	_, err := r.db.NewUpdate().
+		Model(lobby).
+		Column("left_at").
+		Where("id = ?", lobby_id).
+		Exec(ctx)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *LobbyRepository) SetIsCreator(ctx context.Context,
+	lobby_id int64, state bool) error {
+	lobby := &games.Lobby{IsCreator: state}
+	_, err := r.db.NewUpdate().
+		Model(lobby).
+		Column("is_creator").
 		Where("id = ?", lobby_id).
 		Exec(ctx)
 	if err != nil {
@@ -176,4 +214,3 @@ func (r *LobbyRepository) RemoveLobby(ctx context.Context,
 	}
 	return nil
 }
-

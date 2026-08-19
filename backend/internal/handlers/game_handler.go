@@ -81,7 +81,20 @@ func (h *GameHandler) CreateLobby() gin.HandlerFunc {
                 gin.H{"message": "The userId is empty"})
             return
 		}
-		lobbyObj := &games.Lobby{UserId: userId.(int64)}
+		actualLobby, err := h.lobbyRepo.ActualLobby(c.Request.Context(), 
+			userId.(int64))
+		if err != nil {
+			c.JSON(http.StatusUnauthorized,
+				gin.H{"message": "Something went wrong"})
+			return
+		}
+		if actualLobby != nil {
+			c.JSON(http.StatusUnauthorized,
+				gin.H{"message": "You're already in a lobby"})
+			return
+		}
+		lobbyObj := &games.Lobby{UserId: userId.(int64),
+								 IsCreator: true}
 		for i := 0; i < 50; i++ {
 			joinCode, err := join_code.RandGenerate()
 			if err != nil {
@@ -89,7 +102,7 @@ func (h *GameHandler) CreateLobby() gin.HandlerFunc {
 					gin.H{"message": "failed"})
 				return
 			}
-			lobbyObj.JoinCode = joinCode
+			lobbyObj.JoinCode = &joinCode
 			lobby, err := h.lobbyRepo.CreateLobby(c.Request.Context(), lobbyObj)
 			if err == nil {
 				gameObj, err := initGameObj(c)

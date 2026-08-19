@@ -30,6 +30,18 @@ func (h *LobbyHandler) JoinLobby() gin.HandlerFunc {
 				gin.H{"message": "The userId is empty"})
 			return
 		}
+		actualLobby, err := h.lobbyRepo.ActualLobby(c.Request.Context(), 
+			userId.(int64))
+		if err != nil {
+			c.JSON(http.StatusUnauthorized,
+				gin.H{"message": "Something went wrong"})
+			return
+		}
+		if actualLobby != nil {
+			c.JSON(http.StatusUnauthorized,
+				gin.H{"message": "You're already in a lobby"})
+			return
+		}
 		joinCode := c.PostForm("join_code")
 		gameId, err := h.lobbyRepo.GameIdLobby(c.Request.Context(), joinCode)
 		if err != nil {
@@ -37,7 +49,7 @@ func (h *LobbyHandler) JoinLobby() gin.HandlerFunc {
 				gin.H{"message": "failed"})
 			return
 		}
-		lobby, err := h.lobbyRepo.LobbyUserGameId(c.Request.Context(),
+		lobby, err := h.lobbyRepo.ActualLobbyGameId(c.Request.Context(),
 			userId.(int64), gameId)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized,
@@ -62,7 +74,9 @@ func (h *LobbyHandler) JoinLobby() gin.HandlerFunc {
 			return
 		}
 		lobbyObj := &games.Lobby{UserId: userId.(int64),
-								GameId: gameId}
+								GameId: gameId,
+								JoinCode: nil,
+								IsCreator: false}
 		err = h.lobbyRepo.JoinLobby(c.Request.Context(), lobbyObj)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized,
@@ -82,20 +96,14 @@ func (h *LobbyHandler) LeaveLobby() gin.HandlerFunc {
 				gin.H{"message": "failed"})
 			return
 		}
-		// gameId, err := strconv.ParseInt(c.Param("id"), 10, 64)
-		// if err != nil {
-		// 	c.JSON(http.StatusBadRequest, 
-		// 		gin.H{"message": "invalid id"})
-		// 	return;
-		// }
-		lobby, err := h.lobbyRepo.LobbyUser(c.Request.Context(),
+		lobby, err := h.lobbyRepo.ActualLobby(c.Request.Context(),
 			userId.(int64));
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, 
 				gin.H{"message": "failed"})
 			return
 		}
-		err = h.lobbyRepo.RemoveLobby(c.Request.Context(), lobby)
+		err = h.lobbyRepo.SetLeftAt(c.Request.Context(), lobby.ID)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized,
 				gin.H{"message": err})
@@ -118,7 +126,7 @@ func (h *LobbyHandler) RemovePlayer() gin.HandlerFunc {
 		user, err := h.userRepo.UserByName(c.Request.Context(), username)
 		if err != nil {
 			c.JSON(http.StatusBadRequest,
-				gin.H{"message": "cant't get the user by name"})
+				gin.H{"message": "can't get the user by name"})
 			return
 		}
 		lobby, err := h.lobbyRepo.ActualLobby(c.Request.Context(), user.ID)
@@ -127,19 +135,19 @@ func (h *LobbyHandler) RemovePlayer() gin.HandlerFunc {
 				gin.H{"message": "failed"})
 			return
 		}
-		joinCode, err := h.lobbyRepo.IsAllowedToRemove(c.Request.Context(),
+		isCreator, err := h.lobbyRepo.IsCreator(c.Request.Context(),
 			userId.(int64), lobby.GameId)
 		if err != nil {
 			c.JSON(http.StatusBadRequest,
-				gin.H{"message": "cant't get the lobby"})
+				gin.H{"message": "can't get the lobby"})
 			return
 		}
-		if len(joinCode) == 0 {
+		if !isCreator {
 			c.JSON(http.StatusUnauthorized,
 				gin.H{"message": "you're not allowed to remove the player"})
 			return
 		}
-		err = h.lobbyRepo.RemoveLobby(c.Request.Context(), lobby)
+		err = h.lobbyRepo.SetLeftAt(c.Request.Context(), lobby.ID)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized,
 				gin.H{"message": "failed"})
@@ -147,5 +155,33 @@ func (h *LobbyHandler) RemovePlayer() gin.HandlerFunc {
 		}
 		c.JSON(http.StatusOK, 
 			gin.H{"message": "success"})
+	}
+}
+
+func (h *LobbyHandler) AllPlayers() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userId, ok := c.Get("userId")
+		if !ok {
+            c.JSON(http.StatusUnauthorized,
+                gin.H{"message": "The userId is empty"})
+            return
+        }
+		lobby, err := h.lobbyRepo.ActualLobby(c.Request.Context(),
+			userId.(int64))
+		if err != nil {
+			c.JSON(http.StatusNotFound,
+				gin.H{"message": "You are not in a lobby"})
+			return 
+		}
+		lobbies, err := h.lobbyRepo.AllPlayers(c.Request.Context(),
+			lobby.GameId)
+		if err != nil {
+			c.JSON(http.StatusNotFound,
+				gin.H{"message": "There's none in the lobby"})
+			return 
+		}
+		c.JSON(http.StatusOK,
+			gin.H{"message": "success", "lobbies": lobbies})
+		
 	}
 }
