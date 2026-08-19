@@ -1,3 +1,4 @@
+import {useState} from "react"
 import OperationHistory from '../components/cards/OperationHistory';
 import { operations } from "../data/operations";
 import UserProfile from '../components/user/UserProfile.tsx';
@@ -23,6 +24,9 @@ import SummaryResultCard from '../components/cards/SummaryResultCard.tsx'
 import Podium from '../components/cards/podium/Podium.tsx';
 
 export default function ComponentPage() {
+
+	const [email, setEmail] = useState("");
+
   return (
       <div className="w-full min-h-screen bg-black p-8 text-white">
   
@@ -203,6 +207,8 @@ export default function ComponentPage() {
             label="Email"
             type="email"
             placeholder="example@mail.com"
+			value={email}
+    		onChange={setEmail}
           />
         </section>
   
@@ -220,7 +226,7 @@ export default function ComponentPage() {
             Authentication Card — Sign Up
           </h2>
           <AuthenticationCard>
-            <AuthenticationSignUp />
+            <AuthenticationSignUp onLogin={() => {}}/>
           </AuthenticationCard>
         </section>
   
@@ -229,7 +235,7 @@ export default function ComponentPage() {
             Authentication Card — Login
           </h2>
           <AuthenticationCard>
-            <AuthenticationLogin />
+            <AuthenticationLogin onBackToOptions={() => {}}/>
           </AuthenticationCard>
         </section>
   
