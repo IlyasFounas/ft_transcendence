@@ -1,6 +1,3 @@
-import { useState, useEffect } from "react";
-
-
 export default function SignalIntegrityCard({ countDown, totalTime }: {countDown : number, totalTime : number}) 
 {
 	const TOTAL_SIGNALS = 15;
@@ -25,7 +22,7 @@ export default function SignalIntegrityCard({ countDown, totalTime }: {countDown
 						<div
 							key={index}
 							className={`
-								w-4 h-6 rounded-xs
+								w-3 h-6 rounded-xs
 								${index < activeSignals
 									? "bg-cyan-400"
 									: "bg-sky-950"}

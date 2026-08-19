@@ -14,7 +14,7 @@ export default function GameBar()
 
 	return (
 		<div className="
-			w-full
+			w-full h-[120px]
 			flex flex-row justify-center items-center px-8 gap-8">
 			<LogoHorizontal className="min-w-[150px]"></LogoHorizontal>
 			<GameInfosCard round={3} totalRounds={5} id={4242}></GameInfosCard>

@@ -1,5 +1,4 @@
 import RoomCodeCard from "../components/cards/RoomCodeCard";
-import LobbyList from "../components/cards/LobbyList"
 import LobbyTestPage from "../components/cards/LobbyTestPage";
 import PrimaryButton from "../components/buttons/PrimaryButton";
 import SecondaryButton from "../components/buttons/SecondaryButton";

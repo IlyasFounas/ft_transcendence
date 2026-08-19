@@ -1,6 +1,4 @@
 import Avatar from "../primitives/Avatar.tsx"
-import StatusBadge from '../primitives/StatusBadge.tsx'
-import type {StatusBadgeProps}  from "../primitives/StatusBadge";
 
 export default function EmptyLobbyRoll() {
 
