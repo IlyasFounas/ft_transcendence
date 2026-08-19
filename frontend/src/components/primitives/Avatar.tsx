@@ -4,7 +4,6 @@ type AvatarSvgProps = {
   size?: number;
   borderColor?: string;
   avatar?: string;
-  className?: string;
 };
 
 const HEXAGON_PATH =
@@ -21,7 +20,6 @@ export default function Avatar({
   size = 60,
   borderColor = "#35DFFF",
   avatar,
-  className
 	}: AvatarSvgProps) {
 	const width = size;
 	const height = size * 1.1;

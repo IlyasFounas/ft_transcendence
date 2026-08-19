@@ -33,7 +33,7 @@ export default function LobbyRoll({
 	  			</span>
 			</div>
   		</div>
- 		<StatusBadge status={status} />
+ 		<StatusBadge status={status ?? "waiting"} />
 		</div>
 	);
 }
