@@ -14,9 +14,10 @@ type Guess struct {
 	Lat				*float64		`bun:"latitude" json:"latitude,omitempty"` // pointer to allow knowing if values have been set or not, so if user has guessed or not
 	Long			*float64		`bun:"longitude" json:"longitude,omitempty"`
 	CC				string			`bun:"country_code,type:varchar(2)"`
+	// Timer			time.Time		`bun:"timer,default:current_timestamp"`
 	Distance		int64			`bun:"distance"`
 	CountryFound 	bool			`bun:"country_found,default:false"`
-	// TimeTaken		time.Time		`bun:"time_taken,default:0"`
+	TimeLeft		int64			`bun:"time_left,default:0"`
 	Streak			int64			`bun:"streak,default:0"`
 	Score			int64			`bun:"score,notnull"`
 	// RoundId			int64			`bun:"round_id,notnull,unique"`

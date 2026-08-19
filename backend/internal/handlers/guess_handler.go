@@ -58,14 +58,17 @@ func calculateScore(createdGuess *guesses.Guess) () {
 	createdGuess.Score = distance * 1000 / haversine.EarthDiameterMeters //put score on base 1000 (ex: if the distance is 0, the score is 1000, if the distance is 12742176, the score is 0)
 
 	//multiplier time left (0 to 1, based on time max being one, and time min being zero, and time left being the difference between the time the time at the moment of validating guess and the time max)
-	// TODO implement multiplier time left
+	totalTime := int64(120) // TODO: maxtime to be taken from game table !
+	createdGuess.TimeLeft = 30 //TODO: to be replaced by the actual time left from the request body (in seconds)
+	createdGuess.Score *= createdGuess.TimeLeft // not in one line because it is not a float64, and does not handle decimals
+	createdGuess.Score /= totalTime
 
 	// multiplier correct country code
 	if createdGuess.CountryFound == true {
 		createdGuess.Score *= 2
 	}
 
-	// multiplier for streaks (if less than 1000 meters, then add 1 to the streak, if more than 1000 meters, then reset the streak to 0)
+	// multiplier for streaks (if less than 1000 meters and country found, then add 1 to the streak, if more than 1000 meters, if at least one is true, then keep streak, if none then reset the streak to 0)
 	if createdGuess.Distance < 1000 && createdGuess.CountryFound == true {
 		createdGuess.Streak += 1
 		createdGuess.Score *= createdGuess.Streak
