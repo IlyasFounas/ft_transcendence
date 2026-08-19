@@ -1,4 +1,3 @@
-import Panel from '../primitives/Panel'
 import LobbyRoll from './LobbyRoll'
 import EmptyLobbyRoll from './EmptyLobbyRoll'
 
