@@ -109,6 +109,24 @@ func (h *LobbyHandler) LeaveLobby() gin.HandlerFunc {
 				gin.H{"message": err})
 			return
 		}
+		lobbies, err := h.lobbyRepo.AllPlayers(c.Request.Context(), lobby.GameId)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized,
+				gin.H{"message": "failed"})
+			return
+		}
+		for _, newLobby := range lobbies {
+			if newLobby.UserId == userId.(int64) {
+				err = h.lobbyRepo.SetIsCreator(c.Request.Context(),
+					newLobby.ID, true)
+				if err != nil {
+					c.JSON(http.StatusUnauthorized,
+						gin.H{"message": "failed"})
+					return
+				}
+				break
+			}
+		}
 		c.JSON(http.StatusOK, 
 			gin.H{"message": "success"})
 	}
