@@ -80,6 +80,7 @@ return (
 						hover:scale-[1.1]
 						hover:opacity-100
 						active:scale-[0.98]
+						rounded-[10px]
 					"
 					onClick={() => setIsMapMain(prev => !prev)}
 				>
