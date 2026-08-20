@@ -34,6 +34,7 @@ export default function LobbyList({className, listOfPlayers}: LobbyListProps)
 			${className}`}>
       			<div className="
 					flex 
+					bg-surface-base
 					items-center 
 					justify-between 
 					border-b 

@@ -22,7 +22,7 @@ export default function SignalIntegrityCard({ countDown, totalTime }: {countDown
 						<div
 							key={index}
 							className={`
-								w-3 h-6 rounded-xs
+								w-2 xl:w-4 h-6 rounded-xs
 								${index < activeSignals
 									? "bg-cyan-400"
 									: "bg-sky-950"}

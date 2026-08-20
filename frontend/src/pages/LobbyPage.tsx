@@ -32,7 +32,7 @@ export default function LobbyPage()
 				</div>
 
 				<div className="order-3 lg:col-start-1 lg:row-span-3">
-        		<LobbyTestPage />
+        			<LobbyTestPage />
 				</div>
 
 				<div className="
@@ -49,7 +49,7 @@ export default function LobbyPage()
 						Leave Room
 					</SecondaryButton>
 
-					<PrimaryButton size="medium">
+					<PrimaryButton size="medium" className="w-[356px] h-[90px]">
 						Ready
 					</PrimaryButton>
 				</div>
