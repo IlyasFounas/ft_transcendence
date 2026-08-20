@@ -24,11 +24,17 @@ export default function GameBar()
 			gap-8 md:gap-4
 		">
 			<div className="flex justify-start items-center gap-4">
-				<div className="hidden xl:flex">
-					<LogoHorizontal className="min-w-[100px] h-[100px] md:w-[50px]"></LogoHorizontal>
-				</div>
-				<div className="flex xl:hidden">
-					<LogoIcon className="w-[75px] h-[75px]"></LogoIcon>
+				<div className="
+					cursor-pointer
+					transition-transform
+					duration-200
+					ease-out
+					hover:scale-[1.2]
+						
+					active:scale-[0.9]
+					">
+						<LogoHorizontal className="hidden xl:flex min-w-[100px] h-[100px] md:w-[50px]"></LogoHorizontal>
+						<LogoIcon className="flex xl:hidden w-[75px] h-[75px]"></LogoIcon>
 				</div>
 				<GameInfosCard round={3} totalRounds={5} id={4242}></GameInfosCard>
 			</div>
