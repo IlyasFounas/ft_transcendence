@@ -62,7 +62,7 @@ func (h *UserHandler) createActivationToken(c *gin.Context, expiresAt time.Time,
 	}
 	email := c.PostForm("email")
 	if len(email) == 0 {
-		emailString, err := h.userRepo.GetEmail(c.Request.Context(), userId)
+		emailString, err := h.userRepo.Email(c.Request.Context(), userId)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError,
 				gin.H{"message": "can't find the email"})
@@ -166,7 +166,7 @@ func (h *UserHandler) LoginUser() gin.HandlerFunc {
 }
 
 // Getters
-func (h *UserHandler) GetUser() gin.HandlerFunc {
+func (h *UserHandler) User() gin.HandlerFunc {
 	//return almost all user infos
 	return func(c *gin.Context) {
 		userId, ok := c.Get("userId")
@@ -175,7 +175,7 @@ func (h *UserHandler) GetUser() gin.HandlerFunc {
                 gin.H{"message": "The userId is empty"})
             return
         }
-		userData, err := h.userRepo.GetUser(c.Request.Context(), userId.(int64))
+		userData, err := h.userRepo.User(c.Request.Context(), userId.(int64))
 		if err != nil {
 		    c.JSON(http.StatusInternalServerError, gin.H{"message": "Something went wrong"})
             return
@@ -191,14 +191,14 @@ func (h *UserHandler) GetUser() gin.HandlerFunc {
 		}
 	}
 }
-func (h *UserHandler) GetName() gin.HandlerFunc {
+func (h *UserHandler) Name() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userId, ok := c.Get("userId")
 		if !ok {
             c.JSON(http.StatusUnauthorized,
                 gin.H{"message": "The user id is empty"})
 		}
-		name, err := h.userRepo.GetName(c.Request.Context(), userId.(int64))
+		name, err := h.userRepo.Name(c.Request.Context(), userId.(int64))
 		if err != nil {
 		    c.JSON(http.StatusInternalServerError, gin.H{"message": "Something went wrong"})
 			return
@@ -212,14 +212,14 @@ func (h *UserHandler) GetName() gin.HandlerFunc {
 		}
 	}
 }
-func (h *UserHandler) GetLogin() gin.HandlerFunc {
+func (h *UserHandler) Login() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userId, ok := c.Get("userId")
 		if !ok {
             c.JSON(http.StatusUnauthorized,
                 gin.H{"message": "The user id is empty"})
 		}
-		login, err := h.userRepo.GetLogin(c.Request.Context(), userId.(int64))
+		login, err := h.userRepo.Login(c.Request.Context(), userId.(int64))
 		if err != nil {
 		    c.JSON(http.StatusInternalServerError, gin.H{"message": "Something went wrong"})
 			return
@@ -232,7 +232,7 @@ func (h *UserHandler) GetLogin() gin.HandlerFunc {
 		}
 	}
 }
-func (h *UserHandler) GetEmail() gin.HandlerFunc {
+func (h *UserHandler) Email() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userId, ok := c.Get("userId")
 		if !ok {
@@ -240,7 +240,7 @@ func (h *UserHandler) GetEmail() gin.HandlerFunc {
                 gin.H{"message": "The user id is empty"})
 			return
 		}
-		email, err := h.userRepo.GetEmail(c.Request.Context(), userId.(int64))
+		email, err := h.userRepo.Email(c.Request.Context(), userId.(int64))
 		if err != nil {
             c.JSON(http.StatusInternalServerError, gin.H{"message": "failed"})
 			return
@@ -253,7 +253,7 @@ func (h *UserHandler) GetEmail() gin.HandlerFunc {
 		}
 	}
 }
-func (h *UserHandler) GetOAuth() gin.HandlerFunc {
+func (h *UserHandler) OAuth() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userId, ok := c.Get("userId")
 		if !ok {
@@ -261,7 +261,7 @@ func (h *UserHandler) GetOAuth() gin.HandlerFunc {
                 gin.H{"message": "The user id is empty"})
 			return
 		}
-		oauth, err := h.userRepo.GetOAuth(c.Request.Context(), userId.(int64))
+		oauth, err := h.userRepo.OAuth(c.Request.Context(), userId.(int64))
 		if err != nil {
             c.JSON(http.StatusInternalServerError, gin.H{"message": "failed"})
 			return

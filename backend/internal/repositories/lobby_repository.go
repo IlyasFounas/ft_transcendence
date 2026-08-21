@@ -195,6 +195,20 @@ func (r *LobbyRepository) SetIsCreator(ctx context.Context,
 	return nil
 }
 
+func (r *LobbyRepository) SetJoinCode(ctx context.Context,
+	lobby_id int64, joinCode *string) error {
+	lobby := &games.Lobby{JoinCode: joinCode}
+	_, err := r.db.NewUpdate().
+		Model(lobby).
+		Column("join_code").
+		Where("id = ?", lobby_id).
+		Exec(ctx)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // Delete
 func (r *LobbyRepository) RemoveLobby(ctx context.Context, 
 	lobby *games.Lobby) error {

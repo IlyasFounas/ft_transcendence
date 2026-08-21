@@ -106,7 +106,7 @@ func (h *LobbyHandler) LeaveLobby() gin.HandlerFunc {
 		err = h.lobbyRepo.SetLeftAt(c.Request.Context(), lobby.ID)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized,
-				gin.H{"message": err})
+				gin.H{"message": "failed"})
 			return
 		}
 		lobbies, err := h.lobbyRepo.AllPlayers(c.Request.Context(), lobby.GameId)
@@ -115,10 +115,31 @@ func (h *LobbyHandler) LeaveLobby() gin.HandlerFunc {
 				gin.H{"message": "failed"})
 			return
 		}
+		err = h.lobbyRepo.SetJoinCode(c.Request.Context(),
+			lobby.ID, nil)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized,
+				gin.H{"message": "failed"})
+			return
+		}
+		err = h.lobbyRepo.SetIsCreator(c.Request.Context(),
+			lobby.ID, false)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized,
+				gin.H{"message": "failed"})
+			return
+		}
 		for _, newLobby := range lobbies {
-			if newLobby.UserId == userId.(int64) {
+			if newLobby.UserId != userId.(int64) {
 				err = h.lobbyRepo.SetIsCreator(c.Request.Context(),
 					newLobby.ID, true)
+				if err != nil {
+					c.JSON(http.StatusUnauthorized,
+						gin.H{"message": "failed"})
+					return
+				}
+				err = h.lobbyRepo.SetJoinCode(c.Request.Context(),
+					newLobby.ID, lobby.JoinCode)
 				if err != nil {
 					c.JSON(http.StatusUnauthorized,
 						gin.H{"message": "failed"})

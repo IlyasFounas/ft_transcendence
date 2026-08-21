@@ -60,7 +60,7 @@ func (r *UserRepository) LoginUser(ctx context.Context,
 }
 
 // Getters
-func (r *UserRepository) GetUser(ctx context.Context, userId int64) (*users.User, error) {
+func (r *UserRepository) User(ctx context.Context, userId int64) (*users.User, error) {
 	user := new(users.User)
 	err := r.db.NewSelect().
 		Model(user).
@@ -73,7 +73,7 @@ func (r *UserRepository) GetUser(ctx context.Context, userId int64) (*users.User
 	return user, nil
 }
 
-func (r *UserRepository) GetName(ctx context.Context, userId int64) (*string, error) {
+func (r *UserRepository) Name(ctx context.Context, userId int64) (*string, error) {
 	user := new(users.User)
 	err := r.db.NewSelect().
 		Model(user).
@@ -86,7 +86,7 @@ func (r *UserRepository) GetName(ctx context.Context, userId int64) (*string, er
 	return &user.Username, nil
 }
 
-func (r *UserRepository) GetLogin(ctx context.Context, userId int64) (*string, error) {
+func (r *UserRepository) Login(ctx context.Context, userId int64) (*string, error) {
 	user := new(users.User)
 	err := r.db.NewSelect().
 		Model(user).
@@ -99,7 +99,7 @@ func (r *UserRepository) GetLogin(ctx context.Context, userId int64) (*string, e
 	return &user.Login, nil
 }
 
-func (r *UserRepository) GetEmail(ctx context.Context, userId int64) (*string, error) {
+func (r *UserRepository) Email(ctx context.Context, userId int64) (*string, error) {
 	user := new(users.User)
 	err := r.db.NewSelect().
 		Model(user).
@@ -112,7 +112,7 @@ func (r *UserRepository) GetEmail(ctx context.Context, userId int64) (*string, e
 	return &user.Email, nil
 }
 
-func (r *UserRepository) GetOAuth(ctx context.Context, userId int64) (*oauth2.Token, error) {
+func (r *UserRepository) OAuth(ctx context.Context, userId int64) (*oauth2.Token, error) {
 	user := new(users.User)
 	err := r.db.NewSelect().
 		Model(user).

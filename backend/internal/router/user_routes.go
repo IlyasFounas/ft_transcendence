@@ -37,11 +37,11 @@ func registerUserRoutes(r *gin.Engine, h *handlers.UserHandler, ht *handlers.Tok
 	private := r.Group("/")
 	private.Use(middleware.AuthMiddleWare())
 	{
-		private.GET("/user/get", h.GetUser())
-		private.GET("/user/get/name", h.GetName())
-		private.GET("/user/get/login", h.GetLogin())
-		private.GET("/user/get/email", h.GetEmail())
-		private.GET("/user/get/oauth", h.GetOAuth())
+		private.GET("/user", h.User())
+		private.GET("/user/name", h.Name())
+		private.GET("/user/login", h.Login())
+		private.GET("/user/email", h.Email())
+		private.GET("/user/oauth", h.OAuth())
 		private.GET("/user/:username", h.UserByName())
 		// PUT = modify a lot of informations
 		// PATCH = modify a specific field
