@@ -34,7 +34,7 @@ export default function AuthenticationLogin ({
             body,
         };
 
-        const result = await apiFetch("/auth/login", options);
+        const result = await apiFetch("/api/auth/login", options);
         if (result === null) {
             setError("Unable to connect to the server. Please try again.");
             return;
@@ -48,6 +48,9 @@ export default function AuthenticationLogin ({
             const refreshToken = result.data["Refresh-Token"];
 
             login(accessToken, refreshToken);
+            console.log("login success !");
+            console.log(accessToken);
+            console.log(refreshToken);
         }
 
     };
