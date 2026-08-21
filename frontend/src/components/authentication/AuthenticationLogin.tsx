@@ -2,6 +2,7 @@ import PrimaryButton from "../buttons/PrimaryButton";
 import Input from "../primitives/Input";
 import { useState } from "react";
 import { apiFetch } from "../../api/apiFetch";
+import { useAuth } from "../../context/AuthContext";
 
 interface AuthenticationLoginProps {
     onBackToOptions: () => void;
@@ -10,6 +11,7 @@ interface AuthenticationLoginProps {
 export default function AuthenticationLogin ({
     onBackToOptions,
 }: AuthenticationLoginProps) {
+    const {login} = useAuth();
     const [loginId, setLoginId] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
@@ -45,8 +47,7 @@ export default function AuthenticationLogin ({
             const accessToken = result.data.Authorization;
             const refreshToken = result.data["Refresh-Token"];
 
-            console.log(accessToken);
-            console.log(refreshToken);
+            login(accessToken, refreshToken);
         }
 
     };
