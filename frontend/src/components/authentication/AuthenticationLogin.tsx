@@ -10,14 +10,45 @@ interface AuthenticationLoginProps {
 export default function AuthenticationLogin ({
     onBackToOptions,
 }: AuthenticationLoginProps) {
-    const [loginId, setLogin] = useState("");
+    const [loginId, setLoginId] = useState("");
     const [password, setPassword] = useState("");
+    const [error, setError] = useState("");
 
-    const handleLogin = () => {
-        console.log(loginId);
-        console.log(password);
-        //need to add functions later
-        // validate fields / send data to back / handle success or error
+    const handleLogin = async () => {
+        if (!loginId || !password) {
+            setError("Login ID and password are required");
+            return;
+        }
+
+        setError("");
+
+        const body = new URLSearchParams({
+            login: loginId,
+            password,
+        });
+
+        const options: RequestInit = {
+            method: "POST",
+            body,
+        };
+
+        const result = await apiFetch("/auth/login", options);
+        if (result === null) {
+            setError("Unable to connect to the server. Please try again.");
+            return;
+        }
+        if (result.status === 401 || result.status === 500) {
+            setError(result.data.message);
+            return;
+        }
+        if (result.status === 200) {
+            const accessToken = result.data.Authorization;
+            const refreshToken = result.data["Refresh-Token"];
+
+            console.log(accessToken);
+            console.log(refreshToken);
+        }
+
     };
 
     return (
@@ -29,8 +60,9 @@ export default function AuthenticationLogin ({
             gap-4
             "
         >
-            <Input label="login id" type="login" value={loginId} onChange={setLogin}/>
+            <Input label="login id" type="login" value={loginId} onChange={setLoginId}/>
             <Input label="password" type="password" value={password} onChange={setPassword}/>
+            {error && <p>{error}</p>}
             <PrimaryButton size="small" onClick={handleLogin}>log in</PrimaryButton>
             <button
                 type="button"
