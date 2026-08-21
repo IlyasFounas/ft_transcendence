@@ -1,6 +1,7 @@
 import PrimaryButton from "../buttons/PrimaryButton";
 import Input from "../primitives/Input";
 import { useState } from "react";
+import { apiFetch } from "../../api/apiFetch";
 
 interface AuthenticationLoginProps {
     onBackToOptions: () => void;
@@ -9,13 +10,11 @@ interface AuthenticationLoginProps {
 export default function AuthenticationLogin ({
     onBackToOptions,
 }: AuthenticationLoginProps) {
-    const [email, setEmail] = useState("");
-    const [login, setLogin] = useState("");
+    const [loginId, setLogin] = useState("");
     const [password, setPassword] = useState("");
 
     const handleLogin = () => {
-        console.log(email);
-        console.log(login);
+        console.log(loginId);
         console.log(password);
         //need to add functions later
         // validate fields / send data to back / handle success or error
@@ -30,8 +29,7 @@ export default function AuthenticationLogin ({
             gap-4
             "
         >
-            <Input label="email" type="email" value={email} onChange={setEmail}/>
-            <Input label="login id" type="login" value={login} onChange={setLogin}/>
+            <Input label="login id" type="login" value={loginId} onChange={setLogin}/>
             <Input label="password" type="password" value={password} onChange={setPassword}/>
             <PrimaryButton size="small" onClick={handleLogin}>log in</PrimaryButton>
             <button
