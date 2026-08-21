@@ -123,7 +123,7 @@ func (h *UserHandler) CreateUser() gin.HandlerFunc {
 	}
 }
 
-func (h *UserHandler) LoginUser() gin.HandlerFunc {
+func (h *UserHandler) Login() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		state, userId, err := h.userRepo.LoginUser(c.Request.Context(),
 			c.PostForm("login"), c.PostForm("password"))
@@ -162,6 +162,14 @@ func (h *UserHandler) LoginUser() gin.HandlerFunc {
             c.JSON(http.StatusOK,
                 gin.H{"Authorization": tokenObj.Token, "Refresh-Token": encodedKey})
 		}
+	}
+}
+
+func (h *UserHandler) GoogleLogin() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		
+		c.JSON(http.StatusOK, 
+			gin.H{"message": "success"})
 	}
 }
 

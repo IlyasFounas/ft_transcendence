@@ -27,7 +27,9 @@ func registerUserRoutes(r *gin.Engine, h *handlers.UserHandler, ht *handlers.Tok
 	public := r.Group("/")
 	{
 		public.POST("/user/create", h.CreateUser())
-		public.POST("/auth/login", h.LoginUser())
+		public.POST("/auth/login", h.Login())
+		public.POST("/auth/google/login", h.GoogleLogin())
+		// public.POST("/auth/google/callback", h.GoogleCallback())
 		// BUGFIX: ces deux routes appelaient h.ActivationToken() / h.RefreshToken(),
 		// des méthodes qui n'existent pas sur UserHandler — elles vivent sur TokenHandler.
 		public.GET("/user/activation", ht.ActivationToken())
