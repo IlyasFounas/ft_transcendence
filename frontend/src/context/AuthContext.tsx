@@ -2,14 +2,14 @@ import { createContext, useContext, useState} from "react";
 import type { ReactNode } from "react";
 
 interface AuthContextType {
-    authorizationToken: string | null;
+    accessToken: string | null;
     refreshToken: string | null;
     isAuthenticated: boolean;
-    login: (authorizationToken: string, refreshToken: string) => void;
+    login: (accessToken: string, refreshToken: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
-    authorizationToken: null,
+    accessToken: null,
     refreshToken: null,
     isAuthenticated: false,
     login: () => {},
@@ -17,18 +17,18 @@ const AuthContext = createContext<AuthContextType>({
 
 function AuthProvider({children}: {children: ReactNode}) {
     
-    const [authorizationToken, setAccessToken] = useState<string | null>(null);
+    const [accessToken, setAccessToken] = useState<string | null>(null);
     const [refreshToken, setRefreshToken] = useState<string | null>(null);
-    const isAuthenticated = authorizationToken !== null;
-    const login = (authorizationToken: string, refreshToken: string) => {
-        setAccessToken(authorizationToken);
+    const isAuthenticated = accessToken !== null;
+    const login = (accessToken: string, refreshToken: string) => {
+        setAccessToken(accessToken);
         setRefreshToken(refreshToken);
     };
 
     return (
         <AuthContext.Provider 
             value={{
-                authorizationToken,
+                accessToken,
                 refreshToken,
                 isAuthenticated,
                 login,
