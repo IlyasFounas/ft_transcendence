@@ -13,12 +13,12 @@ export default function SecondaryButton({ children, onClick, icon, active, class
 		className={`
 			inline-flex w-fit min-h-[60px] items-center justify-center
 			
-			px-[24px] py-[16px] gap-3
+			px-[12px]
+			lg:px-[24px] lg:py-[16px] gap-3
 			
 			rounded-lg
 			border border-primary
-			outline outline-1 outline-offset-[-1px] outline-primary
-			
+			outline outline-1 outline-offset-[-1px]			
 			bg-surface-elevated
 			
 			text-heading-medium
@@ -44,11 +44,11 @@ export default function SecondaryButton({ children, onClick, icon, active, class
 		? `
 			text-text-primary
 			border-border-active
-			outline-border-active
+			outline-primary
 			shadow-[0px_0px_16px_0px_rgba(40,215,255,0.5)]
 		`
 		: `
-			border-border-default
+			border-surface-elevated
 			outline-border-default
 			text-text-secondary
 			shadow-[0px_0px_16px_0px_rgba(30,77,120,0.15)]

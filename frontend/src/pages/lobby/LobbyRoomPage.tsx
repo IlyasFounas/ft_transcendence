@@ -1,8 +1,8 @@
-import RoomCodeCard from "../components/cards/RoomCodeCard";
-import LobbyTestPage from "../components/cards/LobbyTestPage";
-import PrimaryButton from "../components/buttons/PrimaryButton";
-import SecondaryButton from "../components/buttons/SecondaryButton";
-import MissionSettingsCard from "../components/cards/MissionSettingsCard";
+import RoomCodeCard from "../../components/cards/RoomCodeCard";
+import LobbyTestPage from "../../components/cards/LobbyTestPage";
+import PrimaryButton from "../../components/buttons/PrimaryButton";
+import SecondaryButton from "../../components/buttons/SecondaryButton";
+import MissionSettingsCard from "../../components/cards/MissionSettingsCard";
 
 export default function LobbyPage()
 {
