@@ -3,6 +3,7 @@ import Input from "../primitives/Input";
 import { useState } from "react";
 import { apiFetch } from "../../api/apiFetch";
 import { useAuth } from "../../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 interface AuthenticationLoginProps {
     onBackToOptions: () => void;
@@ -15,6 +16,7 @@ export default function AuthenticationLogin ({
     const [loginId, setLoginId] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
+    const navigate = useNavigate();
 
     const handleLogin = async () => {
         if (!loginId || !password) {
@@ -44,13 +46,13 @@ export default function AuthenticationLogin ({
             return;
         }
         if (result.status === 200) {
-            const accessToken = result.data.Authorization;
+            const authorizationToken = result.data.Authorization;
             const refreshToken = result.data["Refresh-Token"];
 
-            login(accessToken, refreshToken);
+            login(authorizationToken, refreshToken);
             console.log("login success !");
-            console.log(accessToken);
-            console.log(refreshToken);
+    
+            navigate("/home");
         }
 
     };
