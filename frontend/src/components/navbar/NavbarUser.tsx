@@ -1,4 +1,4 @@
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, User, LogOut, } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import Avatar from "../primitives/Avatar";
 
@@ -85,42 +85,53 @@ export default function NavbarUser({
                 group-hover:block
             ">
                 <div className="
-                    w-40
+                    w-60
                     rounded-lg
                     border
                     border-border-default
                     bg-surface-elevated
                     shadow-[0_0_15px_rgba(0,183,255,0.2)]
+                    overflow-hidden
                 ">
                     <NavLink
                         to="/profile"
                         className="
-                            block
-                            px-4
-                            py-3
+                            flex
+                            items-center
+                            gap-3
+                            px-5
+                            py-4
                             text-body-primary
                             text-text-primary
                             uppercase
+                            transition
+                            duration-150
                             hover:text-primary
                         "
                     >
-                        profile
+                        <User size={18} />
+                        <span>profile</span>
                     </NavLink>
 
                     <button
                         type="button"
                         className="
-                            w-full
-                            px-4
-                            py-3
-                            text-left
+                            flex
+                            items-center
+                            gap-3
+                            px-5
+                            py-4
                             text-body-primary
-                            text-text-primary
+                            text-status-red
                             uppercase
-                            hover:text-status-red
+                            transition
+                            duration-150
+                            hover:brightness-125
+                            cursor-pointer
                         "
                     >
-                        log out
+                        <LogOut size={18} />
+                        <span>log out</span>
                     </button>
                 </div>
             </div>
