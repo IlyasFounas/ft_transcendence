@@ -1,6 +1,9 @@
 import { NavLink } from "react-router-dom";
 import NavbarUser from "./NavbarUser";
 import type { UserStatusType } from "../../types/user.types";
+import { useState } from "react";
+import NavbarMenuButton from "./NavbarMenuButton";
+import NavbarMobileMenu from "./NavbarMobileMenu";
 
 interface NavbarProps {
     username: string;
@@ -13,6 +16,7 @@ export function Navbar({
     avatar,
     status,
 }: NavbarProps) {
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
     return (
         <nav
             className="
@@ -23,9 +27,11 @@ export function Navbar({
                 border-border-default
             "
         >
+            {/* Navbar for desktop */}
             <div className="
+                hidden
+                lg:flex
                 h-full
-                flex
                 items-center
                 px-8
             ">
@@ -56,6 +62,7 @@ export function Navbar({
                             h-full
                             flex
                             items-center
+                            whitespace-nowrap
                             transition
                             duration-150
                             hover:text-primary
@@ -72,6 +79,7 @@ export function Navbar({
                             h-full
                             flex
                             items-center
+                            whitespace-nowrap
                             transition
                             duration-150
                             hover:text-primary
@@ -88,6 +96,7 @@ export function Navbar({
                             h-full
                             flex
                             items-center
+                            whitespace-nowrap
                             transition
                             duration-150
                             hover:text-primary
@@ -105,6 +114,39 @@ export function Navbar({
                     />
                 </div>
             </div>
+
+            {/* Navbar for tablet and phone */}
+            <div className="
+                flex
+                lg:hidden
+                h-full
+                items-center
+                px-6
+                "
+            >
+                <div className="w-12">
+                    <NavbarMenuButton
+                        onClick={() => setIsMenuOpen(!isMenuOpen)}
+                    />
+                </div>
+                <div className="flex-1 flex justify-center">
+                    <NavLink to="/home">
+                        <img
+                            src="/logos/atlas-logo.png"
+                            alt="Atlas"
+                            className="h-12"
+                        />
+                    </NavLink>
+                </div>
+
+                <div className="w-12 flex justify-end">
+                    {/* chat */}
+                </div>
+            </div>
+            <NavbarMobileMenu
+                isOpen={isMenuOpen}
+                onClose={() => setIsMenuOpen(false)}
+            />
         </nav>
     );
 }
