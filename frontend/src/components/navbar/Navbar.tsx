@@ -4,6 +4,7 @@ import type { UserStatusType } from "../../types/user.types";
 import { useState } from "react";
 import NavbarMenuButton from "./NavbarMenuButton";
 import NavbarMobileMenu from "./NavbarMobileMenu";
+import NavbarChatButton from "./NavbarChatButton";
 
 interface NavbarProps {
     username: string;
@@ -17,6 +18,7 @@ export function Navbar({
     status,
 }: NavbarProps) {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [isChatOpen, setIsChatOpen] = useState(false);
     return (
         <nav
             className="
@@ -140,7 +142,9 @@ export function Navbar({
                 </div>
 
                 <div className="w-12 flex justify-end">
-                    {/* chat */}
+                    <NavbarChatButton
+                        onClick={() => setIsChatOpen(!isChatOpen)}
+                    />
                 </div>
             </div>
             <NavbarMobileMenu
