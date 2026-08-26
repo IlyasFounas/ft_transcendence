@@ -1,7 +1,7 @@
-import { NavLink } from "react-router-dom";
-import NavbarUser from "./NavbarUser";
-import type { UserStatusType } from "../../types/user.types";
 import { useState } from "react";
+import { NavLink } from "react-router-dom";
+import type { UserStatusType } from "../../types/user.types";
+import NavbarUser from "./NavbarUser";
 import NavbarMenuButton from "./NavbarMenuButton";
 import NavbarMobileMenu from "./NavbarMobileMenu";
 import NavbarChatButton from "./NavbarChatButton";
@@ -37,6 +37,7 @@ export function Navbar({
                 items-center
                 px-8
             ">
+                {/* logo */}
                 <div className="w-75">
                     <NavLink to="/home">
                         <img
@@ -46,7 +47,8 @@ export function Navbar({
                         />
                     </NavLink>
                 </div>
-
+                
+                {/* menu */}
                 <div className="
                     flex-1
                     flex
@@ -108,6 +110,8 @@ export function Navbar({
                         Leaderboard
                     </NavLink>
                 </div>
+
+                {/* profile */}
                 <div className="w-75 flex justify-end">
                     <NavbarUser
                         username={username}
@@ -126,11 +130,14 @@ export function Navbar({
                 px-6
                 "
             >
+                {/* menu */}
                 <div className="w-12">
                     <NavbarMenuButton
                         onClick={() => setIsMenuOpen(!isMenuOpen)}
                     />
                 </div>
+
+                {/* logo */}
                 <div className="flex-1 flex justify-center">
                     <NavLink to="/home">
                         <img
@@ -141,12 +148,15 @@ export function Navbar({
                     </NavLink>
                 </div>
 
+                {/* chat */}
                 <div className="w-12 flex justify-end">
                     <NavbarChatButton
                         onClick={() => setIsChatOpen(!isChatOpen)}
                     />
                 </div>
             </div>
+            
+            {/* open menu */}
             <NavbarMobileMenu
                 isOpen={isMenuOpen}
                 onClose={() => setIsMenuOpen(false)}
