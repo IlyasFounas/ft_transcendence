@@ -12,6 +12,7 @@ export default function NavbarMobileMenu({
 }: NavbarMobileMenuProps) {
     return (
         <>
+            {/* add background overlay */}
             { isOpen && (
                 <div
                     className="
@@ -25,6 +26,7 @@ export default function NavbarMobileMenu({
                 />
             )}
             
+            {/* sliding menu */}
             <div
                 className={`
                     fixed
@@ -33,22 +35,20 @@ export default function NavbarMobileMenu({
                     bottom-0
                     z-50
                     lg:hidden
-
                     w-full
                     md:w-72
-
                     bg-[linear-gradient(90deg,#133867_0%,#020A14_100%)]
-
                     transition-transform
                     duration-300
                     ease-out
-
                     ${isOpen
                         ? "translate-x-0"
                         : "-translate-x-full"
                     }
                 `}
             >
+
+                {/* menu items */}
                 <div className="
                     flex
                     flex-col
