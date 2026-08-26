@@ -13,6 +13,7 @@ import (
 	"backend/internal/tools/encryption"
 	"backend/internal/tools/mailing"
 	"backend/internal/tools/token_generation"
+	"backend/internal/tools/cookie"
 )
 
 /**
@@ -143,6 +144,7 @@ func (h *UserHandler) Login() gin.HandlerFunc {
 		if !state {
             c.JSON(http.StatusUnauthorized,
                 gin.H{"message": "Try to login again"})
+			return
 		} else {
 			// generate the jwt token here
 			expiresAt := time.Now().Add(15 * time.Minute)
@@ -159,8 +161,10 @@ func (h *UserHandler) Login() gin.HandlerFunc {
                     gin.H{"message": "Try to login again"})
 				return
 			}
+			cookie.Set(c, "/api/auth", "refresh_token",
+			encodedKey, 7*24*time.Hour)
             c.JSON(http.StatusOK,
-                gin.H{"Authorization": tokenObj.Token, "Refresh-Token": encodedKey})
+                gin.H{"Authorization": tokenObj.Token})
 		}
 	}
 }
@@ -220,7 +224,7 @@ func (h *UserHandler) Name() gin.HandlerFunc {
 		}
 	}
 }
-func (h *UserHandler) Login() gin.HandlerFunc {
+func (h *UserHandler) GetLogin() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userId, ok := c.Get("userId")
 		if !ok {
