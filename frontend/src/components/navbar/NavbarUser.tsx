@@ -1,11 +1,12 @@
 import { ChevronDown, User, LogOut, } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import Avatar from "../primitives/Avatar";
+import type { UserStatusType } from "../../types/user.types";
 
 interface NavbarUserProps {
     username: string;
     avatar: string;
-    status: string;
+    status: UserStatusType;
 }
 
 export default function NavbarUser({
@@ -13,6 +14,19 @@ export default function NavbarUser({
     status,
     avatar,
 }: NavbarUserProps) {
+
+    const statusClasses = {
+    online: "text-status-green",
+    "in-mission": "text-status-yellow",
+    offline: "text-text-secondary",
+    };
+
+    const statusLabels = {
+        online: "ONLINE",
+        "in-mission": "IN MISSION",
+        offline: "OFFLINE",
+    };
+
     return (
         <div className="
             group
@@ -20,7 +34,8 @@ export default function NavbarUser({
             flex
             items-center
             gap-3
-        ">
+            "
+        >
             <NavLink
                 to="/profile"
                 className="
@@ -42,16 +57,19 @@ export default function NavbarUser({
                         text-heading-small
                         text-text-primary
                         uppercase
-                    ">
+                        "
+                    >
                         {username}
                     </div>
 
-                    <div className="
-                        text-body-primary
-                        text-status-green
-                        uppercase
-                    ">
-                        ● {status}
+                    <div
+                        className={`
+                            text-body-primary
+                            uppercase
+                            ${statusClasses[status]}
+                        `}
+                    >
+                        ● {statusLabels[status]}
                     </div>
                 </div>
             </NavLink>
@@ -75,7 +93,8 @@ export default function NavbarUser({
                     "
                 />
             </button>
-
+            
+            {/* drop down menu */}
             <div className="
                 absolute
                 right-0
@@ -83,7 +102,8 @@ export default function NavbarUser({
                 hidden
                 pt-3
                 group-hover:block
-            ">
+                "
+            >
                 <div className="
                     w-60
                     rounded-lg
@@ -92,7 +112,8 @@ export default function NavbarUser({
                     bg-surface-elevated
                     shadow-[0_0_15px_rgba(0,183,255,0.2)]
                     overflow-hidden
-                ">
+                    "
+                >
                     <NavLink
                         to="/profile"
                         className="
