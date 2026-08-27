@@ -3,10 +3,10 @@ import { useState, useEffect } from "react"
 
 export default function NextRoundTimer()
 {
-	const [countDown, setCountDown] = useState(10);
+	const [countdown, setCountDown] = useState(10);
 
 	useEffect(() => {
-		if (countDown <= 0)
+		if (countdown <= 0)
 				return;
 
 		const timer = setInterval(() => {
@@ -14,7 +14,7 @@ export default function NextRoundTimer()
 		}, 1000);
 
 		return () => clearInterval(timer);
-	}, [countDown]);
+	}, [countdown]);
 
 	
 	return (
@@ -24,7 +24,7 @@ export default function NextRoundTimer()
 			<h1 className="text-heading-large uppercase text-primary">
 				Next Round
 			</h1>
-			<CountdownRing countDown={countDown}></CountdownRing>
+			<CountdownRing countdown={countdown}></CountdownRing>
 		</div>
 	)
 }

@@ -23,3 +23,22 @@ export interface RoundResult {
   points: number;
   distance: number;
 }
+
+export interface Game {
+    id: number;
+    currentRound: number;
+    totalRounds: number;
+    totalTime: number;
+
+    location: {
+        latitude: number;
+        longitude: number;
+    };
+
+    streetView: {
+        id: string;
+        moving: boolean;
+        zooming: boolean;
+        panning: boolean;
+    };
+}

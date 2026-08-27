@@ -37,7 +37,7 @@ const RADIUS = 30;
 const STROKE_WIDTH = 5;
 const TOTAL_SEGMENTS = 10;
 
-export function CountdownRing({countDown} : {countDown : number}) {
+export function CountdownRing({countdown} : {countdown : number}) {
   
 	const segmentAngle = 360 / TOTAL_SEGMENTS;
 	
@@ -48,7 +48,7 @@ export function CountdownRing({countDown} : {countDown : number}) {
 			{Array.from({ length: TOTAL_SEGMENTS }).map((_, index) => {
 			const startAngle = index * segmentAngle + GAP / 2;
 			const endAngle = (index + 1) * segmentAngle - GAP / 2;
-			const isVisible = index < countDown;
+			const isVisible = index < countdown;
 
 			return (
 				<path
@@ -66,7 +66,7 @@ export function CountdownRing({countDown} : {countDown : number}) {
 
 		<div className="absolute inset-0 flex items-center justify-center">
 			<span className="text-heading-large text-primary">
-			{countDown}
+			{countdown}
 			</span>
 		</div>
 		</div>

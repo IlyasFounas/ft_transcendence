@@ -1,8 +1,8 @@
-export default function SignalIntegrityCard({ countDown, totalTime }: {countDown : number, totalTime : number}) 
+export default function SignalIntegrityCard({ countdown, totalTime }: {countdown : number, totalTime : number}) 
 {
 	const TOTAL_SIGNALS = 15;
 
-	const percentage = Math.round((countDown / totalTime) * 100);
+	const percentage = Math.round((countdown / totalTime) * 100);
 	const activeSignals = Math.ceil((percentage / 100) * TOTAL_SIGNALS);
 
 	return (
