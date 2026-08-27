@@ -1,11 +1,10 @@
 import {useState}  from "react";
 
-import PrimaryButton from "../components/buttons/PrimaryButton";
-import GameBar from "../components/game/GameBar";
-import LoadStreetView from "./game/StreetView/LoadStreetView";
-import Preview2DMap from "./game/2DMap/Preview2DMap";
-import CountdownCard from "../components/game/Countdown";
-import Load2DMap from "./game/2DMap/Load2DMap";
+import PrimaryButton from "../../components/buttons/PrimaryButton";
+import GameBar from "../../components/game/GameBar";
+import LoadStreetView from "./StreetView/LoadStreetView";
+import CountdownCard from "../../components/game/Countdown";
+import Load2DMap from "./2DMap/Load2DMap";
 
 export default function GamePlayPage()
 {
@@ -92,7 +91,7 @@ return (
 							panning={false}
 						/>
 					) : (
-						<Preview2DMap
+						<Load2DMap
 							latitude={45.782429}
 							longitude={4.745860}
 						/>

@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 
-
 export default function CountdownCard({ countDown , setCountDown}: { countDown: number; setCountDown: React.Dispatch<React.SetStateAction<number>>;}) 
 {
 

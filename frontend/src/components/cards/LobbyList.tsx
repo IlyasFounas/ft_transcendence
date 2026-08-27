@@ -19,7 +19,6 @@ interface LobbyListProps{
 
 export default function LobbyList({className, listOfPlayers}: LobbyListProps)
 {
-
 	const playersReady = listOfPlayers.filter((player) => player.status == "ready").length;
 	const numberOfPlayers = listOfPlayers.length;
 
@@ -37,7 +36,7 @@ export default function LobbyList({className, listOfPlayers}: LobbyListProps)
 					bg-surface-base
 					items-center 
 					justify-between 
-					border-b 
+					border
 					border-border-default/30 
                   	bg-surface-title px-4 py-3">
         				<span className="text-heading-small text-text-primary/70 uppercase">

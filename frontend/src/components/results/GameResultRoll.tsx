@@ -1,11 +1,11 @@
 interface GameResultCardProps {
-	rank: number;
+	round: number;
 	points: number;
 	distance: number;
 }
 
-export default function GameResultCard({
-	rank,
+export default function GameResultList({
+	round,
 	points,
 	distance,
 }: GameResultCardProps) {
@@ -17,13 +17,13 @@ export default function GameResultCard({
 
 	return (
 		<div className="
-			w-80 h-24 
+			w-full h-[60px] lg:h-[80px]
 			outline outline-1 outline-offset-[-1px] outline-cyan-800/30
 			flex justify-around items-center
 			uppercase text-primary
 		">
 			<div className="w-[60px] text-center text-heading-medium">
-				{rank}
+				{round}
 			</div>
 
 			{stats.map((stat) => (

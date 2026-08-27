@@ -17,10 +17,10 @@ import AuthenticationLogin from '../components/authentication/AuthenticationLogi
 import PrimaryButton from '../components/buttons/PrimaryButton.tsx';
 import SecondaryButton from '../components/buttons/SecondaryButton.tsx';
 import Avatar from '../components/primitives/Avatar.tsx';
-import GameResultCard from '../components/cards/GameResultCard.tsx';
+import GameResultList from '../components/results/GameResultRoll.tsx';
 import LobbyTestPage from '../components/cards/LobbyTestPage.tsx';
 import ChatBoxCard from '../components/cards/ChatBox.tsx';
-import SummaryResultCard from '../components/cards/SummaryResultCard.tsx'
+import SummaryResultCard from '../components/results/ScoreSummaryCard.tsx'
 import Podium from '../components/cards/podium/Podium.tsx';
 
 export default function ComponentPage() {
@@ -285,7 +285,7 @@ export default function ComponentPage() {
           <h2 className="mb-4 text-lg font-bold">
             Game Result Card
           </h2>
-            <GameResultCard rank={2} distance={256} points={1000} ></GameResultCard>
+            <GameResultList rank={2} distance={256} points={1000} ></GameResultList>
         </section>
   
        <section className="mb-10">
