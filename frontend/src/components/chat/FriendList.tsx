@@ -1,0 +1,75 @@
+import FriendChatRow from "./FriendChatRow";
+import type { UserStatusType } from "../../types/user.types";
+
+interface Friend {
+    username: string;
+    avatar: string;
+    status: UserStatusType;
+    lastMessage: string;
+    timestamp: string;
+}
+
+interface FriendsListProps {
+    friends: Friend[];
+    onOpenChat: (friend: Friend) => void;
+}
+
+export default function FriendsList({
+    friends,
+    onOpenChat,
+}: FriendsListProps) {
+
+    const onlineCount = friends.filter((friend) => friend.status === "online").length;
+
+    return (
+        <div
+            className="
+                flex
+                h-full
+                w-full
+                flex-col
+                bg-surface-base
+                border
+                border-border-default
+            "
+        >
+
+            <div className="shrink-0 px-4 py-3">
+
+                <div className="text-heading-small text-text-primary uppercase">
+                    Friends
+                </div>
+
+                <div className="text-body-primary text-status-green uppercase">
+                    ● {onlineCount} Online
+                </div>
+            </div>
+
+            <div
+                className="
+                    min-h-0
+                    flex-1
+                    mx-4
+                    mb-4
+                    overflow-y-auto
+                    rounded-lg
+                    border
+                    border-border-default
+                    custom-scrollbar
+                "
+            >
+                {friends.map((friend, index) => (
+                    <FriendChatRow
+                        key={index}
+                        username={friend.username}
+                        avatar={friend.avatar}
+                        status={friend.status}
+                        lastMessage={friend.lastMessage}
+                        timestamp={friend.timestamp}
+                        onOpenChat={() => onOpenChat(friend)}
+                    />
+                ))}
+            </div>
+        </div>
+    );
+}``
