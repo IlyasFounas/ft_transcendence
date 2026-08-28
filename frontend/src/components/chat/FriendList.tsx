@@ -1,13 +1,5 @@
 import FriendChatRow from "./FriendChatRow";
-import type { UserStatusType } from "../../types/user.types";
-
-interface Friend {
-    username: string;
-    avatar: string;
-    status: UserStatusType;
-    lastMessage: string;
-    timestamp: string;
-}
+import type { Friend } from "../../types/user.types";
 
 interface FriendsListProps {
     friends: Friend[];
@@ -35,7 +27,6 @@ export default function FriendsList({
         >
 
             <div className="shrink-0 px-4 py-3">
-
                 <div className="text-heading-small text-text-primary uppercase">
                     Friends
                 </div>
