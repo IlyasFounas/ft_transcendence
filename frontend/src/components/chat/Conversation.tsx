@@ -2,6 +2,8 @@ import { ArrowLeft } from "lucide-react";
 import ChatBoxCard from "../cards/ChatBox";
 import type { Friend } from "../../types/user.types";
 import Avatar from "../primitives/Avatar";
+import { useState } from "react";
+import MessageInput from "./MessageInput";
 
 interface ConversationProps {
     friend: Friend;
@@ -17,6 +19,8 @@ export default function Conversation({
         "in-mission": "bg-status-yellow",
         offline: "bg-text-secondary",
     };
+
+    const [message, setMessage] = useState("");
 
     return (
         <div
@@ -104,6 +108,16 @@ export default function Conversation({
                     time="03:02 PM"
                 />
             </div>
+
+            <MessageInput
+                value={message}
+                onChange={setMessage}
+                onSend={() => {
+                    console.log("Message:", message);
+                    setMessage("");
+                }}
+            />
+            
         </div>
     );
 }
