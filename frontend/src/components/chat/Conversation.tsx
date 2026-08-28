@@ -2,8 +2,10 @@ import { ArrowLeft } from "lucide-react";
 import ChatBoxCard from "../cards/ChatBox";
 import type { Friend } from "../../types/user.types";
 import Avatar from "../primitives/Avatar";
-import { useState } from "react";
+import { useState, useEffect, useRef, } from "react";
 import MessageInput from "./MessageInput";
+import type { Message } from "../../types/message.type";
+import { conversations } from "../../data/conversation";
 
 interface ConversationProps {
     friend: Friend;
@@ -21,6 +23,38 @@ export default function Conversation({
     };
 
     const [message, setMessage] = useState("");
+
+    const [conversation, setConversation] = useState<Message[]>(
+        conversations[friend.username] ?? []
+    );
+
+    const handleSend = () => {
+        if (message.trim() === "") {
+            return;
+        }
+
+        const newMessage: Message = {
+            id: Date.now(),
+            variant: "sent",
+            message: message,
+            time: "03:03 PM",
+        };
+
+        setConversation((currentMessages) => [
+            ...currentMessages,
+            newMessage,
+        ]);
+
+        setMessage("");
+    };
+
+    // auto-scroll to the newest message
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({
+            behavior: "smooth",
+        });
+    }, [conversation]);
 
     return (
         <div
@@ -92,30 +126,22 @@ export default function Conversation({
                     custom-scrollbar
                 "
             >
-                <ChatBoxCard
-                    variant="received"
-                    message="Hello! How are you doing?"
-                    time="03:01 PM"
-                />
-                <ChatBoxCard
-                    variant="sent"
-                    message="I'm good, how are you?"
-                    time="03:02 PM"
-                />
-                <ChatBoxCard
-                    variant="received"
-                    message="Great! Do you wanna join game now?"
-                    time="03:02 PM"
-                />
+                {conversation.map((message) => (
+                    <ChatBoxCard
+                        key={message.id}
+                        variant={message.variant}
+                        message={message.message}
+                        time={message.time}
+                    />
+                ))}
+
+                <div ref={messagesEndRef} />
             </div>
 
             <MessageInput
                 value={message}
                 onChange={setMessage}
-                onSend={() => {
-                    console.log("Message:", message);
-                    setMessage("");
-                }}
+                onSend={handleSend}
             />
             
         </div>
