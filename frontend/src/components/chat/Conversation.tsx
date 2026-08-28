@@ -24,7 +24,9 @@ export default function Conversation({
                 flex
                 h-full
                 w-full
+                min-w-0
                 flex-col
+                overflow-hidden
                 bg-surface-base
                 border
                 border-border-default
@@ -75,8 +77,10 @@ export default function Conversation({
             <div
                 className="
                     min-h-0
+                    min-w-0
                     flex-1
                     overflow-y-auto
+                    overflow-x-hidden
                     py-4
                     flex
                     flex-col
@@ -100,20 +104,6 @@ export default function Conversation({
                     time="03:02 PM"
                 />
             </div>
-
-            <div
-                className="
-                    shrink-0
-                    border-t
-                    border-border-default
-                    p-3
-                "
-            >
-                <div className="text-body-primary text-text-secondary uppercase">
-                    Type a message...
-                </div>
-            </div>
-            
         </div>
     );
 }
