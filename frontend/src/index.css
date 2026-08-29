@@ -130,7 +130,7 @@ input:-webkit-autofill:active {
 
 @keyframes scale-pop {
   0% { transform: scale(1); }
-  80% { transform: scale(1.2); }
+  60% { transform: scale(1.5); }
   100% { transform: scale(1); }
 }
 

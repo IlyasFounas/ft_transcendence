@@ -1,18 +1,28 @@
 import PrimaryButton from "../../components/buttons/PrimaryButton";
 import ResultInfoRow from "../../components/results/ResultInfoRow";
 import TotalScoreCard from "../../components/results/TotalScoreCard";
-import Preview2DMap from "./2DMap/Preview2DMap";
 import GameResultList from "../../components/results/GameResultList";
+import ResultMap from "./2DMap/ResultMap";
 import { mockGameResult } from "../../mocks/gameResult.mock";
+import { mockGame } from "../../mocks/game.mock";
+import { useCurrentRoundStats } from "../../utils/useCurrentRoundStats";
+import { useRoundGuesses } from "../../utils/useRoundGuesses";
+
 
 export default function SoloResultPage()
 {
-
 	const gameResult = mockGameResult;
+
+	const {
+		totalScore,
+		currentPlayerResult,
+		animatedScore,
+		scoreJustFinished,
+		animatedDistance,
+		distanceJustFinished,
+	} = useCurrentRoundStats(gameResult);
 	
-	  const currentPlayerResult = gameResult.players.find(
-		(p) => p.player.username === gameResult.currentUsername
-	  );
+	const guesses = useRoundGuesses(gameResult);
 
 	return (
 			<div className="
@@ -23,7 +33,7 @@ export default function SoloResultPage()
 			<div className="order-1 lg:col-start-1 lg:row-start-1">
 				<ResultInfoRow
 					title="Mission Debrief"
-					infos="Round 3 of 5"
+					infos={`Round ${gameResult.currentRound} of ${gameResult.totalRounds}`}
 					variant="primary"
 				/>
 			</div>
@@ -36,7 +46,11 @@ export default function SoloResultPage()
 				rounded-[10px]
 				overflow-hidden
 			">
-				<Preview2DMap latitude={42} longitude={12} />
+				<ResultMap
+					actualLocation={mockGame.location}
+					guesses={guesses}
+					currentUsername={gameResult.currentUsername}
+				/>
 			</div>
 
 			<div className="
@@ -44,16 +58,18 @@ export default function SoloResultPage()
 				lg:col-start-1 lg:row-start-3
 			">
 				<ResultInfoRow
-					title="Total Score"
-					infos="4578"
+					title="Score"
+					infos={String(animatedScore)}
 					variant="secondary"
 					suffix="pts"
+					animate={scoreJustFinished}
 				/>
 				<ResultInfoRow
 					title="Distance"
-					infos="4225"
+					infos={String(animatedDistance)}
 					variant="secondary"
 					suffix="km"
+					animate={distanceJustFinished}
 				/>
 			</div>
 			<div className="hidden lg:flex lg:col-start-2 lg:row-start-1">
@@ -66,8 +82,8 @@ export default function SoloResultPage()
 				items-center
 				gap-4
 			">
-				<GameResultList rounds={currentPlayerResult?.rounds ?? []} />
-				<TotalScoreCard points={456} distance={9874} />
+				<GameResultList currentRound={gameResult.currentRound} rounds={currentPlayerResult?.rounds ?? []} />
+				<TotalScoreCard points={totalScore} distance={gameResult.distance} />
 				<PrimaryButton size="medium">
 					Next Round
 				</PrimaryButton>

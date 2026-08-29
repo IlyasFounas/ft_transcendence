@@ -2,12 +2,14 @@ interface GameResultRowProps {
 	round: number;
 	points: number;
 	distance: number;
+	currentRound: number;
 }
 
 export default function GameResultRow({
 	round,
 	points,
 	distance,
+	currentRound,
 }: GameResultRowProps) {
 
 	const stats = [
@@ -15,13 +17,21 @@ export default function GameResultRow({
 		{ value: distance, label: "km" },
 	];
 
+	const isCurrentRound = currentRound === round;
+	const rowColor = isCurrentRound ? "text-cyan-400" : "text-(--color-text-secondary)";
+
 	return (
-		<div className="
+		<div className={`
 			w-full h-[60px] lg:h-[80px]
 			outline outline-1 outline-offset-[-1px] outline-cyan-800/30
 			flex justify-around items-center
-			uppercase text-primary
-		">
+			uppercase ${rowColor}
+			${
+		 	 isCurrentRound
+			? "outline-cyan-400/60 bg-gradient-to-r from-cyan-400/15 via-cyan-400/5 to-transparent shadow-[0_0_20px_rgba(53,223,255,0.25)]"
+			: "outline-cyan-800/30"
+	   		 }
+		`}>
 			<div className="w-[60px] text-center text-heading-medium">
 				{round}
 			</div>
@@ -32,7 +42,7 @@ export default function GameResultRow({
 					className="flex items-center gap-[10px] p-[14px]"
 				>
 					<div className="text-heading-small">
-						{stat.value}
+						{stat ? stat.value : "-"}
 					</div>
 
 					<div className="text-body-primary">
