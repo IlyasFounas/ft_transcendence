@@ -1,5 +1,5 @@
 import type { RoundResult } from "../../types/game";
-import GameResultRoll from "./GameResultRoll";
+import GameResultRow from "./GameResultRow";
 
 interface GameResultListProps {
   rounds: RoundResult[];
@@ -15,7 +15,7 @@ export default function GameResultList({ rounds }: GameResultListProps) {
       </div>
       <div className="max-h-[230px] overflow-y-auto lg:max-h-[500px]">
         {rounds.map((round) => (
-          <GameResultRoll
+          <GameResultRow
             key={round.round}
             round={round.round}
             distance={round.distance}

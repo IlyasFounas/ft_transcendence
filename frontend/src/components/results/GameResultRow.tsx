@@ -1,14 +1,14 @@
-interface GameResultCardProps {
+interface GameResultRowProps {
 	round: number;
 	points: number;
 	distance: number;
 }
 
-export default function GameResultList({
+export default function GameResultRow({
 	round,
 	points,
 	distance,
-}: GameResultCardProps) {
+}: GameResultRowProps) {
 
 	const stats = [
 		{ value: points, label: "pts" },

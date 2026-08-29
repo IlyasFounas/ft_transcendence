@@ -1,11 +1,19 @@
 import PrimaryButton from "../../components/buttons/PrimaryButton";
+import ResultInfoRow from "../../components/results/ResultInfoRow";
+import TotalScoreCard from "../../components/results/TotalScoreCard";
+import Preview2DMap from "./2DMap/Preview2DMap";
 import GameResultList from "../../components/results/GameResultList";
-import PanelInfosCard from "../../components/results/PanelInfosCard";
-import ScoreResumeCard from "../../components/results/ScoreSummaryCard";
-import Load2DMap from "./2DMap/Load2DMap";
+import { mockGameResult } from "../../mocks/gameResult.mock";
 
 export default function SoloResultPage()
 {
+
+	const gameResult = mockGameResult;
+	
+	  const currentPlayerResult = gameResult.players.find(
+		(p) => p.player.username === gameResult.currentUsername
+	  );
+
 	return (
 			<div className="
 				grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_394px]
@@ -13,10 +21,10 @@ export default function SoloResultPage()
 				p-4">
 
 			<div className="order-1 lg:col-start-1 lg:row-start-1">
-				<PanelInfosCard
+				<ResultInfoRow
 					title="Mission Debrief"
 					infos="Round 3 of 5"
-					style="primary"
+					variant="primary"
 				/>
 			</div>
 
@@ -28,28 +36,28 @@ export default function SoloResultPage()
 				rounded-[10px]
 				overflow-hidden
 			">
-				<Load2DMap latitude={45.782429} longitude={4.745860} />
+				<Preview2DMap latitude={42} longitude={12} />
 			</div>
 
 			<div className="
 				flex flex-row order-3 gap-2
 				lg:col-start-1 lg:row-start-3
 			">
-				<PanelInfosCard
+				<ResultInfoRow
 					title="Total Score"
 					infos="4578"
-					style="secondary"
+					variant="secondary"
 					suffix="pts"
 				/>
-				<PanelInfosCard
+				<ResultInfoRow
 					title="Distance"
 					infos="4225"
-					style="secondary"
+					variant="secondary"
 					suffix="km"
 				/>
 			</div>
 			<div className="hidden lg:flex lg:col-start-2 lg:row-start-1">
-				<PanelInfosCard title="Your results" style="primary"/>
+				<ResultInfoRow title="Your results"variant="primary"/>
 			</div>
 			<div className="
 				order-4
@@ -58,8 +66,8 @@ export default function SoloResultPage()
 				items-center
 				gap-4
 			">
-						<GameResultList rounds={5} /><GameResultList rounds={currentPlayerResult?.rounds ?? []} />
-				<ScoreResumeCard points={456} distance={9874} />
+				<GameResultList rounds={currentPlayerResult?.rounds ?? []} />
+				<TotalScoreCard points={456} distance={9874} />
 				<PrimaryButton size="medium">
 					Next Round
 				</PrimaryButton>

@@ -1,9 +1,9 @@
-interface ScoreSummaryCardProps{
+interface TotalScoreCardProps{
 	points: number;
 	distance: number;
 }
 
-export default function ScoreSummaryCard({points, distance} : ScoreSummaryCardProps)
+export default function TotalScoreCard({points, distance} : TotalScoreCardProps)
 {
 	return (
 		<div className="

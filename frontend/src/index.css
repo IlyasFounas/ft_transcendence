@@ -117,3 +117,24 @@ input:-webkit-autofill:active {
   --button-gradient-pressed-middle: #082743;
   --button-gradient-pressed-end: #030B17;
 }
+
+.custom-tooltip {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+.custom-tooltip::before {
+  display: none !important;
+}
+
+@keyframes scale-pop {
+  0% { transform: scale(1); }
+  80% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+.animate-scale-pop {
+  animation: scale-pop 200ms ease-out;
+}
+

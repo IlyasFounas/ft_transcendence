@@ -1,5 +1,5 @@
-import LobbyRoll from './LobbyRoll'
-import EmptyLobbyRoll from './EmptyLobbyRoll'
+import LobbyRow from './LobbyRow'
+import EmptyLobbyRow from './EmptyLobbyRow'
 
 import type { StatusBadgeProps } from "../primitives/StatusBadge";
 
@@ -51,7 +51,7 @@ export default function LobbyList({className, listOfPlayers}: LobbyListProps)
 				const player = listOfPlayers[index];
 
 				return player ? (
-					<LobbyRoll
+					<LobbyRow
 						key={player.id}
 						username={player.username}
 						role={player.role}
@@ -59,7 +59,7 @@ export default function LobbyList({className, listOfPlayers}: LobbyListProps)
 						avatar={player.avatar}
 					/>
 				) : (
-					<EmptyLobbyRoll key={`empty-${index}`} />
+					<EmptyLobbyRow key={`empty-${index}`} />
 				);
 			})}
 			</div>

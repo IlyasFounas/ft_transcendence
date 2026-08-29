@@ -5,22 +5,27 @@ function generateRounds(count: number): RoundResult[] {
     round: i + 1,
     points: 800 + Math.floor(Math.random() * 700),
     distance: Math.floor(Math.random() * 500),
+    guessLocation: {
+      // coordonnées aléatoires quelque part en Europe, juste pour tester visuellement
+      latitude: 35 + Math.random() * 25,   // ~35 à 60
+      longitude: -10 + Math.random() * 40, // ~-10 à 30
+    },
   }));
 }
 
 export const mockGameResult: GameResult = {
-  currentRound: 100,
-  totalRounds: 100,
-  currentPlayerUsername: "Lucie",
+  currentRound: 10,
+  totalRounds: 10,
+  currentUsername: "Lucie",
   distance: 4225,
+
   players: Array.from({ length: 10 }, (_, i) => ({
-    rank: i + 1,
     player: {
       username: i === 0 ? "Lucie" : `Player${i + 1}`,
       role: "Player",
       avatar: "/avatars/avatar1.png",
     },
-    rounds: generateRounds(100),
+
+    rounds: generateRounds(10),
   })),
 };
-

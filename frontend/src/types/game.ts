@@ -1,28 +1,31 @@
 export interface Player {
-  username: string;
-  role: string;
-  avatar: string;
+    username: string;
+    role: string;
+    avatar: string;
 }
 
 export interface PlayerResult {
-  rank: number;
-  player: Player;
-  rounds: RoundResult[];
+    player: Player;
+    rounds: RoundResult[];
 }
 
 export interface GameResult {
-  currentRound: number;
-  totalRounds: number;
-  players: PlayerResult[];
-  currentPlayerUsername: string; 
-  distance: number;
+    currentRound: number;
+    totalRounds: number;
+    players: PlayerResult[];
+    currentUsername: string;
+    distance: number;
 }
 
-export interface RoundResult {
+export type RoundResult = {
   round: number;
   points: number;
   distance: number;
-}
+  guessLocation: {
+    latitude: number;
+    longitude: number;
+  };
+};
 
 export interface Game {
     id: number;

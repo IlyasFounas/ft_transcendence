@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
+import { mockGame } from "../../mocks/game.mock";
 
 import PrimaryButton from "../../components/buttons/PrimaryButton";
 import GameBar from "../../components/game/GameBar";
 import Countdown from "../../components/game/Countdown";
 import LoadStreetView from "./StreetView/LoadStreetView";
 import Load2DMap from "./2DMap/Load2DMap";
-
-import { mockGame } from "../../mocks/game.mock";
 import Preview2DMap from "./2DMap/Preview2DMap";
+
 
 export default function GamePlayPage() {
 

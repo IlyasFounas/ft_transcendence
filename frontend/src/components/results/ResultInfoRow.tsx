@@ -1,8 +1,9 @@
-interface PanelInfosCardProps{
+interface ResultInfoRowProps{
 	title: string;
 	infos?: string;
 	suffix?: string;
-	style: "primary" | "secondary";
+	variant: "primary" | "secondary";
+	animate? : boolean;
 }
 
 const styles =
@@ -20,9 +21,9 @@ const styles =
 	}
 }
 
-export default function PanelInfosCard({title, infos, style, suffix} : PanelInfosCardProps)
+export default function ResultInfoRow({title, infos, variant, suffix, animate} : ResultInfoRowProps)
 {
-	const Style = styles[style];
+	const Style = styles[variant];
 
 	return (
 		<div className="w-full">
@@ -38,7 +39,10 @@ export default function PanelInfosCard({title, infos, style, suffix} : PanelInfo
 				rounded-[10px]
 				">
 				<h1 className={`${Style.title}`}>{title}</h1>
-				<p className={`${Style.infos}`}>{infos} {suffix}</p>
+				<div className="flex flex-row gap-2">
+					<p className={`${Style.infos} text-primary ${animate ? "animate-scale-pop" : ""}`}>{infos}</p>
+					<p className={`${Style.infos}`} >{suffix}</p>
+				</div>
 			</div>
 		</div>
 	)
