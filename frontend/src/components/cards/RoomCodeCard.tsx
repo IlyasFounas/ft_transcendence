@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { Copy } from 'lucide-react';
+import { Copy, Check } from 'lucide-react';
 
 interface RoomCodeCardProps {
 	code: string;
 	className?: string;
 };
 
-export default function RoomCodeCard({ code = "ATL-7961", className = ""}: RoomCodeCardProps)
+export default function RoomCodeCard({ code, className}: RoomCodeCardProps)
 {
 	const [copied, setCopied] = useState(false);
 
@@ -36,12 +36,6 @@ export default function RoomCodeCard({ code = "ATL-7961", className = ""}: RoomC
 					{code}
 				</span>
 				<div className="flex items-center gap-2">
-					{copied && (
-						<span className="text-sm text-text-primary">
-							Copied!
-						</span>
-					)}
-
 					<button
 						type="button"
 						onClick={handleCopy}
@@ -53,7 +47,7 @@ export default function RoomCodeCard({ code = "ATL-7961", className = ""}: RoomC
 							hover:scale-[1.2]
 							active:scale-[0.98]"
 						>
-						<Copy />
+						{copied ? <Check/> : <Copy/>}
 					</button>
 				</div>
 			</div>

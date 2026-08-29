@@ -1,4 +1,3 @@
-import { useState } from "react"
 import RoundsSettingsCard from "../cards/RoundsSettingsCard";
 import CheckBox from "./CheckBox";
 
