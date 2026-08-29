@@ -1,21 +1,21 @@
 import Avatar from "../primitives/Avatar.tsx"
 import StatusBadge from '../primitives/StatusBadge.tsx'
-import type {StatusBadgeProps}  from "../primitives/StatusBadge";
+import type {StatusBadgeProps}  from "../primitives/StatusBadge.tsx";
 
 
-interface LobbyRollProps {
+interface LobbyRowProps {
 	username?: string;
 	role?: string;
 	avatar: string;
 	status?: StatusBadgeProps["status"];
 }
 
-export default function LobbyRoll({
+export default function LobbyRow({
 		username,
 		role,
 		status,
 		avatar
-}: LobbyRollProps) {
+}: LobbyRowProps) {
 
 	
 	return (

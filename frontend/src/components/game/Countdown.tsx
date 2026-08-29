@@ -1,21 +1,9 @@
-import { useEffect } from "react";
+type Props = {
+    countdown: number;
+};
 
-
-export default function CountdownCard({ countDown , setCountDown}: { countDown: number; setCountDown: React.Dispatch<React.SetStateAction<number>>;}) 
+export default function Countdown({ countdown }: Props)
 {
-
-	useEffect(() => {
-		if (countDown <= 0)
-				return;
-
-		const timer = setInterval(() => {
-			setCountDown((prev) => prev - 1);
-		}, 1000);
-
-		return () => clearInterval(timer);
-	}, [countDown]);
-
-
 	function formatTime(value: number)
 	{
 		const minutes = Math.floor(value / 60);
@@ -25,19 +13,19 @@ export default function CountdownCard({ countDown , setCountDown}: { countDown: 
 	}
 
 	return (
-		<div className={`
-			w-[75px] h-[40px]
-			lg:w-[200px] lg:h-[75px] shrink-0 bg-surface-base
-			flex
+		<div className="
+			w-[75px] h-[40px] shrink-0
+			lg:w-[200px] lg:h-[75px]
+			flex items-center justify-center
 			rounded-lg
 			px-6 py-4
-			shadow-[inset_0px_0px_20px_0px_rgba(0,175,255,0.05)] outline outline-1 outline-sky-950
-			uppercase 
-			text-heading-small
-			justify-center items-center
-			lg:text-hero 
- 			`}>
-				0{formatTime(countDown)}
+			bg-surface-base
+			outline outline-1 outline-sky-950
+			shadow-[inset_0px_0px_20px_0px_rgba(0,175,255,0.05)]
+			uppercase
+			text-heading-small lg:text-hero
+		">
+				0{formatTime(countdown)}
 		</div>
 	)
 }

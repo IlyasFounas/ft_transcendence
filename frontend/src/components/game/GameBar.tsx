@@ -1,5 +1,3 @@
-import {useState} from "react"
-
 import { Cog, LogOut } from 'lucide-react'
 
 import LogoHorizontal from '../primitives/LogoHorizontal'
@@ -8,11 +6,16 @@ import GameInfosCard from './GameInfosCard'
 import SignalIntegrityCard from './SignalIntegrityCard'
 import LogoIcon from "../primitives/LogoIcon"
 
-export default function GameBar()
-{
-	const totalTime = 60;
-	const [countDown, setCountDown] = useState(totalTime);
+type Props = {
+    countdown: number;
+    totalTime: number;
+	gameId: number;
+	round: number;
+	totalRounds: number;
+};
 
+export default function GameBar({countdown, totalTime, gameId, round, totalRounds} : Props)
+{
 	return (
 		<div className="
 			grid
@@ -36,14 +39,13 @@ export default function GameBar()
 						<LogoHorizontal className="hidden xl:flex min-w-[100px] h-[100px] md:w-[50px]"></LogoHorizontal>
 						<LogoIcon className="flex xl:hidden w-[75px] h-[75px]"></LogoIcon>
 				</div>
-				<GameInfosCard round={3} totalRounds={5} id={4242}></GameInfosCard>
+				<GameInfosCard round={round} totalRounds={totalRounds} id={gameId}></GameInfosCard>
 			</div>
 			<div className="flex justify-center">
-				<Countdown countDown={countDown} setCountDown={setCountDown}
-				></Countdown>
+				<Countdown countdown={countdown}/>
 			</div>
 			<div className="flex justify-end gap-6">
-				<SignalIntegrityCard countDown={countDown} totalTime={totalTime}></SignalIntegrityCard>
+				<SignalIntegrityCard countdown={countdown} totalTime={totalTime}></SignalIntegrityCard>
 				<div className="flex flex-row gap-6">
 					<button className="
 						cursor-pointer

@@ -17,10 +17,10 @@ import AuthenticationLogin from '../components/authentication/AuthenticationLogi
 import PrimaryButton from '../components/buttons/PrimaryButton.tsx';
 import SecondaryButton from '../components/buttons/SecondaryButton.tsx';
 import Avatar from '../components/primitives/Avatar.tsx';
-import GameResultCard from '../components/cards/GameResultCard.tsx';
+import GameResultRow from '../components/results/GameResultRow.tsx';
 import LobbyTestPage from '../components/cards/LobbyTestPage.tsx';
 import ChatBoxCard from '../components/cards/ChatBox.tsx';
-import SummaryResultCard from '../components/cards/SummaryResultCard.tsx'
+import TotalScoreCard from '../components/results/TotalScoreCard.tsx'
 import Podium from '../components/cards/podium/Podium.tsx';
 
 export default function ComponentPage() {
@@ -285,7 +285,7 @@ export default function ComponentPage() {
           <h2 className="mb-4 text-lg font-bold">
             Game Result Card
           </h2>
-            <GameResultCard rank={2} distance={256} points={1000} ></GameResultCard>
+            <GameResultRow round={2} distance={256} points={1000} ></GameResultRow>
         </section>
   
        <section className="mb-10">
@@ -312,11 +312,11 @@ export default function ComponentPage() {
   
        <section className="mb-10">
           <h2 className="mb-4 text-lg font-bold">
-            Summary Result Roll
+            Summary Result Row
           </h2>
-            <SummaryResultCard rank={2}
+            <TotalScoreCard rank={2}
                 player={{ username: "Agent Tommy", role: "Field Analyst", avatar: "/avatars/avatar1.png" }}
-             rounds={[ {round: 1, points: 1820,}, {round: 1, points: 1245,},{round: 1, points: 180, },{round: 1, points: 1896,},{round: 1, points: 1200,}, ]}></SummaryResultCard>
+             rounds={[ {round: 1, points: 1820,}, {round: 1, points: 1245,},{round: 1, points: 180, },{round: 1, points: 1896,},{round: 1, points: 1200,}, ]}></TotalScoreCard>
         </section>
   
       <section className="mb-10">

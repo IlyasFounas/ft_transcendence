@@ -12,7 +12,7 @@ export default function LobbyPage()
 		bg-[url(/backgrounds/earth_background.png)]
 		">
       		<div className="
-				container mx-auto 
+				mx-auto 
 				grid grid-cols-1
 				px-6 py-8 
 				gap-6

@@ -1,8 +1,7 @@
 import Avatar from "../primitives/Avatar.tsx"
 
-export default function EmptyLobbyRoll() {
+export default function EmptyLobbyRow() {
 
-	
 	return (
 		<div className="
 			w-full min-h-[65px] 
