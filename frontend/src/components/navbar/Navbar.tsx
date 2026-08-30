@@ -10,15 +10,19 @@ interface NavbarProps {
     username: string;
     avatar: string;
     status: UserStatusType;
+    isChatOpen: boolean;
+    onToggleChat: () => void;
 }
 
 export function Navbar({
     username,
     avatar,
     status,
+    isChatOpen,
+    onToggleChat,
 }: NavbarProps) {
+
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const [isChatOpen, setIsChatOpen] = useState(false);
     return (
         <nav
             className="
@@ -151,7 +155,8 @@ export function Navbar({
                 {/* chat */}
                 <div className="w-12 flex justify-end">
                     <NavbarChatButton
-                        onClick={() => setIsChatOpen(!isChatOpen)}
+                        isChatOpen={isChatOpen}
+                        onClick={onToggleChat}
                     />
                 </div>
             </div>

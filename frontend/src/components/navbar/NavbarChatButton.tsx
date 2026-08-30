@@ -1,10 +1,12 @@
-import { Users } from "lucide-react";
+import { Users, X } from "lucide-react";
 
 interface NavbarChatButtonProps {
+    isChatOpen: boolean;
     onClick: () => void;
 }
 
 export default function NavbarChatButton({
+    isChatOpen,
     onClick,
 }: NavbarChatButtonProps) {
     return (
@@ -23,7 +25,11 @@ export default function NavbarChatButton({
                 hover:text-primary
             "
         >
-            <Users size={24} />
+            {isChatOpen ? (
+                <X size={24} />
+            ) : (
+                <Users size={24} />
+            )}
         </button>
     );
 }
