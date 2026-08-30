@@ -3,10 +3,18 @@ import type { Friend } from "../../types/user.types";
 import FriendsList from "./FriendList";
 import Conversation from "./Conversation";
 import { conversations } from "../../data/conversation";
+import type { Message } from "../../types/message.type";
 
 interface ChatPanelProps {
     friends: Friend[];
 }
+
+const getCurrentTime = () => {
+    return new Date().toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+    });
+};
 
 export default function ChatPanel({
     friends,
@@ -23,11 +31,13 @@ export default function ChatPanel({
             return;
         }
 
-        const newMessage = {
+        const currentTime = getCurrentTime();
+
+        const newMessage: Message = {
             id: Date.now(),
-            variant: "sent" as const,
+            variant: "sent",
             message,
-            time: "03:03 PM",
+            time: currentTime,
         };
 
         setConversationData((currentConversations) => ({
@@ -44,7 +54,7 @@ export default function ChatPanel({
                     ? {
                         ...friend,
                         lastMessage: message,
-                        timestamp: "03:03 pm",
+                        timestamp: currentTime,
                     }
                     : friend
             )
