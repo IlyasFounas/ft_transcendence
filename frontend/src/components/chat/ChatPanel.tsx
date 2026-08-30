@@ -16,6 +16,8 @@ export default function ChatPanel({
     
     const [conversationData, setConversationData] = useState(conversations);
     
+    const [friendList, setFriendList] = useState(friends);
+
     const handleSendMessage = (message: string) => {
         if (!selectedFriend) {
             return;
@@ -35,13 +37,25 @@ export default function ChatPanel({
                 newMessage,
             ],
         }));
+
+        setFriendList((currentFriends) => 
+            currentFriends.map((friend) =>
+                friend.username === selectedFriend.username
+                    ? {
+                        ...friend,
+                        lastMessage: message,
+                        timestamp: "03:03 pm",
+                    }
+                    : friend
+            )
+        );
     };
 
     return (
         <div className="h-full w-full">
             {selectedFriend === null ? (
                 <FriendsList
-                    friends={friends}
+                    friends={friendList}
                     onOpenChat={setSelectedFriend}
                 />
             ) : (
