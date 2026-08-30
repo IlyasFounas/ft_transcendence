@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { Friend } from "../../types/user.types";
 import FriendsList from "./FriendList";
 import Conversation from "./Conversation";
+import { conversations } from "../../data/conversation";
 
 interface ChatPanelProps {
     friends: Friend[];
@@ -12,6 +13,29 @@ export default function ChatPanel({
 }: ChatPanelProps) {
 
     const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
+    
+    const [conversationData, setConversationData] = useState(conversations);
+    
+    const handleSendMessage = (message: string) => {
+        if (!selectedFriend) {
+            return;
+        }
+
+        const newMessage = {
+            id: Date.now(),
+            variant: "sent" as const,
+            message,
+            time: "03:03 PM",
+        };
+
+        setConversationData((currentConversations) => ({
+            ...currentConversations,
+            [selectedFriend.username]: [
+                ...(currentConversations[selectedFriend.username] ?? []),
+                newMessage,
+            ],
+        }));
+    };
 
     return (
         <div className="h-full w-full">
@@ -36,7 +60,11 @@ export default function ChatPanel({
                 >
                     <Conversation
                         friend={selectedFriend}
+                        conversation={
+                            conversationData[selectedFriend.username] ?? []
+                        }
                         onBack={() => setSelectedFriend(null)}
+                        onSendMessage={handleSendMessage}
                     />
                 </div>
             )}

@@ -5,17 +5,21 @@ import Avatar from "../primitives/Avatar";
 import { useState, useEffect, useRef, } from "react";
 import MessageInput from "./MessageInput";
 import type { Message } from "../../types/message.type";
-import { conversations } from "../../data/conversation";
 
 interface ConversationProps {
     friend: Friend;
+    conversation: Message[];
     onBack: () => void;
+    onSendMessage: (message: string) => void;
 }
 
 export default function Conversation({
     friend,
+    conversation,
     onBack,
+    onSendMessage,
 }: ConversationProps) {
+
     const statusClasses = {
         online: "bg-status-green",
         "in-mission": "bg-status-yellow",
@@ -24,27 +28,12 @@ export default function Conversation({
 
     const [message, setMessage] = useState("");
 
-    const [conversation, setConversation] = useState<Message[]>(
-        conversations[friend.username] ?? []
-    );
-
     const handleSend = () => {
         if (message.trim() === "") {
             return;
         }
 
-        const newMessage: Message = {
-            id: Date.now(),
-            variant: "sent",
-            message: message,
-            time: "03:03 PM",
-        };
-
-        setConversation((currentMessages) => [
-            ...currentMessages,
-            newMessage,
-        ]);
-
+        onSendMessage(message);
         setMessage("");
     };
 
