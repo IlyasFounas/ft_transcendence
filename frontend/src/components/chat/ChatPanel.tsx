@@ -48,8 +48,8 @@ export default function ChatPanel({
             ],
         }));
 
-        setFriendList((currentFriends) => 
-            currentFriends.map((friend) =>
+        setFriendList((currentFriends) => {
+            const updatedFriends = currentFriends.map((friend) =>
                 friend.username === selectedFriend.username
                     ? {
                         ...friend,
@@ -57,8 +57,20 @@ export default function ChatPanel({
                         timestamp: currentTime,
                     }
                     : friend
-            )
-        );
+            );
+
+            const updatedFriend = updatedFriends.find(
+                (friend) => friend.username === selectedFriend.username
+            );
+
+            const otherFriends = updatedFriends.filter(
+                (friend) => friend.username !== selectedFriend.username
+            );
+
+            return updatedFriend
+                ? [updatedFriend, ...otherFriends]
+                : updatedFriends;
+        });
     };
 
     return (
