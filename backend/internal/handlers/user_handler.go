@@ -10,10 +10,11 @@ import (
 
 	"backend/internal/models/users"
 	"backend/internal/repositories"
+	"backend/internal/tools/code_generation"
+	"backend/internal/tools/cookie"
 	"backend/internal/tools/encryption"
 	"backend/internal/tools/mailing"
 	"backend/internal/tools/token_generation"
-	"backend/internal/tools/cookie"
 )
 
 /**
@@ -103,7 +104,7 @@ func (h *UserHandler) CreateUser() gin.HandlerFunc {
 		    username = "player"	
 		}
 		userObj := &users.User{Login: login,
-			Password:    hashpassword,
+			Password:    &hashpassword,
 			Username:    username,
 			Email:       email,
 			Is_verified: false}
@@ -162,7 +163,7 @@ func (h *UserHandler) Login() gin.HandlerFunc {
 				return
 			}
 			cookie.Set(c, "/api/auth", "refresh_token",
-			encodedKey, 7*24*time.Hour)
+			encodedKey, 7*24*time.Hour, true)
             c.JSON(http.StatusOK,
                 gin.H{"Authorization": tokenObj.Token})
 		}
@@ -171,9 +172,16 @@ func (h *UserHandler) Login() gin.HandlerFunc {
 
 func (h *UserHandler) GoogleLogin() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		
-		c.JSON(http.StatusOK, 
-			gin.H{"message": "success"})
+		state, err := code_generation.RandGenerate(32)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, 
+				gin.H{"message": "failed"})
+			return ;
+		}
+		cookie.Set(c, "/api/auth/google", "httpOnly",
+		state, 10*time.Minute, false)
+		url := "nothing_for_now"
+		c.Redirect(http.StatusFound, url)
 	}
 }
 
@@ -263,29 +271,6 @@ func (h *UserHandler) Email() gin.HandlerFunc {
 		} else {
             c.JSON(http.StatusOK, gin.H{"message": "success", "email":  email})
 		}
-	}
-}
-func (h *UserHandler) OAuth() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		userId, ok := c.Get("userId")
-		if !ok {
-            c.JSON(http.StatusUnauthorized,
-                gin.H{"message": "The user id is empty"})
-			return
-		}
-		oauth, err := h.userRepo.OAuth(c.Request.Context(), userId.(int64))
-		if err != nil {
-            c.JSON(http.StatusInternalServerError, gin.H{"message": "failed"})
-			return
-		}
-        if oauth == nil {
-            c.JSON(http.StatusNotFound, gin.H{"message": "The user doesn't have a oauth"})
-			return
-		} else {
-            c.JSON(http.StatusOK, gin.H{
-            "message": "success",
-            "OAuth":  oauth})
-        }
 	}
 }
 

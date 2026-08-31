@@ -8,7 +8,11 @@ import (
 )
 
 func Set(c *gin.Context, path string, 
-	name string, token string, ttl time.Duration) {
+	name string, token string, ttl time.Duration, strict bool) {
+	sameSite := http.SameSiteLaxMode
+	if strict {
+		sameSite = http.SameSiteStrictMode
+	}
 	http.SetCookie(c.Writer, &http.Cookie{
 		Name:     name,
 		Value:    token,
@@ -16,6 +20,6 @@ func Set(c *gin.Context, path string,
 		MaxAge:   int(ttl.Seconds()),
 		HttpOnly: true,
 		Secure:   os.Getenv("ENV") == "prod",
-		SameSite: http.SameSiteStrictMode,
+		SameSite: sameSite,
 	})
 }

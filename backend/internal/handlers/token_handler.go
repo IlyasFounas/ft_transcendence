@@ -112,7 +112,7 @@ func (h *TokenHandler) RefreshToken() gin.HandlerFunc {
 			return
 		}
 		cookie.Set(c, "/api/auth", "refresh_token",
-		newEncodedKey, 7*24*time.Hour)
+		newEncodedKey, 7*24*time.Hour, true)
         c.JSON(http.StatusOK,gin.H{
 			"message": "success",
 			"Authorization": newToken.Token})

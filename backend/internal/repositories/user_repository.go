@@ -6,7 +6,6 @@ import (
 	"context"
 	"errors"
 	"github.com/uptrace/bun"
-	"golang.org/x/oauth2"
 )
 
 /**
@@ -51,8 +50,8 @@ func (r *UserRepository) LoginUser(ctx context.Context,
 	if err != nil {
 		return false, 0, err
 	}
-	if !encryption.CheckPasswordHash(password, user.Password) {
-		// TODO: add something like "return false, user.ID, nil" ??
+	if user.Password == nil || !encryption.CheckPasswordHash(password, *user.Password) {
+		return false, user.ID, errors.New("The user has not set a password")
 	} else if !user.Is_verified {
 		return false, user.ID, errors.New("The user has not verified his email")
 	}
@@ -110,19 +109,6 @@ func (r *UserRepository) Email(ctx context.Context, userId int64) (*string, erro
 		return nil, err
 	}
 	return &user.Email, nil
-}
-
-func (r *UserRepository) OAuth(ctx context.Context, userId int64) (*oauth2.Token, error) {
-	user := new(users.User)
-	err := r.db.NewSelect().
-		Model(user).
-		Column("oauth").
-		Where("id = ?", userId).
-		Scan(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return user.OAuth, nil
 }
 
 func (r *UserRepository) UserByName(ctx context.Context,
