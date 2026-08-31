@@ -92,9 +92,32 @@ export default function HomePage() {
           onToggleChat={() => setIsChatOpen((current) => !current)}
       />
 
-      {isChatOpen && (
-        <ChatPanel friends={friends} />
-      )}
+      <div
+        className={`
+            group
+            fixed
+            right-5
+            top-25
+            bottom-5
+            z-50
+            w-28
+            rounded-xl
+            overflow-hidden
+            border
+            border-border-default
+            bg-surface-base
+            transition-[width]
+            duration-200
+            ease-in-out
+            hover:w-80
+
+            ${isChatOpen ? "block" : "hidden"}
+
+            lg:block
+            `}
+        >
+            <ChatPanel friends={friends} />
+        </div>
     </div>
   );
 }

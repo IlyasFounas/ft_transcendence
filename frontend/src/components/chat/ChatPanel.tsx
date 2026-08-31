@@ -79,6 +79,7 @@ export default function ChatPanel({
                 <FriendsList
                     friends={friendList}
                     onOpenChat={setSelectedFriend}
+                    variant="compact"
                 />
             ) : (
                 <div
@@ -88,12 +89,11 @@ export default function ChatPanel({
                         w-full
                         items-center
                         justify-center
-                        border
-                        border-border-default
                         bg-surface-base
                         text-text-primary
                     "
                 >
+                    
                     <Conversation
                         friend={selectedFriend}
                         conversation={

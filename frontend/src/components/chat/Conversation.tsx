@@ -54,9 +54,6 @@ export default function Conversation({
                 min-w-0
                 flex-col
                 overflow-hidden
-                bg-surface-base
-                border
-                border-border-default
             "
         >
             <div className="shrink-0 border-b border-border-default p-4">

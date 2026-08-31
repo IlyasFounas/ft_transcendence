@@ -1,14 +1,17 @@
 import FriendChatRow from "./FriendChatRow";
 import type { Friend } from "../../types/user.types";
+import CompactFriendRow from "./CompactFriendRow";
 
 interface FriendsListProps {
     friends: Friend[];
     onOpenChat: (friend: Friend) => void;
+    variant?: "expended" | "compact";
 }
 
 export default function FriendsList({
     friends,
     onOpenChat,
+    variant = "expended",
 }: FriendsListProps) {
 
     const onlineCount = friends.filter((friend) => friend.status === "online").length;
@@ -20,9 +23,6 @@ export default function FriendsList({
                 h-full
                 w-full
                 flex-col
-                bg-surface-base
-                border
-                border-border-default
             "
         >
 
@@ -50,16 +50,30 @@ export default function FriendsList({
                 "
             >
                 {friends.map((friend, index) => (
-                    <FriendChatRow
-                        key={index}
-                        username={friend.username}
-                        avatar={friend.avatar}
-                        status={friend.status}
-                        lastMessage={friend.lastMessage}
-                        timestamp={friend.timestamp}
-                        onOpenChat={() => onOpenChat(friend)}
-                    />
-                ))}
+                <div key={index} className="relative">
+
+                    {/* Compact */}
+                    <div className="block group-hover:hidden">
+                        <CompactFriendRow
+                            friend={friend}
+                            onOpenChat={onOpenChat}
+                        />
+                    </div>
+
+                    {/* Expanded */}
+                    <div className="hidden group-hover:block">
+                        <FriendChatRow
+                            username={friend.username}
+                            avatar={friend.avatar}
+                            status={friend.status}
+                            lastMessage={friend.lastMessage}
+                            timestamp={friend.timestamp}
+                            onOpenChat={() => onOpenChat(friend)}
+                        />
+                    </div>
+
+                </div>
+            ))}
             </div>
         </div>
     );
