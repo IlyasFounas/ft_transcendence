@@ -1,7 +1,9 @@
 import 'leaflet/dist/leaflet.css';
+import { renderToStaticMarkup } from "react-dom/server";
 
 import { useEffect } from 'react';
 import L from 'leaflet';
+import Avatar from '../../../components/primitives/Avatar';
 
 type Location = {
   latitude: number;
@@ -54,6 +56,16 @@ function createTargetIcon(color: string) {
   });
 }
 
+function PlayerTooltip({ avatar, username }: { avatar: string, username: string})
+{
+	return (
+		<div className="flex flex-row  justify-center items-center gap-2">
+			<Avatar avatar={avatar} size={35}></Avatar>
+			<span>{username}</span>
+		</div>
+	)
+}
+
 export default function ResultMap({actualLocation, guesses, currentUsername}: Props) {
   useEffect(() => {
 	// Initializes the map and sets the view to the specified latitude and longitude with a zoom level
@@ -75,13 +87,9 @@ export default function ResultMap({actualLocation, guesses, currentUsername}: Pr
 	{ icon: isCurrentPlayer ? createTargetIcon("#ef4444") : createDotIcon() }
   )
 	.addTo(map)
-	.bindTooltip(`
-					<div className="flex items-center gap-2 w-20  ">
-						<img src="${guess.avatar}" className="w-6 h-6 rounded-full" />
-						<span>${guess.username}</span>
-					</div>
-					`,
-					{ direction: "top", offset: [0, -12] });
+	.bindTooltip(
+		renderToStaticMarkup(<PlayerTooltip avatar={guess.avatar} username={guess.username} />),
+					{ direction: "top", offset: [0, -12], className: "player-tooltip" });
 
 		L.polyline(
 			[
@@ -90,7 +98,7 @@ export default function ResultMap({actualLocation, guesses, currentUsername}: Pr
 			],
 			{
 			color:"#000000", 
-			weight: 0.5,
+			weight: 1,
 			dashArray: "6, 3"
 			}
 		).addTo(map);

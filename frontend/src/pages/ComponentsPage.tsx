@@ -19,7 +19,6 @@ import SecondaryButton from '../components/buttons/SecondaryButton.tsx';
 import Avatar from '../components/primitives/Avatar.tsx';
 import GameResultRow from '../components/results/GameResultRow.tsx';
 import ChatBoxCard from '../components/cards/ChatBox.tsx';
-import TotalScoreCard from '../components/results/TotalScoreCard.tsx'
 import Podium from '../components/cards/podium/Podium.tsx';
 
 export default function ComponentPage() {
@@ -280,6 +279,20 @@ export default function ComponentPage() {
         <Avatar avatar="/avatars/avatar1.png"></Avatar>
         </section>
   
+       <section className="mb-10">
+          <h2 className="mb-4 text-lg font-bold">
+            Game Result Card
+          </h2>
+            <GameResultRow currentRound={1} round={2} distance={256} points={1000} ></GameResultRow>
+        </section>
+  
+       <section className="mb-10">
+          <h2 className="mb-4 text-lg font-bold">
+            Lobby Card
+          </h2>
+            <LobbyTestPage></LobbyTestPage>
+        </section>
+  
       <section className="mb-10">
           <h2 className="mb-4 text-lg font-bold">
             ChatBox - Received
@@ -293,15 +306,6 @@ export default function ComponentPage() {
             ChatBox - Sent
           </h2>
             <ChatBoxCard variant="sent" message="I'm good, how r u?" time="02.11 PM"></ChatBoxCard>
-        </section>
-  
-       <section className="mb-10">
-          <h2 className="mb-4 text-lg font-bold">
-            Summary Result Row
-          </h2>
-            <TotalScoreCard rank={2}
-                player={{ username: "Agent Tommy", role: "Field Analyst", avatar: "/avatars/avatar1.png" }}
-             rounds={[ {round: 1, points: 1820,}, {round: 1, points: 1245,},{round: 1, points: 180, },{round: 1, points: 1896,},{round: 1, points: 1200,}, ]}></TotalScoreCard>
         </section>
   
       <section className="mb-10">
