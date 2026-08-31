@@ -56,7 +56,7 @@ export default function Conversation({
                 overflow-hidden
             "
         >
-            <div className="shrink-0 border-b border-border-default p-4">
+            <div className="shrink-0 p-2">
                 <div className="flex items-center gap-3">
                     <button
                         type="button"
@@ -111,7 +111,8 @@ export default function Conversation({
                     px-2
                     py-4
                     mx-4
-                    my-4
+                    mt-0
+                    mb-4
                     flex
                     flex-col
                     gap-4
