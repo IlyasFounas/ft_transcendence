@@ -5,13 +5,11 @@ import CompactFriendRow from "./CompactFriendRow";
 interface FriendsListProps {
     friends: Friend[];
     onOpenChat: (friend: Friend) => void;
-    variant?: "expended" | "compact";
 }
 
 export default function FriendsList({
     friends,
     onOpenChat,
-    variant = "expended",
 }: FriendsListProps) {
 
     const onlineCount = friends.filter((friend) => friend.status === "online").length;

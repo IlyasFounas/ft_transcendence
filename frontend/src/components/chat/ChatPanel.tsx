@@ -79,7 +79,6 @@ export default function ChatPanel({
                 <FriendsList
                     friends={friendList}
                     onOpenChat={setSelectedFriend}
-                    variant="compact"
                 />
             ) : (
                 <div
