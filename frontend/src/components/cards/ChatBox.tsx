@@ -24,8 +24,8 @@ export default function ChatBoxCard({
 	const style = variants[variant];
 
 	return(
-		<div className={`w-80 px-[5px] inline-flex
-			${style.wrapper}`}
+		<div className={`w-full px-[5px] flex
+    		${style.wrapper}`}
 		>
 			<div className={`max-w-64 px-2.5 py-[5px] rounded-[10px] inline-flex flex-col ${style.bubble}`}>
 				<div>

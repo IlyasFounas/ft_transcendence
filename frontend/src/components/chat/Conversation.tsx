@@ -105,10 +105,16 @@ export default function Conversation({
                     flex-1
                     overflow-y-auto
                     overflow-x-hidden
+                    rounded-xl
+                    border
+                    border-border-default
+                    px-2
                     py-4
+                    mx-4
+                    my-4
                     flex
                     flex-col
-                    gap-2
+                    gap-4
                     custom-scrollbar
                 "
             >
