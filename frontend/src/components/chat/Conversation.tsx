@@ -105,7 +105,7 @@ export default function Conversation({
                     flex-1
                     overflow-y-auto
                     overflow-x-hidden
-                    rounded-xl
+                    rounded-lg
                     border
                     border-border-default
                     px-2
