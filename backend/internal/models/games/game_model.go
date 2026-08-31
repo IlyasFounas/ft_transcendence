@@ -16,19 +16,21 @@ type Game struct {
 	Timer		int64 		`bun:"timer,notnull"`
 	RoundNb 	int64 		`bun:"round_nb,notnull,check:round_nb <> 0"`
 	Finished	bool 		`bun:"finished"`
-	PlayerNb	int64 		`bun:"player_nb,notnull,check player_nb <> 0`
+	PlayerNb	int64 		`bun:"player_nb,notnull,check:player_nb <> 0`
 	CreatedAt   time.Time	`bun:"created_at,default:current_timestamp"`
 
-	Lobby 		[]*Lobby  `bun:"rel:has-many,join:id=game_id"`
+	Lobby 		[]*Lobby  	`bun:"rel:has-many,join:id=game_id"`
 }
 
 type Lobby struct {
-	bun.BaseModel `bun:"lobby,alias:lo"`
+	bun.BaseModel `bun:"table:lobby,alias:lo"`
 
-	ID 			int64 `bun:"id,pk,autoincrement"`
-	UserId  	int64 `bun:"user_id"`
-	GameId  	int64 `bun:"game_id"`
-	JoinCode  	string `bun:"join_code,unique"`
+	ID 			int64		`bun:"id,pk,autoincrement"`
+	UserId  	int64		`bun:"user_id"`
+	GameId  	int64		`bun:"game_id"`
+	JoinCode  	*string		`bun:"join_code,unique"`
+	IsCreator  	bool 		`bun:"is_creator"`
+	LeftAt  	*time.Time 	`bun:"left_at"`
 
-	Game 		*Game `bun:"rel:has-one,join:game_id=id"`
+	Game 		*Game 	`bun:"rel:has-one,join:game_id=id"`
 }

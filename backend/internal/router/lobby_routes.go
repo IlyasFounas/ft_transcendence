@@ -6,10 +6,15 @@ import (
 	"backend/internal/middleware"
 )
 
-func registerLobbyRoutes(r *gin.Engine, h *handlers.GameHandler) {
+func registerLobbyRoutes(r *gin.Engine, h *handlers.GameHandler,
+	hl *handlers.LobbyHandler) {
 	private := r.Group("/")
 	private.Use(middleware.AuthMiddleWare())
 	{
 		private.POST("/lobby/create", h.CreateLobby())
+		private.POST("/lobby/join", hl.JoinLobby())
+		private.DELETE("/lobby/leave", hl.LeaveLobby())
+		private.DELETE("/lobby/remove/:username", hl.RemovePlayer())
+		private.GET("/lobby/allPlayers", hl.AllPlayers())
 	}
 }

@@ -81,44 +81,60 @@ func (h *GameHandler) CreateLobby() gin.HandlerFunc {
                 gin.H{"message": "The userId is empty"})
             return
 		}
-		lobbyObj := &games.Lobby{UserId: userId.(int64)}
+		actualLobby, err := h.lobbyRepo.ActualLobby(c.Request.Context(), 
+			userId.(int64))
+		if err != nil {
+			c.JSON(http.StatusUnauthorized,
+				gin.H{"message": "Something went wrong"})
+			return
+		}
+		if actualLobby != nil {
+			c.JSON(http.StatusUnauthorized,
+				gin.H{"message": "You're already in a lobby"})
+			return
+		}
+		lobbyObj := &games.Lobby{UserId: userId.(int64),
+								 IsCreator: true}
 		for i := 0; i < 50; i++ {
 			joinCode, err := join_code.RandGenerate()
 			if err != nil {
 				c.JSON(http.StatusUnauthorized,
 					gin.H{"message": "failed"})
-				return ;
+				return
 			}
-			lobbyObj.JoinCode = joinCode
+			lobbyObj.JoinCode = &joinCode
 			lobby, err := h.lobbyRepo.CreateLobby(c.Request.Context(), lobbyObj)
-			// fmt.Printf("\n\n\nlobby_id = %d\n", lobby.ID)
 			if err == nil {
 				gameObj, err := initGameObj(c)
 				if err != nil {
+					h.lobbyRepo.RemoveLobby(c.Request.Context(), lobby)
 					c.JSON(http.StatusUnauthorized,
 						gin.H{"message": "the game initiation failed"})
 					return
 				}
 				game, err := h.gameRepo.CreateGame(c.Request.Context(), gameObj)
 				if err != nil {
+					h.lobbyRepo.RemoveLobby(c.Request.Context(), lobby)
 					c.JSON(http.StatusUnauthorized,
 						gin.H{"message": "the creation of the game failed, try again"})
-					return ;
+					return
 				}
 				err = h.lobbyRepo.SetGameId(c.Request.Context(), lobby.ID, game.ID)
 				if err != nil {
+					h.lobbyRepo.RemoveLobby(c.Request.Context(), lobby)
 					c.JSON(http.StatusUnauthorized,
 						gin.H{"message": "the lobby can not be updated, try again"})
+					return
 				}
 				c.JSON(http.StatusOK,
 					gin.H{"message": "success", "lobby_id": lobby.ID})
-				return ;
+				return
 			}
 			fmt.Println("The join code already exist, currently retrying...\n")				
 		}
 		c.JSON(http.StatusUnauthorized,
 			gin.H{"message": "the creation of the lobby failed, try again"})
-		return ;
+		return
 	}
 }
 
@@ -130,7 +146,7 @@ func (h *GameHandler) Game() gin.HandlerFunc {
 				gin.H{"message": "failed"})
 			return ;
 		}
-		game, err := h.gameRepo.Game(c, id)
+		game, err := h.gameRepo.Game(c.Request.Context(), id)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized,
 				gin.H{"message": "the game doesn't exist"})
@@ -149,7 +165,7 @@ func (h *GameHandler) Title() gin.HandlerFunc {
 				gin.H{"message": "failed"})
 			return ;
 		}
-		title, err := h.gameRepo.Title(c, id)
+		title, err := h.gameRepo.Title(c.Request.Context(), id)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized,
 				gin.H{"message": "failed"})
@@ -168,7 +184,7 @@ func (h *GameHandler) Mode() gin.HandlerFunc {
 				gin.H{"message": "failed"})
 			return ;
 		}
-		mode, err := h.gameRepo.Mode(c, id)
+		mode, err := h.gameRepo.Mode(c.Request.Context(), id)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized,
 				gin.H{"message": "failed"})
@@ -187,7 +203,7 @@ func (h *GameHandler) Difficulty() gin.HandlerFunc {
 				gin.H{"message": "failed"})
 			return ;
 		}
-		difficulty, err := h.gameRepo.Difficulty(c, id)
+		difficulty, err := h.gameRepo.Difficulty(c.Request.Context(), id)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized,
 				gin.H{"message": "failed"})
@@ -206,7 +222,7 @@ func (h *GameHandler) Timer() gin.HandlerFunc {
 				gin.H{"message": "failed"})
 			return ;
 		}
-		timer, err := h.gameRepo.Timer(c, id)
+		timer, err := h.gameRepo.Timer(c.Request.Context(), id)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized,
 				gin.H{"message": "failed"})
@@ -225,7 +241,7 @@ func (h *GameHandler) RoundNb() gin.HandlerFunc {
 				gin.H{"message": "failed"})
 			return ;
 		}
-		roundNb, err := h.gameRepo.RoundNb(c, id)
+		roundNb, err := h.gameRepo.RoundNb(c.Request.Context(), id)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized,
 				gin.H{"message": "failed"})
@@ -244,7 +260,7 @@ func (h *GameHandler) Finished() gin.HandlerFunc {
 				gin.H{"message": "failed"})
 			return ;
 		}
-		finished, err := h.gameRepo.Finished(c, id)
+		finished, err := h.gameRepo.Finished(c.Request.Context(), id)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized,
 				gin.H{"message": "failed"})
@@ -263,7 +279,7 @@ func (h *GameHandler) PlayerNb() gin.HandlerFunc {
 				gin.H{"message": "failed"})
 			return ;
 		}
-		playerNb, err := h.gameRepo.PlayerNb(c, id)
+		playerNb, err := h.gameRepo.PlayerNb(c.Request.Context(), id)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized,
 				gin.H{"message": "failed"})
@@ -282,7 +298,7 @@ func (h *GameHandler) CreatedAt() gin.HandlerFunc {
 				gin.H{"message": "failed"})
 			return ;
 		}
-		createdAt, err := h.gameRepo.CreatedAt(c, id)
+		createdAt, err := h.gameRepo.CreatedAt(c.Request.Context(), id)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized,
 				gin.H{"message": "failed"})
@@ -307,7 +323,7 @@ func (h *GameHandler) SetTitle() gin.HandlerFunc {
 				gin.H{"message": "The title is empty"})
 			return ;
 		}
-		err = h.gameRepo.SetTitle(c, id, title)
+		err = h.gameRepo.SetTitle(c.Request.Context(), id, title)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized,
 				gin.H{"message": "failed"})
@@ -332,7 +348,7 @@ func (h *GameHandler) SetMode() gin.HandlerFunc {
 				gin.H{"message": "The mode is empty"})
 			return ;
 		}
-		err = h.gameRepo.SetMode(c, id, mode)
+		err = h.gameRepo.SetMode(c.Request.Context(), id, mode)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized,
 				gin.H{"message": "failed"})
@@ -357,7 +373,7 @@ func (h *GameHandler) SetDifficulty() gin.HandlerFunc {
 				gin.H{"message": "The difficulty is empty"})
 			return ;
 		}
-		err = h.gameRepo.SetDifficulty(c, id, difficulty)
+		err = h.gameRepo.SetDifficulty(c.Request.Context(), id, difficulty)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized,
 				gin.H{"message": "failed"})
@@ -387,7 +403,7 @@ func (h *GameHandler) SetTimer() gin.HandlerFunc {
 		} else if (timer < 10) {
 			timer = 10
 		}
-		err = h.gameRepo.SetTimer(c, id, timer)
+		err = h.gameRepo.SetTimer(c.Request.Context(), id, timer)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized,
 				gin.H{"message": "failed"})
@@ -418,7 +434,7 @@ func (h *GameHandler) SetRoundNb() gin.HandlerFunc {
 		} else if (round_nb < 1) {
 			round_nb = 1
 		}
-		err = h.gameRepo.SetRoundNb(c, id, round_nb)
+		err = h.gameRepo.SetRoundNb(c.Request.Context(), id, round_nb)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized,
 				gin.H{"message": "failed"})
@@ -434,23 +450,47 @@ func (h *GameHandler) SetFinished() gin.HandlerFunc {
 		id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized,
-				gin.H{"message": "failed"})
+				gin.H{"success": false})
 			return ;
 		}
 		finished, err := strconv.ParseBool(c.PostForm("finished"))
 		if err != nil {
 			c.JSON(http.StatusUnauthorized,
-				gin.H{"message": "failed"})
+				gin.H{"success": false})
 			return ;
 		}
-		err = h.gameRepo.SetFinished(c, id, finished)
+		err = h.gameRepo.SetFinished(c.Request.Context(), id, finished)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized,
-				gin.H{"message": "failed"})
+				gin.H{"success": false})
 			return ;
 		}
+		lobbies, err := h.lobbyRepo.AllPlayers(c.Request.Context(), id)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized,
+				gin.H{"success": false})
+			return ;
+		}
+		for _, lobby := range lobbies {
+			if lobby.JoinCode != nil {
+				err = h.lobbyRepo.SetJoinCode(c.Request.Context(), lobby.ID, nil)
+				if err != nil {
+					c.JSON(http.StatusUnauthorized, 
+						gin.H{"success": false})
+					return
+				}
+			}
+			if lobby.LeftAt == nil {
+				err = h.lobbyRepo.SetLeftAt(c.Request.Context(), lobby.ID)
+				if err != nil {
+					c.JSON(http.StatusUnauthorized, 
+						gin.H{"success": false})
+					return
+				}
+			}
+		}
         c.JSON(http.StatusOK,
-			gin.H{"message": "success"})
+			gin.H{"success": true})
 	}
 }
 
@@ -473,7 +513,7 @@ func (h *GameHandler) SetPlayerNb() gin.HandlerFunc {
 		} else if (player_nb < 1) {
 			player_nb = 1
 		}
-		err = h.gameRepo.SetPlayerNb(c, id, player_nb)
+		err = h.gameRepo.SetPlayerNb(c.Request.Context(), id, player_nb)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized,
 				gin.H{"message": "failed"})
