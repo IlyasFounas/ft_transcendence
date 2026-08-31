@@ -19,7 +19,6 @@ export default function RoomCodeCard({ code, className}: RoomCodeCardProps)
     	}, 2000);
 	}
 
-
 	return (
 		<div 
 		className={`rounded-[12px] bg-surface-base

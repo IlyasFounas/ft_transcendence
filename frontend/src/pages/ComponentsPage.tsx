@@ -18,7 +18,6 @@ import PrimaryButton from '../components/buttons/PrimaryButton.tsx';
 import SecondaryButton from '../components/buttons/SecondaryButton.tsx';
 import Avatar from '../components/primitives/Avatar.tsx';
 import GameResultRow from '../components/results/GameResultRow.tsx';
-import LobbyTestPage from '../components/cards/LobbyTestPage.tsx';
 import ChatBoxCard from '../components/cards/ChatBox.tsx';
 import TotalScoreCard from '../components/results/TotalScoreCard.tsx'
 import Podium from '../components/cards/podium/Podium.tsx';
@@ -279,20 +278,6 @@ export default function ComponentPage() {
             Avatar
           </h2>
         <Avatar avatar="/avatars/avatar1.png"></Avatar>
-        </section>
-  
-       <section className="mb-10">
-          <h2 className="mb-4 text-lg font-bold">
-            Game Result Card
-          </h2>
-            <GameResultRow round={2} distance={256} points={1000} ></GameResultRow>
-        </section>
-  
-       <section className="mb-10">
-          <h2 className="mb-4 text-lg font-bold">
-            Lobby Card
-          </h2>
-            <LobbyTestPage></LobbyTestPage>
         </section>
   
       <section className="mb-10">
