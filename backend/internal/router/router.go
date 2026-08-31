@@ -18,6 +18,7 @@ func NewRouter(h *handlers.Handlers) *gin.Engine {
 	registerLocationRoutes(r, h.Location)
 	registerGameRoutes(r, h.Game)
 	registerLobbyRoutes(r, h.Game)
+	registerRoundRoutes(r, h.Round)
 	registerGuessRoutes(r, h.Guess)
 	
 	return r

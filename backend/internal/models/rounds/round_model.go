@@ -11,9 +11,9 @@ type Round struct {
 
 	ID			int64					`bun:"id,pk,autoincrement"`
 	RoundId		int64					`bun:"round_id,notnull"`
-	// GameId		games.Game				`bun:"game_id,notnull,unique:idx_loc_game"` // TODO join + unique
+	GameId		int64					`bun:"game_id,notnull"` // TODO join + unique ,unique:idx_loc_game
+	Game		*games.Game				`bun:"rel:belongs-to,join:game_id=id"`
 	// LocationId	locations.Location.ID	`bun:"location_id,notnull,unique:idx_loc_game"` // TODO join + unique
 	// StartedAt	time.Time				`bun:"started_at,notnull"`
-	// Game			*games.Game				`bun:"rel:belongs-to,join:game_id=id"`
 	// Location		*locations.Location		`bun:"rel:belongs-to,join:location_id=id"`
 }

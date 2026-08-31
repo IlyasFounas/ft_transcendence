@@ -5,13 +5,14 @@ import (
 )
 
 type Repositories struct {
-	Location *LocationRepository
-	User     *UserRepository
-	AToken 	 *ActivationTokenRepository
-	RToken   *RefreshTokenRepository
-	Game     *GameRepository
-	Lobby    *LobbyRepository
-	Guess    *GuessRepository
+	Location	*LocationRepository
+	User		*UserRepository
+	AToken		*ActivationTokenRepository
+	RToken		*RefreshTokenRepository
+	Game		*GameRepository
+	Lobby		*LobbyRepository
+	Round		*RoundRepository
+	Guess		*GuessRepository
 }
 
 // NewRepositories instanciates and assembles all the repositories
@@ -28,6 +29,7 @@ func NewRepositories(db *bun.DB) (*Repositories, error) {
 		RToken:		NewRefreshTokenRepository(db),
 		Game:		NewGameRepository(db),
 		Lobby:		NewLobbyRepository(db),
+		Round:		NewRoundRepository(db),
 		Guess:		NewGuessRepository(db),
 	}, nil
 }
