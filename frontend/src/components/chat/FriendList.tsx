@@ -41,6 +41,7 @@ export default function FriendsList({
                     mx-4
                     mb-4
                     overflow-y-auto
+                    overflow-x-hidden
                     rounded-lg
                     border
                     border-border-default
