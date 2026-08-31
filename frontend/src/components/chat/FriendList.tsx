@@ -76,4 +76,4 @@ export default function FriendsList({
             </div>
         </div>
     );
-}``
+}
