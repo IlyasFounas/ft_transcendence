@@ -138,3 +138,21 @@ input:-webkit-autofill:active {
   animation: scale-pop 200ms ease-out;
 }
 
+.leaflet-tooltip {
+	background: #020A14;
+	border: rgb(30 77 120 / 30%);
+	border-radius: 8px;
+	padding: 6px 10px;
+
+}
+
+.leaflet-tooltip.player-tooltip {
+  background: #18181b;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 10px;
+  color: white;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  font-family: "Rajdhani", sans-serif;
+  text-transform: uppercase;
+}

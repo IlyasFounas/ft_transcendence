@@ -1,5 +1,4 @@
 import { Cog, LogOut } from 'lucide-react'
-
 import LogoHorizontal from '../primitives/LogoHorizontal'
 import Countdown from './Countdown'
 import GameInfosCard from './GameInfosCard'
@@ -63,7 +62,10 @@ export default function GameBar({countdown, totalTime, gameId, round, totalRound
 						transition-transform
 						duration-200
 						ease-out
+						transition-colors
 						hover:scale-[1.2]
+						hover:text-red-900
+						hover:brightness-100
 						
 						active:scale-[0.9]
 						">
@@ -71,6 +73,6 @@ export default function GameBar({countdown, totalTime, gameId, round, totalRound
 					</button>
 				</div>
 			</div>
-		</div>
+			</div>
 	)
 }

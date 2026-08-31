@@ -6,7 +6,7 @@ export const mockGame: Game = {
     currentRound: 8,
     totalRounds: 10,
 
-    totalTime: 85,
+    totalTime: 12,
 
     location: {
         latitude: 45.782429,
