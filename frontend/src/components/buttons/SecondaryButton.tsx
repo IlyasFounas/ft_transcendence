@@ -4,9 +4,10 @@ interface SecondaryButtonProps extends BaseButtonProps {
 	active?: boolean;
 	icon?: React.ReactNode;
 	className?: string;
+	variant?: "classic" | "danger"
 }
 
-export default function SecondaryButton({ children, onClick, icon, active, className }: SecondaryButtonProps) {
+export default function SecondaryButton({ children, onClick, icon, active, className, variant="classic", }: SecondaryButtonProps) {
   return (
 	<button 
 		onClick={onClick}
@@ -40,6 +41,17 @@ export default function SecondaryButton({ children, onClick, icon, active, class
 			active:drop-shadow-none
 			active:opacity-75
 			
+			${variant === "danger"
+  ? `
+            hover:border-red-500
+            hover:outline-red-500
+            hover:text-red-500
+            hover:drop-shadow-[0_0_10px_rgba(255,59,59,0.6)]
+        `
+  : `
+            hover:brightness-110
+            hover:drop-shadow-[0_0_10px_rgba(40,215,255,0.5)]
+        `}
 			${active
 		? `
 			text-text-primary
