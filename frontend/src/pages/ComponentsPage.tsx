@@ -20,7 +20,6 @@ import Avatar from '../components/primitives/Avatar.tsx';
 import GameResultRow from '../components/results/GameResultRow.tsx';
 import LobbyTestPage from '../components/cards/LobbyTestPage.tsx';
 import ChatBoxCard from '../components/cards/ChatBox.tsx';
-import TotalScoreCard from '../components/results/TotalScoreCard.tsx'
 import Podium from '../components/cards/podium/Podium.tsx';
 
 export default function ComponentPage() {
@@ -285,7 +284,7 @@ export default function ComponentPage() {
           <h2 className="mb-4 text-lg font-bold">
             Game Result Card
           </h2>
-            <GameResultRow round={2} distance={256} points={1000} ></GameResultRow>
+            <GameResultRow currentRound={1} round={2} distance={256} points={1000} ></GameResultRow>
         </section>
   
        <section className="mb-10">
@@ -308,15 +307,6 @@ export default function ComponentPage() {
             ChatBox - Sent
           </h2>
             <ChatBoxCard variant="sent" message="I'm good, how r u?" time="02.11 PM"></ChatBoxCard>
-        </section>
-  
-       <section className="mb-10">
-          <h2 className="mb-4 text-lg font-bold">
-            Summary Result Row
-          </h2>
-            <TotalScoreCard rank={2}
-                player={{ username: "Agent Tommy", role: "Field Analyst", avatar: "/avatars/avatar1.png" }}
-             rounds={[ {round: 1, points: 1820,}, {round: 1, points: 1245,},{round: 1, points: 180, },{round: 1, points: 1896,},{round: 1, points: 1200,}, ]}></TotalScoreCard>
         </section>
   
       <section className="mb-10">

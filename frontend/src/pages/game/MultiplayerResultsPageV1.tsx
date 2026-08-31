@@ -26,7 +26,7 @@ export default function MultiplayerResultsPage() {
 		avatar: p.player.avatar,
 	  };
 	})
-	.filter((g): g is { username: string; location: typeof g.location, avatar: string } => g !== null);
+	.filter((g): g is NonNullable<typeof g> => g !== null)
 
   return (
 	<div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_394px] gap-4 p-4">
@@ -75,7 +75,7 @@ export default function MultiplayerResultsPage() {
 
 	  <div className="order-5 lg:col-start-2 lg:row-start-2 lg:row-span-3 flex flex-col items-center gap-4">
 		<div className="hidden lg:flex w-full">
-		  <GameResultList rounds={currentPlayerResult?.rounds ?? []} />
+		  <GameResultList rounds={currentPlayerResult?.rounds ?? []} currentRound={3}/>
 		</div>
 		<TotalScoreCard points={totalScore} distance={gameResult.distance} />
 		<NextRoundTimer />

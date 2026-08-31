@@ -14,10 +14,7 @@ export function useRoundGuesses(gameResult: GameResult) {
 				avatar: p.player.avatar,
 			  };
 			})
-			.filter(
-			  (g): g is { username: string; location: typeof g.location; avatar: string } =>
-				g !== null
-			),
+			.filter((g): g is NonNullable<typeof g> => g !== null),
 		[gameResult.players, gameResult.currentRound]
 	  );
 
