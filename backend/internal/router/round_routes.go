@@ -9,14 +9,14 @@ func registerRoundRoutes(r *gin.Engine, h *handlers.RoundHandler) {
 	// Public user
 	public := r.Group("/")
 	{
-		public.POST("/rounds/:id", h.NewRound) //create the new round using its round nb (user_id and game_id should be in the context/token)
+		public.POST("/rounds/", h.NextRound) //create the new round using its round nb (user_id and game_id should be in the context/token)
 
 
-		public.GET("/rounds/:id", h.GetRoundByID) //get a round by id
+		// public.GET("/rounds/:id", h.GetRoundByID) //get a round by id
 
 		// public.PATCH("/rounds/:id", h.UpdateRoundByID) //update a round  by id (game_id, round_nb, location_id, start_time, end_time, duration, is_active)
 
-		public.DELETE("/rounds/:id", h.DeleteRoundByID) //delete a round by id
+		// public.DELETE("/rounds/:id", h.DeleteRoundByID) //delete a round by id
 	}
 
 	// 	// Authentificated user
