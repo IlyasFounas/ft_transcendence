@@ -28,8 +28,8 @@ export default function ChatBoxCard({
     		${style.wrapper}`}
 		>
 			<div className={`max-w-64 px-2.5 py-[5px] rounded-[10px] inline-flex flex-col ${style.bubble}`}>
-				<div>
-					<div className="text-body-primary">{message}</div>
+				<div className="min-w-0 max-w-full wrap-break-words">
+					<div className="text-body-primary wrap-break-words">{message}</div>
 				</div>
 				<div className="self-stretch flex justify-end">
 					<div className="text-label-small text-text-secondary ">{time}</div>
