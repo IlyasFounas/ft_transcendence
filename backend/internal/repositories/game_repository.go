@@ -90,17 +90,17 @@ func (r *GameRepository) Timer(ctx context.Context, game_id int64) (int64, error
 	return game.Timer, nil
 }
 
-func (r *GameRepository) RoundNb(ctx context.Context, game_id int64) (int64, error){
+func (r *GameRepository) RoundTotal(ctx context.Context, game_id int64) (int64, error){
 	game := new(games.Game)
 	err := r.db.NewSelect().
 		Model(game).
-		Column("round_nb").
+		Column("round_total").
 		Where("id = ?", game_id).
 		Scan(ctx)
 	if err != nil {
 		return -1, err
 	}
-	return game.RoundNb, nil
+	return game.RoundTotal, nil
 }
 
 func (r *GameRepository) Finished(ctx context.Context, game_id int64) (bool, error){
@@ -198,12 +198,12 @@ func (r *GameRepository) SetTimer(ctx context.Context, game_id int64,
 	return nil
 }
 
-func (r *GameRepository) SetRoundNb(ctx context.Context, game_id int64, 
-	round_nb int64) error {
-	game := &games.Game{RoundNb: round_nb}
+func (r *GameRepository) SetRoundTotal(ctx context.Context, game_id int64, 
+	round_total int64) error {
+	game := &games.Game{RoundTotal: round_total}
 	_, err := r.db.NewUpdate().
 		Model(game).
-		Column("round_nb").
+		Column("round_total").
 		Where("id = ?", game_id).
 		Exec(ctx)
 	if err != nil {

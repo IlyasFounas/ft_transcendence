@@ -25,7 +25,7 @@ func initGameObj(c *gin.Context) (*games.Game, error) {
 	if err != nil {
 		return nil, err;
 	}
-	round_nb, err := strconv.ParseInt(c.PostForm("round_nb"), 10, 64)
+	round_total, err := strconv.ParseInt(c.PostForm("round_total"), 10, 64)
 	if err != nil {
 		return nil, err;
 	}
@@ -38,8 +38,8 @@ func initGameObj(c *gin.Context) (*games.Game, error) {
 	} else if (timer < 10) {
 		timer = 10
 	}
-	if round_nb > 2 {
-		round_nb = 2
+	if round_total > 2 {
+		round_total = 2
 	}
 	if player_nb > 2 {
 		player_nb = 2
@@ -48,7 +48,7 @@ func initGameObj(c *gin.Context) (*games.Game, error) {
 		Mode: c.PostForm("mode"),
 		Difficulty: "easy",
 		Timer: timer,
-		RoundNb: round_nb,
+		RoundTotal: round_total,
 		Finished: false,
 		PlayerNb: player_nb}
 	return gameObj, nil
@@ -233,7 +233,7 @@ func (h *GameHandler) Timer() gin.HandlerFunc {
 	}
 }
 
-func (h *GameHandler) RoundNb() gin.HandlerFunc {
+func (h *GameHandler) RoundTotal() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 		if err != nil {
@@ -241,7 +241,7 @@ func (h *GameHandler) RoundNb() gin.HandlerFunc {
 				gin.H{"message": "failed"})
 			return ;
 		}
-		roundNb, err := h.gameRepo.RoundNb(c.Request.Context(), id)
+		roundNb, err := h.gameRepo.RoundTotal(c.Request.Context(), id)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized,
 				gin.H{"message": "failed"})
@@ -414,7 +414,7 @@ func (h *GameHandler) SetTimer() gin.HandlerFunc {
 	}
 }
 
-func (h *GameHandler) SetRoundNb() gin.HandlerFunc {
+func (h *GameHandler) SetRoundTotal() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 		if err != nil {
@@ -422,19 +422,19 @@ func (h *GameHandler) SetRoundNb() gin.HandlerFunc {
 				gin.H{"message": "failed"})
 			return ;
 		}
-		round_nb, err := strconv.ParseInt(c.PostForm("round_nb"), 10, 64)
+		round_total, err := strconv.ParseInt(c.PostForm("round_total"), 10, 64)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized,
 				gin.H{"message": "failed"})
 			return ;
 		}
 
-		if round_nb > 5 {
-			round_nb = 5
-		} else if (round_nb < 1) {
-			round_nb = 1
+		if round_total > 5 {
+			round_total = 5
+		} else if (round_total < 1) {
+			round_total = 1
 		}
-		err = h.gameRepo.SetRoundNb(c.Request.Context(), id, round_nb)
+		err = h.gameRepo.SetRoundTotal(c.Request.Context(), id, round_total)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized,
 				gin.H{"message": "failed"})

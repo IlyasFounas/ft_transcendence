@@ -17,6 +17,7 @@ type RoundGetter interface {
 	GetGame(ctx context.Context, game_id int64) error
 	// GetByID(ctx context.Context, round_id int64) (*rounds.Round, error)
 	GetRoundNb(ctx context.Context, game_id int64) (int64, error)
+	// CheckLastRound(ctx context.Context, game_id int64, round_nb int64) (bool, error)
 	// GetLocationID(ctx context.Context, game_id int64, round_nb int64) (int64, error)
 
 	// PatchByID(ctx context.Context, round_id int64, patch *rounds.Round) error
@@ -90,6 +91,12 @@ func (h *RoundHandler) NextRound(c *gin.Context) {
 	}
 
 	// TODO si round number superieur au nombre total de rounds present dans game_id alors on ressort une erreur pour dire que c'est la fin de la game
+	// LastRound, err := h.repo.CheckLastRound(ctx, round.GameId)
+	// if err != nil {
+	// 	log.Printf("Error getting total rounds: %v", err)
+	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get total rounds"})
+	// 	return
+	// }
 
 	// // // get the user_id from the context (from the token)
 	// // user_id, exists := c.Get("userId")
