@@ -40,8 +40,10 @@ export default function FriendsList({
                     flex-1
                     mx-4
                     mb-4
-                    overflow-y-auto
                     overflow-x-hidden
+                    overflow-y-auto
+                    lg:overflow-y-hidden
+                    lg:group-hover:overflow-y-auto
                     rounded-lg
                     border
                     border-border-default

@@ -74,25 +74,53 @@ export default function ChatPanel({
     };
 
     return (
-        <div className="h-full w-full">
-            {selectedFriend === null ? (
+        <div className="flex h-full w-full flex-col">
+            <div
+                className={`
+                    min-h-0
+                    ${selectedFriend ? "hidden lg:block" : "block"}
+                    lg:h-full
+                    lg:group-hover:h-[45%]
+                    lg:group-hover:flex-none
+                `}
+            >
                 <FriendsList
                     friends={friendList}
                     onOpenChat={setSelectedFriend}
                 />
-            ) : (
-                <div
-                    className="
-                        flex
-                        h-full
-                        w-full
-                        items-center
-                        justify-center
-                        bg-surface-base
-                        text-text-primary
-                    "
-                >
-                    
+            </div>
+
+            <div
+                className={`
+                    min-h-0
+                    ${selectedFriend ? "flex" : "hidden"}
+                    lg:group-hover:flex
+                    lg:group-hover:flex-1
+                `}
+            >
+                {selectedFriend === null ? (
+                    <div
+                        className="
+                            flex
+                            h-full
+                            w-full
+                            items-center
+                            justify-center
+                            bg-surface-base
+                            text-text-primary
+                        "
+                    >
+                        <div className="text-center">
+                            <div className="text-heading-small text-text-primary uppercase">
+                                Select a conversation
+                            </div>
+
+                            <div className="mt-2 text-label-small text-text-secondary uppercase">
+                                Choose an online agent to begin chatting.
+                            </div>
+                        </div>
+                    </div>
+                ) : (
                     <Conversation
                         friend={selectedFriend}
                         conversation={
@@ -101,8 +129,8 @@ export default function ChatPanel({
                         onBack={() => setSelectedFriend(null)}
                         onSendMessage={handleSendMessage}
                     />
-                </div>
-            )}
+                )}
+            </div>
         </div>
     );
 }
