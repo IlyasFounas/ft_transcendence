@@ -13,7 +13,7 @@ type User struct {
 	ID          int64         	`bun:"id,pk,autoincrement"`
 	Login       string        	`bun:"login,unique,notnull"`
 	Username    string        	`bun:"name,unique,notnull"`
-	GoogleID 	*string 	  	`bun:"google_id,unique"`
+	GoogleId 	*string 	  	`bun:"google_id,unique"`
 	Password 	*string 	  	`bun:"password"`
 	Email       string        	`bun:"email,unique,notnull"`
 	Is_verified bool          	`bun:"is_verified,notnull"`
@@ -21,4 +21,12 @@ type User struct {
 	CreatedAt   time.Time     	`bun:"created_at,default:current_timestamp"`
 
 	Lobby 		[]*games.Lobby	`bun:"rel:has-many,join:id=user_id"`
+}
+
+type GoogleUserInfo struct {
+	Sub           string `json:"sub"`
+	Email         string `json:"email"`
+	EmailVerified bool   `json:"email_verified"`
+	Name          string `json:"name"`
+	Picture       string `json:"picture"`
 }

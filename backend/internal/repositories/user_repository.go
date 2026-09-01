@@ -125,6 +125,20 @@ func (r *UserRepository) UserByName(ctx context.Context,
 	return user, nil
 }
 
+func (r *UserRepository) UserByEmail(ctx context.Context,
+	email string) (*users.User, error) {
+	user := new(users.User)
+	err := r.db.NewSelect().
+		Model(user).
+		Column("id", "name", "email", "is_verified", "avatar", "created_at").
+		Where("email = ?", email).
+		Scan(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
 // Setters
 // todo: set a limit to change the name (maybe 1 change per month)
 func (r *UserRepository) SetName(ctx context.Context, userId int64, name string) (bool, error) {
@@ -135,6 +149,22 @@ func (r *UserRepository) SetName(ctx context.Context, userId int64, name string)
 	_, err := r.db.NewUpdate().
 		Model(user).
 		Column("name").
+		Where("id = ?", userId).
+		Exec(ctx)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+func (r *UserRepository) SetGoogleId(ctx context.Context, userId int64, googleId *string) (bool, error) {
+	if googleId == nil || *googleId == "" {
+		return false, nil
+	}
+	user := &users.User{GoogleId: googleId}
+	_, err := r.db.NewUpdate().
+		Model(user).
+		Column("google_id").
 		Where("id = ?", userId).
 		Exec(ctx)
 	if err != nil {

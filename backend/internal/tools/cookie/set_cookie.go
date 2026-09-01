@@ -23,3 +23,14 @@ func Set(c *gin.Context, path string,
 		SameSite: sameSite,
 	})
 }
+
+func Clear(c *gin.Context, path, name string) {
+	http.SetCookie(c.Writer, &http.Cookie{
+		Name:     name,
+		Value:    "",
+		Path:     path,
+		MaxAge:   -1,
+		HttpOnly: true,
+		Secure:   os.Getenv("ENV") == "prod",
+	})
+}
