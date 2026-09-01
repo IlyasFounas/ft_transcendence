@@ -106,16 +106,12 @@ export default function HomePage() {
             border
             border-border-default
             bg-surface-base
-            transition-[width]
-            duration-200
-            ease-in-out
 
             md:left-auto
             md:right-5
             md:bottom-5
             md:w-2/5
-            lg:w-28
-            lg:hover:w-80
+            lg:w-100
 
             ${isChatOpen ? "block" : "hidden"}
 

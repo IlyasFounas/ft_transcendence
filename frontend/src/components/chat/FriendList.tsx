@@ -1,17 +1,14 @@
 import FriendChatRow from "./FriendChatRow";
 import type { Friend } from "../../types/user.types";
-import CompactFriendRow from "./CompactFriendRow";
 
 interface FriendsListProps {
     friends: Friend[];
     onOpenChat: (friend: Friend) => void;
-    variant?: "compact" | "expended";
 }
 
 export default function FriendsList({
     friends,
     onOpenChat,
-    variant = "expended",
 }: FriendsListProps) {
 
     const onlineCount = friends.filter((friend) => friend.status === "online").length;
@@ -52,21 +49,14 @@ export default function FriendsList({
             >
                 {friends.map((friend, index) => (
                     <div key={index}>
-                        {variant === "compact" ? (
-                            <CompactFriendRow
-                                friend={friend}
-                                onOpenChat={onOpenChat}
-                            />
-                        ) : (
-                            <FriendChatRow
-                                username={friend.username}
-                                avatar={friend.avatar}
-                                status={friend.status}
-                                lastMessage={friend.lastMessage}
-                                timestamp={friend.timestamp}
-                                onOpenChat={() => onOpenChat(friend)}
-                            />
-                        )}
+                        <FriendChatRow
+                            username={friend.username}
+                            avatar={friend.avatar}
+                            status={friend.status}
+                            lastMessage={friend.lastMessage}
+                            timestamp={friend.timestamp}
+                            onOpenChat={() => onOpenChat(friend)}
+                        />
                     </div>
                 ))}
             </div>

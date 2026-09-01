@@ -80,6 +80,7 @@ export default function MessageInput({
                         min-w-0
                         max-h-20
                         flex-1
+                        px-2.5
                         resize-none
                         overflow-y-auto
                         bg-surface-base
