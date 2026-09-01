@@ -1,5 +1,4 @@
 import type { Friend } from "../../types/user.types";
-
 import Avatar from "../primitives/Avatar";
 
 interface CompactFriendRowProps {

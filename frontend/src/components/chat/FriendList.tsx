@@ -5,11 +5,13 @@ import CompactFriendRow from "./CompactFriendRow";
 interface FriendsListProps {
     friends: Friend[];
     onOpenChat: (friend: Friend) => void;
+    variant?: "compact" | "expended";
 }
 
 export default function FriendsList({
     friends,
     onOpenChat,
+    variant = "expended",
 }: FriendsListProps) {
 
     const onlineCount = friends.filter((friend) => friend.status === "online").length;
@@ -23,7 +25,6 @@ export default function FriendsList({
                 flex-col
             "
         >
-
             <div className="shrink-0 px-4 py-3">
                 <div className="text-heading-small text-text-primary uppercase">
                     Friends
@@ -33,7 +34,6 @@ export default function FriendsList({
                     ● {onlineCount} Online
                 </div>
             </div>
-
             <div
                 className="
                     min-h-0
@@ -51,30 +51,24 @@ export default function FriendsList({
                 "
             >
                 {friends.map((friend, index) => (
-                <div key={index} className="relative">
-
-                    {/* Compact */}
-                    <div className="block group-hover:hidden">
-                        <CompactFriendRow
-                            friend={friend}
-                            onOpenChat={onOpenChat}
-                        />
+                    <div key={index}>
+                        {variant === "compact" ? (
+                            <CompactFriendRow
+                                friend={friend}
+                                onOpenChat={onOpenChat}
+                            />
+                        ) : (
+                            <FriendChatRow
+                                username={friend.username}
+                                avatar={friend.avatar}
+                                status={friend.status}
+                                lastMessage={friend.lastMessage}
+                                timestamp={friend.timestamp}
+                                onOpenChat={() => onOpenChat(friend)}
+                            />
+                        )}
                     </div>
-
-                    {/* Expanded */}
-                    <div className="hidden group-hover:block">
-                        <FriendChatRow
-                            username={friend.username}
-                            avatar={friend.avatar}
-                            status={friend.status}
-                            lastMessage={friend.lastMessage}
-                            timestamp={friend.timestamp}
-                            onOpenChat={() => onOpenChat(friend)}
-                        />
-                    </div>
-
-                </div>
-            ))}
+                ))}
             </div>
         </div>
     );

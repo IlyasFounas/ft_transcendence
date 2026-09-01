@@ -99,8 +99,8 @@ export default function HomePage() {
             right-5
             top-25
             bottom-5
+            left-5
             z-50
-            w-28
             rounded-xl
             overflow-hidden
             border
@@ -109,7 +109,13 @@ export default function HomePage() {
             transition-[width]
             duration-200
             ease-in-out
-            hover:w-80
+
+            md:left-auto
+            md:right-5
+            md:bottom-5
+            md:w-2/5
+            lg:w-28
+            lg:hover:w-80
 
             ${isChatOpen ? "block" : "hidden"}
 

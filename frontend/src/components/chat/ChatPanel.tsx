@@ -79,7 +79,7 @@ export default function ChatPanel({
                 className={`
                     min-h-0
                     ${selectedFriend ? "hidden lg:block" : "block"}
-                    lg:h-full
+                    h-full
                     lg:group-hover:h-[45%]
                     lg:group-hover:flex-none
                 `}
@@ -93,7 +93,7 @@ export default function ChatPanel({
             <div
                 className={`
                     min-h-0
-                    ${selectedFriend ? "flex" : "hidden"}
+                    ${selectedFriend ? "flex flex-1" : "hidden"}
                     lg:group-hover:flex
                     lg:group-hover:flex-1
                 `}

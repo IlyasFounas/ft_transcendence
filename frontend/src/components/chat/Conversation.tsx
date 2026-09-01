@@ -37,7 +37,6 @@ export default function Conversation({
         setMessage("");
     };
 
-    // auto-scroll to the newest message
     const messagesEndRef = useRef<HTMLDivElement>(null);
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({
@@ -131,11 +130,13 @@ export default function Conversation({
                 <div ref={messagesEndRef} />
             </div>
 
-            <MessageInput
-                value={message}
-                onChange={setMessage}
-                onSend={handleSend}
-            />
+            <div className="shrink-0">
+                <MessageInput
+                    value={message}
+                    onChange={setMessage}
+                    onSend={handleSend}
+                />
+            </div>
             
         </div>
     );
