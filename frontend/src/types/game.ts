@@ -29,6 +29,7 @@ export type RoundResult = {
 
 export interface Game {
     id: number;
+	roomcode: string;
     currentRound: number;
     totalRounds: number;
     totalTime: number;

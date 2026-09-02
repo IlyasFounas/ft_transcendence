@@ -2,7 +2,7 @@ import type { Game } from "../types/game";
 
 export const mockGame: Game = {
     id: 42,
-
+	roomcode: "214748",
     currentRound: 8,
     totalRounds: 10,
 

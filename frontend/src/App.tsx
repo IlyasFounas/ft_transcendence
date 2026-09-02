@@ -2,11 +2,12 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import GamePage from './pages/game/GamePage'
 import Home from './pages/HomePage' 
 import ComponentsPage from './pages/ComponentsPage';
-import LobbyPage from './pages/LobbyPage';
-import GamePlayPage from './pages/game/GamePlayPage';
 import SoloResultPage from './pages/game/SoloResultsPage';
 import MultiplayerResultsPagev1 from './pages/game/MultiplayerResultsPageV1';
 import MultiplayerResultsPagev2 from './pages/game/MultiplayerResultsPageV2';
+import LobbyPage from './pages/lobby/LobbyPage';
+import LobbyRoomPage from './pages/lobby/LobbyRoomPage';
+import GamePlayPage from './pages/game/GamePlayPage';
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
         <Route path="/game" element={<GamePage/>} />
         <Route path="/components" element={<ComponentsPage/>} />
         <Route path="/lobby" element={<LobbyPage/>} />
+        <Route path="/lobbyroom" element={<LobbyRoomPage/>} />
         <Route path="/gameplay" element={<GamePlayPage/>} />
         <Route path="/soloresults" element={<SoloResultPage/>} />
 		<Route path="/multiresultsv1" element={<MultiplayerResultsPagev1/>} />
