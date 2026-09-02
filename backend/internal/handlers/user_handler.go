@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"time"
+	"errors"
 	"encoding/json"
 	"crypto/subtle"
 	"github.com/gin-gonic/gin"
@@ -17,6 +18,7 @@ import (
 	"backend/internal/tools/encryption"
 	"backend/internal/tools/mailing"
 	"backend/internal/tools/token_generation"
+	"backend/internal/models/users/tokens"
 )
 
 /**
@@ -92,7 +94,7 @@ func (h *UserHandler) createActivationToken(c *gin.Context, expiresAt time.Time,
 	return nil
 }
 
-func (h *UserHandler) jwtGenereation() (*tokens.ActivationToken, bool){
+func (h *UserHandler) jwtGeneration(c *gin.Context, userId int64) (*tokens.ActivationToken, bool) {
 	expiresAt := time.Now().Add(15 * time.Minute)
 	tokenObj, tokenErr := token_generation.GenerateToken(userId, expiresAt,
 		[]byte(os.Getenv("JWT_SECRET")))
@@ -132,7 +134,7 @@ func (h *UserHandler) CreateUser() gin.HandlerFunc {
 		if len(username) == 0 {
 		    username = "player"	
 		}
-		userObj := &users.User{Login: login,
+		userObj := &users.User{Login: &login,
 			Password:    &hashpassword,
 			Username:    username,
 			Email:       email,
@@ -177,7 +179,7 @@ func (h *UserHandler) Login() gin.HandlerFunc {
 			return
 		} else {
 			// generate the jwt token here
-			tokenObj, ok := jwtGeneration()
+			tokenObj, ok := h.jwtGeneration(c, userId)
 			if !ok {
 				return
 			}
@@ -202,75 +204,99 @@ func (h *UserHandler) GoogleLogin() gin.HandlerFunc {
 	}
 }
 
+func (h *UserHandler) fetchGoogleUser(c *gin.Context, code string) (*users.GoogleUserInfo, error) {
+	token, err := h.googleConf.Exchange(c, code)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := h.googleConf.Client(c, token).Get("https://www.googleapis.com/oauth2/v3/userinfo")
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("userinfo: status %d", resp.StatusCode)
+	}
+	var info users.GoogleUserInfo
+	if err := json.NewDecoder(resp.Body).Decode(&info); err != nil {
+		return nil, err
+	}
+	return &info, nil
+}
+
+func (h *UserHandler) resolveGoogleUser(c *gin.Context, info *users.GoogleUserInfo) (*users.User, error) {
+	user, err := h.userRepo.UserByGoogleId(c.Request.Context(), &info.Sub)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "failed"})
+		return nil, err
+	}
+	if user != nil {
+		return user, nil
+	}
+
+	user, err = h.userRepo.UserByEmail(c.Request.Context(), info.Email)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "failed"})
+		return nil, err
+	}
+	if user != nil {
+		ok := h.setGoogleId(c, user.ID, &info.Sub)
+		if !ok {
+			c.JSON(http.StatusUnauthorized, gin.H{"message": "failed"})
+			return nil, errors.New("failed")
+		}
+		return user, nil
+	}
+	// création du compte à partir de info
+	userObj := &users.User{Login: nil,
+			Password:    nil,
+			Username:    info.Name,
+			Email:       info.Email,
+			Is_verified: true,
+			GoogleId: 	 &info.Sub,}
+	user, err = h.userRepo.CreateUser(c.Request.Context(), userObj)
+	if err != nil {
+        c.JSON(http.StatusInternalServerError,
+            gin.H{"message": "The account creation failed"})
+		return nil, errors.New("failed")
+	}
+	return user, nil
+}
+
 func (h *UserHandler) GoogleCallback() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		googleError := c.Query("error")
 		googleState := c.Query("state")
 		userState, err := c.Cookie("oauth_state")
-		if err != nil || googleError{
-			c.JSON(http.StatusUnauthorized, 
-				gin.H{"message": "failed"})
-			return 
+		if err != nil || c.Query("error") != "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"message": "failed"})
+			return
 		}
 		if subtle.ConstantTimeCompare([]byte(userState), []byte(googleState)) != 1 {
-			c.JSON(http.StatusUnauthorized, 
-				gin.H{"message": "failed"})
-			return 
+			c.JSON(http.StatusUnauthorized, gin.H{"message": "failed"})
+			return
 		}
-		code := c.Query("code")
-		cookie.Clear(c, "/api/auth/google", "oauth_state") //destroy the cookie
-		token, err := h.googleConf.Exchange(c, code) //google give us a token
+		cookie.Clear(c, "/api/auth/google", "oauth_state")
 
-		// use the token to get the user info
-		client := h.googleConf.Client(c, token)
-		resp, err := client.Get("https://www.googleapis.com/oauth2/v3/userinfo")
+		userInfo, err := h.fetchGoogleUser(c, c.Query("code"))
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"message": "failed"})
 			return
 		}
-		defer resp.Body.Close()
-
-		if resp.StatusCode != http.StatusOK {
-			c.JSON(http.StatusUnauthorized, gin.H{"message": "failed"})
-			return
-		}
-
-		var userInfo users.GoogleUserInfo
-		if err := json.NewDecoder(resp.Body).Decode(&userInfo); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "failed"})
-			return
-		}
-		// perform the last checks
 		if !userInfo.EmailVerified {
-			c.JSON(http.StatusUnauthorized, 
-				gin.H{"message": "failed"})
+			c.JSON(http.StatusUnauthorized, gin.H{"message": "failed"})
 			return
 		}
-		user, err := h.userRepo.UserByEmail(c.Request.Context(), userInfo.Email)
+
+		user, err := h.resolveGoogleUser(c, userInfo)
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, 
-				gin.H{"message": "failed"})
 			return
 		}
-		if user == nil {
-			// we should create the user
-		} else {
-			if user.GoogleId == nil {
-				err := h.setGoogleId(c, user.ID, ???)
-				if err != nil {
-					c.JSON(http.StatusInternalServerError,
-						gin.H{"message": "token creation went wrong"})
-					return
-				}
-			}
-		}
-		// generate the jwt token here
-		tokenObj, ok := jwtGeneration()
+
+		tokenObj, ok := h.jwtGeneration(c, user.ID)
 		if !ok {
 			return
 		}
-		c.JSON(http.StatusOK, 
-			gin.H{"message": "success", "Authorization": tokenObj.Token})
+		c.JSON(http.StatusOK, gin.H{"message": "success", "Authorization": tokenObj.Token})
 	}
 }
 

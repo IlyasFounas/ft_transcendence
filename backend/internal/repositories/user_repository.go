@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"database/sql"
 	"backend/internal/models/users"
 	"backend/internal/tools/encryption"
 	"context"
@@ -95,7 +96,7 @@ func (r *UserRepository) Login(ctx context.Context, userId int64) (*string, erro
 	if err != nil {
 		return nil, err
 	}
-	return &user.Login, nil
+	return user.Login, nil
 }
 
 func (r *UserRepository) Email(ctx context.Context, userId int64) (*string, error) {
@@ -129,10 +130,30 @@ func (r *UserRepository) UserByEmail(ctx context.Context,
 	email string) (*users.User, error) {
 	user := new(users.User)
 	err := r.db.NewSelect().
-		Model(user).
-		Column("id", "name", "email", "is_verified", "avatar", "created_at").
-		Where("email = ?", email).
-		Scan(ctx)
+	Model(user).
+	Column("id", "name", "email", "is_verified", "avatar", "created_at").
+	Where("email = ?", email).
+	Scan(ctx)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
+func (r *UserRepository) UserByGoogleId(ctx context.Context,
+	googleId *string) (*users.User, error) {
+	user := new(users.User)
+	err := r.db.NewSelect().
+	Model(user).
+	Column("id", "name", "email", "is_verified", "avatar", "created_at").
+	Where("google_id = ?", googleId).
+	Scan(ctx)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, nil
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -178,7 +199,7 @@ func (r *UserRepository) SetLogin(ctx context.Context, userId int64, login strin
 	if len(login) == 0 {
 		return false, nil
 	}
-	user := &users.User{Login: login}
+	user := &users.User{Login: &login}
 	_, err := r.db.NewUpdate().
 		Model(user).
 		Column("login").

@@ -11,7 +11,7 @@ type User struct {
 	bun.BaseModel `bun:"table:users,alias:u"`
 
 	ID          int64         	`bun:"id,pk,autoincrement"`
-	Login       string        	`bun:"login,unique,notnull"`
+	Login       *string        	`bun:"login,unique"`
 	Username    string        	`bun:"name,unique,notnull"`
 	GoogleId 	*string 	  	`bun:"google_id,unique"`
 	Password 	*string 	  	`bun:"password"`
