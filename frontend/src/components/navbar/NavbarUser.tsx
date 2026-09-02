@@ -102,6 +102,7 @@ export default function NavbarUser({
                 hidden
                 pt-3
                 group-hover:block
+                z-60
                 "
             >
                 <div className="
