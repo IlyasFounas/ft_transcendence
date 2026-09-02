@@ -158,8 +158,8 @@ export function Navbar({
                 <div className="w-12 flex justify-end">
                     {showChat && (
                         <NavbarChatButton
-                            isChatOpen={isChatOpen}
-                            onClick={onToggleChat}
+                            isChatOpen={isChatOpen ?? false}
+                            onClick={onToggleChat ?? (() => {})}
                         />
                     )}
                 </div>
