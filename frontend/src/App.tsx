@@ -7,6 +7,7 @@ import MultiplayerPage from './pages/MultiplayerPage';
 import LeaderboardPage from './pages/LeaderboardPage';
 import ProfilePage from './pages/ProfilePage';
 import { ChatLayout } from './layouts/ChatLayout';
+import { MainLayout } from './layouts/MainLayout';
 
 function App() {
     return (
@@ -17,10 +18,12 @@ function App() {
                 <Route path="/home" element={<HomePage />} />
                 <Route path="/multiplayer" element={<MultiplayerPage />} />
             </Route>
+            <Route element={<MainLayout />}>
                 <Route path="/leaderboard" element={<LeaderboardPage />} />
                 <Route path="/profile" element={<ProfilePage />} />
                 <Route path="/game" element={<GamePage/>} />
                 <Route path="/components" element={<ComponentsPage/>} />
+              </Route>
             </Routes>
         </Router>
     )

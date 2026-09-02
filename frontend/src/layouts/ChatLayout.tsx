@@ -29,6 +29,7 @@ export function ChatLayout () {
                     status="online"
                     isChatOpen={isChatOpen}
                     onToggleChat={() => setIsChatOpen((current) => !current)}
+                    showChat={true}
                 />
                 
                 < Outlet />
