@@ -4,11 +4,7 @@ import HomePage from './pages/HomePage'
 import ComponentsPage from './pages/ComponentsPage';
 import LandingPage from './pages/LandingPage';
 
-import { useAuth } from "./context/AuthContext";
-
 function App() {
-  const { isAuthenticated } = useAuth();
-  
   return (
     <Router>
       <Routes>
