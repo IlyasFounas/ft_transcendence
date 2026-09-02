@@ -40,14 +40,12 @@ export default function MissionSettingsCard({className = ""}: MissionSettingsCar
 			text-heading-small uppercase">
 				<div>Rounds</div>
 				<div className="flex flex-row justify-between gap-4 shrink-0 w-[150px]">
-					<button className="
-						cursor-pointer
+					<button className={`
 						transition-transform
 						duration-200
 						ease-out
-						hover:scale-[1.2]
-						active:scale-[0.98]
-						"
+						${rounds > 1 ? "text-white hover:scale-[1.2] active:scale-[0.98] cursor-pointer" : "text-gray-600"}
+						`}
 						onClick={() => {
 							if (rounds > 1) {
 								setRounds(rounds - 1);
@@ -55,14 +53,12 @@ export default function MissionSettingsCard({className = ""}: MissionSettingsCar
 						<Minus/>
 					</button>
 					<div>{rounds}</div>
-					<button className="
-						cursor-pointer
+					<button className={`
 						transition-transform
 						duration-200
 						ease-out
-						hover:scale-[1.2]
-						active:scale-[0.98]
-						"
+						${rounds < 10 ? "text-white hover:scale-[1.2] active:scale-[0.98] cursor-pointer" : "text-gray-600"}
+						`}
 						onClick={() => {
 							if (rounds < 10) {
 								setRounds(rounds + 1);
@@ -77,14 +73,12 @@ export default function MissionSettingsCard({className = ""}: MissionSettingsCar
 			text-heading-small uppercase">
 				<div>Time Limit</div>
 				<div className="flex flex-row justify-between gap-4 shrink-0 w-[150px]">
-					<button className="
-						cursor-pointer
+					<button className={`
 						transition-transform
 						duration-200
 						ease-out
-						hover:scale-[1.2]
-						active:scale-[0.98]
-						"
+						${timeLimit > 1 ? "text-white hover:scale-[1.2] active:scale-[0.98] cursor-pointer" : "text-gray-600"}
+						`}
 						onClick={() => {
 							if (timeLimit > 1) {
 								setTimeLimit(timeLimit - 0.5);
@@ -92,14 +86,13 @@ export default function MissionSettingsCard({className = ""}: MissionSettingsCar
 						<Minus/>
 					</button >
 					<div>{formatTime(timeLimit)}</div>
-					<button className="
+					<button className={`
 						cursor-pointer
 						transition-transform
 						duration-200
 						ease-out
-						hover:scale-[1.2]
-						active:scale-[0.98]
-						"
+						${timeLimit < 5 ? "text-white hover:scale-[1.2] active:scale-[0.98] cursor-pointer" : "text-gray-600"}
+						`}
 						onClick={() => {
 							if (timeLimit < 5) {
 								setTimeLimit(timeLimit + 0.5);
