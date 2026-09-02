@@ -1,16 +1,20 @@
 export async function apiFetch (
-  url: string,
-  options: RequestInit
+    url: string,
+    options: RequestInit
 ) {
-  try {
-    const response = await fetch(url, options);
-    const data = await response.json();
+    try {
+        const response = await fetch(url, {
+            ...options,
+            credentials: "include"
+            }
+        );
+        const data = await response.json();
 
-    return {
-      status: response.status,
-      data,
-    };
-  } catch {
-    return null;
-  }
+        return {
+          status: response.status,
+          data,
+        };
+    } catch {
+        return null;
+    }
 }

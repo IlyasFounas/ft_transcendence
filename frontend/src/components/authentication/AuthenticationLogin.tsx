@@ -47,9 +47,8 @@ export default function AuthenticationLogin ({
         }
         if (result.status === 200) {
             const accessToken = result.data.Authorization;
-            const refreshToken = result.data["Refresh-Token"];
 
-            login(accessToken, refreshToken);
+            login(accessToken);
             console.log("login success !");
     
             navigate("/home");

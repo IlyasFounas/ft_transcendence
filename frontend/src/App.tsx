@@ -3,6 +3,7 @@ import GamePage from './pages/game/GamePage'
 import HomePage from './pages/HomePage' 
 import ComponentsPage from './pages/ComponentsPage';
 import LandingPage from './pages/LandingPage';
+import AuthenticationPage from './pages/AuthenticationPage';
 
 function App() {
   return (
@@ -10,6 +11,7 @@ function App() {
       <Routes>
         <Route path="/" element={<LandingPage/>} />
         <Route path="/home" element={<HomePage />} />
+        <Route path="/authentication" element={<AuthenticationPage />} />
         <Route path="/game" element={<GamePage/>} />
         <Route path="/components" element={<ComponentsPage/>} />
       </Routes>
