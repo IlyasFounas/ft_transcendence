@@ -31,7 +31,7 @@ export default function Input ({
                     h-15.5
                     px-6
                     py-4
-                    rounded-xl
+                    rounded-lg
                     bg-[linear-gradient(90deg,#07192E_0%,rgba(13,58,97,0.6)_38%,#07192E_100%)]
                     text-text-primary
                     text-heading-medium

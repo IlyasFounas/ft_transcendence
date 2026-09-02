@@ -117,3 +117,42 @@ input:-webkit-autofill:active {
   --button-gradient-pressed-middle: #082743;
   --button-gradient-pressed-end: #030B17;
 }
+
+.custom-tooltip {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+.custom-tooltip::before {
+  display: none !important;
+}
+
+@keyframes scale-pop {
+  0% { transform: scale(1); }
+  60% { transform: scale(1.5); }
+  100% { transform: scale(1); }
+}
+
+.animate-scale-pop {
+  animation: scale-pop 200ms ease-out;
+}
+
+.leaflet-tooltip {
+	background: #020A14;
+	border: rgb(30 77 120 / 30%);
+	border-radius: 8px;
+	padding: 6px 10px;
+
+}
+
+.leaflet-tooltip.player-tooltip {
+  background: #18181b;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 10px;
+  color: white;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  font-family: "Rajdhani", sans-serif;
+  text-transform: uppercase;
+}
