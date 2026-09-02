@@ -1,18 +1,40 @@
-import { useAuth } from "../context/AuthContext"
+import { useAuth } from "../context/AuthContext";
 
 export default function HomePage() {
-
-    const {isAuthenticated, accessToken} = useAuth();
+    const {
+        isAuthenticated,
+        accessToken,
+        refreshAccessToken,
+    } = useAuth();
 
     return (
         <div>
             <h1>Home page</h1>
-            <span>isAuthenticated =</span>
-            {isAuthenticated ? (
-                <span>true</span>
+
+            <div>
+                <span>isAuthenticated = </span>
+
+                {isAuthenticated ? (
+                  <span>true</span>
                 ) : (
-                <span>false</span>)}
-            <h1>AccessToken =</h1><h1>{accessToken}</h1>
+                  <span>false</span>
+                )}
+            </div>
+
+            <div>
+                <span>AccessToken = </span>
+                <p>{accessToken}</p>
+            </div>
+
+            <button
+                type="button"
+                onClick={() => {
+                  console.log("refresh button clicked");
+                  refreshAccessToken();
+                }}
+            >
+                Refresh Access Token
+            </button>
         </div>
     );
 }
