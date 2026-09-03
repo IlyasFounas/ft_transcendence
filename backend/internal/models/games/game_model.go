@@ -18,6 +18,8 @@ type Game struct {
 	Finished	bool 		`bun:"finished"`
 	PlayerNb	int64 		`bun:"player_nb,notnull"`
 	CreatedAt   time.Time	`bun:"created_at,default:current_timestamp"`
+	
+	LocationIDs []int64		`bun:"location_ids,type:jsonb" json:"location_ids"`
 
 	Lobby 		[]*Lobby  	`bun:"rel:has-many,join:id=game_id"`
 }

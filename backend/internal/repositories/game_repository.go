@@ -239,3 +239,20 @@ func (r *GameRepository) SetPlayerNb(ctx context.Context, game_id int64,
 	}
 	return nil
 }
+
+// GetRandomLocations returns a list of unique random location IDs based on the total number of rounds
+func (r *LocationRepository) GetRandomLocations(ctx context.Context, round_total int64) ([]int64, error) {
+	locations := make([]int64, 0)
+	err := r.db.NewSelect().
+		Model(&locations).
+		TableExpr("locations").
+		OrderExpr("RANDOM()").
+		Limit(int(round_total)). // limits to the number of rounds
+		Group("location_id"). // ensures unique locations
+		Column("location_id"). // select only the location id column
+		Scan(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return locations, nil
+}

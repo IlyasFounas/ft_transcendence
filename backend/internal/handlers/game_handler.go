@@ -13,14 +13,16 @@ import (
 type GameHandler struct {
 	gameRepo *repositories.GameRepository
 	lobbyRepo *repositories.LobbyRepository
+	locationRepo *repositories.LocationRepository
 } 
 
 func NewGameHandler(gameRepo *repositories.GameRepository,
-	lobbyRepo *repositories.LobbyRepository) *GameHandler {
-	return &GameHandler{gameRepo: gameRepo, lobbyRepo: lobbyRepo}
+	lobbyRepo *repositories.LobbyRepository, 
+	locationRepo *repositories.LocationRepository) *GameHandler {
+	return &GameHandler{gameRepo: gameRepo, lobbyRepo: lobbyRepo, locationRepo: locationRepo}
 }
 
-func initGameObj(c *gin.Context) (*games.Game, error) {
+func initGameObj(c *gin.Context, locationRepo *repositories.LocationRepository) (*games.Game, error) {
 	timer, err := strconv.ParseInt(c.PostForm("timer"), 10, 64)
 	if err != nil {
 		return nil, err;
@@ -44,32 +46,47 @@ func initGameObj(c *gin.Context) (*games.Game, error) {
 	if player_nb > 2 {
 		player_nb = 2
 	}
+
+	var locationIDs []int64
+	// get location list based on total nb of rounds
+	locationIDs, err = locationRepo.GetRandomLocations(c.Request.Context(), round_total)
+	if err != nil {
+		return nil, err;
+	}
+
 	gameObj := &games.Game{Title: "default",
 		Mode: c.PostForm("mode"),
 		Difficulty: "easy",
 		Timer: timer,
 		RoundTotal: round_total,
 		Finished: false,
-		PlayerNb: player_nb}
+		PlayerNb: player_nb,
+		LocationIDs: locationIDs,}
 	return gameObj, nil
 }
 
 func (h *GameHandler) CreateGame() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		gameObj, err := initGameObj(c)
+		gameObj, err := initGameObj(c, h.locationRepo)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized,
 				gin.H{"message": "the game initiation failed"})
 			return ;
 		}
+
 		game, err := h.gameRepo.CreateGame(c.Request.Context(), gameObj)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized,
 				gin.H{"message": "the creation of the game failed, try again"})
 			return ;
 		}
-        c.JSON(http.StatusOK,
+		
+		c.JSON(http.StatusOK,
 			gin.H{"message": "the game is launching", "game_id": game.ID})
+
+		// // TO CHECK LOCATIONS IDS ARE CORRECTLY STORED IN THE GAME TABLE
+		// fmt.Printf("Game created with ID: %d\n", game.ID)
+		// fmt.Printf("Location IDs: %v\n", game.LocationIDs)
 	}
 }
 
@@ -105,7 +122,7 @@ func (h *GameHandler) CreateLobby() gin.HandlerFunc {
 			lobbyObj.JoinCode = &joinCode
 			lobby, err := h.lobbyRepo.CreateLobby(c.Request.Context(), lobbyObj)
 			if err == nil {
-				gameObj, err := initGameObj(c)
+				gameObj, err := initGameObj(c, h.locationRepo)
 				if err != nil {
 					h.lobbyRepo.RemoveLobby(c.Request.Context(), lobby)
 					c.JSON(http.StatusUnauthorized,

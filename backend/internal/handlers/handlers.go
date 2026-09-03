@@ -22,7 +22,7 @@ func NewHandlers(repo *repositories.Repositories) *Handlers {
 		Location: NewLocationHandler(repo.Location),
 		User:     NewUserHandler(repo.User, repo.AToken, tokenHandler),
 		Token:    tokenHandler,
-		Game:     NewGameHandler(repo.Game, repo.Lobby),
+		Game:     NewGameHandler(repo.Game, repo.Lobby, repo.Location),
 		Lobby:    NewLobbyHandler(repo.Game, repo.Lobby, repo.User),
 		Round:    NewRoundHandler(repo.Round),
 		Guess:    NewGuessHandler(repo.Guess),
