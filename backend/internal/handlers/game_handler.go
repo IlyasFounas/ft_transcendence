@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"log"
 	"strconv"
 	"net/http"
 	"github.com/gin-gonic/gin"
@@ -40,7 +41,7 @@ func initGameObj(c *gin.Context, locationRepo *repositories.LocationRepository) 
 	} else if (timer < 10) {
 		timer = 10
 	}
-	if round_total > 2 {
+	if round_total > 10 {
 		round_total = 2
 	}
 	if player_nb > 2 {
@@ -48,6 +49,11 @@ func initGameObj(c *gin.Context, locationRepo *repositories.LocationRepository) 
 	}
 
 	var locationIDs []int64
+	// check if there are enough unique locations available for the requested number of rounds
+	err = locationRepo.CheckEnoughLocations(c, round_total)
+	if err != nil {
+		return nil, err
+	}
 	// get location list based on total nb of rounds
 	locationIDs, err = locationRepo.GetRandomLocations(c.Request.Context(), round_total)
 	if err != nil {
@@ -69,6 +75,7 @@ func (h *GameHandler) CreateGame() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		gameObj, err := initGameObj(c, h.locationRepo)
 		if err != nil {
+			log.Printf("Error initializing game object: %v", err)
 			c.JSON(http.StatusUnauthorized,
 				gin.H{"message": "the game initiation failed"})
 			return ;
@@ -94,9 +101,9 @@ func (h *GameHandler) CreateLobby() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userId, ok := c.Get("userId")
 		if !ok {
-            c.JSON(http.StatusUnauthorized,
-                gin.H{"message": "The userId is empty"})
-            return
+			c.JSON(http.StatusUnauthorized,
+				gin.H{"message": "The userId is empty"})
+			return
 		}
 		actualLobby, err := h.lobbyRepo.ActualLobby(c.Request.Context(), 
 			userId.(int64))
@@ -169,7 +176,7 @@ func (h *GameHandler) Game() gin.HandlerFunc {
 				gin.H{"message": "the game doesn't exist"})
 			return ;
 		}
-        c.JSON(http.StatusOK,
+		c.JSON(http.StatusOK,
 			gin.H{"message": "success", "game": game})
 	}
 }
@@ -188,7 +195,7 @@ func (h *GameHandler) Title() gin.HandlerFunc {
 				gin.H{"message": "failed"})
 			return ;
 		}
-        c.JSON(http.StatusOK,
+		c.JSON(http.StatusOK,
 			gin.H{"message": "success", "title": title})
 	}
 }
@@ -207,7 +214,7 @@ func (h *GameHandler) Mode() gin.HandlerFunc {
 				gin.H{"message": "failed"})
 			return ;
 		}
-        c.JSON(http.StatusOK,
+		c.JSON(http.StatusOK,
 			gin.H{"message": "success", "mode": mode})
 	}
 }
@@ -226,7 +233,7 @@ func (h *GameHandler) Difficulty() gin.HandlerFunc {
 				gin.H{"message": "failed"})
 			return ;
 		}
-        c.JSON(http.StatusOK,
+		c.JSON(http.StatusOK,
 			gin.H{"message": "success", "difficulty": difficulty})
 	}
 }
@@ -245,7 +252,7 @@ func (h *GameHandler) Timer() gin.HandlerFunc {
 				gin.H{"message": "failed"})
 			return ;
 		}
-        c.JSON(http.StatusOK,
+		c.JSON(http.StatusOK,
 			gin.H{"message": "success", "timer": timer})
 	}
 }
@@ -264,7 +271,7 @@ func (h *GameHandler) RoundTotal() gin.HandlerFunc {
 				gin.H{"message": "failed"})
 			return ;
 		}
-        c.JSON(http.StatusOK,
+		c.JSON(http.StatusOK,
 			gin.H{"message": "success", "roundNb": roundNb})
 	}
 }
@@ -283,7 +290,7 @@ func (h *GameHandler) Finished() gin.HandlerFunc {
 				gin.H{"message": "failed"})
 			return ;
 		}
-        c.JSON(http.StatusOK,
+		c.JSON(http.StatusOK,
 			gin.H{"message": "success", "finished": finished})
 	}
 }
@@ -302,7 +309,7 @@ func (h *GameHandler) PlayerNb() gin.HandlerFunc {
 				gin.H{"message": "failed"})
 			return ;
 		}
-        c.JSON(http.StatusOK,
+		c.JSON(http.StatusOK,
 			gin.H{"message": "success", "playerNb": playerNb})
 	}
 }
@@ -321,7 +328,7 @@ func (h *GameHandler) CreatedAt() gin.HandlerFunc {
 				gin.H{"message": "failed"})
 			return ;
 		}
-        c.JSON(http.StatusOK,
+		c.JSON(http.StatusOK,
 			gin.H{"message": "success", "createdAt": createdAt})
 	}
 }
@@ -346,7 +353,7 @@ func (h *GameHandler) SetTitle() gin.HandlerFunc {
 				gin.H{"message": "failed"})
 			return ;
 		}
-        c.JSON(http.StatusOK,
+		c.JSON(http.StatusOK,
 			gin.H{"message": "success"})
 	}
 }
@@ -371,7 +378,7 @@ func (h *GameHandler) SetMode() gin.HandlerFunc {
 				gin.H{"message": "failed"})
 			return ;
 		}
-        c.JSON(http.StatusOK,
+		c.JSON(http.StatusOK,
 			gin.H{"message": "success"})
 	}
 }
@@ -396,7 +403,7 @@ func (h *GameHandler) SetDifficulty() gin.HandlerFunc {
 				gin.H{"message": "failed"})
 			return ;
 		}
-        c.JSON(http.StatusOK,
+		c.JSON(http.StatusOK,
 			gin.H{"message": "success"})
 	}
 }
@@ -426,7 +433,7 @@ func (h *GameHandler) SetTimer() gin.HandlerFunc {
 				gin.H{"message": "failed"})
 			return ;
 		}
-        c.JSON(http.StatusOK,
+		c.JSON(http.StatusOK,
 			gin.H{"message": "success"})
 	}
 }
@@ -457,7 +464,7 @@ func (h *GameHandler) SetRoundTotal() gin.HandlerFunc {
 				gin.H{"message": "failed"})
 			return ;
 		}
-        c.JSON(http.StatusOK,
+		c.JSON(http.StatusOK,
 			gin.H{"message": "success"})
 	}
 }
@@ -506,7 +513,7 @@ func (h *GameHandler) SetFinished() gin.HandlerFunc {
 				}
 			}
 		}
-        c.JSON(http.StatusOK,
+		c.JSON(http.StatusOK,
 			gin.H{"success": true})
 	}
 }
@@ -536,7 +543,7 @@ func (h *GameHandler) SetPlayerNb() gin.HandlerFunc {
 				gin.H{"message": "failed"})
 			return ;
 		}
-        c.JSON(http.StatusOK,
+		c.JSON(http.StatusOK,
 			gin.H{"message": "success"})
 	}
 }

@@ -3,7 +3,7 @@ package repositories
 import (
 	"time"
 	"context"
-	// "errors"
+	"errors"
 	"github.com/uptrace/bun"
 	"backend/internal/models/games"
 )
@@ -240,6 +240,21 @@ func (r *GameRepository) SetPlayerNb(ctx context.Context, game_id int64,
 	return nil
 }
 
+// Check if round_total is smaller than the number of available locations (else error)
+func (r *LocationRepository) CheckEnoughLocations(ctx context.Context, round_total int64) (error) {
+	var count int
+	count, err := r.db.NewSelect().
+		TableExpr("locations").
+		Count(ctx)
+	if err != nil {
+		return err
+	}
+	if int(round_total) > count {
+		return errors.New("not enough unique locations available")
+	}
+	return nil
+}
+
 // GetRandomLocations returns a list of unique random location IDs based on the total number of rounds
 func (r *LocationRepository) GetRandomLocations(ctx context.Context, round_total int64) ([]int64, error) {
 	locations := make([]int64, 0)
@@ -247,8 +262,8 @@ func (r *LocationRepository) GetRandomLocations(ctx context.Context, round_total
 		Model(&locations).
 		TableExpr("locations").
 		OrderExpr("RANDOM()").
-		Limit(int(round_total)). // limits to the number of rounds
-		Group("location_id"). // ensures unique locations
+		Limit(int(round_total)). // limits to the exact number of rounds
+		Group("location_id"). // ensures unique locations by grouping same location_id
 		Column("location_id"). // select only the location id column
 		Scan(ctx)
 	if err != nil {
