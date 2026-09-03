@@ -1,9 +1,10 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 import type { ReactNode } from "react";
 import { apiFetch } from "../api/apiFetch";
 
 interface AuthContextType {
     accessToken: string | null;
+    isAuthLoading: boolean;
     isAuthenticated: boolean;
     login: (accessToken: string) => void;
     refreshAccessToken: () => Promise<boolean>;
@@ -11,6 +12,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType>({
     accessToken: null,
+    isAuthLoading: true,
     isAuthenticated: false,
     login: () => {},
     refreshAccessToken: async () => false,
@@ -19,6 +21,7 @@ const AuthContext = createContext<AuthContextType>({
 function AuthProvider({children}: {children: ReactNode}) {
     
     const [accessToken, setAccessToken] = useState<string | null>(null);
+    const [isAuthLoading, setIsAuthLoading] = useState(true);
     const isAuthenticated = accessToken !== null;
     const login = (accessToken: string) => {
         setAccessToken(accessToken);
@@ -30,6 +33,7 @@ function AuthProvider({children}: {children: ReactNode}) {
         }
 
         const result = await apiFetch("/api/auth/refresh", options);
+
         if (result === null) {
             return false;
         }
@@ -40,11 +44,24 @@ function AuthProvider({children}: {children: ReactNode}) {
         }
         return false;
     }
+    
+    useEffect(() => {
+        const checkAuth = async () => {
+            if (!accessToken) {
+                await refreshAccessToken();
+            }
 
+            setIsAuthLoading(false);
+        };
+
+        checkAuth();
+    }, []);
+    
     return (
         <AuthContext.Provider 
             value={{
                 accessToken,
+                isAuthLoading,
                 isAuthenticated,
                 login,
                 refreshAccessToken,
