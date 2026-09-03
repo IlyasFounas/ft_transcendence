@@ -134,8 +134,9 @@ func (h *RoundHandler) NextRound(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, createdRound)
-	fmt.Printf("6 Error round + gameid: %v + %d\n", err, round.GameId) //TODO to remove
-
+	c.JSON(http.StatusCreated, gin.H{
+		"game_id":     createdRound.GameId,
+		"round_nb":    createdRound.RoundNb,
+		"last_round":  createdRound.LastRound,
+	})
 }
-
