@@ -18,16 +18,9 @@ type RoundGetter interface {
 	// GetByID(ctx context.Context, round_id int64) (*rounds.Round, error)
 	GetRoundNb(ctx context.Context, game_id int64) (int64, error)
 	CheckLastRound(ctx context.Context, game_id int64, round_nb int64) (bool, error)
-	// GetLocationID(ctx context.Context, game_id int64, round_nb int64) (int64, error)
-
-	// PatchByID(ctx context.Context, round_id int64, patch *rounds.Round) error
-
+	GetLocationID(ctx context.Context, game_id int64, round_nb int64) (int64, error)
 	// DeleteByID(ctx context.Context, round_id int64) error
 }
-
-// type GameGetter interface {
-// 	// GetByID(ctx context.Context, game_id int64) (*rounds.Round, error)
-// }
 
 type RoundHandler struct {
 	repo RoundGetter
@@ -111,14 +104,15 @@ func (h *RoundHandler) NextRound(c *gin.Context) {
 	// // // set the user_id in the round struct
 	// // round.UserId = user_id.(int64)
 
-	// // recuperer la location_id associee a ce round (avec la game_id et le round_nb), la liste de locations est dans la table games, il faut donc faire une jointure pour recuperer la location_id associee a ce round
-	// location_id, err := h.repo.GetLocationID(ctx, round.GameId, round.RoundNb)
-	// if err != nil {
-	// 	log.Printf("Error getting location_id: %v", err)
-	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get location_id"})
-	// 	return
-	// }
-	// round.LocationId = location_id
+	// retrieve the location_id for this game_id and round_nb
+	location_id, err := h.repo.GetLocationID(ctx, round.GameId, round.RoundNb)
+	if err != nil {
+		log.Printf("Error getting location_id: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get location_id"})
+		return
+	}
+	round.LocationId = location_id
+	log.Printf("Location ID for game_id %d and round_nb %d: %d", round.GameId, round.RoundNb, location_id) //TODO to remove
 
 	// // si la game_id, round_nb et location_id sont valides, on peut creer le round dans la base de donnees
 	// if (round.GameId == 0 || round.RoundNb == 0 || round.LocationId == 0) {

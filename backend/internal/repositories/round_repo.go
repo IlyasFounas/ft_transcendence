@@ -2,7 +2,7 @@ package repositories
 
 import (
 	"context"
-	// "database/sql"
+	"database/sql"
 	"errors"
 	"fmt"
 
@@ -91,23 +91,24 @@ func (r *RoundRepository) CheckLastRound(ctx context.Context, game_id int64, rou
 	return isLastRound, nil
 }
 
-// // READ - get location_id by using the map of locations associated with the game_id, and the round_nb (called id inside) as the key within that map
-// func (r *RoundRepository) GetLocationID(ctx context.Context, game_id int64, round_nb int64) (int64, error) {
-// 	var location_id int64
-// 	err := r.db.NewSelect().
-//         Column("location_id").
-//         Table("rounds").
-//         Where("game_id = ? AND location_id = ?", game_id, round_nb). //location ou round_nb? check the schema > to get the right key
-//         Limit(1).
-//         Scan(ctx, &locationID)
-// 	if err != nil {
-// 		if errors.Is(err, sql.ErrNoRows) {
-// 			return 0, ErrRoundNotFound
-// 		}
-// 		return 0, fmt.Errorf("failed to get location_id for game_id %d and round_nb %d: %w", game_id, round_nb, err)
-// 	}
-// 	return location_id, nil
-// }
+// READ - get location_id by using the map of locations associated with the game_id, and the round_nb (called id inside) as the key within that map
+func (r *RoundRepository) GetLocationID(ctx context.Context, game_id int64, round_nb int64) (int64, error) {
+	var location_id int64
+	index := round_nb - 1 // because the array is 0-indexed, but round_nb starts at 1
+	err := r.db.NewSelect().
+		Model((*games.Game)(nil)).
+		ColumnExpr("location_ids[?] AS location_id", index).
+        Where("id = ?", game_id).
+        Limit(1).
+        Scan(ctx, &location_id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return 0, ErrRoundNotFound
+		}
+		return 0, fmt.Errorf("failed to get location_id for game_id %d and round_nb %d: %w", game_id, round_nb, err)
+	}
+	return location_id, nil
+}
 
 // // DELETE - using round ID
 // func (r *RoundRepository) DeleteByID(ctx context.Context, round_id int64) error {
