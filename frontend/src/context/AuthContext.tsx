@@ -1,4 +1,4 @@
-import { createContext, useContext, useState} from "react";
+import { createContext, useContext, useState } from "react";
 import type { ReactNode } from "react";
 import { apiFetch } from "../api/apiFetch";
 
@@ -6,14 +6,14 @@ interface AuthContextType {
     accessToken: string | null;
     isAuthenticated: boolean;
     login: (accessToken: string) => void;
-    refreshAccessToken: () => Promise<void>;
+    refreshAccessToken: () => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType>({
     accessToken: null,
     isAuthenticated: false,
     login: () => {},
-    refreshAccessToken: async () => {},
+    refreshAccessToken: async () => false,
 });
 
 function AuthProvider({children}: {children: ReactNode}) {
@@ -26,19 +26,21 @@ function AuthProvider({children}: {children: ReactNode}) {
 
     const refreshAccessToken = async () => {
         const options: RequestInit = {
-        method: "POST",
+        method: "GET",
         }
 
         const result = await apiFetch("/api/auth/refresh", options);
         if (result === null) {
-            return;
+            return false;
         }
         if (result.status === 200)
         {
             setAccessToken(result.data.Authorization);
+            return true;
         }
-        return ;
+        return false;
     }
+
     return (
         <AuthContext.Provider 
             value={{
