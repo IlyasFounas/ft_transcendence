@@ -24,9 +24,9 @@ export default function Countdown({ countdown }: Props)
 			shadow-[inset_0px_0px_20px_0px_rgba(0,175,255,0.05)]
 			uppercase
 			text-heading-small lg:text-hero 
-			${countdown <= 10 ? "outline-red-950" : "outline-sky-950"}
+			${countdown <= 10 ? "outline-red-500" : "outline-sky-950"}
 		`}>
-			<div className={` transition-colors duration-300 ${countdown <= 10 ? "text-red-800 animate-pulse" : "text-white"} `}>
+			<div className={` transition-colors duration-300 ${countdown <= 10 ? "text-red-500 animate-pulse" : "text-white"} `}>
 				0{formatTime(countdown)}
 			</div>
 		</div>

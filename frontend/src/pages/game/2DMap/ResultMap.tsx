@@ -1,7 +1,7 @@
 import 'leaflet/dist/leaflet.css';
 import { renderToStaticMarkup } from "react-dom/server";
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import Avatar from '../../../components/primitives/Avatar';
 
@@ -20,6 +20,7 @@ type Props = {
 	actualLocation: Location;
 	guesses : PlayerGuesses[];
 	currentUsername: string;
+	hoveredPlayerId: string;
 }
 
 function createDotIcon() {
@@ -66,12 +67,13 @@ function PlayerTooltip({ avatar, username }: { avatar: string, username: string}
 	)
 }
 
-export default function ResultMap({actualLocation, guesses, currentUsername}: Props) {
-  useEffect(() => {
-	// Initializes the map and sets the view to the specified latitude and longitude with a zoom level
-	const map = L.map('leaflet-result-map', {minZoom: 2});
-	console.log("map créée")
-	// Adds the OpenStreetMap tile layer to the map with attribution and maximum zoom level
+export default function ResultMap({actualLocation, guesses, currentUsername, hoveredPlayerId}: Props) {
+  
+	const guessMarkersRef = useRef<Map<stringify, L.marker>>(new Map());
+
+	useEffect(() => {
+		const map = L.map('leaflet-result-map', {minZoom: 2});
+
 	L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
 	  maxZoom: 19,
 	  attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -79,17 +81,22 @@ export default function ResultMap({actualLocation, guesses, currentUsername}: Pr
 
 	L.marker([actualLocation.latitude, actualLocation.longitude], {icon: createTargetIcon("#22c55e")}).addTo(map);
 
-	guesses.forEach((guess) => {
-  const isCurrentPlayer = currentUsername === guess.username;
+	guessMarkersRef.current.clear();
 
-  L.marker(
-	[guess.location.latitude, guess.location.longitude],
-	{ icon: isCurrentPlayer ? createTargetIcon("#ef4444") : createDotIcon() }
-  )
-	.addTo(map)
-	.bindTooltip(
-		renderToStaticMarkup(<PlayerTooltip avatar={guess.avatar} username={guess.username} />),
-					{ direction: "top", offset: [0, -12], className: "player-tooltip" });
+	guesses.forEach((guess) => {
+  		const isCurrentPlayer = currentUsername === guess.username;
+
+		const marker = L.marker(
+			[guess.location.latitude, guess.location.longitude],
+			{ icon: isCurrentPlayer ? createTargetIcon("#ef4444") : createDotIcon() }
+		)
+		.addTo(map)
+		.bindTooltip(
+			renderToStaticMarkup(<PlayerTooltip avatar={guess.avatar} username={guess.username} />),
+			{ direction: "top", offset: [0, -12], className: "player-tooltip" }
+		);
+
+		guessMarkersRef.current.set(guess.username, marker);
 
 		L.polyline(
 			[
@@ -116,9 +123,24 @@ export default function ResultMap({actualLocation, guesses, currentUsername}: Pr
 	map.fitBounds(bounds, { padding: [40, 40] });
 
 	return () => {
-	  map.remove();
-	};
-  }, [guesses, actualLocation.latitude, actualLocation.longitude]);
+	 	 map.remove();
+		};
+  	}, [guesses, actualLocation.latitude, actualLocation.longitude]);
+
+	useEffect(() => {
+		guessMarkersRef.current.forEach((marker, username) => {
+			const el = marker.getElement();
+			if (!el) return;
+			const isHovered= username === hoveredPlayerId;
+
+			if (isHovered) {
+				marker.openTooltip();
+			} else {
+				marker.closeTooltip();
+			}
+		});
+		}, [hoveredPlayerId]);
+
   return (
 	<div id="leaflet-result-map" style={{ width: '100%', height: '100%' }}></div>
   );

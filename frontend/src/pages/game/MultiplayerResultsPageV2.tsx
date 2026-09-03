@@ -1,3 +1,5 @@
+import { useState } from "react"
+
 import NextRoundTimer from "../../components/results/NextRoundTimer";
 import ResultInfoRow from "../../components/results/ResultInfoRow";
 import RankResultsList from "../../components/results/RankResultsList";
@@ -18,6 +20,7 @@ export default function MultiplayerResultsPage() {
 	} = useCurrentRoundStats(gameResult);
 
 	const guesses = useRoundGuesses(gameResult);
+	const [hoveredPlayerId, setHoveredPlayerId] = useState<string | null>(null);
 
 	return (
 		<div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_394px] gap-4 p-4">
@@ -37,6 +40,7 @@ export default function MultiplayerResultsPage() {
 			actualLocation={mockGame.location}
 			guesses={guesses}
 			currentUsername={gameResult.currentUsername}
+			hoveredPlayerId={hoveredPlayerId}
 			/>
 		</div>
 
@@ -60,9 +64,10 @@ export default function MultiplayerResultsPage() {
 		<div className="order-4 lg:col-start-2 lg:row-span-3 flex flex-col items-center gap-4">
 			<ResultInfoRow title="Round Ranking" variant="primary" />
 			<RankResultsList
-			players={gameResult.players}
-			currentRound={gameResult.currentRound}
-			currentUsername={gameResult.currentUsername}
+				players={gameResult.players}
+				currentRound={gameResult.currentRound}
+				currentUsername={gameResult.currentUsername}
+				onHoverPlayer={setHoveredPlayerId}
 			/>
 			<NextRoundTimer />
 		</div>

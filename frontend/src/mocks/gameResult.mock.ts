@@ -14,18 +14,18 @@ function generateRounds(count: number): RoundResult[] {
 }
 
 export const mockGameResult: GameResult = {
-  currentRound: 2,
+  currentRound: 5,
   totalRounds: 10,
   currentUsername: "Lucie",
   distance: 4225,
 
-  players: Array.from({ length: 2 }, (_, i) => ({
+  players: Array.from({ length: 10 }, (_, i) => ({
     player: {
       username: i === 0 ? "Lucie" : `Player${i + 1}`,
       role: "Player",
       avatar: "/avatars/avatar1.png",
     },
 
-    rounds: generateRounds(2),
+    rounds: generateRounds(5),
   })),
 };

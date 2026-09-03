@@ -12,15 +12,20 @@ type Props = {
 	rounds: RoundResult[];
 	displayRounds: number[];
 	currentUsername: string;
+	onMouseEnter?: () => void;
+  	onMouseLeave?: () => void;
 };
 
 export default function RankResultRow({
-  rank = 2,
-  rounds,
-  player,
-  displayRounds,
-  currentUsername,
+	rank = 2,
+	rounds,
+	player,
+	displayRounds,
+	currentUsername,
+	onMouseEnter, 
+	onMouseLeave
 }: Props) {
+
   const offset = ROUND_VISIBILITY.length - displayRounds.length;
   const isCurrentPlayer = player.username === currentUsername;
 
@@ -29,13 +34,23 @@ export default function RankResultRow({
 
   return (
 	<div
-	  className={`w-full h-[65px] outline outline-1 outline-offset-[-1px] grid ${GRID_COLS}
-		items-center px-4 uppercase ${rowColor}
-		${
-		  isCurrentPlayer
-			? "outline-cyan-400/60 bg-gradient-to-r from-cyan-400/15 via-cyan-400/5 to-transparent shadow-[0_0_20px_rgba(53,223,255,0.25)]"
-			: "outline-cyan-800/30"
-		}`}
+		onMouseEnter={onMouseEnter}
+		onMouseLeave={onMouseLeave}
+		className={`
+			w-full 
+			h-[65px] 
+			outline outline-1 outline-offset-[-1px] 
+			grid ${GRID_COLS}
+			items-center 
+			px-4 
+			uppercase 
+			${rowColor}
+			hover:bg-cyan-400/8 transition-colors
+			${
+			isCurrentPlayer
+				? "outline-cyan-400/60 bg-gradient-to-r from-cyan-400/15 via-cyan-400/5 to-transparent shadow-[0_0_20px_rgba(53,223,255,0.25)]"
+				: "outline-cyan-800/30"
+			}`}
 	>
 	  <div className="text-center text-heading-medium">{rank}</div>
 

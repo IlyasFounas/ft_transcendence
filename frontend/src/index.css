@@ -156,3 +156,9 @@ input:-webkit-autofill:active {
   font-family: "Rajdhani", sans-serif;
   text-transform: uppercase;
 }
+
+.marker-highlighted {
+  transform: scale(1.4);
+  filter: drop-shadow(0 0 8px currentColor);
+  transition: transform 0.15s ease;
+}
