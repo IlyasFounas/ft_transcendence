@@ -6,9 +6,9 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/uptrace/bun"
 	"backend/internal/models/rounds"
 	"backend/internal/models/games"
-	"github.com/uptrace/bun"
 )
 
 var ErrRoundNotFound = errors.New("round not found")
@@ -71,19 +71,25 @@ func (r *RoundRepository) GetRoundNb(ctx context.Context, game_id int64) (int64,
 	return nextRound, nil // return the next round number
 }
 
-// // READ - check if the last round has been reached for this game_id
-// func (r *RoundRepository) CheckLastRound(ctx context.Context, game_id int64, round_nb int64) (bool, error) {
-// 	var lastRound bool
-// 	err := r.db.NewSelect().
-// 		ColumnExpr(" >= (SELECT round_total FROM game WHERE id = ?) AS last_round", game_id).
-// 		Table("rounds").
-// 		Where("game_id = ?", game_id).
-// 		Scan(ctx, &lastRound)
-// 	if err != nil {
-// 		return false, fmt.Errorf("failed to check last round for game_id %d: %w", game_id, err)
-// 	}
-// 	return lastRound, nil
-// }
+// READ - check if the last round has been reached for this game_id
+func (r *RoundRepository) CheckLastRound(ctx context.Context, game_id int64, round_nb int64) (bool, error) {
+	var roundTotal int64
+	err := r.db.NewSelect().
+		Model((*games.Game)(nil)).
+		Column("round_total").
+		Where("id = ?", game_id).
+		Limit(1).
+		Scan(ctx, &roundTotal)
+	if err != nil {
+		return false, fmt.Errorf("failed to get round_total for game_id %d: %w", game_id, err)
+	}
+	if round_nb > roundTotal {
+		return true, fmt.Errorf("failed for game_id %d: actual round %d exceeds total rounds %d", game_id, round_nb, roundTotal)
+	}
+
+	isLastRound := round_nb == roundTotal
+	return isLastRound, nil
+}
 
 // // READ - get location_id by using the map of locations associated with the game_id, and the round_nb (called id inside) as the key within that map
 // func (r *RoundRepository) GetLocationID(ctx context.Context, game_id int64, round_nb int64) (int64, error) {

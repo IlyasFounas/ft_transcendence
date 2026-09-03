@@ -17,7 +17,7 @@ type RoundGetter interface {
 	GetGame(ctx context.Context, game_id int64) error
 	// GetByID(ctx context.Context, round_id int64) (*rounds.Round, error)
 	GetRoundNb(ctx context.Context, game_id int64) (int64, error)
-	// CheckLastRound(ctx context.Context, game_id int64, round_nb int64) (bool, error)
+	CheckLastRound(ctx context.Context, game_id int64, round_nb int64) (bool, error)
 	// GetLocationID(ctx context.Context, game_id int64, round_nb int64) (int64, error)
 
 	// PatchByID(ctx context.Context, round_id int64, patch *rounds.Round) error
@@ -44,7 +44,7 @@ func (h *RoundHandler) NextRound(c *gin.Context) {
 	ctx := c.Request.Context()
 
 	var round rounds.Round
-	// recuperer le game_id depuis le body de la requete
+	// retrieve the game_id from the request body
 	if err := c.ShouldBindJSON(&round); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request body"})
 		fmt.Printf("0 Error binding JSON + gameid: %v + %d\n", err, round.GameId) //TODO to remove
@@ -82,7 +82,7 @@ func (h *RoundHandler) NextRound(c *gin.Context) {
 		return
 	}
 
-	// recuperer le nombre de rounds deja cree pour ce game_id + 1 pour calculer le bon round_nb actuel (une jointure avec la table rounds est necessaire pour recuperer le nombre de rounds deja crees pour ce game_id)
+	// calculate the actual round number using the number of rounds already created + 1
 	round.RoundNb, err = h.repo.GetRoundNb(ctx, round.GameId)
 	if err != nil {
 		log.Printf("Error counting rounds: %v", err)
@@ -90,13 +90,17 @@ func (h *RoundHandler) NextRound(c *gin.Context) {
 		return
 	}
 
-	// TODO si round number superieur au nombre total de rounds present dans game_id alors on ressort une erreur pour dire que c'est la fin de la game
-	// LastRound, err := h.repo.CheckLastRound(ctx, round.GameId)
-	// if err != nil {
-	// 	log.Printf("Error getting total rounds: %v", err)
-	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get total rounds"})
-	// 	return
-	// }
+	// check if this is the last round for this game_id
+	round.LastRound, err = h.repo.CheckLastRound(ctx, round.GameId, round.RoundNb)
+	if err != nil {
+		log.Printf("Error getting total rounds: %v", err)
+		if round.LastRound == true {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
+		return
+	}
 
 	// // // get the user_id from the context (from the token)
 	// // user_id, exists := c.Get("userId")
