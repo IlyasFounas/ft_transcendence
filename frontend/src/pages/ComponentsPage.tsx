@@ -279,20 +279,6 @@ export default function ComponentPage() {
         <Avatar avatar="/avatars/avatar1.png"></Avatar>
         </section>
   
-       <section className="mb-10">
-          <h2 className="mb-4 text-lg font-bold">
-            Game Result Card
-          </h2>
-            <GameResultRow currentRound={1} round={2} distance={256} points={1000} ></GameResultRow>
-        </section>
-  
-       <section className="mb-10">
-          <h2 className="mb-4 text-lg font-bold">
-            Lobby Card
-          </h2>
-            <LobbyTestPage></LobbyTestPage>
-        </section>
-  
       <section className="mb-10">
           <h2 className="mb-4 text-lg font-bold">
             ChatBox - Received

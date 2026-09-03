@@ -59,7 +59,8 @@ func (r *UserRepository) LoginUser(ctx context.Context,
 	return true, user.ID, nil
 }
 
-func (r *UserRepository) GetUser(ctx context.Context, userId int64) (*users.User, error) {
+// Getters
+func (r *UserRepository) User(ctx context.Context, userId int64) (*users.User, error) {
 	user := new(users.User)
 	err := r.db.NewSelect().
 		Model(user).
@@ -72,7 +73,7 @@ func (r *UserRepository) GetUser(ctx context.Context, userId int64) (*users.User
 	return user, nil
 }
 
-func (r *UserRepository) GetName(ctx context.Context, userId int64) (*string, error) {
+func (r *UserRepository) Name(ctx context.Context, userId int64) (*string, error) {
 	user := new(users.User)
 	err := r.db.NewSelect().
 		Model(user).
@@ -85,7 +86,7 @@ func (r *UserRepository) GetName(ctx context.Context, userId int64) (*string, er
 	return &user.Username, nil
 }
 
-func (r *UserRepository) GetLogin(ctx context.Context, userId int64) (*string, error) {
+func (r *UserRepository) Login(ctx context.Context, userId int64) (*string, error) {
 	user := new(users.User)
 	err := r.db.NewSelect().
 		Model(user).
@@ -98,7 +99,7 @@ func (r *UserRepository) GetLogin(ctx context.Context, userId int64) (*string, e
 	return &user.Login, nil
 }
 
-func (r *UserRepository) GetEmail(ctx context.Context, userId int64) (*string, error) {
+func (r *UserRepository) Email(ctx context.Context, userId int64) (*string, error) {
 	user := new(users.User)
 	err := r.db.NewSelect().
 		Model(user).
@@ -111,7 +112,7 @@ func (r *UserRepository) GetEmail(ctx context.Context, userId int64) (*string, e
 	return &user.Email, nil
 }
 
-func (r *UserRepository) GetOAuth(ctx context.Context, userId int64) (*oauth2.Token, error) {
+func (r *UserRepository) OAuth(ctx context.Context, userId int64) (*oauth2.Token, error) {
 	user := new(users.User)
 	err := r.db.NewSelect().
 		Model(user).
@@ -124,6 +125,21 @@ func (r *UserRepository) GetOAuth(ctx context.Context, userId int64) (*oauth2.To
 	return user.OAuth, nil
 }
 
+func (r *UserRepository) UserByName(ctx context.Context,
+	username string) (*users.User, error) {
+	user := new(users.User)
+	err := r.db.NewSelect().
+		Model(user).
+		Column("id", "name", "email", "is_verified", "avatar", "created_at").
+		Where("name = ?", username).
+		Scan(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
+// Setters
 // todo: set a limit to change the name (maybe 1 change per month)
 func (r *UserRepository) SetName(ctx context.Context, userId int64, name string) (bool, error) {
 	if len(name) == 0 {

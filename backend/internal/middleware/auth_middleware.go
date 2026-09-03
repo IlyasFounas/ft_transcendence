@@ -26,12 +26,12 @@ func AuthMiddleWare() gin.HandlerFunc {
         return []byte(os.Getenv("JWT_SECRET")), nil })
     if err != nil {
       fmt.Printf("%s\n", err)
-      c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "unauthorized"})
+      c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "you have to login"})
       return
     }
     id, err := strconv.ParseInt(claims["sub"].(string), 10, 64)
     if err != nil {
-      c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "invalid token"})
+      c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "you have to login"})
       return
     }
     c.Set("userId", id)
