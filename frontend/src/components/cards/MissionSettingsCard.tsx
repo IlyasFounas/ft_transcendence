@@ -77,10 +77,10 @@ export default function MissionSettingsCard({className = ""}: MissionSettingsCar
 						transition-transform
 						duration-200
 						ease-out
-						${timeLimit > 1 ? "text-white hover:scale-[1.2] active:scale-[0.98] cursor-pointer" : "text-gray-600"}
+						${timeLimit > 0.5 ? "text-white hover:scale-[1.2] active:scale-[0.98] cursor-pointer" : "text-gray-600"}
 						`}
 						onClick={() => {
-							if (timeLimit > 1) {
+							if (timeLimit > 0.5) {
 								setTimeLimit(timeLimit - 0.5);
 							}}}>
 						<Minus/>

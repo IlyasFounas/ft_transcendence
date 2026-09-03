@@ -22,14 +22,12 @@ export default function RoundsSettingsCard({min, max, interval, settings, format
 				<div className="flex flex-rows justify-between w-[150px] lg:w-[200px]">
 
 					<button
-						className="
-						cursor-pointer
+						className={`
 						transition-transform
 						duration-200
 						ease-out
-						hover:scale-[1.2]
-						active:scale-[0.98]
-						"
+						${value > min ? "text-white hover:scale-[1.2] active:scale-[0.98] cursor-pointer" : "text-gray-600"}
+						`}
 						onClick={() => {
 							if (value > min) {
 								setValue(value - interval);
@@ -43,14 +41,12 @@ export default function RoundsSettingsCard({min, max, interval, settings, format
 						 {formatValue ? formatValue(value) : value}
 					</div>
 					<button
-						className="
-						cursor-pointer
+						className={`
 						transition-transform
 						duration-200
 						ease-out
-						hover:scale-[1.2]
-						active:scale-[0.98]
-						"
+						${value < max ? "text-white hover:scale-[1.2] active:scale-[0.98] cursor-pointer" : "text-gray-600"}
+						`}
 						onClick={() => {
 							if (value < max) {
 								setValue(value + interval);
