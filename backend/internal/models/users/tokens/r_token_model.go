@@ -7,7 +7,7 @@ import (
 )
 
 type RefreshToken struct {
-	bun.BaseModel `bun:"table:refresh_tokens,alias:at"`
+	bun.BaseModel `bun:"table:refresh_tokens,alias:rt"`
 
 	ID        int64      `bun:"id,pk,autoincrement"`
 	HashToken string     `bun:"hash_token,notnull,unique"`

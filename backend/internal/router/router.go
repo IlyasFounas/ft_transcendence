@@ -16,5 +16,10 @@ func NewRouter(h *handlers.Handlers) *gin.Engine {
 	// Splitting routes
 	registerUserRoutes(r, h.User, h.Token)
 	registerLocationRoutes(r, h.Location)
+	registerGameRoutes(r, h.Game)
+	registerLobbyRoutes(r, h.Game, h.Lobby)
+	registerRoundRoutes(r, h.Round)
+	registerGuessRoutes(r, h.Guess)
+	
 	return r
 }
