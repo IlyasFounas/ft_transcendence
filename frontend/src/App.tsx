@@ -16,6 +16,7 @@ function App() {
           <Routes>
             <Route path="/" element={<LandingPage/>} />
             <Route path="/login" element={<AuthenticationPage/>} />
+            <Route path="/game" element={<GamePage/>} />
             <Route element={<ChatLayout />}>
                 <Route path="/home" element={<HomePage />} />
                 <Route path="/multiplayer" element={<MultiplayerPage />} />
@@ -23,7 +24,6 @@ function App() {
                 <Route path="/profile" element={<ProfilePage />} />
             </Route>
             <Route element={<MainLayout />}>
-                <Route path="/game" element={<GamePage/>} />
                 <Route path="/components" element={<ComponentsPage/>} />
               </Route>
             </Routes>
