@@ -17,26 +17,30 @@ export default function AuthenticationWelcome ({
             flex
             flex-col
             w-full
-            gap-[50px]
+            gap-5
+            md:py-12
             "
         >
-            <div className="flex flex-col gap-[30px]">
+            <div className="flex flex-col gap-5 md:px-6">
                 <button className="
                     flex
-                    h-[62px]
                     items-center
                     justify-center
                     gap-2
                     rounded-2xl
                     bg-white
                     text-black
-                    text-heading-medium
                     transition
                     duration-200
                     hover:shadow-[0_0_12px_rgba(255,255,255,0.35)]
                     hover:scale-[1.02]
                     active:scale-[0.98]
                     cursor-pointer
+                    
+                    h-13
+                    text-body-primary
+                    md:text-heading-medium
+                    md:h-15
                     "
                     onClick={onGoogleLogin}
                 >
@@ -49,20 +53,23 @@ export default function AuthenticationWelcome ({
                 </button>
                 <button className="
                     flex
-                    h-[62px]
                     items-center
                     justify-center
                     gap-2
                     rounded-2xl
                     bg-primary
                     text-black
-                    text-heading-medium
                     transition
                     duration-200
                     hover:shadow-[0_0_12px_rgba(53,223,255,0.35)]
                     hover:scale-[1.02]
                     active:scale-[0.98]
                     cursor-pointer
+
+                    h-13
+                    text-body-primary
+                    md:text-heading-medium
+                    md:h-15
                     "
                     onClick={onEmailSignUp}
                 >
@@ -70,15 +77,15 @@ export default function AuthenticationWelcome ({
                     <span>Continue with Email</span>
                 </button>
             </div>
-            <div className="flex gap-[16px] items-center">
-                <hr className="w-full border-t border-text-secondary" />
+            <div className="flex w-full gap-4 items-center sm:px-6">
+                <hr className="h-px flex-1 border-text-secondary" />
                 <span className="text-body-primary text-text-secondary uppercase">
                     or
                 </span>
-                <hr className="w-full border-t border-text-secondary" />
+                <hr className="h-px flex-1 border-text-secondary" />
             </div>
-            <div className="flex items-center justify-between">
-                <div className="text-heading-small text-text-primary">
+            <div className="flex flex-col items-center px-2">
+                <div className="uppercase text-label-small text-text-primary md:text-body-primary">
                     Already have an account ?
                 </div>
                 <PrimaryButton size="small" onClick={onEmailLogin}>

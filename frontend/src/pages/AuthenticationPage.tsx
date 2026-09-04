@@ -23,20 +23,33 @@ export default function AuthenticationPage () {
                 flex
                 min-h-screen
                 w-full
+                flex-col
                 items-center
                 justify-center
-                gap-20
+                gap-6
+
                 bg-surface-base
                 bg-cover
                 bg-center
                 bg-no-repeat
-                px-6
+                bg-[url('/images/landing-bg.png')]
+
+                md:px-10
+                md:py-5
+                lg:flex-row
+                
             "
-            style={{
-                backgroundImage: "url('/images/landing-bg.png')",
-            }}
         >
-            <div className="flex w-full max-w-lg items-center justify-center">
+            <div 
+                className="
+                    hidden
+                    w-full 
+                    max-w-lg 
+                    items-center
+                    justify-center
+                    sm:flex
+                "
+            >
                 <button
                     type="button"
                     onClick={() => navigate("/")}
@@ -46,7 +59,7 @@ export default function AuthenticationPage () {
                     <img
                         src="/logos/atlas-logo-landing.png"
                         alt="ATLAS"
-                        className="w-72 md:w-80 lg:w-96"
+                        className="w-72 md:w-80 lg:w-116"
                     />
                 </button>
             </div>
