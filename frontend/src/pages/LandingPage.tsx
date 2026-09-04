@@ -78,7 +78,6 @@ export default function LandingPage() {
                     <PrimaryButton
                         size="medium"
                         onClick={() => navigate("/login")}
-                        className="!h-[100px] lg:!h-[125px]"
                     >
                         Login
                     </PrimaryButton>
@@ -101,7 +100,6 @@ export default function LandingPage() {
                         md:text-heading-small
                         lg:text-heading-medium
                         uppercase
-                        tracking-[0.08em]
                         text-text-primary
                         transition
                         hover:text-primary
