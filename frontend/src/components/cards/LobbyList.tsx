@@ -12,25 +12,23 @@ interface Player {
 }
 
 interface LobbyListProps{
-	className?: string;
 	numberOfPlayers: number;
 	listOfPlayers: Player[];
 }
 
-export default function LobbyList({className, listOfPlayers}: LobbyListProps)
+export default function LobbyList({listOfPlayers}: LobbyListProps)
 {
 	const playersReady = listOfPlayers.filter((player) => player.status == "ready").length;
 	const numberOfPlayers = listOfPlayers.length;
 
 	return (
 		<div 
-		className={`
+		className="
 			rounded-[12px] 
 			border 
 			border-border-default/30
             shadow-[0_0_10px_rgba(40,215,255,0.5)] 
-			overflow-hidden 
-			${className}`}>
+			overflow-hidden ">
       			<div className="
 					flex 
 					bg-surface-base
@@ -57,6 +55,7 @@ export default function LobbyList({className, listOfPlayers}: LobbyListProps)
 						role={player.role}
 						status={player.status}
 						avatar={player.avatar}
+						currentUsername="Agent Tommy"
 					/>
 				) : (
 					<EmptyLobbyRow key={`empty-${index}`} />
