@@ -29,28 +29,25 @@ func initGameObj(c *gin.Context) (*games.Game, error) {
 	if err != nil {
 		return nil, err;
 	}
-	player_nb, err := strconv.ParseInt(c.PostForm("player_nb"), 10, 64)
-	if err != nil {
-		return nil, err;
-	}
 	if timer > 120 {
 		timer = 120
 	} else if (timer < 10) {
 		timer = 10
 	}
-	if round_nb > 2 {
-		round_nb = 2
+	if round_nb > 5 {
+		round_nb = 5
 	}
-	if player_nb > 2 {
-		player_nb = 2
+	if round_nb < 0 {
+		round_nb = 1
 	}
+	// c.PostForm("mode")
 	gameObj := &games.Game{Title: "default",
-		Mode: c.PostForm("mode"),
-		Difficulty: "easy",
+		Mode: "Default",
+		Difficulty: "Default",
 		Timer: timer,
 		RoundNb: round_nb,
 		Finished: false,
-		PlayerNb: player_nb}
+		PlayerNb: 10}
 	return gameObj, nil
 }
 
