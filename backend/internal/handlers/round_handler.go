@@ -23,12 +23,12 @@ type RoundGetter interface {
 }
 
 type RoundHandler struct {
-	repo RoundGetter
-	// repo GameGetter
+	roundRepo RoundGetter
+	locationRepo *repositories.LocationRepository
 }
 
-func NewRoundHandler(repo RoundGetter) *RoundHandler {
-	return &RoundHandler{repo: repo}
+func NewRoundHandler(roundRepo RoundGetter, locationRepo *repositories.LocationRepository) *RoundHandler {
+	return &RoundHandler{roundRepo: roundRepo, locationRepo: locationRepo}
 }
 
 // POST /rounds
@@ -62,7 +62,7 @@ func (h *RoundHandler) NextRound(c *gin.Context) {
 	}
 
 	// check if the game_id exists in the database
-	err := h.repo.GetGame(ctx, round.GameId)
+	err := h.roundRepo.GetGame(ctx, round.GameId)
 	if err != nil {
 		if errors.Is(err, repositories.ErrGameNotFound) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "game_id does not exist"})
@@ -76,7 +76,7 @@ func (h *RoundHandler) NextRound(c *gin.Context) {
 	}
 
 	// calculate the actual round number using the number of rounds already created + 1
-	round.RoundNb, err = h.repo.GetRoundNb(ctx, round.GameId)
+	round.RoundNb, err = h.roundRepo.GetRoundNb(ctx, round.GameId)
 	if err != nil {
 		log.Printf("Error counting rounds: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not count rounds"})
@@ -84,7 +84,7 @@ func (h *RoundHandler) NextRound(c *gin.Context) {
 	}
 
 	// check if this is the last round for this game_id
-	round.LastRound, err = h.repo.CheckLastRound(ctx, round.GameId, round.RoundNb)
+	round.LastRound, err = h.roundRepo.CheckLastRound(ctx, round.GameId, round.RoundNb)
 	if err != nil {
 		log.Printf("Error getting total rounds: %v", err)
 		if round.LastRound == true {
@@ -105,7 +105,7 @@ func (h *RoundHandler) NextRound(c *gin.Context) {
 	// // round.UserId = user_id.(int64)
 
 	// retrieve the location_id for this game_id and round_nb
-	location_id, err := h.repo.GetLocationID(ctx, round.GameId, round.RoundNb)
+	location_id, err := h.roundRepo.GetLocationID(ctx, round.GameId, round.RoundNb)
 	if err != nil {
 		log.Printf("Error getting location_id: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get location_id"})
@@ -120,7 +120,7 @@ func (h *RoundHandler) NextRound(c *gin.Context) {
 	// 	return
 	// }
 	
-	createdRound, err := h.repo.Create(ctx, &round)
+	createdRound, err := h.roundRepo.Create(ctx, &round)
 	if err != nil {
 		log.Printf("Error creating round: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not create round"})
@@ -134,3 +134,6 @@ func (h *RoundHandler) NextRound(c *gin.Context) {
 		"last_round":  createdRound.LastRound,
 	})
 }
+
+
+// TODO function to retrieve the round corresponding coordinates (to launch the game) ?

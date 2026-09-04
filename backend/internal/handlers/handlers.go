@@ -24,7 +24,7 @@ func NewHandlers(repo *repositories.Repositories) *Handlers {
 		Token:		tokenHandler,
 		Game:		NewGameHandler(repo.Game, repo.Lobby, repo.Location),
 		Lobby:		NewLobbyHandler(repo.Game, repo.Lobby, repo.User),
-		Round:		NewRoundHandler(repo.Round),
+		Round:		NewRoundHandler(repo.Round, repo.Location),
 		Guess:		NewGuessHandler(repo.Guess),
 	}
 }
