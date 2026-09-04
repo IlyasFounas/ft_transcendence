@@ -44,7 +44,7 @@ export default function AuthenticationPage () {
                     aria-label="Go to landing page"
                 >
                     <img
-                        src="/logos/atlas-logo-square.png"
+                        src="/logos/atlas-logo-landing.png"
                         alt="ATLAS"
                         className="w-72 md:w-80 lg:w-96"
                     />
