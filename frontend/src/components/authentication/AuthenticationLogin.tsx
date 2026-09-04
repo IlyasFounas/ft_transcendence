@@ -55,7 +55,7 @@ export default function AuthenticationLogin ({
 
             navigate(from, { replace: true });
         }
-
+        
     };
 
     return (
