@@ -13,6 +13,10 @@ export default function AuthenticationPage () {
 
     const navigate = useNavigate();
 
+    const handleGoogleLogin = () => {
+        window.location.href = "/api/auth/google";
+    };
+    
     return (
         <main
             className="
@@ -49,6 +53,7 @@ export default function AuthenticationPage () {
             <AuthenticationCard>
                 {mode === "options" && (
                     <AuthenticationWelcome
+                        onGoogleLogin={handleGoogleLogin}
                         onEmailSignUp={() => setMode("signup")}
                         onEmailLogin={() => setMode("login")}
                     />
