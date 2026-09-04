@@ -11,8 +11,9 @@ func registerLobbyRoutes(r *gin.Engine, h *handlers.GameHandler,
 	private := r.Group("/")
 	private.Use(middleware.AuthMiddleWare())
 	{
-		private.POST("/ws/lobby/create", h.CreateLobby())
-		private.POST("/ws/lobby/join", hl.JoinLobby())
+		private.POST("/lobby/create", h.CreateLobby())
+		private.POST("/lobby/join", hl.JoinLobby())
+		private.GET("/ws/lobby/join", hl.WsLobby())
 		private.DELETE("/lobby/leave", hl.LeaveLobby())
 		private.DELETE("/lobby/remove/:username", hl.RemovePlayer())
 		private.GET("/lobby/allPlayers", hl.AllPlayers())
