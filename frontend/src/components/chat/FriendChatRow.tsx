@@ -1,11 +1,13 @@
-import type { UserProps, UserStatusType } from "../../types/user.types";
+import type { UserStatusType } from "../../types/user.types";
 import Avatar from "../primitives/Avatar";
 
-interface FriendChatRowProps extends UserProps{
+interface FriendChatRowProps {
+    username: string;
+    avatar: string;
     status: UserStatusType;
     lastMessage: string;
     timestamp: string;
-    onOpenChat?: () => void;
+    onOpenChat: () => void;
 }
 
 export default function FriendChatRow ({

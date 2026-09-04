@@ -1,4 +1,4 @@
-import {useState} from 'react'
+import {useState} from "react"
 import OperationHistory from '../components/cards/OperationHistory';
 import { operations } from "../data/operations";
 import UserProfile from '../components/user/UserProfile.tsx';
@@ -8,7 +8,6 @@ import FriendRequestRow from '../components/rows/FriendRequestRow.tsx';
 import StatusBadge from '../components/primitives/StatusBadge.tsx';
 import UserStatus from '../components/user/UserStatus.tsx';
 import FriendListRow from '../components/rows/FriendListRow.tsx';
-import FriendChatRow from '../components/rows/FriendChatRow.tsx';
 import AuthenticationCard from '../components/cards/AuthenticationCard.tsx';
 import AuthenticationWelcome from '../components/authentication/AuthenticationWelcome.tsx';
 import Input from '../components/primitives/Input.tsx';

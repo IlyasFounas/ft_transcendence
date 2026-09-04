@@ -4,6 +4,7 @@ import (
 	"github.com/uptrace/bun"
 	"golang.org/x/oauth2"
 	"time"
+	"backend/internal/models/games"
 )
 
 // this struct represent the Table user in the db
@@ -19,4 +20,6 @@ type User struct {
 	OAuth       *oauth2.Token `bun:"oauth,type:json"`
 	Avatar      *string       `bun:"avatar"`
 	CreatedAt   time.Time     `bun:"created_at,default:current_timestamp"`
+
+	Lobby 		[]*games.Lobby  `bun:"rel:has-many,join:id=user_id"`
 }
