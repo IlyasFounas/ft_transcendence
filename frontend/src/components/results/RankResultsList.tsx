@@ -7,7 +7,7 @@ interface RankResultListProps {
 	players: PlayerResult[];
 	currentRound: number;
 	currentUsername: string;
-	onHoverPlayer: (username: string | null) => void;
+	onHoverPlayer?: (username: string | null) => void;
 }
 
 export default function RankResultList({ players, currentRound, currentUsername, onHoverPlayer}: RankResultListProps) {
@@ -45,8 +45,8 @@ export default function RankResultList({ players, currentRound, currentUsername,
 			rounds={result.rounds}
 			displayRounds={displayRounds}
 			currentUsername={currentUsername}
-			onMouseEnter={() => onHoverPlayer(result.player.username)}
-			onMouseLeave={() => onHoverPlayer(null)}
+			onMouseEnter={() => onHoverPlayer?.(result.player.username)}
+			onMouseLeave={() => onHoverPlayer?.(null)}
 		  />
 		))}
 	  </div>

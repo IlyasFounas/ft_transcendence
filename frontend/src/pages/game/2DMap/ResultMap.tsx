@@ -20,7 +20,7 @@ type Props = {
 	actualLocation: Location;
 	guesses : PlayerGuesses[];
 	currentUsername: string;
-	hoveredPlayerId: string;
+	hoveredPlayerId?: string | null;
 }
 
 function createDotIcon() {
@@ -69,7 +69,7 @@ function PlayerTooltip({ avatar, username }: { avatar: string, username: string}
 
 export default function ResultMap({actualLocation, guesses, currentUsername, hoveredPlayerId}: Props) {
   
-	const guessMarkersRef = useRef<Map<stringify, L.marker>>(new Map());
+	const guessMarkersRef = useRef<Map<string, L.Marker>>(new Map());
 
 	useEffect(() => {
 		const map = L.map('leaflet-result-map', {minZoom: 2});
