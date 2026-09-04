@@ -2,9 +2,9 @@ package guesses
 
 import(
 	// "time"
+	"backend/internal/models/rounds"
+	"backend/internal/models/users"
 	"github.com/uptrace/bun"
-	// "backend/internal/models/games"
-	// "backend/internal/models/rounds"
 )
 
 type Guess struct {
@@ -20,8 +20,9 @@ type Guess struct {
 	TimeLeft		int64			`bun:"time_left,default:0"`
 	Streak			int64			`bun:"streak,default:0"`
 	Score			int64			`bun:"score,notnull"`
-	// RoundId			int64			`bun:"round_id,notnull,unique"`
-	// UserId			int64			`bun:"user_id,notnull, unique"`
+	RoundId			int64			`bun:"round_id,notnull,unique"`
+	UserId			int64			`bun:"user_id,notnull, unique"`
 
-	// Round			*rounds.Round	`bun:"rel:belongs-to,join:round_id=id"`
+	Round			*rounds.Round	`bun:"rel:belongs-to,join:round_id=id"`
+	User			*users.User		`bun:"rel:belongs-to,join:user_id=id"`
 }
