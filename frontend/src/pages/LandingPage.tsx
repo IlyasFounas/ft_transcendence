@@ -7,30 +7,28 @@ export default function LandingPage() {
     return (
         <main
             className="
-                min-h-[100dvh]
+                min-h-dvh
                 w-full
                 bg-surface-base
                 bg-cover
                 bg-center
+                bg-[url('/images/landing-bg.png')]
                 bg-no-repeat
                 flex
                 items-center
                 justify-center
                 px-5
-                py-8
+                py-10
             "
-            style={{
-                backgroundImage: "url('/images/landing-bg.png')",
-            }}
         >
             <div
                 className="
                     flex
                     w-full
-                    max-w-sm
                     flex-col
                     items-center
                     text-center
+                    max-w-sm
                     sm:max-w-md
                     lg:max-w-xl
                 "
@@ -39,7 +37,7 @@ export default function LandingPage() {
                     <img
                         src="/logos/atlas-logo-landing.png"
                         alt="ATLAS"
-                        className="mb-4 w-52 sm:w-60 md:w-72 lg:w-80"
+                        className="w-60 md:w-93 lg:w-146"
                     />
                 </div>
                 <div 
@@ -47,15 +45,17 @@ export default function LandingPage() {
                         flex
                         items-center
                         justify-center
-                        gap-4
-                        text-heading-small
                         uppercase
                         text-white
-                        sm:gap-6
-                        sm:text-base
-                        md:gap-8
-                        md:text-lg
                         py-4
+
+                        gap-5
+                        text-heading-small
+                        
+                        md:text-heading-medium
+                        md:gap-8
+
+                        lg:text-heading-large
                     "
                 >
                     <span>Analyze.</span>
@@ -63,25 +63,31 @@ export default function LandingPage() {
                     <span>Report.</span>
                 </div>
 
-                <div 
+                <div
                     className="
                         flex
                         w-full
-                        max-w-xs
                         flex-col
-                        gap-2
-                        sm:max-w-sm
-                        md:gap-5
-                        lg:max-w-md
                         items-center
+                        mt-2
+                        
+                        max-w-xs
+                        lg:max-w-md
                     "
                 >
-                    <PrimaryButton size="medium" onClick={() => navigate("/login")}>
-                      Login
+                    <PrimaryButton
+                        size="medium"
+                        onClick={() => navigate("/login")}
+                        className="!h-[100px] lg:!h-[125px]"
+                    >
+                        Login
                     </PrimaryButton>
 
-                    <PrimaryButton size="medium" onClick={() => navigate("/game")}>
-                      Guest Mode
+                    <PrimaryButton 
+                        size="small"
+                        onClick={() => navigate("/game")}
+                    >
+                      Start Guest Mode
                     </PrimaryButton>
                 </div>
 
@@ -92,9 +98,11 @@ export default function LandingPage() {
                         md:mt-7
                         cursor-pointer
                         text-body-primary
+                        md:text-heading-small
+                        lg:text-heading-medium
                         uppercase
                         tracking-[0.08em]
-                        text-white
+                        text-text-primary
                         transition
                         hover:text-primary
                     "
