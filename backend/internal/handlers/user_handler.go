@@ -165,7 +165,7 @@ func (h *UserHandler) Login() gin.HandlerFunc {
 			if err := h.createActivationToken(c, expiresAt, userId); err != nil {
 				return
 			}
-			c.JSON(http.StatusOK,
+			c.JSON(http.StatusUnauthorized,
                 gin.H{"message": "The activation link has been sent on your email"})
             return
 		} else if err != nil {

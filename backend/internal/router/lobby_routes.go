@@ -2,6 +2,7 @@ package router
 
 import (
 	"backend/internal/handlers"
+	"backend/internal/websockets/lobby"
 	"github.com/gin-gonic/gin"
 	"backend/internal/middleware"
 )
@@ -13,9 +14,11 @@ func registerLobbyRoutes(r *gin.Engine, h *handlers.GameHandler,
 	{
 		private.POST("/lobby/create", h.CreateLobby())
 		private.POST("/lobby/join", hl.JoinLobby())
-		private.GET("/ws/lobby/join", hl.WsLobby())
+		// private.GET("/ws/lobby/join", lobby_ws.WsLobby())
 		private.DELETE("/lobby/leave", hl.LeaveLobby())
 		private.DELETE("/lobby/remove/:username", hl.RemovePlayer())
 		private.GET("/lobby/allPlayers", hl.AllPlayers())
 	}
+	public := r.Group("/")
+	public.GET("/ws/lobby/join", lobby_ws.WsLobby())
 }
