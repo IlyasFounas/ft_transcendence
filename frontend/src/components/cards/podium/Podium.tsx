@@ -85,7 +85,6 @@ export default function Podium({
 	<div
 	  className="relative w-full @container"
 	  style={{
-		maxWidth: `${width}px`,
 		aspectRatio: `${width} / ${height}`,
 	  }}
 	>

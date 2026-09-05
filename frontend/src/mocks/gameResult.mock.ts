@@ -19,7 +19,7 @@ export const mockGameResult: GameResult = {
   currentUsername: "Lucie",
   distance: 4225,
 
-  players: Array.from({ length: 10 }, (_, i) => ({
+  players: Array.from({ length: 25 }, (_, i) => ({
     player: {
       username: i === 0 ? "Lucie" : `Player${i + 1}`,
       role: "Player",

@@ -7,7 +7,6 @@ import JoinOperationCard from "../../components/lobby/JoinOperationCard";
 export default function LobbyPage()
 {
 	const [mode, setMode] = useState<"create" | "join">("join");
-	
 
 	return (
 		<div className="min-h-screen w-full bg-[url(/backgrounds/earth_background.png)] py-50">
