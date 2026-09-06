@@ -98,7 +98,13 @@ export default function AuthenticationSignUp ({
             <Input label="login id" type="text" value={loginId} onChange={setLoginId}/>
             <Input label="username" type="text" value={username} onChange={setUsername}/>
             <Input label="password" type="password" value={password} onChange={setPassword}/>
-            {error && <p>{error}</p>}
+            
+            <div className="pt-2 text-status-red text-label-small sm:text-heading-small">
+                {error && 
+                    <p>{error}</p>
+                }
+            </div>
+            
             <div className="flex items-center justify-between w-full">
                 <button
                     type="button"
