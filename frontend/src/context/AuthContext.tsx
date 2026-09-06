@@ -1,30 +1,51 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import type { ReactNode } from "react";
 import { apiFetch } from "../api/apiFetch";
+import type { User } from "../types/user.types";
 
 interface AuthContextType {
     accessToken: string | null;
+    user: User | null;
     isAuthLoading: boolean;
     isAuthenticated: boolean;
-    login: (accessToken: string) => void;
+    login: (accessToken: string) => Promise<void>;
     refreshAccessToken: () => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType>({
     accessToken: null,
+    user: null,
     isAuthLoading: true,
     isAuthenticated: false,
-    login: () => {},
+    login: async () => {},
     refreshAccessToken: async () => false,
 });
 
 function AuthProvider({children}: {children: ReactNode}) {
     
     const [accessToken, setAccessToken] = useState<string | null>(null);
+    const [user, setUser] = useState<User | null>(null);
     const [isAuthLoading, setIsAuthLoading] = useState(true);
     const isAuthenticated = accessToken !== null;
-    const login = (accessToken: string) => {
+    
+    const getUser = async (token: string) => {
+        const result = await apiFetch("/api/user", {}, token);
+        
+        if (result === null) {
+            return false;
+        }
+        if (result.status === 200)
+        {
+            setUser(result.data.user);
+            return true;
+        }
+        return false;
+        
+    }
+    
+    const login = async (accessToken: string) => {
         setAccessToken(accessToken);
+        await getUser(accessToken);
     };
 
     const refreshAccessToken = async () => {
@@ -39,7 +60,11 @@ function AuthProvider({children}: {children: ReactNode}) {
         }
         if (result.status === 200)
         {
-            setAccessToken(result.data.Authorization);
+            const newToken = result.data.Authorization;
+            setAccessToken(newToken);
+            
+            await getUser(newToken);
+
             return true;
         }
         return false;
@@ -61,6 +86,7 @@ function AuthProvider({children}: {children: ReactNode}) {
         <AuthContext.Provider 
             value={{
                 accessToken,
+                user,
                 isAuthLoading,
                 isAuthenticated,
                 login,
