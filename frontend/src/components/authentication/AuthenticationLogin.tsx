@@ -64,19 +64,29 @@ export default function AuthenticationLogin ({
             flex-col
             w-full
             items-center
-            gap-4
+            gap-3
+            py-5
+            sm:px-6
             "
         >
             <Input label="login id" type="login" value={loginId} onChange={setLoginId}/>
             <Input label="password" type="password" value={password} onChange={setPassword}/>
-            {error && <p>{error}</p>}
+            
+            <div className="pt-2 text-status-red text-label-small sm:text-heading-small">
+                {error && 
+                    <p>{error}</p>
+                }
+            </div>
+
             <PrimaryButton size="small" onClick={handleLogin}>log in</PrimaryButton>
             <button
                 type="button"
                 className="
                     text-text-primary
                     underline
-                    text-heading-small
+                    text-label-small
+                    md:text-body-primary
+                    uppercase
                     cursor-pointer
                     transition
                     duration-150
