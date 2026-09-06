@@ -67,7 +67,9 @@ export default function AuthenticationSignUp ({
             ">
                 <p className="
                     text-text-primary
-                    text-heading-small
+                    text-body-primary
+                    px-8
+                    sm:text-heading-small
                 ">
                     {success}
                 </p>
