@@ -38,8 +38,8 @@ export default function Input ({
                     w-full
                     h-11
                     md:h-15
-                    px-6
-                    py-4
+                    px-4
+                    sm:px-6
                     rounded-xl
                     bg-[linear-gradient(90deg,#07192E_0%,rgba(13,58,97,0.6)_38%,#07192E_100%)]
                     
