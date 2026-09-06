@@ -24,8 +24,6 @@ export function ChatLayout () {
             )}
             <div>
                 <Navbar
-                    username="Agent Nova"
-                    avatar="/avatars/avatar1.png"
                     status="online"
                     isChatOpen={isChatOpen}
                     onToggleChat={() => setIsChatOpen((current) => !current)}
