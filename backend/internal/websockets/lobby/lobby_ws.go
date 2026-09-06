@@ -13,6 +13,17 @@ var upgrader = websocket.Upgrader {
     CheckOrigin: func(r *http.Request) bool {return true},
 }
 
+func WritePump(conn *websocket.Conn, send <-chan []byte) {
+    defer conn.Close()
+    for msg := range send {
+        msg, ok := <-send
+        if !ok {
+            return
+        }
+        conn.WriteMessage(websocket.TextMessage, msg)
+    }
+}
+
 func WsLobby() gin.HandlerFunc {
 	return func(c *gin.Context) {
         // userId, ok := c.Get("userId")
@@ -27,6 +38,9 @@ func WsLobby() gin.HandlerFunc {
             log.Println(err)
             return
         }
+        send := make(chan []byte, 256)   // bufferisé
+        go WritePump(conn, send)
+        defer close(send)
         defer conn.Close()
         for {
             msgType, data, err := conn.ReadMessage()
@@ -34,7 +48,8 @@ func WsLobby() gin.HandlerFunc {
                 break // the connection ended up
             }
             if msgType == websocket.TextMessage {
-                log.Printf("client request : %s\n", string(data))
+                // log.Printf("client request : %s\n", string(data))
+                send <- data
             }
         }
     }
