@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import type { ReactNode } from "react";
-import { apiFetch } from "../api/apiFetch";
 import type { User } from "../types/user.types";
+import { apiFetch } from "../api/apiFetch";
 
 interface AuthContextType {
     accessToken: string | null;
