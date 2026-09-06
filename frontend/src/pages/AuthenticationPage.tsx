@@ -33,11 +33,10 @@ export default function AuthenticationPage () {
                 bg-center
                 bg-no-repeat
                 bg-[url('/images/landing-bg.png')]
-
+                px-8
                 md:px-10
                 md:py-5
                 lg:flex-row
-                
             "
         >
             <div 
