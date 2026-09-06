@@ -90,6 +90,8 @@ export default function AuthenticationSignUp ({
             w-full
             items-center
             gap-2
+            py-5
+            sm:px-6
             "
         >
             <Input label="email" type="email" value={email} onChange={setEmail}/>
@@ -103,7 +105,9 @@ export default function AuthenticationSignUp ({
                     className="
                         text-text-primary
                         underline
-                        text-heading-small
+                        text-label-small
+                        md:text-body-primary
+                        uppercase
                         cursor-pointer
                         transition
                         duration-150

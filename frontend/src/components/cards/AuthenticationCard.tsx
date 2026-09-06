@@ -11,7 +11,7 @@ export default function AuthenticationCard ({
             flex
             flex-col
             min-w-xs
-            min-h-120
+            min-h-140
             rounded-4xl
             bg-surface-base
             border
