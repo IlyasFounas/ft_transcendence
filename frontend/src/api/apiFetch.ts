@@ -1,13 +1,20 @@
 export async function apiFetch (
     url: string,
-    options: RequestInit
+    options: RequestInit = {},
+    accessToken?: string | null
 ) {
     try {
         const response = await fetch(url, {
             ...options,
-            credentials: "include"
-            }
-        );
+            credentials: "include",
+            headers: {
+                ...options.headers,
+                ...(accessToken
+                    ? { Authorization: accessToken }
+                    : {}),
+            },
+        });
+        
         const data = await response.json();
 
         return {
