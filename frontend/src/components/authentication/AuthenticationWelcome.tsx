@@ -89,7 +89,7 @@ export default function AuthenticationWelcome ({
                     Already have an account ?
                 </div>
                 <PrimaryButton size="small" onClick={onEmailLogin}>
-                    Login
+                    log in
                 </PrimaryButton>
             </div>
         </div>
