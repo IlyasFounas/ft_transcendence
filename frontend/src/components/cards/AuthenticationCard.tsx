@@ -10,7 +10,6 @@ export default function AuthenticationCard ({
             relative
             flex
             flex-col
-            min-w-xs
             min-h-140
             rounded-4xl
             bg-surface-base
@@ -20,8 +19,11 @@ export default function AuthenticationCard ({
             
             px-7
             py-10
-    
-            sm:w-136
+            
+            w-full
+            max-w-md
+            min-w-0
+            sm:min-w-136
             sm:min-h-125
 
             md:pt-15
