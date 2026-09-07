@@ -16,7 +16,7 @@ type Game struct {
 	Timer		int64 		`bun:"timer,notnull"`
 	RoundTotal 	int64 		`bun:"round_total,notnull"`
 	Finished	bool 		`bun:"finished"`
-	PlayerNb	int64 		`bun:"player_nb,notnull"`
+	PlayerNb	int64 		`bun:"player_nb,notnull,check:player_nb <> 0"`
 	CreatedAt   time.Time	`bun:"created_at,default:current_timestamp"`
 	
 	LocationIDs []int64		`bun:"location_ids,type:jsonb" json:"location_ids"`
