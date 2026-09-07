@@ -62,6 +62,10 @@ func main() {
 		IdleTimeout:  120 * time.Second,
 	}
 
+	// 4 bis. Run the hub websocket
+	// hub := NewHub()
+	// go hub.Run()
+	
 	// 5. Run the server in a goroutine to allow graceful shutdown
 	go func() {
 		log.Println("Starting server and listening on :8080...")

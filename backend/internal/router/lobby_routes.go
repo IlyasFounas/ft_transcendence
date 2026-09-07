@@ -2,7 +2,7 @@ package router
 
 import (
 	"backend/internal/handlers"
-	"backend/internal/websockets/client"
+	"backend/internal/websockets/lobby"
 	"github.com/gin-gonic/gin"
 	"backend/internal/middleware"
 )

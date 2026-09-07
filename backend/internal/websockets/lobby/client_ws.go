@@ -6,7 +6,7 @@ import (
     "strconv"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
-	"backend/internal/websockets/hub"
+	// "backend/internal/websockets/lobby"
 )
 
 var upgrader = websocket.Upgrader {
@@ -21,10 +21,10 @@ type ClientWs struct {
     userId  int64
     lobbyId int64
     gameId  int64
-    hub  *hub_ws.HubWs
+    hub  *HubWs
 }
 
-func NewClient(hub *hub_ws.HubWs, conn *websocket.Conn,
+func NewClient(hub *HubWs, conn *websocket.Conn,
     userId int64, lobbyId int64, gameId int64) *ClientWs {
     return &ClientWs{conn: conn,
     send: make(chan []byte, 256),
@@ -58,7 +58,7 @@ func (c *ClientWs) ReadPump() {
     }
 }
 
-func WsJoinLobby(hub *hub_ws.HubWs) gin.HandlerFunc {
+func WsJoinLobby(hub *HubWs) gin.HandlerFunc {
 	return func(c *gin.Context) {
         // userId, ok := c.Get("userId")
         // if !ok {
@@ -66,21 +66,6 @@ func WsJoinLobby(hub *hub_ws.HubWs) gin.HandlerFunc {
         //         gin.H{"message": "The userId is empty"})
         //     return
         // }
-        userId, err := strconv.ParseInt(c.Query("userId"), 10, 64)
-        if err != nil {
-            c.JSON(http.StatusBadRequest, gin.H{"message": "invalid userId"})
-            return
-        }
-        lobbyId, err := strconv.ParseInt(c.Query("lobbyId"), 10, 64)
-        if err != nil {
-            c.JSON(http.StatusBadRequest, gin.H{"message": "invalid lobbyId"})
-            return
-        }
-        gameId, err := strconv.ParseInt(c.Query("gameId"), 10, 64)
-        if err != nil {
-            c.JSON(http.StatusBadRequest, gin.H{"message": "invalid gameId"})
-            return
-        }
 
         // Check if the player is in the right lobby
         // We pass to an HTTP request to a websocket connexion
@@ -89,9 +74,8 @@ func WsJoinLobby(hub *hub_ws.HubWs) gin.HandlerFunc {
             log.Println(err)
             return
         }
-        // defer conn.Close()
         client := NewClient(hub, conn, userId, lobbyId, gameId)
-        hub.Register <- client
+        client.hub.register <- client
         go client.WritePump()
         client.ReadPump()
     }

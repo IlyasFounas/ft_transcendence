@@ -296,7 +296,9 @@ func (h *UserHandler) GoogleCallback() gin.HandlerFunc {
 		if !ok {
 			return
 		}
-		c.JSON(http.StatusOK, gin.H{"message": "success", "Authorization": tokenObj.Token})
+		// url := fmt.Sprintf("http://localhost:5130/home?Authorization=%s", tokenObj.Token)
+		url := fmt.Sprintf("http://localhost:5130/home")
+		c.Redirect(http.StatusFound, url)
 	}
 }
 
