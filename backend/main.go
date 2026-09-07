@@ -17,6 +17,7 @@ import (
 	"backend/internal/repositories"
 	"backend/internal/router"
 	"github.com/gin-gonic/gin"
+	"backend/internal/websockets/lobby"
 )
 
 /**
@@ -52,8 +53,12 @@ func main() {
 	// 3. Instanciation of handlers
 	h := handlers.NewHandlers(repo)
 
-	// 4. Router setup
-	r := router.NewRouter(h)
+	// 4. Run the hub websocket
+	hub := lobby_ws.NewHub()
+	go hub.Run()
+
+	// 4.bis Router setup
+	r := router.NewRouter(h, hub)
 	srv := &http.Server{
 		Addr:         ":8080",
 		Handler:      r,
@@ -62,9 +67,6 @@ func main() {
 		IdleTimeout:  120 * time.Second,
 	}
 
-	// 4 bis. Run the hub websocket
-	// hub := NewHub()
-	// go hub.Run()
 	
 	// 5. Run the server in a goroutine to allow graceful shutdown
 	go func() {

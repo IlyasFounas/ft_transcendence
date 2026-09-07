@@ -3,7 +3,7 @@ package lobby_ws
 import (
     "log"
     "net/http"
-    "strconv"
+    // "strconv"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	// "backend/internal/websockets/lobby"
@@ -44,7 +44,7 @@ func (c *ClientWs) WritePump() {
 }
 
 func (c *ClientWs) ReadPump() {
-    defer func() { c.hub.Unregister <- c }()
+    defer func() { c.hub.unregister <- c }()
     defer c.conn.Close()
     for {
         msgType, data, err := c.conn.ReadMessage()
@@ -74,7 +74,8 @@ func WsJoinLobby(hub *HubWs) gin.HandlerFunc {
             log.Println(err)
             return
         }
-        client := NewClient(hub, conn, userId, lobbyId, gameId)
+        // client := NewClient(hub, conn, userId, lobbyId, gameId)
+        client := NewClient(hub, conn, 1, 1, 1)
         client.hub.register <- client
         go client.WritePump()
         client.ReadPump()

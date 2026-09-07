@@ -1,8 +1,7 @@
 package lobby_ws
 
-import (
-	// "backend/internal/websockets/lobby"
-)
+// import (
+// )
 
 type HubWs struct {
 	clients map[int64]map[*ClientWs]bool
@@ -11,7 +10,9 @@ type HubWs struct {
 }
 
 func NewHub() *HubWs {
-	return &HubWs{clients: make(map[int64]map[*ClientWs]bool)}
+	return &HubWs{clients: make(map[int64]map[*ClientWs]bool),
+		register: make(chan *ClientWs),
+		unregister: make(chan *ClientWs)}
 }
 
 func (h *HubWs) registerClient(client *ClientWs) {
@@ -21,10 +22,9 @@ func (h *HubWs) registerClient(client *ClientWs) {
 	h.clients[client.lobbyId][client] = true
 }
 
-func (h *HubWs) unregisterClient() {
+func (h *HubWs) unregisterClient(client *ClientWs) {
 	if _, ok := h.clients[client.lobbyId]; ok {
-		h.clients[client.lobbyId] = make(map[*ClientWs]bool)
-		delete()
+		delete(h.clients[client.lobbyId], client)
 	}
 }
 
@@ -32,9 +32,9 @@ func (h *HubWs) Run() {
 	for {
 		select {
 		case client := <- h.register:
-			registerClient(client)
+			h.registerClient(client)
 		case client := <- h.unregister:
-			// do smth
+			h.unregisterClient(client)
 		}
 	}
 }

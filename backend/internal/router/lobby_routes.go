@@ -8,7 +8,7 @@ import (
 )
 
 func registerLobbyRoutes(r *gin.Engine, h *handlers.GameHandler,
-	hl *handlers.LobbyHandler) {
+	hl *handlers.LobbyHandler, hub *lobby_ws.HubWs) {
 	private := r.Group("/")
 	private.Use(middleware.AuthMiddleWare())
 	{
@@ -20,5 +20,5 @@ func registerLobbyRoutes(r *gin.Engine, h *handlers.GameHandler,
 		private.GET("/lobby/allPlayers", hl.AllPlayers())
 	}
 	public := r.Group("/")
-	public.GET("/ws/lobby/join", client_ws.WsJoinLobby())
+	public.GET("/ws/lobby/join", lobby_ws.WsJoinLobby(hub))
 }
