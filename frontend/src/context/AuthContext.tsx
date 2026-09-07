@@ -9,7 +9,11 @@ interface AuthContextType {
     isAuthLoading: boolean;
     isAuthenticated: boolean;
     login: (accessToken: string) => Promise<void>;
-    refreshAccessToken: () => Promise<boolean>;
+    refreshAccessToken: () => Promise<string | null>;
+    authFetch: (url: string, options?: RequestInit) => Promise<{
+        status: number,
+        data: any,
+    } | null >;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -18,7 +22,8 @@ const AuthContext = createContext<AuthContextType>({
     isAuthLoading: true,
     isAuthenticated: false,
     login: async () => {},
-    refreshAccessToken: async () => false,
+    refreshAccessToken: async () => null,
+    authFetch: async () => null,
 });
 
 function AuthProvider({children}: {children: ReactNode}) {
@@ -49,14 +54,11 @@ function AuthProvider({children}: {children: ReactNode}) {
     };
 
     const refreshAccessToken = async () => {
-        const options: RequestInit = {
-        method: "GET",
-        }
 
-        const result = await apiFetch("/api/auth/refresh", options);
+        const result = await apiFetch("/api/auth/refresh");
 
         if (result === null) {
-            return false;
+            return null;
         }
         if (result.status === 200)
         {
@@ -65,9 +67,34 @@ function AuthProvider({children}: {children: ReactNode}) {
             
             await getUser(newToken);
 
-            return true;
+            return newToken;
         }
-        return false;
+        return null;
+    }
+
+    const authFetch = async (
+        url: string,
+        options: RequestInit = {}
+    ) => {
+
+        if (!accessToken) {
+            return null;
+        }
+
+        const result = await apiFetch(url, options, accessToken);
+        if (result === null) {
+            return null;
+        }
+        if (result.status !== 401) {
+            return result;
+        }
+
+        const newToken = await refreshAccessToken();
+        if (newToken === null) {
+            return null;
+        }
+
+        return await apiFetch(url, options, newToken);
     }
     
     useEffect(() => {
@@ -91,6 +118,7 @@ function AuthProvider({children}: {children: ReactNode}) {
                 isAuthenticated,
                 login,
                 refreshAccessToken,
+                authFetch,
             }}
         >
             {children}
