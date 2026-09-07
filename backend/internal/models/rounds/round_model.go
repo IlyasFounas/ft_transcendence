@@ -1,6 +1,7 @@
 package rounds
 
 import(
+	"time"
 	"github.com/uptrace/bun"
 	"backend/internal/models/locations"
 	"backend/internal/models/games"
@@ -16,5 +17,6 @@ type Round struct {
 	Game		*games.Game				`bun:"rel:belongs-to,join:game_id=id"`
 	LocationId	int64					`bun:"loc_id,notnull"` // TODO join + unique ,unique:idx_loc_game
 	Location	*locations.Location		`bun:"rel:belongs-to,join:loc_id=location_id"`
-	// StartedAt	time.Time				`bun:"started_at,notnull"`
+	StartedAt	time.Time				`bun:"started_at,notnull"`
+	// Timer		time.Timer				`bun:"timer,notnull"` //TODO a implementer directement quand on cree un round, se stoppe a la fin du timer, ou indique le temps auquel a guess chaque user et permet de calculer le temps restant dans le guess (entre la fin du timer et le moment du guess)
 }

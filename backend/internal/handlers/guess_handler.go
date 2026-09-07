@@ -58,12 +58,12 @@ func calculateScore(createdGuess *guesses.Guess) () {
 	createdGuess.Score = distance * 1000 / haversine.EarthDiameterMeters //put score on base 1000 (ex: if the distance is 0, the score is 1000, if the distance is 12742176, the score is 0)
 
 	//multiplier time left (0 to 1, based on time max being one, and time min being zero, and time left being the difference between the time the time at the moment of validating guess and the time max)
-	totalTime := int64(120) // TODO: maxtime to be taken from game table !
-	createdGuess.TimeLeft = 30 //TODO: to be replaced by the actual time left from the request body (in seconds)
-	createdGuess.Score *= createdGuess.TimeLeft // not in one line because it is not a float64, and does not handle decimals
+	totalTime := int64(120000000000) // TODO:  get total duration in nanoseconds (from game table where it is stored in seconds) here: maxtime to be taken from game table !
+	createdGuess.TimeLeft = 30000000000 //TODO: calculate based on StoppedAt time.Time (given when user guesses , and StartedAt time.Time stored in round table)
+	createdGuess.Score *= createdGuess.TimeLeft.Nanoseconds() // not in one line because it is not a float64, and does not handle decimals
 	createdGuess.Score /= totalTime
 
-	// multiplier correct country code
+	// multiplier correct country code //TODO : diviser plutot le score par 2 si pays incorrect
 	if createdGuess.CountryFound == true {
 		createdGuess.Score *= 2
 	}
@@ -76,6 +76,9 @@ func calculateScore(createdGuess *guesses.Guess) () {
 		createdGuess.Streak = 0
 	} 
 }
+
+// TODO mettre le score sur une base de 10000 points max (2 dividers(temps et pays) + un multiplier(streaks))
+// TODO ajouter un baseScore vs multiplierScore pour garder le baseScore pour le calcul des XP (xp = total de tous les baseScore de toutes les games jouees)
 
 // POST /guesses
 func (h *GuessHandler) AddGuess(c *gin.Context) {
