@@ -42,8 +42,12 @@ export default function AuthenticationLogin ({
             setError("Unable to connect to the server. Please try again.");
             return;
         }
-        if (result.status === 401 || result.status === 500) {
+        if (result.status === 401) {
             setError(result.data.message);
+            return;
+        }
+        if (result.status === 500) {
+            setError(result.data.state);
             return;
         }
         if (result.status === 200) {
