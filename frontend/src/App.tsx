@@ -8,6 +8,11 @@ import LeaderboardPage from './pages/LeaderboardPage';
 import ProfilePage from './pages/ProfilePage';
 import { ChatLayout } from './layouts/ChatLayout';
 import { MainLayout } from './layouts/MainLayout';
+import MultiplayerResultsPage from './pages/game/MultiplayerResultsPage';
+import SoloResultsPage from './pages/game/SoloResultsPage';
+import GameLayout from './layouts/GameLayout';
+import GamePlayPage from './pages/game/GamePlayPage';
+import LobbyPage from './pages/LobbyPage';
 
 function App() {
     return (
@@ -23,7 +28,13 @@ function App() {
             <Route element={<MainLayout />}>
                 <Route path="/game" element={<GamePage/>} />
                 <Route path="/components" element={<ComponentsPage/>} />
+				<Route path="/lobby" element={< LobbyPage/>}/>
               </Route>
+			<Route element={<GameLayout />}>
+				<Route path="/multiresults" element={<MultiplayerResultsPage/>} />
+				<Route path="/soloresults" element={<SoloResultsPage/>} />
+			</Route>
+			<Route path="/gameplay" element={<GamePlayPage />} />
             </Routes>
         </Router>
     )
