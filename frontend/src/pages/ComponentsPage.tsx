@@ -16,8 +16,6 @@ import AuthenticationLogin from '../components/authentication/AuthenticationLogi
 import PrimaryButton from '../components/buttons/PrimaryButton.tsx';
 import SecondaryButton from '../components/buttons/SecondaryButton.tsx';
 import Avatar from '../components/primitives/Avatar.tsx';
-import GameResultRow from '../components/results/GameResultRow.tsx';
-import LobbyTestPage from '../components/cards/LobbyTestPage.tsx';
 import ChatBoxCard from '../components/cards/ChatBox.tsx';
 import Podium from '../components/cards/podium/Podium.tsx';
 
@@ -162,44 +160,6 @@ export default function ComponentPage() {
         </section>
   
         <section className="mb-10">
-          <h2 className="mb-4 text-lg font-bold">Friend Chat Row — Online</h2>
-          <FriendChatRow
-            username="agent tommy"
-            role="Field Analyst"
-            avatar="/avatars/avatar1.png"
-            lastMessage="make[1]: Entering directory '/home/spunyapr/commoncore/ft_transcendence/ft_transcendence'"
-            timestamp="03.45pm"
-            status="online"
-          />
-        </section>
-  
-        <section className="mb-10">
-          <h2 className="mb-4 text-lg font-bold">Friend Chat Row — Offline</h2>
-          <FriendChatRow
-            username="agent tommy"
-            role="Field Analyst"
-            avatar="/avatars/avatar1.png"
-            lastMessage="make[1]: Entering directory '/home/spunyapr/commoncore/ft_transcendence/ft_transcendence'"
-            timestamp="03.45pm"
-            status="offline"
-          />
-        </section>
-  
-        <section className="mb-10">
-          <h2 className="mb-4 text-lg font-bold">
-            Friend Chat Row — In Mission
-          </h2>
-          <FriendChatRow
-            username="agent tommy"
-            role="Field Analyst"
-            avatar="/avatars/avatar1.png"
-            lastMessage="make[1]: Entering directory '/home/spunyapr/commoncore/ft_transcendence/ft_transcendence'"
-            timestamp="03.45pm"
-            status="in-mission"
-          />
-        </section>
-  
-        <section className="mb-10">
           <h2 className="mb-4 text-lg font-bold">Input</h2>
           <Input
             label="Email"
@@ -277,20 +237,6 @@ export default function ComponentPage() {
             Avatar
           </h2>
         <Avatar avatar="/avatars/avatar1.png"></Avatar>
-        </section>
-  
-       <section className="mb-10">
-          <h2 className="mb-4 text-lg font-bold">
-            Game Result Card
-          </h2>
-            <GameResultRow currentRound={1} round={2} distance={256} points={1000} ></GameResultRow>
-        </section>
-  
-       <section className="mb-10">
-          <h2 className="mb-4 text-lg font-bold">
-            Lobby Card
-          </h2>
-            <LobbyTestPage></LobbyTestPage>
         </section>
   
       <section className="mb-10">

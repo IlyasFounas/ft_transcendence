@@ -22,10 +22,10 @@ function App() {
             <Route element={<ChatLayout />}>
                 <Route path="/home" element={<HomePage />} />
                 <Route path="/multiplayer" element={<MultiplayerPage />} />
-                <Route path="/leaderboard" element={<LeaderboardPage />} />
                 <Route path="/profile" element={<ProfilePage />} />
             </Route>
             <Route element={<MainLayout />}>
+                <Route path="/leaderboard" element={<LeaderboardPage />} />
                 <Route path="/game" element={<GamePage/>} />
                 <Route path="/components" element={<ComponentsPage/>} />
 				<Route path="/lobby" element={< LobbyPage/>}/>
