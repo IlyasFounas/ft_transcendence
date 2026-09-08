@@ -10,13 +10,13 @@ export default function JoinOperationCard()
 	}, []);
 
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-   	 	const value = e.target.value.replace(/[^a-zA-Z0-9]/g, "").slice(0, 6);
+   	 	const value = e.target.value.replace(/[^a-zA-Z0-9]/g, "").slice(0, 7);
     	setCode(value);
 	};
 
 	const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
 		if (e.key !== "Enter") return;
-		if (code.length !== 6) {
+		if (code.length !== 7) {
 			console.log ("code invalide", code);
 			return ;
 		}
@@ -32,7 +32,7 @@ export default function JoinOperationCard()
 					ref={inputRef}
 					type="text"
 					inputMode="numeric"
-					maxLength={6}
+					maxLength={7}
 					value={code}
 					onChange={handleChange}
 					onKeyDown={handleKeyDown}
@@ -40,7 +40,7 @@ export default function JoinOperationCard()
 				/>
 
 				<div className="flex gap-4 text-heading-small uppercase">
-					{[0, 1, 2, 3, 4, 5].map((index) => (
+					{[0, 1, 2, 3, 4, 5, 6].map((index) => (
 						<span key={index}>
 							{code[index] ?? "_"}
 						</span>
