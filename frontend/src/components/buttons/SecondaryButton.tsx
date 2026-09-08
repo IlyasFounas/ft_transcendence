@@ -22,8 +22,9 @@ export default function SecondaryButton({ children, onClick, icon, active, class
 			outline outline-1 outline-offset-[-1px]			
 			bg-surface-elevated
 			
-			text-heading-medium
-			
+			lg:text-heading-medium
+			text-body-primary
+
 			shadow-[0_0_6px_rgba(53,223,255,0.5)]
 			
 			uppercase

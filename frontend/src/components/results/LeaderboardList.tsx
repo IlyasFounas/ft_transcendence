@@ -15,7 +15,7 @@ interface LeaderBoardListProps {
 export default function LeaderBoardList({ players, currentPlayerResult, currentUsername, onHoverPlayer}: LeaderBoardListProps) {
 
   return (
-	<div className="flex flex-col gap-4 lg:w-[620px]">
+	<div className="flex flex-col gap-4 w-full">
 		<div className="flex flex-col rounded-[12px] border border-border-default/30 shadow-[0_0_10px_rgba(40,215,255,0.5)] overflow-hidden w-full">
 		<div className=" ">
 			<div className={`z-10 h-[50px] grid grid-cols-[30%_40%_30%] items-center
@@ -24,7 +24,7 @@ export default function LeaderBoardList({ players, currentPlayerResult, currentU
 			<h1 className="px-8">Agent</h1>
 			<h1 className="text-center"> Score</h1>
 			</div>
-			<div className="lg:h-[500px] overflow-y-auto [scrollbar-gutter:stable]">
+			<div className=" h-[250px] md:h-[450px] overflow-y-auto [scrollbar-gutter:stable]">
 
 			{players.map((result) => (
 				<LeaderboardRow
