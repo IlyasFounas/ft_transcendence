@@ -2,7 +2,6 @@ package repositories
 
 import (
 	"backend/internal/models/friends"
-	"errors"
 	"context"
 	"github.com/uptrace/bun"
 )
@@ -22,5 +21,5 @@ func (r *FriendRepository) AddFriend(ctx context.Context, friend *friends.Friend
 	if err != nil {
 		return nil, err
 	}
-	return user, nil
+	return friend, nil
 }

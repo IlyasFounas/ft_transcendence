@@ -55,14 +55,14 @@ func (h *FriendHandler) AddFriend() gin.HandlerFunc {
 			Requester_ID: userId.(int64),
 			Receiver_ID: user.ID,
 		}
-		err = h.friendRepo.AddFriend(c.Request.Context(), friendObj)
+		_, err = h.friendRepo.AddFriend(c.Request.Context(), friendObj)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError,
 				gin.H{"message": "failed to add friend"})
 			return
 		}
 		c.JSON(http.StatusCreated,
-			gin.h{"message": "friend request sent"})
+			gin.H{"message": "friend request sent"})
 	}
 }
 
