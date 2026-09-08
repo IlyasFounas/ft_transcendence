@@ -21,7 +21,7 @@ func init() {
 	}, func(ctx context.Context, db *bun.DB) error {
 		fmt.Print(" [down migration] ")
 		_, err := db.NewDropTable().
-			IfNotExists().
+			IfExists().
 			Model((*friends.Friend)(nil)).
 			Exec(ctx)
 		if err != nil {
