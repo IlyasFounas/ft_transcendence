@@ -17,6 +17,7 @@ import (
 	"backend/internal/repositories"
 	"backend/internal/router"
 	"github.com/gin-gonic/gin"
+	"github.com/sams96/rgeo"
 )
 
 /**
@@ -50,7 +51,11 @@ func main() {
 	}
 
 	// 3. Instanciation of handlers
-	h := handlers.NewHandlers(repo)
+	reverser, err := rgeo.New(rgeo.Countries110)
+	if err != nil {
+		log.Fatalf("Failed to initialize country reverser: %v", err)
+	}
+	h := handlers.NewHandlers(repo, reverser)
 
 	// 4. Router setup
 	r := router.NewRouter(h)

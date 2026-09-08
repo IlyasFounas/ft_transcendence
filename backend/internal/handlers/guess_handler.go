@@ -10,6 +10,7 @@ import (
 	"backend/internal/tools/haversine"
 	"backend/internal/models/guesses"
 	"backend/internal/repositories"
+	"github.com/sams96/rgeo"
 )
 
 // GuessGetter — methods expected from the repository by the handler
@@ -35,11 +36,13 @@ type GuessGetter interface {
 }
 
 type GuessHandler struct {
-	repo GuessGetter
+	guessRepo GuessGetter;
+	roundRepo RoundGetter;
+	reverser *rgeo.Rgeo;
 }
 
-func NewGuessHandler(repo GuessGetter) *GuessHandler {
-	return &GuessHandler{repo: repo}
+func NewGuessHandler(guessRepo GuessGetter, roundRepo RoundGetter, reverser *rgeo.Rgeo) *GuessHandler {
+	return &GuessHandler{guessRepo: guessRepo, roundRepo: roundRepo, reverser: reverser}
 }
 
 // Calculates distance based on lat + long compared to actual location

@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	// OUR PACKAGE
 	"backend/internal/repositories"
+	"github.com/sams96/rgeo"
 )
 
 type Handlers struct {
@@ -16,7 +16,7 @@ type Handlers struct {
 }
 
 // NewHandlers instanciates and assembles all the handlers
-func NewHandlers(repo *repositories.Repositories) *Handlers {
+func NewHandlers(repo *repositories.Repositories, reverser *rgeo.Rgeo) *Handlers {
 	tokenHandler := NewTokenHandler(repo.User, repo.AToken, repo.RToken)
 	return &Handlers{
 		Location:	NewLocationHandler(repo.Location),
@@ -25,6 +25,6 @@ func NewHandlers(repo *repositories.Repositories) *Handlers {
 		Game:		NewGameHandler(repo.Game, repo.Lobby, repo.Location),
 		Lobby:		NewLobbyHandler(repo.Game, repo.Lobby, repo.User),
 		Round:		NewRoundHandler(repo.Round, repo.Location),
-		Guess:		NewGuessHandler(repo.Guess),
+		Guess:		NewGuessHandler(repo.Guess, repo.Round, reverser),
 	}
 }
