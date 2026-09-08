@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"backend/internal/models/games"
 	"backend/internal/repositories"
-	"backend/internal/tools/join_code"
+	"backend/internal/tools/code_generation"
 )
 
 type GameHandler struct {
@@ -96,7 +96,7 @@ func (h *GameHandler) CreateLobby() gin.HandlerFunc {
 		lobbyObj := &games.Lobby{UserId: userId.(int64),
 								 IsCreator: true}
 		for i := 0; i < 50; i++ {
-			joinCode, err := join_code.RandGenerate()
+			joinCode, err := code_generation.RandGenerate(4)
 			if err != nil {
 				c.JSON(http.StatusUnauthorized,
 					gin.H{"message": "failed"})

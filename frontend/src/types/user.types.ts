@@ -14,3 +14,15 @@ export interface Friend {
     lastMessage: string;
     timestamp: string;
 }
+
+export interface User {
+    ID: number;
+    Login: string | null;
+    Username: string;
+    GoogleId: string | null;
+    Email: string;
+    Is_verified: boolean;
+    Avatar: string | null;
+    CreatedAt: string;
+    Lobby: unknown[] | null;
+}

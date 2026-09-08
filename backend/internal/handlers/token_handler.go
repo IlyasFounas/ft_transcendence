@@ -16,6 +16,7 @@ import (
 	"backend/internal/models/users/tokens"
 	"backend/internal/repositories"
 	"backend/internal/tools/token_generation"
+	"backend/internal/tools/cookie"
 )
 
 type TokenHandler struct {
@@ -79,7 +80,11 @@ func (h *TokenHandler) CreateRefreshToken(ctx context.Context, userId int64) (st
 // we start a token in the db to refresh a short connection token that we give to the client
 func (h *TokenHandler) RefreshToken() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		encodedKey := c.GetHeader("Refresh-Token")
+		encodedKey, err := c.Cookie("refresh_token")
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"message": "Ypu have to login"})
+			return
+		}
 		hashedKey := sha256.Sum256([]byte(encodedKey))
 		hashToken := fmt.Sprintf("%x", hashedKey)
 		rToken, err := h.rTokenRepo.RefreshToken(c.Request.Context(), hashToken)
@@ -106,9 +111,10 @@ func (h *TokenHandler) RefreshToken() gin.HandlerFunc {
 				gin.H{"message": "You have to login"})
 			return
 		}
+		cookie.Set(c, "/api/auth", "refresh_token",
+		newEncodedKey, 7*24*time.Hour, true)
         c.JSON(http.StatusOK,gin.H{
 			"message": "success",
-			"Authorization": newToken.Token,
-			"Refresh-Token": newEncodedKey})
+			"Authorization": newToken.Token})
 	}
 }
