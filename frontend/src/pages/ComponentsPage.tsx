@@ -8,7 +8,6 @@ import FriendRequestRow from '../components/rows/FriendRequestRow.tsx';
 import StatusBadge from '../components/primitives/StatusBadge.tsx';
 import UserStatus from '../components/user/UserStatus.tsx';
 import FriendListRow from '../components/rows/FriendListRow.tsx';
-import FriendChatRow from '../components/rows/FriendChatRow.tsx';
 import AuthenticationCard from '../components/cards/AuthenticationCard.tsx';
 import AuthenticationWelcome from '../components/authentication/AuthenticationWelcome.tsx';
 import Input from '../components/primitives/Input.tsx';
@@ -158,44 +157,6 @@ export default function ComponentPage() {
             avatar="/avatars/avatar1.png"
             status="offline"
             rank={33}
-          />
-        </section>
-  
-        <section className="mb-10">
-          <h2 className="mb-4 text-lg font-bold">Friend Chat Row — Online</h2>
-          <FriendChatRow
-            username="agent tommy"
-            role="Field Analyst"
-            avatar="/avatars/avatar1.png"
-            lastMessage="make[1]: Entering directory '/home/spunyapr/commoncore/ft_transcendence/ft_transcendence'"
-            timestamp="03.45pm"
-            status="online"
-          />
-        </section>
-  
-        <section className="mb-10">
-          <h2 className="mb-4 text-lg font-bold">Friend Chat Row — Offline</h2>
-          <FriendChatRow
-            username="agent tommy"
-            role="Field Analyst"
-            avatar="/avatars/avatar1.png"
-            lastMessage="make[1]: Entering directory '/home/spunyapr/commoncore/ft_transcendence/ft_transcendence'"
-            timestamp="03.45pm"
-            status="offline"
-          />
-        </section>
-  
-        <section className="mb-10">
-          <h2 className="mb-4 text-lg font-bold">
-            Friend Chat Row — In Mission
-          </h2>
-          <FriendChatRow
-            username="agent tommy"
-            role="Field Analyst"
-            avatar="/avatars/avatar1.png"
-            lastMessage="make[1]: Entering directory '/home/spunyapr/commoncore/ft_transcendence/ft_transcendence'"
-            timestamp="03.45pm"
-            status="in-mission"
           />
         </section>
   

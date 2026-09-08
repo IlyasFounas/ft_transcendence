@@ -1,30 +1,32 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import GamePage from './pages/game/GamePage'
-import Home from './pages/HomePage' 
 import ComponentsPage from './pages/ComponentsPage';
-import SoloResultPage from './pages/game/SoloResultsPage';
-import MultiplayerResultsPagev1 from './pages/game/MultiplayerResultsPageV1';
-import MultiplayerResultsPagev2 from './pages/game/MultiplayerResultsPageV2';
-import LobbyPage from './pages/lobby/LobbyPage';
-import LobbyRoomPage from './pages/lobby/LobbyRoomPage';
-import GamePlayPage from './pages/game/GamePlayPage';
+import LandingPage from './pages/LandingPage';
+import HomePage from './pages/HomePage';
+import MultiplayerPage from './pages/MultiplayerPage';
+import LeaderboardPage from './pages/LeaderboardPage';
+import ProfilePage from './pages/ProfilePage';
+import { ChatLayout } from './layouts/ChatLayout';
+import { MainLayout } from './layouts/MainLayout';
 
 function App() {
-  return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Home/>} />
-        <Route path="/game" element={<GamePage/>} />
-        <Route path="/components" element={<ComponentsPage/>} />
-        <Route path="/lobby" element={<LobbyPage/>} />
-        <Route path="/lobbyroom" element={<LobbyRoomPage/>} />
-        <Route path="/gameplay" element={<GamePlayPage/>} />
-        <Route path="/soloresults" element={<SoloResultPage/>} />
-		<Route path="/multiresultsv1" element={<MultiplayerResultsPagev1/>} />
-		<Route path="/multiresultsv2" element={<MultiplayerResultsPagev2/>} />
-      </Routes>
-    </Router>
-  )
+    return (
+        <Router>
+          <Routes>
+            <Route path="/" element={<LandingPage/>} />
+            <Route element={<ChatLayout />}>
+                <Route path="/home" element={<HomePage />} />
+                <Route path="/multiplayer" element={<MultiplayerPage />} />
+                <Route path="/leaderboard" element={<LeaderboardPage />} />
+                <Route path="/profile" element={<ProfilePage />} />
+            </Route>
+            <Route element={<MainLayout />}>
+                <Route path="/game" element={<GamePage/>} />
+                <Route path="/components" element={<ComponentsPage/>} />
+              </Route>
+            </Routes>
+        </Router>
+    )
 }
 
 export default App;
