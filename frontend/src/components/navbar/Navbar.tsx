@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { NavLink } from "react-router-dom";
 import type { UserStatusType } from "../../types/user.types";
+import { useAuth } from "../../context/AuthContext";
+
 import NavbarUser from "./NavbarUser";
 import NavbarMenuButton from "./NavbarMenuButton";
 import NavbarMobileMenu from "./NavbarMobileMenu";
 import NavbarChatButton from "./NavbarChatButton";
 
 interface NavbarProps {
-    username: string;
-    avatar: string;
     status: UserStatusType;
     isChatOpen?: boolean;
     onToggleChat?: () => void;
@@ -16,8 +16,6 @@ interface NavbarProps {
 }
 
 export function Navbar({
-    username,
-    avatar,
     status,
     isChatOpen,
     onToggleChat,
@@ -25,6 +23,8 @@ export function Navbar({
 }: NavbarProps) {
 
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const { user } = useAuth();
+
     return (
         <nav
             className="
@@ -44,7 +44,7 @@ export function Navbar({
                 px-8
             ">
                 {/* logo */}
-                <div className="w-75">
+                <div className="w-50 xl:w-60">
                     <NavLink to="/home">
                         <img
                             src="/logos/atlas-logo.png"
@@ -60,7 +60,8 @@ export function Navbar({
                     flex
                     items-center
                     justify-center
-                    gap-20
+                    gap-8
+                    xl:gap-20
                     text-heading-small
                     text-text-primary
                     uppercase
@@ -118,11 +119,11 @@ export function Navbar({
                 </div>
 
                 {/* profile */}
-                <div className="w-75 flex justify-end">
+                <div className="w-50 xl:w-60 flex justify-end">
                     <NavbarUser
-                        username={username}
+                        username={`Agent ${user?.Username}`}
                         status={status}
-                        avatar={avatar}
+                        avatar={user?.Avatar ?? "/avatars/avatar1.png"}
                     />
                 </div>
             </div>
