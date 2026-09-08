@@ -19,6 +19,8 @@ type RoundGetter interface {
 	GetRoundNb(ctx context.Context, game_id int64) (int64, error)
 	CheckLastRound(ctx context.Context, game_id int64, round_nb int64) (bool, error)
 	GetLocationID(ctx context.Context, game_id int64, round_nb int64) (int64, error)
+	GetCoordinatesByLocationID(ctx context.Context, location_id int64) (float64, float64, error)
+	GetCCByLocationID(ctx context.Context, location_id int64) (string, error)
 	// DeleteByID(ctx context.Context, round_id int64) error
 }
 
@@ -27,13 +29,13 @@ type RoundHandler struct {
 	locationRepo *repositories.LocationRepository
 }
 
-func NewRoundHandler(roundRepo RoundGetter, locationRepo *repositories.LocationRepository) *RoundHandler {
-	return &RoundHandler{roundRepo: roundRepo, locationRepo: locationRepo}
+func NewRoundHandler(roundRepo RoundGetter) *RoundHandler {
+	return &RoundHandler{roundRepo: roundRepo}
 }
 
 // POST /rounds
 func (h *RoundHandler) NextRound(c *gin.Context) {
-	log.Println("NewRound handler called\n") //TODO to remove
+	log.Println("NewRound handler called") //TODO to remove
 	ctx := c.Request.Context()
 
 	var round rounds.Round

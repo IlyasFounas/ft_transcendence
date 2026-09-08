@@ -23,6 +23,7 @@ type GuessGetter interface {
 	GetCountryCodeByID(ctx context.Context, guess_id int64) (string, error)
 	GetDistanceByID(ctx context.Context, guess_id int64) (int64, error)
 	GetScoreByID(ctx context.Context, guess_id int64) (int64, error)
+	GetLocationIDByRoundID(ctx context.Context, round_id int64) (int64, error)
 	// GetUserIDByID(ctx context.Context, guess_id int64) (int64, error)
 	// GetRoundIDByID(ctx context.Context, guess_id int64) (int64, error)
 	// GetByRoundID(ctx context.Context, round_id int64) ([]*guesses.Guess, error)
@@ -56,17 +57,29 @@ func calculateDistance(location, guessCoords haversine.Coordinates) (int64) {
 }
 
 // Calculate score based on distance and multipliers/dividers (time, cc, streaks)
-func calculateScore(createdGuess *guesses.Guess) () {
+func calculateScore(createdGuess *guesses.Guess) {
+	if createdGuess.Distance < 0 {
+		log.Printf("Error: negative distance %d for guess", createdGuess.Distance)
+		createdGuess.Score = 0
+		return
+	}
+
+	if createdGuess.Distance > haversine.EarthDiameterMeters {
+		log.Printf("Error: distance %d exceeds Earth's diameter for guess", createdGuess.Distance)
+		createdGuess.Score = 0
+		return
+	}
+
 	distance := haversine.EarthDiameterMeters - createdGuess.Distance
 	createdGuess.Score = distance * 1000 / haversine.EarthDiameterMeters //put score on base 1000 (ex: if the distance is 0, the score is 1000, if the distance is 12742176, the score is 0)
 
 	//multiplier time left (0 to 1, based on time max being one, and time min being zero, and time left being the difference between the time the time at the moment of validating guess and the time max)
 	totalTime := int64(120000000000) // TODO:  get total duration in nanoseconds (from game table where it is stored in seconds) here: maxtime to be taken from game table !
-	createdGuess.TimeLeft = 30000000000 //TODO: calculate based on StoppedAt time.Time (given when user guesses , and StartedAt time.Time stored in round table)
+	createdGuess.TimeLeft = 120000000000 //TODO: calculate based on StoppedAt time.Time (given when user guesses , and StartedAt time.Time stored in round table)
 	createdGuess.Score *= createdGuess.TimeLeft.Nanoseconds() // not in one line because it is not a float64, and does not handle decimals
 	createdGuess.Score /= totalTime
 
-	// multiplier correct country code //TODO : diviser plutot le score par 2 si pays incorrect
+	// multiplier correct country code
 	if createdGuess.CountryFound == true {
 		createdGuess.Score *= 2
 	}
@@ -80,7 +93,6 @@ func calculateScore(createdGuess *guesses.Guess) () {
 	} 
 }
 
-// TODO mettre le score sur une base de 10000 points max (2 dividers(temps et pays) + un multiplier(streaks))
 // TODO ajouter un baseScore vs multiplierScore pour garder le baseScore pour le calcul des XP (xp = total de tous les baseScore de toutes les games jouees)
 
 // POST /guesses
@@ -93,22 +105,69 @@ func (h *GuessHandler) AddGuess(c *gin.Context) {
 		return
 	}
 
-	createdGuess, err := h.repo.Create(ctx, &guess)
+	if guess.Lat == nil || guess.Long == nil {
+    	c.JSON(http.StatusBadRequest, gin.H{"error": "latitude and longitude must be provided"})
+    	return
+	}
+	if guess.RoundID == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "round_id must be provided"})
+		return
+	}
+
+	locationID, err := h.guessRepo.GetLocationIDByRoundID(ctx, guess.RoundID)
+	if err != nil {
+		log.Printf("Error getting location ID for round %d: %v", guess.RoundID, err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get location ID for round"})
+		return
+	}
+	log.Printf("Location ID for round %d: %d", guess.RoundID, locationID) // TODO: remove this log after testing
+	baseLat, baseLong, err := h.roundRepo.GetCoordinatesByLocationID(ctx, locationID)
+	if err != nil {
+		log.Printf("Error getting base coordinates for round %d: %v", guess.RoundID, err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get base coordinates for round"})
+		return
+	}
+	log.Printf("Base coordinates for round %d: (%f, %f)", guess.RoundID, baseLat, baseLong) // TODO: remove this log after testing
+	log.Printf("Guess coordinates: (%f, %f)", *guess.Lat, *guess.Long) // TODO: remove this log after testing
+
+	//get cc using locationID
+	baseCC, err := h.roundRepo.GetCCByLocationID(ctx, locationID)
+	if err != nil {
+		log.Printf("Error getting country code for location %d: %v", locationID, err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get country code for location"})
+		return
+	}
+	log.Printf("Country code for location %d: %s", locationID, baseCC) // TODO: remove this log after testing
+
+	//get cc using guess coordinates and package georeverse
+	loc, err := h.reverser.ReverseGeocode([]float64{*guess.Long, *guess.Lat})
+	if err != nil {
+		log.Printf("Error reverse geocoding guess coordinates (%f, %f): %v", *guess.Lat, *guess.Long, err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not reverse geocode guess coordinates"})
+		return
+	}
+	guess.CC = loc.CountryCode2
+	log.Printf("Country code for this guess: %s", guess.CC) // TODO: remove this log after testing
+	if guess.CC == baseCC {
+		guess.CountryFound = true
+	} 
+
+	// Calculate distance and score before persisting
+	guess.Distance = calculateDistance(haversine.Coordinates{Lat: baseLat, Lon: baseLong}, haversine.Coordinates{Lat: *guess.Lat, Lon: *guess.Long})
+	calculateScore(&guess)
+
+	createdGuess, err := h.guessRepo.Create(ctx, &guess)
 	if err != nil {
 		log.Printf("Error creating guess: %v", err)
+		// to check if it is a unique constraint violation (means user already guessed for this round)
+		if errors.Is(err, repositories.ErrGuessNotFound) || err.Error() == "pq: duplicate key value violates unique constraint" {
+			c.JSON(http.StatusConflict, gin.H{"error": "user has already submitted a guess for this round"})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not create guess"})
 		return
 	}
 
-	if createdGuess.Lat == nil || createdGuess.Long == nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": "latitude and longitude must be provided"})
-        return
-    }
-	
-	createdGuess.Distance = calculateDistance(haversine.Coordinates{Lat: 51.45, Lon: 1.15}, haversine.Coordinates{Lat: *createdGuess.Lat, Lon: *createdGuess.Long})
-	// TODO replace with actual location coordinates from the database using the round_id>location_id
-
-	calculateScore(createdGuess)
 	c.JSON(http.StatusCreated, createdGuess)
 }
 
@@ -122,7 +181,7 @@ func (h *GuessHandler) GetGuessByID(c *gin.Context) {
 		return
 	}
 
-	loc, err := h.repo.GetByID(ctx, guessID)
+	loc, err := h.guessRepo.GetByID(ctx, guessID)
 	if err != nil {
 		if errors.Is(err, repositories.ErrGuessNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "guess not found"})
@@ -146,7 +205,7 @@ func (h *GuessHandler) GetGuessCoordinates(c *gin.Context) {
 		return
 	}
 
-	lat, err := h.repo.GetLatitudeByID(ctx, guessID)
+	lat, err := h.guessRepo.GetLatitudeByID(ctx, guessID)
 	if err != nil {
 		if errors.Is(err, repositories.ErrGuessNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "guess not found"})
@@ -157,7 +216,7 @@ func (h *GuessHandler) GetGuessCoordinates(c *gin.Context) {
 		return
 	}
 
-	long, err := h.repo.GetLongitudeByID(ctx, guessID)
+	long, err := h.guessRepo.GetLongitudeByID(ctx, guessID)
 	if err != nil {
 		if errors.Is(err, repositories.ErrGuessNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "guess not found"})
@@ -181,7 +240,7 @@ func (h *GuessHandler) GetGuessLatitude(c *gin.Context) {
 		return
 	}
 
-	lat, err := h.repo.GetLatitudeByID(ctx, guessID)
+	lat, err := h.guessRepo.GetLatitudeByID(ctx, guessID)
 	if err != nil {
 		if errors.Is(err, repositories.ErrGuessNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "guess not found"})
@@ -205,7 +264,7 @@ func (h *GuessHandler) GetGuessLongitude(c *gin.Context) {
 		return
 	}
 
-	long, err := h.repo.GetLongitudeByID(ctx, guessID)
+	long, err := h.guessRepo.GetLongitudeByID(ctx, guessID)
 	if err != nil {
 		if errors.Is(err, repositories.ErrGuessNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "guess not found"})
@@ -229,7 +288,7 @@ func (h *GuessHandler) GetGuessCountryCode(c *gin.Context) {
 		return
 	}
 
-	cc, err := h.repo.GetCountryCodeByID(ctx, guessID)
+	cc, err := h.guessRepo.GetCountryCodeByID(ctx, guessID)
 	if err != nil {
 		if errors.Is(err, repositories.ErrGuessNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "guess not found"})
@@ -253,7 +312,7 @@ func (h *GuessHandler) GetGuessDistance(c *gin.Context) {
 		return
 	}
 
-	dist, err := h.repo.GetDistanceByID(ctx, guessID)
+	dist, err := h.guessRepo.GetDistanceByID(ctx, guessID)
 	if err != nil {
 		if errors.Is(err, repositories.ErrGuessNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "guess not found"})
@@ -277,7 +336,7 @@ func (h *GuessHandler) GetGuessScore(c *gin.Context) {
 		return
 	}
 
-	score, err := h.repo.GetScoreByID(ctx, guessID)
+	score, err := h.guessRepo.GetScoreByID(ctx, guessID)
 	if err != nil {
 		if errors.Is(err, repositories.ErrGuessNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "guess not found"})
@@ -301,7 +360,7 @@ func (h *GuessHandler) DeleteGuessByID(c *gin.Context) {
 		return
 	}
 
-	err = h.repo.DeleteByID(ctx, guessID)
+	err = h.guessRepo.DeleteByID(ctx, guessID)
 	if err != nil {
 		if errors.Is(err, repositories.ErrGuessNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "guess not found"})

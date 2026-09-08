@@ -29,7 +29,7 @@ func NewRepositories(db *bun.DB) (*Repositories, error) {
 		RToken:		NewRefreshTokenRepository(db),
 		Game:		NewGameRepository(db),
 		Lobby:		NewLobbyRepository(db),
-		Round:		NewRoundRepository(db),
+		Round:		NewRoundRepository(db, locationRepo),
 		Guess:		NewGuessRepository(db),
 	}, nil
 }

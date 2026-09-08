@@ -19,8 +19,8 @@ type Guess struct {
 	TimeLeft		time.Duration	`bun:"time_left,default:0"` // duration are stored in nanoseconds, but can be shown in any type
 	Streak			int64			`bun:"streak,default:0"`
 	Score			int64			`bun:"score,notnull"`
-	RoundId			int64			`bun:"round_id,notnull,unique:idx_guess_user_round"`
-	UserId			int64			`bun:"user_id,notnull, unique:idx_guess_user_round"`
+	RoundID			int64			`bun:"round_id,notnull,unique:idx_guess_user_round" json:"round_id,omitempty"`
+	UserID			int64			`bun:"user_id,notnull,unique:idx_guess_user_round"`
 
 	Round			*rounds.Round	`bun:"rel:belongs-to,join:round_id=id"`
 	User			*users.User		`bun:"rel:belongs-to,join:user_id=id"`

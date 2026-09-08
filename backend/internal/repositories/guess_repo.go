@@ -7,6 +7,8 @@ import (
 	"fmt"
 
 	"backend/internal/models/guesses"
+	"backend/internal/models/rounds"
+	// "backend/internal/models/locations"
 	"github.com/uptrace/bun"
 )
 
@@ -54,6 +56,30 @@ func (r *GuessRepository) GetCoordinatesByID(ctx context.Context, guess_id int64
 	}
 	return coordinates, nil
 }
+
+func (r *GuessRepository) GetLocationIDByRoundID(ctx context.Context, round_id int64) (int64, error) {
+	var locID int64
+	err := r.db.NewSelect().Model((*rounds.Round)(nil)).Column("loc_id").Where("id = ?", round_id).Limit(1).Scan(ctx, &locID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return 0, ErrGuessNotFound
+		}
+		return 0, fmt.Errorf("failed to get location id by round id: %w", err)
+	}
+	return locID, nil
+}
+
+// func (r *GuessRepository) GetCountryCodeByLocationID(ctx context.Context, location_id int64) (string, error) {
+// 	var cc string
+// 	err := r.db.NewSelect().Model((*locations.Location)(nil)).Column("country_code").Where("location_id = ?", location_id).Limit(1).Scan(ctx, &cc)
+// 	if err != nil {
+// 		if errors.Is(err, sql.ErrNoRows) {
+// 			return "", ErrGuessNotFound
+// 		}
+// 		return "", fmt.Errorf("failed to get country code by location id: %w", err)
+// 	}
+// 	return cc, nil
+// }
 
 // READ latitude - using guess ID
 func (r *GuessRepository) GetLatitudeByID(ctx context.Context, guess_id int64) (float64, error) {

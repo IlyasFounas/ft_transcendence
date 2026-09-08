@@ -136,6 +136,32 @@ func (r *LocationRepository) GetByID(ctx context.Context, location_id int64) (*l
 	return loc, nil
 }
 
+// READ coordinates - using internal ID
+func (r *LocationRepository) GetCoordinatesByID(ctx context.Context, location_id int64) (float64, float64, error) {
+	var lat, long float64
+	err := r.db.NewSelect().Model((*locations.Location)(nil)).Column("latitude", "longitude").Where("location_id = ?", location_id).Scan(ctx, &lat, &long)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return 0, 0, ErrLocationNotFound
+		}
+		return 0, 0, fmt.Errorf("failed to get coordinates by location ID: %w", err)
+	}
+	return lat, long, nil
+}
+
+// READ country code - using internal ID
+func (r *LocationRepository) GetCountryCodeByID(ctx context.Context, location_id int64) (string, error) {
+	var cc string
+	err := r.db.NewSelect().Model((*locations.Location)(nil)).Column("country_code").Where("location_id = ?", location_id).Scan(ctx, &cc)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return "", ErrLocationNotFound
+		}
+		return "", fmt.Errorf("failed to get country code by location ID: %w", err)
+	}
+	return cc, nil
+}
+
 // READ (using Mapillary ID)
 func (r *LocationRepository) GetByMapillaryID(ctx context.Context, mid int64) (*locations.Location, error) {
 	loc := new(locations.Location)

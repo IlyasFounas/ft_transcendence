@@ -15,11 +15,15 @@ var ErrRoundNotFound = errors.New("round not found")
 var ErrGameNotFound = errors.New("game not found")
 
 type RoundRepository struct {
-	db *bun.DB
+	db                 *bun.DB
+	locationRepository *LocationRepository
 }
 
-func NewRoundRepository(db *bun.DB) *RoundRepository {
-	return &RoundRepository{db: db}
+func NewRoundRepository(db *bun.DB, locationRepository *LocationRepository) *RoundRepository {
+	return &RoundRepository{
+		db:                 db,
+		locationRepository: locationRepository,
+	}
 }
 
 // CREATE - using round struct
@@ -108,6 +112,14 @@ func (r *RoundRepository) GetLocationID(ctx context.Context, game_id int64, roun
 		return 0, fmt.Errorf("failed to get location_id for game_id %d and round_nb %d: %w", game_id, round_nb, err)
 	}
 	return location_id, nil
+}
+
+func (r *RoundRepository) GetCoordinatesByLocationID(ctx context.Context, location_id int64) (float64, float64, error) {
+	return r.locationRepository.GetCoordinatesByID(ctx, location_id)
+}
+
+func (r *RoundRepository) GetCCByLocationID(ctx context.Context, location_id int64) (string, error) {
+	return r.locationRepository.GetCountryCodeByID(ctx, location_id)
 }
 
 // // DELETE - using round ID
