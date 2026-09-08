@@ -11,6 +11,6 @@ type Friend struct {
 	ID				int64		`bun:"id,pk,autoincrement"`
 	Requester_ID	int64		`bun:"requester_id,notnull"`
 	Receiver_ID		int64		`bun:"receiver_id,notnull"`
-	Status			string		`bun:"status,notnull"`
+	Status			string		`bun:"status,notnull,default:'pending'"`
 	CreatedAt		time.Time	`bun:"created_at,default:current_timestamp"`
 }
