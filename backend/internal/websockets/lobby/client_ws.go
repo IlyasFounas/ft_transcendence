@@ -52,8 +52,7 @@ func (c *ClientWs) ReadPump() {
             break // the connection ended up
         }
         if msgType == websocket.TextMessage {
-            // TODO : give data to the HUB
-            c.send <- data
+            log.Printf("client data : %s\n", data)
         }
     }
 }
