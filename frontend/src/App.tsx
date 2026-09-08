@@ -8,6 +8,8 @@ import LeaderboardPage from './pages/LeaderboardPage';
 import ProfilePage from './pages/ProfilePage';
 import { ChatLayout } from './layouts/ChatLayout';
 import { MainLayout } from './layouts/MainLayout';
+import LobbyPage from './pages/lobby/LobbyPage';
+import LobbyRoomPage from './pages/lobby/LobbyRoomPage';
 import AuthenticationPage from './pages/AuthenticationPage';
 import ProtectedRoute from './components/authentication/ProtectedRoute';
 
@@ -29,6 +31,8 @@ function App() {
               </Route>
             </Route>
             <Route element={<MainLayout />}>
+                <Route path="/lobby" element={<LobbyPage/>} />
+                <Route path="/lobbyroom" element={<LobbyRoomPage/>} />
               <Route path="/components" element={<ComponentsPage/>} />
             </Route>
           </Routes>

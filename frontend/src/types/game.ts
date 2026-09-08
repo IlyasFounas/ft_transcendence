@@ -46,3 +46,24 @@ export interface Game {
         panning: boolean;
     };
 }
+
+export interface GameRoom {
+    id: number;
+    title: string;
+    mode: string;
+    difficulty: string;
+    timer: number;
+    roundNb: number;
+    finished: boolean;
+    playerNb: number; // nombre max de joueurs
+    createdAt: string;
+}
+
+export interface Lobby {
+    id: number;
+    userId: number;
+    gameId: number;
+    joinCode: string | null;
+    isCreator: boolean;
+    leftAt: string | null;
+}
