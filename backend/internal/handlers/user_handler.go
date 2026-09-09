@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"crypto/sha256"
 	"log"
 	"fmt"
 	"net/http"
@@ -34,6 +35,7 @@ import (
  type UserHandler struct {
 	userRepo     *repositories.UserRepository
 	aTokenRepo   *repositories.ActivationTokenRepository
+	rTokenRepo   *repositories.RefreshTokenRepository
 	tokenHandler *TokenHandler
 	googleConf   *oauth2.Config
 }
@@ -41,12 +43,14 @@ import (
 func NewUserHandler(
 	userRepo *repositories.UserRepository,
 	aTokenRepo *repositories.ActivationTokenRepository,
+	rTokenRepo *repositories.RefreshTokenRepository,
 	tokenHandler *TokenHandler,
 	googleConf *oauth2.Config,
 ) *UserHandler {
 	return &UserHandler{
 		userRepo:     userRepo,
 		aTokenRepo:   aTokenRepo,
+		rTokenRepo:   rTokenRepo,
 		tokenHandler: tokenHandler,
 		googleConf:   googleConf,
 	}
@@ -299,8 +303,28 @@ func (h *UserHandler) GoogleCallback() gin.HandlerFunc {
 		// }
 		log.Printf("the user %d just logged in\n", user.ID)
 		// url := fmt.Sprintf("http://localhost:5130/home?Authorization=%s", tokenObj.Token)
-		url := fmt.Sprintf("http://localhost:5130/home")
+		url := "http://localhost:5130/home"
 		c.Redirect(http.StatusFound, url)
+	}
+}
+
+func (h *UserHandler) Logout() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		encodedKey, err := c.Cookie("refresh_token")
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"message": "You have to login"})
+			return
+		}
+		hashedKey := sha256.Sum256([]byte(encodedKey))
+		hashToken := fmt.Sprintf("%x", hashedKey)
+		if err := h.rTokenRepo.SetRefreshUsedAt(c.Request.Context(), hashToken); err != nil {
+			c.JSON(http.StatusUnauthorized,
+				gin.H{"message": "You have to login"})
+			return
+		}
+		cookie.Clear(c, "/api/auth", "refresh_token")
+		c.JSON(http.StatusOK,
+			gin.H{"message": "you are now logout"})
 	}
 }
 
