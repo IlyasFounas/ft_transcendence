@@ -68,7 +68,6 @@ function AuthProvider({children}: {children: ReactNode}) {
             setAccessToken(null);
             setUser(null);
         }
-        return null;
     };
 
     const refreshAccessToken = async () => {
