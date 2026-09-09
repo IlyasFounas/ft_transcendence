@@ -24,6 +24,29 @@ func (r *FriendRepository) AddFriend(ctx context.Context, friend *friends.Friend
 	return friend, nil
 }
 
+func (r *FriendRepository) AcceptRequest(ctx context.Context, userId int64, requesterID int64) (bool, error) {
+	friend := new(friends.Friend)
+	result, err := r.db.NewUpdate().
+		Model(friend).
+		Set("status = ?", "accepted").
+		Where("receiver_id = ?", userId).
+		Where("requester_id = ?", requesterID).
+		Where("status = ?", "pending").
+		Exec(ctx)
+	if err != nil {
+		return false, err
+	}
+
+	affected, err := result.RowsAffected()
+	if err != nil {
+		return false, err
+	}
+	if affected == 0 {
+		return false, nil
+	}
+	return true, nil
+}
+
 func (r *FriendRepository) FriendRequests(ctx context.Context, userId int64) ([]*friends.Friend, error) {
 	var friendRequests []*friends.Friend
 	err := r.db.NewSelect().

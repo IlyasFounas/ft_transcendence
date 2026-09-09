@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 
@@ -63,6 +64,37 @@ func (h *FriendHandler) AddFriend() gin.HandlerFunc {
 		}
 		c.JSON(http.StatusCreated,
 			gin.H{"message": "friend request sent"})
+	}
+}
+
+func (h *FriendHandler) AcceptRequest() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userId, ok := c.Get("userId")
+		if !ok {
+			c.JSON(http.StatusUnauthorized,
+				gin.H{"message": "The userId is empty"})
+			return
+		}
+		requesterID := c.Param("id")
+		requesterIDInt, err := strconv.ParseInt(requesterID, 10, 64)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"message": "invalid requester ID"})
+			return
+		}
+		updated, err := h.friendRepo.AcceptRequest(c.Request.Context(), userId.(int64), requesterIDInt)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError,
+				gin.H{"message": "Failed to accept friend request"})
+			return
+		}
+		if !updated {
+			c.JSON(http.StatusNotFound,
+				gin.H{"message": "No matching pending request"})
+			return
+		}
+		c.JSON(http.StatusOK,
+			gin.H{"message": "accepted friend"})
 	}
 }
 
