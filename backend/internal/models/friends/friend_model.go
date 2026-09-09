@@ -2,6 +2,7 @@ package friends
 
 import (
 	"github.com/uptrace/bun"
+	"backend/internal/models/users"
 	"time"
 )
 
@@ -13,4 +14,6 @@ type Friend struct {
 	Receiver_ID		int64		`bun:"receiver_id,notnull"`
 	Status			string		`bun:"status,notnull,default:'pending'"`
 	CreatedAt		time.Time	`bun:"created_at,default:current_timestamp"`
+	
+	Requester 		*users.User `bun:"rel:belongs-to,join:requester_id=id"`
 }

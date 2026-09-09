@@ -51,6 +51,10 @@ func (r *FriendRepository) FriendRequests(ctx context.Context, userId int64) ([]
 	var friendRequests []*friends.Friend
 	err := r.db.NewSelect().
 		Model(&friendRequests).
+		Column("id", "created_at").
+		Relation("Requester", func(q *bun.SelectQuery) *bun.SelectQuery {
+        	return q.Column("id", "name", "avatar")
+		}).
 		Where("receiver_id = ?", userId).
 		Where("status = ?", "pending").
 		Order("created_at DESC").
