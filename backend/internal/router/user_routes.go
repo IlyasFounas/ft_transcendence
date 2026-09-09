@@ -44,12 +44,9 @@ func registerUserRoutes(r *gin.Engine, h *handlers.UserHandler, ht *handlers.Tok
 		private.GET("/user/login", h.Login())
 		private.GET("/user/email", h.Email())
 		private.GET("/user/:username", h.UserByName())
-		// PUT = modify a lot of informations
-		// PATCH = modify a specific field
 		private.PATCH("/user/name", h.SetName())
 		private.PATCH("/user/login", h.SetLogin())
 		private.PATCH("/user/avatar", h.SetAvatar())
-
 		private.POST("/auth/logout", h.Logout())
 	}
 }
