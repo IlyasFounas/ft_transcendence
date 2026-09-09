@@ -31,7 +31,7 @@ func NewFriendHandler (friendRepo *repositories.FriendRepository,
  * getter func:
  * - Friends(userID): get list of UserID friends
  * - IsFriend(userID): check if this id is friend
- * - FriendRequest()
+ * - FriendRequests()
  * - FriendPending()
  */
 
@@ -58,7 +58,7 @@ func (h *FriendHandler) AddFriend() gin.HandlerFunc {
 		_, err = h.friendRepo.AddFriend(c.Request.Context(), friendObj)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError,
-				gin.H{"message": "failed to add friend"})
+				gin.H{"message": "Failed to add friend"})
 			return
 		}
 		c.JSON(http.StatusCreated,
@@ -66,3 +66,26 @@ func (h *FriendHandler) AddFriend() gin.HandlerFunc {
 	}
 }
 
+// getter
+
+func (h *FriendHandler) FriendRequests() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userId, ok := c.Get("userId")
+		if !ok {
+			c.JSON(http.StatusUnauthorized,
+				gin.H{"message": "The userId is empty"})
+			return
+		}
+		friendRequests, err := h.friendRepo.FriendRequests(c.Request.Context(), userId.(int64))
+		if err != nil {
+			c.JSON(http.StatusInternalServerError,
+				gin.H{"message": "Failed to get friend requests"})
+			return 
+		}
+		c.JSON(http.StatusOK,
+			gin.H{
+				"message": "success",
+				"friendRequests": friendRequests,
+			})
+	}
+}
