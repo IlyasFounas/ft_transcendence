@@ -49,5 +49,7 @@ func registerUserRoutes(r *gin.Engine, h *handlers.UserHandler, ht *handlers.Tok
 		private.PATCH("/user/name", h.SetName())
 		private.PATCH("/user/login", h.SetLogin())
 		private.PATCH("/user/avatar", h.SetAvatar())
+
+		private.POST("/auth/logout", h.Logout())
 	}
 }
