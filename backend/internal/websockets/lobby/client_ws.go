@@ -50,18 +50,19 @@ func (c *ClientWs) ReadPump() {
     for {
         msgType, data, err := c.conn.ReadMessage()
         if err != nil {
+            log.Printf("error : %s\n", err)
             break // the connection ended up
         }
         if msgType == websocket.TextMessage {
-            log.Printf("client data : %s\n", data)
+            // log.Printf("client data : %s\n", data)
             var serializedData DataInfos
             err := json.Unmarshal(data, &serializedData)
             if err != nil {
                 log.Printf("error : %s\n", err)
-                return 
+                continue 
             }
             serializedData.Client = c
-            c.hub.broadcast <- &serializedData
+            c.hub.action <- &serializedData
         }
     }
 }

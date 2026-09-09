@@ -24,7 +24,7 @@ type HubWs struct {
 	clients map[int64]map[*ClientWs]bool
 	register chan *ClientWs
 	unregister chan *ClientWs
-	broadcast chan *DataInfos
+	action chan *DataInfos
 	lobbyRepo *repositories.LobbyRepository
 	userRepo *repositories.UserRepository
 	lobbyWsHandler *ws_handlers.LobbyWsHandler
@@ -38,7 +38,7 @@ func NewHub(
 	return &HubWs{clients: make(map[int64]map[*ClientWs]bool),
 		register: make(chan *ClientWs),
 		unregister: make(chan *ClientWs),
-		broadcast: make(chan *DataInfos),
+		action: make(chan *DataInfos),
 		lobbyRepo: repo.Lobby,
 		userRepo: repo.User,
 		lobbyWsHandler: wsHandlers.Lobby,
@@ -92,11 +92,12 @@ func (h *HubWs) unregisterClient(client *ClientWs) {
 
 func (h *HubWs) handleAction(ctx context.Context, serializedData *DataInfos) {
 	if serializedData.Action == "leave" {
-		h.unregisterClient(serializedData.Client)
-		if !h.lobbyWsHandler.LeaveLobby(ctx, serializedData.Client.userId) {
-			return 
-		}
-		h.clientListBroadcast(serializedData.Client.gameId, ctx)
+		// h.unregisterClient(serializedData.Client)
+		// if !h.lobbyWsHandler.LeaveLobby(ctx, serializedData.Client.userId) {
+		// 	log.Println("error : the client can't leave the lobby in the database")
+		// }
+		// h.clientListBroadcast(serializedData.Client.gameId, ctx)
+		serializedData.Client.conn.Close()
 	}
 }
 
@@ -109,10 +110,11 @@ func (h *HubWs) Run(ctx context.Context) {
 		case client := <- h.unregister:
 			h.unregisterClient(client)
 			if !h.lobbyWsHandler.LeaveLobby(ctx, client.userId) {
-				return 
+				log.Println("error : the client can't leave the lobby in the database")
+				continue 
 			}
 			h.clientListBroadcast(client.gameId, ctx)
-		case serializedData := <- h.broadcast:
+		case serializedData := <- h.action:
 			h.handleAction(ctx, serializedData)
 		}
 	}
