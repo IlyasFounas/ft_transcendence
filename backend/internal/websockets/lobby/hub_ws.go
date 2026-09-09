@@ -1,11 +1,11 @@
 package lobby_ws
 
 import (
-	"log"
-	"encoding/json"
-	"context"
 	"backend/internal/repositories"
 	"backend/internal/websockets/handlers"
+	"context"
+	"encoding/json"
+	"log"
 )
 
 type playerInfos struct {
@@ -14,11 +14,17 @@ type playerInfos struct {
     Avatar   *string `json:"avatar"`
 }
 
+type DataInfos struct {
+	Action	string
+	Payload string
+	Client	*ClientWs
+}
+
 type HubWs struct {
 	clients map[int64]map[*ClientWs]bool
 	register chan *ClientWs
 	unregister chan *ClientWs
-	broadcast chan []byte
+	broadcast chan *DataInfos
 	lobbyRepo *repositories.LobbyRepository
 	userRepo *repositories.UserRepository
 	lobbyWsHandler *ws_handlers.LobbyWsHandler
@@ -32,7 +38,7 @@ func NewHub(
 	return &HubWs{clients: make(map[int64]map[*ClientWs]bool),
 		register: make(chan *ClientWs),
 		unregister: make(chan *ClientWs),
-		broadcast: make(chan []byte, 256),
+		broadcast: make(chan *DataInfos),
 		lobbyRepo: repo.Lobby,
 		userRepo: repo.User,
 		lobbyWsHandler: wsHandlers.Lobby,
@@ -84,6 +90,16 @@ func (h *HubWs) unregisterClient(client *ClientWs) {
 	}
 }
 
+func (h *HubWs) handleAction(ctx context.Context, serializedData *DataInfos) {
+	if serializedData.Action == "leave" {
+		h.unregisterClient(serializedData.Client)
+		if !h.lobbyWsHandler.LeaveLobby(ctx, serializedData.Client.userId) {
+			return 
+		}
+		h.clientListBroadcast(serializedData.Client.gameId, ctx)
+	}
+}
+
 func (h *HubWs) Run(ctx context.Context) {
 	for {
 		select {
@@ -96,6 +112,8 @@ func (h *HubWs) Run(ctx context.Context) {
 				return 
 			}
 			h.clientListBroadcast(client.gameId, ctx)
+		case serializedData := <- h.broadcast:
+			h.handleAction(ctx, serializedData)
 		}
 	}
 }

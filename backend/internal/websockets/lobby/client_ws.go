@@ -1,6 +1,7 @@
 package lobby_ws
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 	"strconv"
@@ -53,19 +54,28 @@ func (c *ClientWs) ReadPump() {
         }
         if msgType == websocket.TextMessage {
             log.Printf("client data : %s\n", data)
+            var serializedData DataInfos
+            err := json.Unmarshal(data, &serializedData)
+            if err != nil {
+                log.Printf("error : %s\n", err)
+                return 
+            }
+            serializedData.Client = c
+            c.hub.broadcast <- &serializedData
         }
     }
 }
 
 func WsJoinLobby(hub *HubWs) gin.HandlerFunc {
 	return func(c *gin.Context) {
-        userIdString := c.Query("user_id")
         // userId, ok := c.Get("userId")
         // if !ok {
         //     c.JSON(http.StatusUnauthorized,
         //         gin.H{"message": "The userId is empty"})
         //     return
         // }
+        // FOR NOW : we take the id in the query string
+        userIdString := c.Query("user_id")
         userId, err := strconv.ParseInt(userIdString, 10, 64)
         if err != nil {
             log.Printf("error : %s\n", err)

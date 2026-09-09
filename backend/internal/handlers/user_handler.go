@@ -297,10 +297,10 @@ func (h *UserHandler) GoogleCallback() gin.HandlerFunc {
 			return
 		}
 
-		// tokenObj, ok := h.jwtGeneration(c, user.ID)
-		// if !ok {
-		// 	return
-		// }
+		_, ok := h.jwtGeneration(c, user.ID)
+		if !ok {
+			return
+		}
 		log.Printf("the user %d just logged in\n", user.ID)
 		// url := fmt.Sprintf("http://localhost:5130/home?Authorization=%s", tokenObj.Token)
 		url := "http://localhost:5130/home"
