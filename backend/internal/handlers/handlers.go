@@ -32,7 +32,7 @@ func NewHandlers(repo *repositories.Repositories) *Handlers {
 	googleConfig := googleConfigInit()
 	return &Handlers{
 		Location: NewLocationHandler(repo.Location),
-		User:     NewUserHandler(repo.User, repo.AToken, tokenHandler, googleConfig),
+		User:     NewUserHandler(repo.User, repo.AToken, repo.RToken, tokenHandler, googleConfig),
 		Token:    tokenHandler,
 		Game:     NewGameHandler(repo.Game, repo.Lobby),
 		Lobby:    NewLobbyHandler(repo.Game, repo.Lobby, repo.User),

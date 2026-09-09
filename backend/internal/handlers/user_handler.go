@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"crypto/sha256"
+	"log"
 	"fmt"
 	"net/http"
 	"os"
@@ -33,6 +35,7 @@ import (
  type UserHandler struct {
 	userRepo     *repositories.UserRepository
 	aTokenRepo   *repositories.ActivationTokenRepository
+	rTokenRepo   *repositories.RefreshTokenRepository
 	tokenHandler *TokenHandler
 	googleConf   *oauth2.Config
 }
@@ -40,12 +43,14 @@ import (
 func NewUserHandler(
 	userRepo *repositories.UserRepository,
 	aTokenRepo *repositories.ActivationTokenRepository,
+	rTokenRepo *repositories.RefreshTokenRepository,
 	tokenHandler *TokenHandler,
 	googleConf *oauth2.Config,
 ) *UserHandler {
 	return &UserHandler{
 		userRepo:     userRepo,
 		aTokenRepo:   aTokenRepo,
+		rTokenRepo:   rTokenRepo,
 		tokenHandler: tokenHandler,
 		googleConf:   googleConf,
 	}
@@ -165,7 +170,7 @@ func (h *UserHandler) Login() gin.HandlerFunc {
 			if err := h.createActivationToken(c, expiresAt, userId); err != nil {
 				return
 			}
-			c.JSON(http.StatusOK,
+			c.JSON(http.StatusUnauthorized,
                 gin.H{"message": "The activation link has been sent on your email"})
             return
 		} else if err != nil {
@@ -292,11 +297,34 @@ func (h *UserHandler) GoogleCallback() gin.HandlerFunc {
 			return
 		}
 
-		tokenObj, ok := h.jwtGeneration(c, user.ID)
-		if !ok {
+		// tokenObj, ok := h.jwtGeneration(c, user.ID)
+		// if !ok {
+		// 	return
+		// }
+		log.Printf("the user %d just logged in\n", user.ID)
+		// url := fmt.Sprintf("http://localhost:5130/home?Authorization=%s", tokenObj.Token)
+		url := "http://localhost:5130/home"
+		c.Redirect(http.StatusFound, url)
+	}
+}
+
+func (h *UserHandler) Logout() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		encodedKey, err := c.Cookie("refresh_token")
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"message": "You have to login"})
 			return
 		}
-		c.JSON(http.StatusOK, gin.H{"message": "success", "Authorization": tokenObj.Token})
+		hashedKey := sha256.Sum256([]byte(encodedKey))
+		hashToken := fmt.Sprintf("%x", hashedKey)
+		if err := h.rTokenRepo.SetRefreshUsedAt(c.Request.Context(), hashToken); err != nil {
+			c.JSON(http.StatusUnauthorized,
+				gin.H{"message": "You have to login"})
+			return
+		}
+		cookie.Clear(c, "/api/auth", "refresh_token")
+		c.JSON(http.StatusOK,
+			gin.H{"message": "you are now logout"})
 	}
 }
 
