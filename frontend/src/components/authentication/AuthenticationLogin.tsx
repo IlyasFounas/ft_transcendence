@@ -1,6 +1,9 @@
 import PrimaryButton from "../buttons/PrimaryButton";
 import Input from "../primitives/Input";
 import { useState } from "react";
+import { apiFetch } from "../../api/apiFetch";
+import { useAuth } from "../../context/AuthContext";
+import { useNavigate, useLocation } from "react-router-dom";
 
 interface AuthenticationLoginProps {
     onBackToOptions: () => void;
@@ -9,16 +12,54 @@ interface AuthenticationLoginProps {
 export default function AuthenticationLogin ({
     onBackToOptions,
 }: AuthenticationLoginProps) {
-    const [email, setEmail] = useState("");
-    const [login, setLogin] = useState("");
+    const {login} = useAuth();
+    const [loginId, setLoginId] = useState("");
     const [password, setPassword] = useState("");
+    const [error, setError] = useState("");
+    const navigate = useNavigate();
+    const location = useLocation();
 
-    const handleLogin = () => {
-        console.log(email);
-        console.log(login);
-        console.log(password);
-        //need to add functions later
-        // validate fields / send data to back / handle success or error
+    const handleLogin = async () => {
+        if (!loginId || !password) {
+            setError("Login ID and password are required");
+            return;
+        }
+
+        setError("");
+
+        const body = new URLSearchParams({
+            login: loginId,
+            password,
+        });
+
+        const options: RequestInit = {
+            method: "POST",
+            body,
+        };
+
+        const result = await apiFetch("/api/auth/login", options);
+        if (result === null) {
+            setError("Unable to connect to the server. Please try again.");
+            return;
+        }
+        if (result.status === 401) {
+            setError(result.data.message);
+            return;
+        }
+        if (result.status === 500) {
+            setError(result.data.state);
+            return;
+        }
+        if (result.status === 200) {
+            const accessToken = result.data.Authorization;
+
+            login(accessToken);
+
+            const from = location.state?.from?.pathname || "/home";
+
+            navigate(from, { replace: true });
+        }
+        
     };
 
     return (
@@ -27,19 +68,29 @@ export default function AuthenticationLogin ({
             flex-col
             w-full
             items-center
-            gap-4
+            gap-3
+            py-5
+            sm:px-6
             "
         >
-            <Input label="email" type="email" value={email} onChange={setEmail}/>
-            <Input label="login id" type="login" value={login} onChange={setLogin}/>
+            <Input label="login id" type="login" value={loginId} onChange={setLoginId}/>
             <Input label="password" type="password" value={password} onChange={setPassword}/>
+            
+            <div className="pt-2 text-status-red text-label-small sm:text-heading-small">
+                {error && 
+                    <p>{error}</p>
+                }
+            </div>
+
             <PrimaryButton size="small" onClick={handleLogin}>log in</PrimaryButton>
             <button
                 type="button"
                 className="
                     text-text-primary
                     underline
-                    text-heading-small
+                    text-label-small
+                    md:text-body-primary
+                    uppercase
                     cursor-pointer
                     transition
                     duration-150

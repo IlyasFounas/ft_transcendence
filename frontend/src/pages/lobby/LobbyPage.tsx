@@ -9,7 +9,7 @@ export default function LobbyPage()
 	const [mode, setMode] = useState<"create" | "join">("join");
 
 	return (
-		<div className="min-h-screen w-full bg-[url(/backgrounds/earth_background.png)] py-50">
+		<div className="min-h-[calc(100vh-5rem)] w-full bg-[url(/backgrounds/earth_background.png)] py-24 lg:pr-[27rem] flex flex-col justify-center">
 			<div className="flex min-h-[50px] items-center justify-center gap-8">
 				<SecondaryButton
 					active={mode === "create"}

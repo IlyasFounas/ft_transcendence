@@ -16,7 +16,7 @@ type Game struct {
 	Timer		int64 		`bun:"timer,notnull"`
 	RoundNb 	int64 		`bun:"round_nb,notnull,check:round_nb <> 0"`
 	Finished	bool 		`bun:"finished"`
-	PlayerNb	int64 		`bun:"player_nb,notnull,check:player_nb <> 0`
+	PlayerNb	int64 		`bun:"player_nb,notnull,check:player_nb <> 0"`
 	CreatedAt   time.Time	`bun:"created_at,default:current_timestamp"`
 
 	Lobby 		[]*Lobby  	`bun:"rel:has-many,join:id=game_id"`

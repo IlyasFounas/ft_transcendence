@@ -34,12 +34,14 @@ export default function NavbarUser({
             flex
             items-center
             gap-3
+            min-w-0
             "
         >
             <NavLink
                 to="/profile"
                 className="
                     flex
+                    min-w-0
                     items-center
                     gap-3
                     transition
@@ -47,13 +49,16 @@ export default function NavbarUser({
                     hover:brightness-125
                 "
             >
-                <Avatar
-                    avatar={avatar}
-                    size={45}
-                />
+                <div className="shrink-0">
+                    <Avatar
+                        avatar={avatar}
+                        size={45}
+                    />
+                </div>
 
-                <div>
+                <div className="min-w-0">
                     <div className="
+                        truncate
                         text-heading-small
                         text-text-primary
                         uppercase
