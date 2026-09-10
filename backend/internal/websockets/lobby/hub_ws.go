@@ -8,6 +8,10 @@ import (
 	"log"
 )
 
+type kickPlayer struct {
+	TargetId int64 	 `json:"target_id"`
+}
+
 type playerInfos struct {
     ID       int64   `json:"id"`
     Username string  `json:"username"`
@@ -16,7 +20,7 @@ type playerInfos struct {
 
 type DataInfos struct {
 	Action	string
-	Payload string
+	Payload json.RawMessage
 	Client	*ClientWs
 }
 
@@ -29,7 +33,6 @@ type HubWs struct {
 	userRepo *repositories.UserRepository
 	lobbyWsHandler *ws_handlers.LobbyWsHandler
 }
-
 
 func NewHub(
 	repo *repositories.Repositories,
@@ -90,14 +93,32 @@ func (h *HubWs) unregisterClient(client *ClientWs) {
 	}
 }
 
-func (h *HubWs) handleAction(ctx context.Context, serializedData *DataInfos) {
-	if serializedData.Action == "leave" {
-		// h.unregisterClient(serializedData.Client)
-		// if !h.lobbyWsHandler.LeaveLobby(ctx, serializedData.Client.userId) {
-		// 	log.Println("error : the client can't leave the lobby in the database")
-		// }
-		// h.clientListBroadcast(serializedData.Client.gameId, ctx)
-		serializedData.Client.conn.Close()
+func (h *HubWs) handleAction(ctx context.Context,
+	serializedData *DataInfos) {
+	switch serializedData.Action {
+		case "leave":
+			serializedData.Client.conn.Close()
+		case "kick_player":
+			var targetClient kickPlayer
+			err := json.Unmarshal(serializedData.Payload, &targetClient)
+			if err != nil {
+				log.Printf("error : %s\n", err)
+				return 
+			}
+			if !h.lobbyWsHandler.RemovePlayer(ctx,
+				serializedData.Client.userId, targetClient.TargetId) {
+					return 
+			}
+			for client := range h.clients[serializedData.Client.gameId] {
+				if client.userId == targetClient.TargetId {
+					h.clientListBroadcast(serializedData.Client.gameId, ctx)
+					client.conn.Close()
+					return 
+				}
+			}
+			h.clientListBroadcast(serializedData.Client.gameId, ctx)
+		default:
+			log.Printf("unknown action : %s\n", serializedData.Action)
 	}
 }
 
