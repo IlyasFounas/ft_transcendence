@@ -31,8 +31,7 @@ function AuthProvider({children}: {children: ReactNode}) {
     const [accessToken, setAccessToken] = useState<string | null>(null);
     const [user, setUser] = useState<User | null>(null);
     const [isAuthLoading, setIsAuthLoading] = useState(true);
-    const DEV_BYPASS_AUTH = true; // ⚠️ à remettre à false avant de push !
-const isAuthenticated = DEV_BYPASS_AUTH || accessToken !== null;
+	const isAuthenticated = accessToken !== null;
     
     const getUser = async (token: string) => {
         const result = await apiFetch("/api/user", {}, token);
