@@ -9,6 +9,7 @@ interface AuthContextType {
     isAuthLoading: boolean;
     isAuthenticated: boolean;
     login: (accessToken: string) => Promise<void>;
+    logout: () => Promise<void>;
     refreshAccessToken: () => Promise<string | null>;
     authFetch: (url: string, options?: RequestInit) => Promise<{
         status: number,
@@ -22,6 +23,7 @@ const AuthContext = createContext<AuthContextType>({
     isAuthLoading: true,
     isAuthenticated: false,
     login: async () => {},
+    logout: async () => {},
     refreshAccessToken: async () => null,
     authFetch: async () => null,
 });
@@ -51,6 +53,21 @@ function AuthProvider({children}: {children: ReactNode}) {
     const login = async (accessToken: string) => {
         setAccessToken(accessToken);
         await getUser(accessToken);
+    };
+
+    const logout = async () => {
+        
+        const result = await authFetch("/api/auth/logout", {
+            method: "POST",
+        });
+
+        if (result == null) {
+            return;
+        }
+        if (result.status === 200) {
+            setAccessToken(null);
+            setUser(null);
+        }
     };
 
     const refreshAccessToken = async () => {
@@ -117,6 +134,7 @@ function AuthProvider({children}: {children: ReactNode}) {
                 isAuthLoading,
                 isAuthenticated,
                 login,
+                logout,
                 refreshAccessToken,
                 authFetch,
             }}
