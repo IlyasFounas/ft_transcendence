@@ -207,7 +207,7 @@ func (h *LobbyHandler) AllPlayers() gin.HandlerFunc {
         }
 		lobby, err := h.lobbyRepo.ActualLobby(c.Request.Context(),
 			userId.(int64))
-		if err != nil {
+		if err != nil || lobby == nil {
 			c.JSON(http.StatusNotFound,
 				gin.H{"message": "You are not in a lobby"})
 			return 
@@ -221,6 +221,5 @@ func (h *LobbyHandler) AllPlayers() gin.HandlerFunc {
 		}
 		c.JSON(http.StatusOK,
 			gin.H{"message": "success", "lobbies": lobbies})
-		
 	}
 }

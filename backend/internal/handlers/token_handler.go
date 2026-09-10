@@ -82,7 +82,7 @@ func (h *TokenHandler) RefreshToken() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		encodedKey, err := c.Cookie("refresh_token")
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"message": "Ypu have to login"})
+			c.JSON(http.StatusUnauthorized, gin.H{"message": "You have to login"})
 			return
 		}
 		hashedKey := sha256.Sum256([]byte(encodedKey))
