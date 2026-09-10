@@ -1,55 +1,82 @@
 import RankResultRow from "./RankResultRow";
-import { GRID_COLS, ROUND_VISIBILITY } from "./rankResults.constants.ts";
 import { getSortedPlayersWithRank } from "../../utils/ranking.ts";
-import type {PlayerResult}  from "../../types/game.ts";
+import type { PlayerResult } from "../../types/game.ts";
+import { useState, useEffect } from "react"
 
-interface RankResultListProps {
-	players: PlayerResult[];
-	currentRound: number;
-	currentUsername: string;
-	onHoverPlayer?: (username: string | null) => void;
+function useIsLargeScreen() {
+    const [isLarge, setIsLarge] = useState(
+        typeof window !== "undefined" ? window.innerWidth >= 1024 : true
+    );
+
+    useEffect(() => {
+        const mediaQuery = window.matchMedia("(min-width: 1024px)");
+        const handleChange = () => setIsLarge(mediaQuery.matches);
+
+        handleChange();
+        mediaQuery.addEventListener("change", handleChange);
+        return () => mediaQuery.removeEventListener("change", handleChange);
+    }, []);
+
+    return isLarge;
 }
 
-export default function RankResultList({ players, currentRound, currentUsername, onHoverPlayer}: RankResultListProps) {
-  const visibleCount = Math.min(currentRound, ROUND_VISIBILITY.length);
-  const displayRounds = Array.from(
-	{ length: visibleCount },
-	(_, i) => currentRound - visibleCount + i + 1
-  );
-  	const offset = ROUND_VISIBILITY.length - displayRounds.length;
+interface RankResultListProps {
+    players: PlayerResult[];
+    currentUsername: string;
+    columns?: 1 | 2;
+    scrollable?: boolean;
+    onHoverPlayer?: (username: string | null) => void;
+}
 
-	const sortedPlayers = getSortedPlayersWithRank(players);
-  return (
-	<div className="@container flex flex-col rounded-[12px] border border-border-default/30 shadow-[0_0_10px_rgba(40,215,255,0.5)] overflow-hidden w-full">
-	  <div className="h-[230px] lg:h-[600px] overflow-y-auto [scrollbar-gutter:stable]">
-		<div className={`sticky top-0 z-10 h-[40px] grid ${GRID_COLS} items-center px-4
-		  uppercase text-heading-small text-text-primary/70 bg-surface-base`}>
-		  <h1 className="text-center">Rank</h1>
-		  <h1 className="px-8">Agent</h1>
-		  {displayRounds.map((round, index) => (
-			<h1
-			  key={round}
-			  className={`text-center justify-center ${ROUND_VISIBILITY[offset + index]}`}
-			>
-			  Round {round}
-			</h1>
-		  ))}
-		  <h1 className="text-center">Total</h1>
-		</div>
+export default function RankResultList({
+    players,
+    currentUsername,
+    columns = 1,
+    scrollable = false,
+    onHoverPlayer
+}: RankResultListProps) {
 
-		{sortedPlayers.map((result) => (
-		  <RankResultRow
-			key={result.player.username}
-			rank={result.rank}
-			player={result.player}
-			rounds={result.rounds}
-			displayRounds={displayRounds}
-			currentUsername={currentUsername}
-			onMouseEnter={() => onHoverPlayer?.(result.player.username)}
-			onMouseLeave={() => onHoverPlayer?.(null)}
-		  />
-		))}
-	  </div>
-	</div>
-  );
+    const isLargeScreen = useIsLargeScreen();
+    const sortedPlayers = getSortedPlayersWithRank(players);
+
+    const shouldSplit = columns === 2 && isLargeScreen;
+
+    const columnGroups = shouldSplit
+        ? [
+            sortedPlayers.slice(0, 5),
+            sortedPlayers.slice(5, 10),
+        ]
+        : [sortedPlayers];
+
+    return (
+        <div className={`grid gap-4 w-full ${shouldSplit ? "lg:grid-cols-2" : "grid-cols-1"}`}>
+            {columnGroups.map((group, groupIndex) => (
+                <div
+                    key={groupIndex}
+                    className="@container flex flex-col rounded-[12px] bg-surface-base border border-border-default/30 shadow-[0_0_10px_rgba(40,215,255,0.5)] overflow-hidden"
+                >
+                    <div className="sticky top-0 z-10 h-[40px] grid grid-cols-[90px_minmax(0,400px)_1fr] items-center px-4
+                        uppercase text-heading-small text-text-primary/70 bg-surface-base bg-linear-to-t from-black to-surface-base">
+                        <h1>Rank</h1>
+                        <h1 className="px-8">Agent</h1>
+                        <h1 className="flex justify-end">Total</h1>
+                    </div>
+
+                    <div className={scrollable ? "h-[230px] lg:h-[600px] overflow-y-auto [scrollbar-gutter:stable]" : ""}>
+                        {group.map((result) => (
+                            <RankResultRow
+                                key={result.player.username}
+                                rank={result.rank}
+                                player={result.player}
+                                rounds={result.rounds}
+                                currentUsername={currentUsername}
+                                onMouseEnter={() => onHoverPlayer?.(result.player.username)}
+                                onMouseLeave={() => onHoverPlayer?.(null)}
+                            />
+                        ))}
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
 }

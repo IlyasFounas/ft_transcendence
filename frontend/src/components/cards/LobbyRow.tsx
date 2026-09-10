@@ -1,11 +1,12 @@
+import { getAgentColorByIndex } from "../../utils/agentColor.ts";
 import Avatar from "../primitives/Avatar.tsx"
 import StatusBadge from '../primitives/StatusBadge.tsx'
 import type {StatusBadgeProps}  from "../primitives/StatusBadge.tsx";
 
-
 interface LobbyRowProps {
 	username?: string;
 	role?: string;
+	index: number;
 	avatar: string;
 	status?: StatusBadgeProps["status"];
 	currentUsername: string; 
@@ -13,6 +14,7 @@ interface LobbyRowProps {
 
 export default function LobbyRow({
 		username,
+		index,
 		role,
 		status,
 		avatar,
@@ -20,9 +22,7 @@ export default function LobbyRow({
 }: LobbyRowProps) {
 
 		const isCurrentPlayer = username === currentUsername;
-	 	const rowColor = isCurrentPlayer ? "text-cyan-400" : "text-(--color-text-secondary)";
-  		const avatarBorder = isCurrentPlayer ? "#35DFFF" : "var(--color-text-secondary)";
-
+	 	const agentColor = isCurrentPlayer ? "#35DFFF" : getAgentColorByIndex(index);
 	return (
 		<div className={`
 		w-full min-h-[65px] 
@@ -32,19 +32,19 @@ export default function LobbyRow({
 		justify-between 
 		px-[16px] 
 		uppercase
-		${rowColor}
 		${
 		  isCurrentPlayer
 			? "outline-cyan-400/60 bg-gradient-to-r from-cyan-400/15 via-cyan-400/5 to-transparent shadow-[0_0_20px_rgba(53,223,255,0.25)]"
 			: "outline-cyan-800/30"
-		}`}>
+		}`}
+		style={{ color: agentColor}}>
   			<div className="flex items-center gap-[12px]">
-			<Avatar size={45} avatar={avatar} borderColor={avatarBorder}/>
+			<Avatar size={45} avatar={avatar} borderColor={agentColor}/>
 			<div className="flex flex-col px-[10px]">
-	  			<span className={`text-heading-small ${rowColor}`}>
+	  			<span className="text-heading-small text-white">
 	   				{username}
 	 			</span>
-	  			<span className={`text-body-primary ${rowColor}`}>
+	  			<span className="text-body-primary">
 					{role}
 	  			</span>
 			</div>

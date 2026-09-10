@@ -51,6 +51,7 @@ export default function LobbyList({listOfPlayers}: LobbyListProps)
 				return player ? (
 					<LobbyRow
 						key={player.id}
+						index={index}
 						username={player.username}
 						role={player.role}
 						status={player.status}

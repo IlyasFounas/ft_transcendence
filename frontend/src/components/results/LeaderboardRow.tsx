@@ -1,4 +1,5 @@
 import Avatar from "../primitives/Avatar";
+import { getAgentColorByIndex } from "../../utils/agentColor";
 import type { Player, RoundResult } from "../../types/game";
 
 type Props = {
@@ -19,10 +20,8 @@ export default function LeaderboardRow({
 	onMouseLeave
 }: Props) {
 
-  const isCurrentPlayer = player.username === currentUsername;
-
-  const rowColor = isCurrentPlayer ? "text-cyan-400" : "text-(--color-text-secondary)";
-  const avatarBorder = isCurrentPlayer ? "#35DFFF" : "var(--color-text-secondary)";
+  	const isCurrentPlayer = player.username === currentUsername;
+    const agentColor = isCurrentPlayer ? "#35DFFF" : getAgentColorByIndex(rank - 1);
 
   return (
 	<div
@@ -36,19 +35,19 @@ export default function LeaderboardRow({
 			items-center 
 			uppercase
 			grid grid-cols-[30%_40%_30%]
-			${rowColor}
 			hover:bg-cyan-400/8 transition-colors
 			${
 			isCurrentPlayer
 				? "outline-cyan-400/60 bg-gradient-to-r from-cyan-400/15 via-cyan-400/5 to-transparent shadow-[0_0_20px_rgba(53,223,255,0.25)]"
 				: "outline-cyan-800/30"
 			}`}
+			style={{ color: agentColor }}
 	>
 	  <div className="text-center text-heading-medium">{rank}</div>
 	  <div className="flex items-center gap-[12px]">
-		<Avatar avatar={player.avatar} borderColor={avatarBorder} size={45} />
+		<Avatar avatar={player.avatar} borderColor={agentColor} size={45} />
 		<div className="flex flex-col min-w-0">
-		  <span className={`text-heading-small truncate ${rowColor}`}>
+		  <span className={`text-heading-small truncate text-white`}>
 			{player.username}
 		  </span>
 		  <span className="text-body-primary truncate">

@@ -2,7 +2,7 @@ import PrimaryButton from "../../components/buttons/PrimaryButton";
 import ResultInfoRow from "../../components/results/ResultInfoRow";
 import TotalScoreCard from "../../components/results/TotalScoreCard";
 import GameResultList from "../../components/results/GameResultList";
-import ResultMap from "./2DMap/ResultMap";
+import ResultMap from "../game/2DMap/ResultMap";
 import { mockGameResult } from "../../mocks/gameResult.mock";
 import { mockGame } from "../../mocks/game.mock";
 import { useCurrentRoundStats } from "../../utils/useCurrentRoundStats";

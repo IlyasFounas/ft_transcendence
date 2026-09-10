@@ -37,6 +37,7 @@ export default function ResultInfoRow({title, infos, variant, suffix, animate} :
 				outline-offset-[-1px] 
 				outline-sky-950
 				rounded-[10px]
+				bg-surface-base
 				">
 				<h1 className={`${Style.title}`}>{title}</h1>
 				<div className="flex flex-row gap-2">

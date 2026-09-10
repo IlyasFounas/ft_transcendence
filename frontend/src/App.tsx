@@ -12,10 +12,11 @@ import LobbyPage from './pages/lobby/LobbyPage';
 import LobbyRoomPage from './pages/lobby/LobbyRoomPage';
 import AuthenticationPage from './pages/AuthenticationPage';
 import ProtectedRoute from './components/authentication/ProtectedRoute';
-import MultiplayerResultsPage from './pages/game/MultiplayerResultsPage';
-import SoloResultsPage from './pages/game/SoloResultsPage';
+import MultiplayerResultsPage from './pages/results/MultiplayerResultsPage';
+import SoloResultsPage from './pages/results/SoloResultsPage';
 import GameLayout from './layouts/GameLayout';
 import GamePlayPage from './pages/game/GamePlayPage';
+import SummaryResultsPage from './pages/results/SummaryResultsPage';
 
 function App() {
     return (
@@ -30,15 +31,20 @@ function App() {
               <Route element={<ChatLayout />}>
                   <Route path="/home" element={<HomePage />} />
                   <Route path="/multiplayer" element={<MultiplayerPage />} />
-                    <Route path="/profile" element={<ProfilePage />} />
+                  <Route path="/profile" element={<ProfilePage />} />
                   <Route path="/lobby" element={<LobbyPage/>} />
                   <Route path="/lobbyroom" element={<LobbyRoomPage/>} />
               </Route>
-            </Route>
+			  <Route element={<GameLayout />}>
+                <Route path="/soloresults" element={<SoloResultsPage/>} />
                 <Route path="/multiresults" element={<MultiplayerResultsPage/>} />
+                <Route path="/summaryresults" element={<SummaryResultsPage/>} />
+			  </Route>
+            </Route>
             <Route element={<MainLayout />}>
                 <Route path="/game" element={<GamePage/>} />
                 <Route path="/components" element={<ComponentsPage/>} />
+				<Route path="/leaderboard" element={<LeaderboardPage/>} />
               </Route>
             </Routes>
         </Router>
