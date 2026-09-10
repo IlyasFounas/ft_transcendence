@@ -16,4 +16,5 @@ type Friend struct {
 	CreatedAt		time.Time	`bun:"created_at,default:current_timestamp"`
 	
 	Requester 		*users.User `bun:"rel:belongs-to,join:requester_id=id"`
+	// Receiver		*users.User	`bun:"rel:belongs-to,join:receiver_id=id"`
 }

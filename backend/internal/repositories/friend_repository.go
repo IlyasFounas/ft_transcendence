@@ -47,6 +47,26 @@ func (r *FriendRepository) AcceptRequest(ctx context.Context, userId int64, requ
 	return true, nil
 }
 
+// func (r *FriendRepository) Friends(ctx context.Context, userId int64) ([]*friends.Friend, error) {
+// 	var friends []*friends.Friend
+// 	err := r.db.NewSelect().
+// 		Model(&friends).
+// 		Relation("Requester", func(q *bun.SelectQuery) *bun.SelectQuery {
+//         	return q.Column("id", "name", "avatar")
+// 		}).
+// 		Relation("Receiver", func(q *bun.SelectQuery) *bun.SelectQuery {
+//         	return q.Column("id", "name", "avatar")
+// 		}).
+// 		Where("(requester_id = ? OR receiver_id = ?) AND status = ?", userId, userId, "accepted").
+// 		Order("created_at DESC").
+// 		Scan(ctx)
+
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return friends, nil
+// }
+
 func (r *FriendRepository) FriendRequests(ctx context.Context, userId int64) ([]*friends.Friend, error) {
 	var friendRequests []*friends.Friend
 	err := r.db.NewSelect().

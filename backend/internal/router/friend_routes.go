@@ -11,7 +11,10 @@ func registerFriendRoutes(r *gin.Engine, h *handlers.FriendHandler) {
 	private.Use(middleware.AuthMiddleWare())
 	{
 		private.POST("/friend/add", h.AddFriend())
+
+		// private.GET("/friend", h.Friends())
 		private.GET("/friend/requests", h.FriendRequests())
+
 		private.PATCH("/friend/requests/:id/accept", h.AcceptRequest())
 	}
 }
