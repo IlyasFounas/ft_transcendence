@@ -98,6 +98,37 @@ func (h *FriendHandler) AcceptRequest() gin.HandlerFunc {
 	}
 }
 
+func (h *FriendHandler) RejectRequest() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userId, ok := c.Get("userId")
+		if !ok {
+			c.JSON(http.StatusUnauthorized,
+				gin.H{"message": "The userId is empty"})
+			return
+		}
+		rejectID := c.Param("id")
+		rejectIDInt, err := strconv.ParseInt(rejectID, 10, 64)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"message": "invalid requester ID"})
+			return
+		}
+		updated, err := h.friendRepo.RejectRequest(c.Request.Context(), userId.(int64), rejectIDInt)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError,
+				gin.H{"message": "Failed to reject friend request"})
+			return
+		}
+		if !updated {
+			c.JSON(http.StatusNotFound,
+				gin.H{"message": "No matching pending request"})
+			return
+		}
+		c.JSON(http.StatusOK,
+			gin.H{"message": "rejected friend"})
+	}
+}
+
 // getter
 
 // func (h *FriendHandler) Friends() gin.HandlerFunc {

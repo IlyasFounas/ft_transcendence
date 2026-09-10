@@ -16,5 +16,6 @@ func registerFriendRoutes(r *gin.Engine, h *handlers.FriendHandler) {
 		private.GET("/friend/requests", h.FriendRequests())
 
 		private.PATCH("/friend/requests/:id/accept", h.AcceptRequest())
+		private.PATCH("/friend/requests/:id/reject", h.RejectRequest())
 	}
 }
