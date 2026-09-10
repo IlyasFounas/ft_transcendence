@@ -90,7 +90,7 @@ func (h *FriendHandler) AcceptRequest() gin.HandlerFunc {
 		}
 		if !updated {
 			c.JSON(http.StatusNotFound,
-				gin.H{"message": "No matching pending request"})
+				gin.H{"message": "No matching request"})
 			return
 		}
 		c.JSON(http.StatusOK,
@@ -110,7 +110,7 @@ func (h *FriendHandler) RejectRequest() gin.HandlerFunc {
 		rejectIDInt, err := strconv.ParseInt(rejectID, 10, 64)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"message": "invalid requester ID"})
+				"message": "invalid ID"})
 			return
 		}
 		updated, err := h.friendRepo.RejectRequest(c.Request.Context(), userId.(int64), rejectIDInt)
@@ -121,7 +121,7 @@ func (h *FriendHandler) RejectRequest() gin.HandlerFunc {
 		}
 		if !updated {
 			c.JSON(http.StatusNotFound,
-				gin.H{"message": "No matching pending request"})
+				gin.H{"message": "No matching request"})
 			return
 		}
 		c.JSON(http.StatusOK,
@@ -141,7 +141,7 @@ func (h *FriendHandler) CancelRequest() gin.HandlerFunc {
 		cancelIDInt, err := strconv.ParseInt(cancelID, 10, 64)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{
-				"message": "invalid requester ID"})
+				"message": "invalid ID"})
 			return
 		}
 		updated, err := h.friendRepo.CancelRequest(c.Request.Context(), userId.(int64), cancelIDInt)
@@ -152,13 +152,45 @@ func (h *FriendHandler) CancelRequest() gin.HandlerFunc {
 		}
 		if !updated {
 			c.JSON(http.StatusNotFound,
-				gin.H{"message": "No matching pending request"})
+				gin.H{"message": "No matching request"})
 			return
 		}
 		c.JSON(http.StatusOK,
 			gin.H{"message": "canceled friend request"})
 	}
 }
+
+func (h *FriendHandler) RemoveFriend() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userId, ok := c.Get("userId")
+		if !ok {
+			c.JSON(http.StatusUnauthorized,
+				gin.H{"message": "The userId is empty"})
+			return
+		}
+		removeID := c.Param("id")
+		removeIDInt, err := strconv.ParseInt(removeID, 10, 64)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{
+				"message": "invalid ID"})
+			return
+		}
+		updated, err := h.friendRepo.RemoveFriend(c.Request.Context(), userId.(int64), removeIDInt)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError,
+				gin.H{"message": "Failed to remove friend"})
+			return
+		}
+		if !updated {
+			c.JSON(http.StatusNotFound,
+				gin.H{"message": "No matching request"})
+			return
+		}
+		c.JSON(http.StatusOK,
+			gin.H{"message": "removed friend"})
+	}
+}
+
 
 // getter
 

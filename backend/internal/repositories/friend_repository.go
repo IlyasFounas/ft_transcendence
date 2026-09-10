@@ -85,6 +85,26 @@ func (r *FriendRepository) CancelRequest(ctx context.Context, userId int64, canc
 	return true, nil
 }
 
+func (r *FriendRepository) RemoveFriend(ctx context.Context, userId int64, removeID int64) (bool, error) {
+	result, err := r.db.NewDelete().
+		Model((*friends.Friend)(nil)).
+		Where("(requester_id = ? AND receiver_id = ?) AND status = ?", userId, removeID, "accepted").
+		WhereOr("(requester_id = ? AND receiver_id = ?) AND status = ?", removeID, userId, "accepted").
+		Exec(ctx)
+	if err != nil {
+		return false, err
+	}
+
+	affected, err := result.RowsAffected()
+	if err != nil {
+		return false, err
+	}
+	if affected == 0 {
+		return false, nil
+	}
+	return true, nil
+}
+
 // func (r *FriendRepository) Friends(ctx context.Context, userId int64) ([]*friends.Friend, error) {
 // 	var friends []*friends.Friend
 // 	err := r.db.NewSelect().
