@@ -14,11 +14,9 @@ func registerLobbyRoutes(r *gin.Engine, h *handlers.GameHandler,
 	{
 		private.POST("/lobby/create", h.CreateLobby())
 		private.POST("/lobby/join", hl.JoinLobby())
-		// private.GET("/ws/lobby/join", client_ws.WsLobby())
+		private.GET("/ws/lobby/join", lobby_ws.WsJoinLobby(hub))
 		private.DELETE("/lobby/leave", hl.LeaveLobby())
 		private.DELETE("/lobby/remove/:username", hl.RemovePlayer())
 		private.GET("/lobby/allPlayers", hl.AllPlayers())
 	}
-	public := r.Group("/")
-	public.GET("/ws/lobby/join", lobby_ws.WsJoinLobby(hub))
 }
