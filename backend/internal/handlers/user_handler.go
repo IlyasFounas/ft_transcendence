@@ -116,7 +116,7 @@ func (h *UserHandler) jwtGeneration(c *gin.Context, userId int64) (*tokens.Activ
 	}
 	cookie.Set(c, "/api/auth", "refresh_token",
 		encodedKey, 7*24*time.Hour, true)
-	cookie.Set(c, "/api/auth", "Authorization",
+	cookie.Set(c, "/api", "Authorization",
 		tokenObj.Token, 15 * time.Minute, true)
 	return tokenObj, true
 }

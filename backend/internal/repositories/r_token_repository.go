@@ -56,3 +56,17 @@ func (tr *RefreshTokenRepository) SetRefreshUsedAt(ctx context.Context, hashToke
 	}
 	return nil
 }
+
+func (tr *RefreshTokenRepository) IsRefreshUsed(ctx context.Context,
+	hashToken string) (*time.Time, error) {
+	rToken := &tokens.RefreshToken{UsedAt: nil}
+	err := tr.db.NewSelect().
+		Model(rToken).
+		Column("used_at").
+		Where("hash_token = ?", hashToken).
+		Scan(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return rToken.UsedAt, nil
+}
