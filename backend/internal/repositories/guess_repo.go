@@ -192,6 +192,33 @@ func (r *GuessRepository) GetXPByUserID(ctx context.Context, user_id int64) (int
 	return total, nil
 }
 
+func (r *GuessRepository) GetLeaderboardByGameID(ctx context.Context, game_id int64) ([][2]int64, error) {
+	type leaderboard struct {
+        UserID int64 `bun:"user_id"`
+        Total  int64 `bun:"total"`
+    }
+
+	var rows []leaderboard
+	err := r.db.NewSelect().
+		Model((*guesses.Guess)(nil)).
+		ColumnExpr("g.user_id AS user_id").
+		ColumnExpr("SUM(g.score) AS total").
+		Join("JOIN rounds AS r ON r.id = g.round_id").
+		Where("r.game_id = ?", game_id).
+		Group("g.user_id").
+		OrderExpr("total DESC").
+		Scan(ctx, &rows)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get leaderboard for game %d: %w", game_id, err)
+	}
+	results := make([][2]int64, 0, len(rows))
+    for _, row := range rows {
+        results = append(results, [2]int64{row.UserID, row.Total})
+    }
+
+    return results, nil
+}
+
 // DELETE - using guess ID
 func (r *GuessRepository) DeleteByID(ctx context.Context, guess_id int64) error {
 	res, err := r.db.NewDelete().Model((*guesses.Guess)(nil)).Where("guess_id = ?", guess_id).Exec(ctx)

@@ -22,11 +22,12 @@ type GuessGetter interface {
 	GetLongitudeByID(ctx context.Context, guess_id int64) (float64, error)
 	GetCountryCodeByID(ctx context.Context, guess_id int64) (string, error)
 	GetDistanceByID(ctx context.Context, guess_id int64) (int64, error)
+	GetLocationIDByRoundID(ctx context.Context, round_id int64) (int64, error)
 	GetScoreByID(ctx context.Context, guess_id int64) (int64, error)
 	GetScoreByRoundAndUserID(ctx context.Context, round_id int64, user_id int64) (int64, error)
 	GetTotalScoreByGameAndUserID(ctx context.Context, game_id int64, user_id int64) (int64, error)
 	GetXPByUserID(ctx context.Context, user_id int64) (int64, error)
-	GetLocationIDByRoundID(ctx context.Context, round_id int64) (int64, error)
+	GetLeaderboardByGameID(ctx context.Context, game_id int64) ([][2]int64, error)
 	// GetUserIDByID(ctx context.Context, guess_id int64) (int64, error)
 	// GetRoundIDByID(ctx context.Context, guess_id int64) (int64, error)
 	// GetByRoundID(ctx context.Context, round_id int64) ([]*guesses.Guess, error)
@@ -488,6 +489,26 @@ func (h *GuessHandler) GetUserXP(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"user_xp": userXP})
+}
+
+// GET /guesses/leaderboard/:game_id //by game
+func (h *GuessHandler) GetLeaderboardByGame(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	game_id, err := strconv.ParseInt(c.Param("game_id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid game id"})
+		return
+	}
+
+	leaderboard, err := h.guessRepo.GetLeaderboardByGameID(ctx, game_id)
+	if err != nil {
+		log.Printf("Error getting leaderboard for game %d: %v", game_id, err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get leaderboard for this game"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"leaderboard": leaderboard})
 }
 
 // DELETE /guesses/:id
