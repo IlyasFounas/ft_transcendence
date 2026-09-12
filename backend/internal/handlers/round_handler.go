@@ -21,6 +21,7 @@ type RoundGetter interface {
 	GetLocationID(ctx context.Context, game_id int64, round_nb int64) (int64, error)
 	GetCoordinatesByLocationID(ctx context.Context, location_id int64) (float64, float64, error)
 	GetCCByLocationID(ctx context.Context, location_id int64) (string, error)
+	GetIDByGameIDAndRoundNb(ctx context.Context, game_id int64, round_nb int64) (int64, error)
 	// DeleteByID(ctx context.Context, round_id int64) error
 }
 

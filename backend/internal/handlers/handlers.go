@@ -25,6 +25,6 @@ func NewHandlers(repo *repositories.Repositories, reverser *rgeo.Rgeo) *Handlers
 		Game:		NewGameHandler(repo.Game, repo.Lobby, repo.Location),
 		Lobby:		NewLobbyHandler(repo.Game, repo.Lobby, repo.User),
 		Round:		NewRoundHandler(repo.Round),
-		Guess:		NewGuessHandler(repo.Guess, repo.Round, reverser),
+		Guess:		NewGuessHandler(repo.Guess, repo.Round, repo.Lobby, reverser),
 	}
 }

@@ -8,7 +8,6 @@ import (
 
 	"backend/internal/models/guesses"
 	"backend/internal/models/rounds"
-	// "backend/internal/models/locations"
 	"github.com/uptrace/bun"
 )
 
@@ -57,6 +56,7 @@ func (r *GuessRepository) GetCoordinatesByID(ctx context.Context, guess_id int64
 	return coordinates, nil
 }
 
+	// "backend/internal/models/locations"
 func (r *GuessRepository) GetLocationIDByRoundID(ctx context.Context, round_id int64) (int64, error) {
 	var locID int64
 	err := r.db.NewSelect().Model((*rounds.Round)(nil)).Column("loc_id").Where("id = ?", round_id).Limit(1).Scan(ctx, &locID)

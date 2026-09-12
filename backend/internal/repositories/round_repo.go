@@ -122,6 +122,23 @@ func (r *RoundRepository) GetCCByLocationID(ctx context.Context, location_id int
 	return r.locationRepository.GetCountryCodeByID(ctx, location_id)
 }
 
+func (r *RoundRepository) GetIDByGameIDAndRoundNb(ctx context.Context, game_id int64, round_nb int64) (int64, error) {
+	var roundID int64
+	err := r.db.NewSelect().
+		Model((*rounds.Round)(nil)).
+		Column("id").
+		Where("game_id = ? AND round_nb = ?", game_id, round_nb).
+		Limit(1).
+		Scan(ctx, &roundID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return 0, ErrRoundNotFound
+		}
+		return 0, fmt.Errorf("failed to get round id by game id %d and round_nb %d: %w", game_id, round_nb, err)
+	}
+	return roundID, nil
+}
+
 // // DELETE - using round ID
 // func (r *RoundRepository) DeleteByID(ctx context.Context, round_id int64) error {
 // 	res, err := r.db.NewDelete().Model((*rounds.Round)(nil)).Where("round_id = ?", round_id).Exec(ctx)

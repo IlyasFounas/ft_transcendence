@@ -39,11 +39,12 @@ type GuessGetter interface {
 type GuessHandler struct {
 	guessRepo GuessGetter;
 	roundRepo RoundGetter;
+	lobbyRepo *repositories.LobbyRepository;
 	reverser *rgeo.Rgeo;
 }
 
-func NewGuessHandler(guessRepo GuessGetter, roundRepo RoundGetter, reverser *rgeo.Rgeo) *GuessHandler {
-	return &GuessHandler{guessRepo: guessRepo, roundRepo: roundRepo, reverser: reverser}
+func NewGuessHandler(guessRepo GuessGetter, roundRepo RoundGetter, lobbyRepo *repositories.LobbyRepository, reverser *rgeo.Rgeo) *GuessHandler {
+	return &GuessHandler{guessRepo: guessRepo, roundRepo: roundRepo, lobbyRepo: lobbyRepo, reverser: reverser}
 }
 
 // Calculates distance based on lat + long compared to actual location
@@ -109,17 +110,49 @@ func (h *GuessHandler) AddGuess(c *gin.Context) {
     	c.JSON(http.StatusBadRequest, gin.H{"error": "latitude and longitude must be provided"})
     	return
 	}
-	if guess.RoundID == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "round_id must be provided"})
+	
+	if guess.RoundNb == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "round_nb must be provided"})
+		return
+	} // round_nb permet de recuperer le round_id en coordonnant avec le user_id (et checker si la game est en cours, et si le user a deja guess pour ce round, et si le round est bien celui de la game en cours)
+
+	if guess.UserID == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "user_id must be provided"})
+		return // a coordonner avec le round_nb
+	}
+
+	// check if the user is in an active lobby (to get the game_id and check if the round_nb is valid for this game)
+	lobby, err := h.lobbyRepo.ActualLobby(ctx, guess.UserID)
+	if err != nil {
+		log.Printf("Error getting active lobby for user %d: %v", guess.UserID, err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get active lobby"})
+		return
+	}
+	if lobby == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "user is not in an active lobby"})
 		return
 	}
 
+	// check if the round_nb exists in table rounds for this specific game id (if it is the next round to be played)
+	guess.RoundID, err = h.roundRepo.GetIDByGameIDAndRoundNb(ctx, lobby.GameId, guess.RoundNb)
+	if err != nil {
+		log.Printf("Error getting round id for game %d and round_nb %d: %v", lobby.GameId, guess.RoundNb, err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get round id"})
+		return
+	}
+	
+	// TODO check if game is not finished (finished value in the game table should be false, OR check if round_nb is less than round_total in the game table)
+	// TODO check if the player has not left the game
+	//TODO check if round is the actual round for this game (if round_nb is equal to the last round created for this game_id)
+
+	// get locationID using roundID (to get base coordinates and base country code)
 	locationID, err := h.guessRepo.GetLocationIDByRoundID(ctx, guess.RoundID)
 	if err != nil {
-		log.Printf("Error getting location ID for round %d: %v", guess.RoundID, err)
+		log.Printf("Error getting location ID for user %d at round %d: %v", guess.UserID, guess.RoundID, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get location ID for round"})
 		return
 	}
+	// get base coordinates using locationID
 	log.Printf("Location ID for round %d: %d", guess.RoundID, locationID) // TODO: remove this log after testing
 	baseLat, baseLong, err := h.roundRepo.GetCoordinatesByLocationID(ctx, locationID)
 	if err != nil {
@@ -129,8 +162,7 @@ func (h *GuessHandler) AddGuess(c *gin.Context) {
 	}
 	log.Printf("Base coordinates for round %d: (%f, %f)", guess.RoundID, baseLat, baseLong) // TODO: remove this log after testing
 	log.Printf("Guess coordinates: (%f, %f)", *guess.Lat, *guess.Long) // TODO: remove this log after testing
-
-	//get cc using locationID
+	//get base cc using locationID
 	baseCC, err := h.roundRepo.GetCCByLocationID(ctx, locationID)
 	if err != nil {
 		log.Printf("Error getting country code for location %d: %v", locationID, err)
