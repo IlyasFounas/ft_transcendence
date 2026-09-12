@@ -73,13 +73,12 @@ func WsJoinLobby(hub *HubWs) gin.HandlerFunc {
                 gin.H{"message": "The userId is empty"})
             return
         }
+        // Check if the player is in the right lobby
         lobby, err := hub.lobbyRepo.ActualLobby(c.Request.Context(), userId.(int64))
         if err != nil || lobby == nil {
             log.Println("error : can't find the lobby")
             return    
         }
-        // Check if the player is in the right lobby
-
         // We pass to an HTTP request to a websocket connexion
         conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
         if err != nil {
