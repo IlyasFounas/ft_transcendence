@@ -23,6 +23,7 @@ type GuessGetter interface {
 	GetCountryCodeByID(ctx context.Context, guess_id int64) (string, error)
 	GetDistanceByID(ctx context.Context, guess_id int64) (int64, error)
 	GetScoreByID(ctx context.Context, guess_id int64) (int64, error)
+	GetScoreByRoundAndUserID(ctx context.Context, round_id int64, user_id int64) (int64, error)
 	GetLocationIDByRoundID(ctx context.Context, round_id int64) (int64, error)
 	// GetUserIDByID(ctx context.Context, guess_id int64) (int64, error)
 	// GetRoundIDByID(ctx context.Context, guess_id int64) (int64, error)
@@ -40,11 +41,18 @@ type GuessHandler struct {
 	guessRepo GuessGetter;
 	roundRepo RoundGetter;
 	lobbyRepo *repositories.LobbyRepository;
+	gameRepo *repositories.GameRepository;
 	reverser *rgeo.Rgeo;
 }
 
-func NewGuessHandler(guessRepo GuessGetter, roundRepo RoundGetter, lobbyRepo *repositories.LobbyRepository, reverser *rgeo.Rgeo) *GuessHandler {
-	return &GuessHandler{guessRepo: guessRepo, roundRepo: roundRepo, lobbyRepo: lobbyRepo, reverser: reverser}
+func NewGuessHandler(guessRepo GuessGetter, roundRepo RoundGetter, lobbyRepo *repositories.LobbyRepository, 
+	gameRepo *repositories.GameRepository, reverser *rgeo.Rgeo) *GuessHandler {
+	return &GuessHandler{
+		guessRepo: guessRepo, 
+		roundRepo: roundRepo, 
+		lobbyRepo: lobbyRepo, 
+		gameRepo: gameRepo, 
+		reverser: reverser}
 }
 
 // Calculates distance based on lat + long compared to actual location
@@ -93,7 +101,6 @@ func calculateScore(createdGuess *guesses.Guess) {
 		createdGuess.Streak = 0
 	} 
 }
-
 // TODO ajouter un baseScore vs multiplierScore pour garder le baseScore pour le calcul des XP (xp = total de tous les baseScore de toutes les games jouees)
 
 // POST /guesses
@@ -140,10 +147,32 @@ func (h *GuessHandler) AddGuess(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get round id"})
 		return
 	}
-	
-	// TODO check if game is not finished (finished value in the game table should be false, OR check if round_nb is less than round_total in the game table)
+
+	// check if the game is finished (if true, then the user cannot guess anymore) OR check if round_nb is less than round_total in the game table
+	finished, err := h.gameRepo.Finished(ctx, lobby.GameId)
+	if err != nil {
+		log.Printf("Error checking if game %d is finished: %v", lobby.GameId, err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not check game status"})
+		return
+	}
+	if finished {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "this game is already finished"})
+		return
+	}
+
 	// TODO check if the player has not left the game
-	//TODO check if round is the actual round for this game (if round_nb is equal to the last round created for this game_id)
+
+	// round_nb should be the same as the current round (last round created for the game), else the user is trying to guess for a round that is not the current one (or has already been played)
+	nextRoundNb, err := h.roundRepo.GetNextRoundNb(ctx, lobby.GameId)
+	if err != nil {
+		log.Printf("Error getting current round number for game %d: %v", lobby.GameId, err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not verify round number"})
+		return
+	}
+	if guess.RoundNb != nextRoundNb - 1 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "round_nb does not match the current round for this game"})
+		return
+	}
 
 	// get locationID using roundID (to get base coordinates and base country code)
 	locationID, err := h.guessRepo.GetLocationIDByRoundID(ctx, guess.RoundID)
@@ -376,6 +405,36 @@ func (h *GuessHandler) GetGuessScore(c *gin.Context) {
 		}
 		log.Printf("Error getting score for guess %d: %v", guessID, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get score for guess"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"score": score})
+}
+
+// GET /guesses/score/:round_id/:user_id //by round and and user
+func (h *GuessHandler) GetGuessScoreByRoundAndUser(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	round_id, err := strconv.ParseInt(c.Param("round_id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid round id"})
+		return
+	}
+
+	user_id, err := strconv.ParseInt(c.Param("user_id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user id"})
+		return
+	}
+
+	score, err := h.guessRepo.GetScoreByRoundAndUserID(ctx, round_id, user_id)
+	if err != nil {
+		if errors.Is(err, repositories.ErrGuessNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "guess not found for this round and user"})
+			return
+		}
+		log.Printf("Error getting score for round %d and user %d: %v", round_id, user_id, err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get score for this round and user"})
 		return
 	}
 

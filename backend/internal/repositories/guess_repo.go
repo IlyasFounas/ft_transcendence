@@ -146,6 +146,23 @@ func (r *GuessRepository) GetScoreByID(ctx context.Context, guess_id int64) (int
 	return score, nil
 }
 
+// READ - using round ID
+func (r *GuessRepository) GetScoreByRoundAndUserID(ctx context.Context, round_id int64, user_id int64) (int64, error) {
+	var score int64
+	err := r.db.NewSelect().
+		Model((*guesses.Guess)(nil)).
+		Column("score").
+		Where("round_id = ? AND user_id = ?", round_id, user_id).
+		Scan(ctx, &score)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return 0, ErrGuessNotFound
+		}
+		return 0, fmt.Errorf("failed to get score for round %d and user %d: %w", round_id, user_id, err)
+	}
+	return score, nil
+}
+
 // DELETE - using guess ID
 func (r *GuessRepository) DeleteByID(ctx context.Context, guess_id int64) error {
 	res, err := r.db.NewDelete().Model((*guesses.Guess)(nil)).Where("guess_id = ?", guess_id).Exec(ctx)

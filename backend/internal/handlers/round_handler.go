@@ -16,7 +16,7 @@ type RoundGetter interface {
 	Create(ctx context.Context, round *rounds.Round) (*rounds.Round, error)
 	GetGame(ctx context.Context, game_id int64) error
 	// GetByID(ctx context.Context, round_id int64) (*rounds.Round, error)
-	GetRoundNb(ctx context.Context, game_id int64) (int64, error)
+	GetNextRoundNb(ctx context.Context, game_id int64) (int64, error)
 	CheckLastRound(ctx context.Context, game_id int64, round_nb int64) (bool, error)
 	GetLocationID(ctx context.Context, game_id int64, round_nb int64) (int64, error)
 	GetCoordinatesByLocationID(ctx context.Context, location_id int64) (float64, float64, error)
@@ -79,7 +79,7 @@ func (h *RoundHandler) NextRound(c *gin.Context) {
 	}
 
 	// calculate the actual round number using the number of rounds already created + 1
-	round.RoundNb, err = h.roundRepo.GetRoundNb(ctx, round.GameId)
+	round.RoundNb, err = h.roundRepo.GetNextRoundNb(ctx, round.GameId)
 	if err != nil {
 		log.Printf("Error counting rounds: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not count rounds"})

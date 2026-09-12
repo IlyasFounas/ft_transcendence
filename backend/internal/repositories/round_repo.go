@@ -62,7 +62,7 @@ func (r *RoundRepository) GetGame(ctx context.Context, game_id int64) error {
 }
 
 //READ - get the number of rounds already created for this game_id
-func (r *RoundRepository) GetRoundNb(ctx context.Context, game_id int64) (int64, error) {
+func (r *RoundRepository) GetNextRoundNb(ctx context.Context, game_id int64) (int64, error) {
 	var nextRound int64
 	err := r.db.NewSelect().
         ColumnExpr("COALESCE(MAX(round_nb), 0) + 1 AS next_round").

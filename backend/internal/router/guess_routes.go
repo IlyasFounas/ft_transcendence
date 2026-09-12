@@ -22,10 +22,7 @@ func registerGuessRoutes(r *gin.Engine, h *handlers.GuessHandler) {
 		public.GET("/guesses/:id/country", h.GetGuessCountryCode) //get country_code for a guess
 		public.GET("/guesses/:id/distance", h.GetGuessDistance) //get distance for a guess
 		public.GET("/guesses/:id/score", h.GetGuessScore) //get score for a guess
-		// public.GET("/guesses/:id/user_id", h.GetGuessUserID) //get user id for a guess
-		// public.GET("/guesses/:id/round_id", h.GetGuessRoundID) //get round id for a guess
-		// public.GET("/guesses/round/:round_id", h.GetGuessesByRoundID) //get all guesses for a round in order to calculate scores for each user in the round
-		// public.GET("/guesses/user/:user_id", h.GetGuessesByUserID) //get all guesses for a user in order to calculate scores for each user in the game
+		public.GET("/guesses/score/:round_id/:user_id", h.GetGuessScoreByRoundAndUser) //get score for a guess by round and user // ou /guesses/score/:round_id/:user_id
 
 		// public.PATCH("/guesses/:id", h.UpdateGuessByID) //update a guess  by id (latitude, longitude, round_id, user_id, game_id)
 
