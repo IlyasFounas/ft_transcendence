@@ -178,16 +178,16 @@ func (r *GuessRepository) GetTotalScoreByGameAndUserID(ctx context.Context, game
 	return total, nil
 }
 
-// READ - using user ID (to get the total score for that user across all games)
-func (r *GuessRepository) GetTotalScoreByUserID(ctx context.Context, user_id int64) (int64, error) {
+// READ - using user ID (to get the XP for that user across all games)
+func (r *GuessRepository) GetXPByUserID(ctx context.Context, user_id int64) (int64, error) {
 	var total int64
 	err := r.db.NewSelect().
 		Model((*guesses.Guess)(nil)).
-		ColumnExpr("COALESCE(SUM(score), 0)").
+		ColumnExpr("COALESCE(SUM(base_score), 0)").
 		Where("user_id = ?", user_id).
 		Scan(ctx, &total)
 	if err != nil {
-		return 0, fmt.Errorf("failed to get total score for user %d: %w", user_id, err)
+		return 0, fmt.Errorf("failed to get XP for user %d: %w", user_id, err)
 	}
 	return total, nil
 }

@@ -25,7 +25,7 @@ type GuessGetter interface {
 	GetScoreByID(ctx context.Context, guess_id int64) (int64, error)
 	GetScoreByRoundAndUserID(ctx context.Context, round_id int64, user_id int64) (int64, error)
 	GetTotalScoreByGameAndUserID(ctx context.Context, game_id int64, user_id int64) (int64, error)
-	GetTotalScoreByUserID(ctx context.Context, user_id int64) (int64, error)
+	GetXPByUserID(ctx context.Context, user_id int64) (int64, error)
 	GetLocationIDByRoundID(ctx context.Context, round_id int64) (int64, error)
 	// GetUserIDByID(ctx context.Context, guess_id int64) (int64, error)
 	// GetRoundIDByID(ctx context.Context, guess_id int64) (int64, error)
@@ -83,6 +83,7 @@ func calculateScore(createdGuess *guesses.Guess) {
 
 	distance := haversine.EarthDiameterMeters - createdGuess.Distance
 	createdGuess.Score = distance * 1000 / haversine.EarthDiameterMeters //put score on base 1000 (ex: if the distance is 0, the score is 1000, if the distance is 12742176, the score is 0)
+	createdGuess.BaseScore = createdGuess.Score // store the base score before multipliers for XP calculation
 
 	//multiplier time left (0 to 1, based on time max being one, and time min being zero, and time left being the difference between the time the time at the moment of validating guess and the time max)
 	totalTime := int64(120000000000) // TODO:  get total duration in nanoseconds (from game table where it is stored in seconds) here: maxtime to be taken from game table !
@@ -469,8 +470,8 @@ func (h *GuessHandler) GetTotalScoreByGameAndUser(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"total_score": totalScore})
 }
 
-// GET /guesses/game/total_score/:user_id //by user
-func (h *GuessHandler) GetTotalScoreByUser(c *gin.Context) {
+// GET /guesses/xp/:user_id //by user
+func (h *GuessHandler) GetUserXP(c *gin.Context) {
 	ctx := c.Request.Context()
 
 	user_id, err := strconv.ParseInt(c.Param("user_id"), 10, 64)
@@ -479,14 +480,14 @@ func (h *GuessHandler) GetTotalScoreByUser(c *gin.Context) {
 		return
 	}
 
-	totalScore, err := h.guessRepo.GetTotalScoreByUserID(ctx, user_id)
+	userXP, err := h.guessRepo.GetXPByUserID(ctx, user_id)
 	if err != nil {
 		log.Printf("Error getting total score for user %d: %v", user_id, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get total score for this user"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"total_score": totalScore})
+	c.JSON(http.StatusOK, gin.H{"user_xp": userXP})
 }
 
 // DELETE /guesses/:id
