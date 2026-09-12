@@ -24,6 +24,8 @@ type GuessGetter interface {
 	GetDistanceByID(ctx context.Context, guess_id int64) (int64, error)
 	GetScoreByID(ctx context.Context, guess_id int64) (int64, error)
 	GetScoreByRoundAndUserID(ctx context.Context, round_id int64, user_id int64) (int64, error)
+	GetTotalScoreByGameAndUserID(ctx context.Context, game_id int64, user_id int64) (int64, error)
+	GetTotalScoreByUserID(ctx context.Context, user_id int64) (int64, error)
 	GetLocationIDByRoundID(ctx context.Context, round_id int64) (int64, error)
 	// GetUserIDByID(ctx context.Context, guess_id int64) (int64, error)
 	// GetRoundIDByID(ctx context.Context, guess_id int64) (int64, error)
@@ -439,6 +441,52 @@ func (h *GuessHandler) GetGuessScoreByRoundAndUser(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"score": score})
+}
+
+// GET /guesses/total_score/:game_id/:user_id //by game and user
+func (h *GuessHandler) GetTotalScoreByGameAndUser(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	game_id, err := strconv.ParseInt(c.Param("game_id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid game id"})
+		return
+	}
+
+	user_id, err := strconv.ParseInt(c.Param("user_id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user id"})
+		return
+	}
+
+	totalScore, err := h.guessRepo.GetTotalScoreByGameAndUserID(ctx, game_id, user_id)
+	if err != nil {
+		log.Printf("Error getting total score for game %d and user %d: %v", game_id, user_id, err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get total score for this game and user"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"total_score": totalScore})
+}
+
+// GET /guesses/game/total_score/:user_id //by user
+func (h *GuessHandler) GetTotalScoreByUser(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	user_id, err := strconv.ParseInt(c.Param("user_id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user id"})
+		return
+	}
+
+	totalScore, err := h.guessRepo.GetTotalScoreByUserID(ctx, user_id)
+	if err != nil {
+		log.Printf("Error getting total score for user %d: %v", user_id, err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get total score for this user"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"total_score": totalScore})
 }
 
 // DELETE /guesses/:id

@@ -146,7 +146,7 @@ func (r *GuessRepository) GetScoreByID(ctx context.Context, guess_id int64) (int
 	return score, nil
 }
 
-// READ - using round ID
+// READ - using round ID (to get the score for that user in that round)
 func (r *GuessRepository) GetScoreByRoundAndUserID(ctx context.Context, round_id int64, user_id int64) (int64, error) {
 	var score int64
 	err := r.db.NewSelect().
@@ -161,6 +161,35 @@ func (r *GuessRepository) GetScoreByRoundAndUserID(ctx context.Context, round_id
 		return 0, fmt.Errorf("failed to get score for round %d and user %d: %w", round_id, user_id, err)
 	}
 	return score, nil
+}
+
+// READ - using game ID and user ID (to get the total score for that user in that game)
+func (r *GuessRepository) GetTotalScoreByGameAndUserID(ctx context.Context, game_id int64, user_id int64) (int64, error) {
+	var total int64
+	err := r.db.NewSelect().
+		Model((*guesses.Guess)(nil)).
+		ColumnExpr("COALESCE(SUM(g.score), 0)"). // COALESCE(..., 0) évite un NULL si l'utilisateur n'a encore aucun guess pour cette game (au lieu de creer une erreur)
+		Join("JOIN rounds AS r ON r.id = g.round_id").
+		Where("r.game_id = ? AND g.user_id = ?", game_id, user_id).
+		Scan(ctx, &total)
+	if err != nil {
+		return 0, fmt.Errorf("failed to get total score for game %d and user %d: %w", game_id, user_id, err)
+	}
+	return total, nil
+}
+
+// READ - using user ID (to get the total score for that user across all games)
+func (r *GuessRepository) GetTotalScoreByUserID(ctx context.Context, user_id int64) (int64, error) {
+	var total int64
+	err := r.db.NewSelect().
+		Model((*guesses.Guess)(nil)).
+		ColumnExpr("COALESCE(SUM(score), 0)").
+		Where("user_id = ?", user_id).
+		Scan(ctx, &total)
+	if err != nil {
+		return 0, fmt.Errorf("failed to get total score for user %d: %w", user_id, err)
+	}
+	return total, nil
 }
 
 // DELETE - using guess ID
