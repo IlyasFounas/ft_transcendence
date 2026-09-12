@@ -70,3 +70,15 @@ func (tr *RefreshTokenRepository) IsRefreshUsed(ctx context.Context,
 	}
 	return rToken.UsedAt, nil
 }
+
+func (tr *RefreshTokenRepository) DestroyTokens(ctx context.Context,
+	userId int64) error {
+	_, err := tr.db.NewDelete().
+		Model((*tokens.RefreshToken)(nil)).
+		Where("user_id = ?", userId).
+		Exec(ctx)
+	if err != nil {
+		return err
+	}
+	return nil
+}

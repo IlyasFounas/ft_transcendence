@@ -86,20 +86,22 @@ func (h *TokenHandler) RefreshToken() gin.HandlerFunc {
 		}
 		hashedKey := sha256.Sum256([]byte(encodedKey))
 		hashToken := fmt.Sprintf("%x", hashedKey)
-		usedAt, err := h.rTokenRepo.IsRefreshUsed(c.Request.Context(), hashToken)
-		if err != nil {
-			c.JSON(http.StatusUnauthorized,
-				gin.H{"message": "You have to login"})
-			return
-		}
-		if usedAt != nil {
-			c.JSON(http.StatusUnauthorized,
-				gin.H{"message": "This refresh token has been used, you have to login"})
-			return
-		}
+		cookie.Clear(c, "/api/auth", "refresh_token")
+		// check the refresh token
 		rToken, err := h.rTokenRepo.RefreshToken(c.Request.Context(), hashToken)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"message": "You have to login"})
+			return
+		}
+		if rToken.UsedAt != nil {
+			err := h.rTokenRepo.DestroyTokens(c.Request.Context(), rToken.UserID)
+			if err != nil {
+				c.JSON(http.StatusUnauthorized,
+					gin.H{"message": "Contact the support"})
+				return 
+			}
+			c.JSON(http.StatusUnauthorized,
+				gin.H{"message": "This refresh token has been used, you have to login"})
 			return
 		}
 		if err := h.rTokenRepo.SetRefreshUsedAt(c.Request.Context(), hashToken); err != nil {
