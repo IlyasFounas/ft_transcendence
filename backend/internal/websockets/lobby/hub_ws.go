@@ -117,6 +117,7 @@ func (h *HubWs) handleAction(ctx context.Context,
 				}
 			}
 			h.clientListBroadcast(serializedData.Client.gameId, ctx)
+		
 		default:
 			log.Printf("unknown action : %s\n", serializedData.Action)
 	}

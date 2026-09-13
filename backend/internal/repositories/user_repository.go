@@ -86,6 +86,22 @@ func (r *UserRepository) Name(ctx context.Context, userId int64) (*string, error
 	return &user.Username, nil
 }
 
+func (r *UserRepository) ExistingName(ctx context.Context, name string) (string, error) {
+	user := new(users.User)
+	err := r.db.NewSelect().
+		Model(user).
+		Column("name").
+		Where("name = ?", name).
+		Scan(ctx)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return "", nil
+		}
+		return "", err
+	}
+	return user.Username, nil
+}
+
 func (r *UserRepository) Login(ctx context.Context, userId int64) (*string, error) {
 	user := new(users.User)
 	err := r.db.NewSelect().
@@ -94,6 +110,22 @@ func (r *UserRepository) Login(ctx context.Context, userId int64) (*string, erro
 		Where("id = ?", userId).
 		Scan(ctx)
 	if err != nil {
+		return nil, err
+	}
+	return user.Login, nil
+}
+
+func (r *UserRepository) ExistingLogin(ctx context.Context, login string) (*string, error) {
+	user := new(users.User)
+	err := r.db.NewSelect().
+		Model(user).
+		Column("login").
+		Where("login = ?", login).
+		Scan(ctx)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
 		return nil, err
 	}
 	return user.Login, nil
