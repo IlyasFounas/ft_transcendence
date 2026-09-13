@@ -419,15 +419,15 @@ func (h *GuessHandler) GetGuessScore(c *gin.Context) {
 func (h *GuessHandler) GetGuessScoreByRoundAndUser(c *gin.Context) {
 	ctx := c.Request.Context()
 
-	round_id, err := strconv.ParseInt(c.Param("round_id"), 10, 64)
+	user_id, err := strconv.ParseInt(c.Param("user_id"), 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid round id"})
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "The user id is empty"})
 		return
 	}
 
-	user_id, err := strconv.ParseInt(c.Param("user_id"), 10, 64)
+	round_id, err := strconv.ParseInt(c.Param("round_id"), 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user id"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid round id"})
 		return
 	}
 
@@ -448,16 +448,16 @@ func (h *GuessHandler) GetGuessScoreByRoundAndUser(c *gin.Context) {
 // GET /guesses/total_score/:game_id/:user_id //by game and user
 func (h *GuessHandler) GetTotalScoreByGameAndUser(c *gin.Context) {
 	ctx := c.Request.Context()
+	
+		user_id, err := strconv.ParseInt(c.Param("user_id"), 10, 64)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"message": "The user id is empty"})
+			return
+		}
 
 	game_id, err := strconv.ParseInt(c.Param("game_id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid game id"})
-		return
-	}
-
-	user_id, err := strconv.ParseInt(c.Param("user_id"), 10, 64)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user id"})
 		return
 	}
 
@@ -477,7 +477,7 @@ func (h *GuessHandler) GetUserXP(c *gin.Context) {
 
 	user_id, err := strconv.ParseInt(c.Param("user_id"), 10, 64)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user id"})
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "The user id is empty"})
 		return
 	}
 
