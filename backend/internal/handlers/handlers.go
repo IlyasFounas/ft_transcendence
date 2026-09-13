@@ -4,7 +4,6 @@ import (
 	"backend/internal/repositories"
 	"github.com/sams96/rgeo"
 	"os"
-	"backend/internal/repositories"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 )
@@ -35,7 +34,7 @@ func NewHandlers(repo *repositories.Repositories, reverser *rgeo.Rgeo) *Handlers
 	googleConfig := googleConfigInit()
 	return &Handlers{
 		Location:	NewLocationHandler(repo.Location),
-		User:	 	NewUserHandler(repo.User, repo.AToken, tokenHandler, googleConfig),
+		User:	 	NewUserHandler(repo.User, repo.AToken, repo.RToken, tokenHandler, googleConfig),
 		Token:		tokenHandler,
 		Game:		NewGameHandler(repo.Game, repo.Lobby, repo.Location),
 		Lobby:		NewLobbyHandler(repo.Game, repo.Lobby, repo.User),
