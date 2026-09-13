@@ -9,5 +9,5 @@ type WsHandlers struct {
 }
 
 func NewWsHandlers(repo *repositories.Repositories) *WsHandlers {
-	return &WsHandlers{Lobby: NewLobbyWsHandler(repo.Lobby)}
+	return &WsHandlers{Lobby: NewLobbyWsHandler(repo.Lobby, repo.User)}
 }

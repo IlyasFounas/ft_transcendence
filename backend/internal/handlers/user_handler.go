@@ -116,6 +116,8 @@ func (h *UserHandler) jwtGeneration(c *gin.Context, userId int64) (*tokens.Activ
 	}
 	cookie.Set(c, "/api/auth", "refresh_token",
 		encodedKey, 7*24*time.Hour, true)
+	cookie.Set(c, "/api", "Authorization",
+		tokenObj.Token, 15 * time.Minute, true)
 	return tokenObj, true
 }
 
@@ -184,12 +186,14 @@ func (h *UserHandler) Login() gin.HandlerFunc {
 			return
 		} else {
 			// generate the jwt token here
-			tokenObj, ok := h.jwtGeneration(c, userId)
+			_, ok := h.jwtGeneration(c, userId)
 			if !ok {
 				return
 			}
+            // c.JSON(http.StatusOK,
+            //     gin.H{"Authorization": tokenObj.Token})
             c.JSON(http.StatusOK,
-                gin.H{"Authorization": tokenObj.Token})
+                gin.H{"message": "success"})
 		}
 	}
 }

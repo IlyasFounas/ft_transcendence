@@ -1,10 +1,9 @@
 package lobby_ws
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
-	"strconv"
-
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 )
@@ -49,41 +48,44 @@ func (c *ClientWs) ReadPump() {
     for {
         msgType, data, err := c.conn.ReadMessage()
         if err != nil {
+            log.Printf("error : %s\n", err)
             break // the connection ended up
         }
         if msgType == websocket.TextMessage {
-            log.Printf("client data : %s\n", data)
+            // log.Printf("client data : %s\n", data)
+            var serializedData DataInfos
+            err := json.Unmarshal(data, &serializedData)
+            if err != nil {
+                log.Printf("error : %s\n", err)
+                continue 
+            }
+            serializedData.Client = c
+            c.hub.action <- &serializedData
         }
     }
 }
 
 func WsJoinLobby(hub *HubWs) gin.HandlerFunc {
 	return func(c *gin.Context) {
-        userIdString := c.Query("user_id")
-        // userId, ok := c.Get("userId")
-        // if !ok {
-        //     c.JSON(http.StatusUnauthorized,
-        //         gin.H{"message": "The userId is empty"})
-        //     return
-        // }
-        userId, err := strconv.ParseInt(userIdString, 10, 64)
-        if err != nil {
-            log.Printf("error : %s\n", err)
+        userId, ok := c.Get("userId")
+        if !ok {
+            c.JSON(http.StatusUnauthorized,
+                gin.H{"message": "The userId is empty"})
             return
         }
-        lobby, err := hub.lobbyRepo.ActualLobby(c.Request.Context(), userId)
+        // Check if the player is in the right lobby
+        lobby, err := hub.lobbyRepo.ActualLobby(c.Request.Context(), userId.(int64))
         if err != nil || lobby == nil {
             log.Println("error : can't find the lobby")
             return    
         }
-        // Check if the player is in the right lobby
         // We pass to an HTTP request to a websocket connexion
         conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
         if err != nil {
             log.Printf("error : %s\n", err)
             return
         }
-        client := NewClient(hub, conn, userId, lobby.ID, lobby.GameId)
+        client := NewClient(hub, conn, userId.(int64), lobby.ID, lobby.GameId)
         client.hub.register <- client
         go client.WritePump()
         client.ReadPump()

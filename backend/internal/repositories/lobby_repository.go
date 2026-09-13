@@ -129,7 +129,7 @@ func (r *LobbyRepository) IsCreator(ctx context.Context,
 	lobby := new(games.Lobby)
 	err := r.db.NewSelect().
 		Model(lobby).
-		Column("join_code").
+		Column("is_creator").
 		Where("user_id = ?", userId).
 		Where("game_id = ?", gameId).
 		Scan(ctx)

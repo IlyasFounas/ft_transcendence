@@ -77,7 +77,6 @@ func (h *TokenHandler) CreateRefreshToken(ctx context.Context, userId int64) (st
 	return encodedKey, nil
 }
 
-// we start a token in the db to refresh a short connection token that we give to the client
 func (h *TokenHandler) RefreshToken() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		encodedKey, err := c.Cookie("refresh_token")
@@ -87,9 +86,22 @@ func (h *TokenHandler) RefreshToken() gin.HandlerFunc {
 		}
 		hashedKey := sha256.Sum256([]byte(encodedKey))
 		hashToken := fmt.Sprintf("%x", hashedKey)
+		cookie.Clear(c, "/api/auth", "refresh_token")
+		// check the refresh token
 		rToken, err := h.rTokenRepo.RefreshToken(c.Request.Context(), hashToken)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{"message": "You have to login"})
+			return
+		}
+		if rToken.UsedAt != nil {
+			err := h.rTokenRepo.DestroyTokens(c.Request.Context(), rToken.UserID)
+			if err != nil {
+				c.JSON(http.StatusUnauthorized,
+					gin.H{"message": "Contact the support"})
+				return 
+			}
+			c.JSON(http.StatusUnauthorized,
+				gin.H{"message": "This refresh token has been used, you have to login"})
 			return
 		}
 		if err := h.rTokenRepo.SetRefreshUsedAt(c.Request.Context(), hashToken); err != nil {
@@ -97,24 +109,27 @@ func (h *TokenHandler) RefreshToken() gin.HandlerFunc {
 				gin.H{"message": "You have to login"})
 			return
 		}
-		expiresAt := time.Now().Add(15 * time.Minute)
-		newToken, tokenErr := token_generation.GenerateToken(rToken.UserID, expiresAt,
-			[]byte(os.Getenv("JWT_SECRET")))
-		if tokenErr != nil {
-            c.JSON(http.StatusUnauthorized,
-				gin.H{"message": "You have to login"})
-			return
-		}
+		// creating the refresh_token
 		newEncodedKey, rTokenErr := h.CreateRefreshToken(c.Request.Context(), rToken.UserID)
 		if rTokenErr != nil {
 			c.JSON(http.StatusUnauthorized,
 				gin.H{"message": "You have to login"})
-			return
+				return
 		}
 		cookie.Set(c, "/api/auth", "refresh_token",
-		newEncodedKey, 7*24*time.Hour, true)
+			newEncodedKey, 7*24*time.Hour, true)
+		// creating the access_token
+		expiresAt := time.Now().Add(15 * time.Minute)
+		newToken, tokenErr := token_generation.GenerateToken(rToken.UserID, expiresAt,
+			[]byte(os.Getenv("JWT_SECRET")))
+		if tokenErr != nil {
+			c.JSON(http.StatusUnauthorized,
+				gin.H{"message": "You have to login"})
+			return
+		}
+		cookie.Set(c, "/api", "Authorization",
+			newToken.Token, 15 * time.Minute, true)
         c.JSON(http.StatusOK,gin.H{
-			"message": "success",
-			"Authorization": newToken.Token})
+			"message": "success"})
 	}
 }

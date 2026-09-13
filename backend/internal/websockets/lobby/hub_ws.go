@@ -1,12 +1,16 @@
 package lobby_ws
 
 import (
-	"log"
-	"encoding/json"
-	"context"
 	"backend/internal/repositories"
 	"backend/internal/websockets/handlers"
+	"context"
+	"encoding/json"
+	"log"
 )
+
+type kickPlayer struct {
+	TargetId int64 	 `json:"target_id"`
+}
 
 type playerInfos struct {
     ID       int64   `json:"id"`
@@ -14,16 +18,21 @@ type playerInfos struct {
     Avatar   *string `json:"avatar"`
 }
 
+type DataInfos struct {
+	Action	string
+	Payload json.RawMessage
+	Client	*ClientWs
+}
+
 type HubWs struct {
 	clients map[int64]map[*ClientWs]bool
 	register chan *ClientWs
 	unregister chan *ClientWs
-	broadcast chan []byte
+	action chan *DataInfos
 	lobbyRepo *repositories.LobbyRepository
 	userRepo *repositories.UserRepository
 	lobbyWsHandler *ws_handlers.LobbyWsHandler
 }
-
 
 func NewHub(
 	repo *repositories.Repositories,
@@ -32,7 +41,7 @@ func NewHub(
 	return &HubWs{clients: make(map[int64]map[*ClientWs]bool),
 		register: make(chan *ClientWs),
 		unregister: make(chan *ClientWs),
-		broadcast: make(chan []byte, 256),
+		action: make(chan *DataInfos),
 		lobbyRepo: repo.Lobby,
 		userRepo: repo.User,
 		lobbyWsHandler: wsHandlers.Lobby,
@@ -84,6 +93,35 @@ func (h *HubWs) unregisterClient(client *ClientWs) {
 	}
 }
 
+func (h *HubWs) handleAction(ctx context.Context,
+	serializedData *DataInfos) {
+	switch serializedData.Action {
+		case "leave":
+			serializedData.Client.conn.Close()
+		case "kick_player":
+			var targetClient kickPlayer
+			err := json.Unmarshal(serializedData.Payload, &targetClient)
+			if err != nil {
+				log.Printf("error : %s\n", err)
+				return 
+			}
+			if !h.lobbyWsHandler.RemovePlayer(ctx,
+				serializedData.Client.userId, targetClient.TargetId) {
+					return 
+			}
+			for client := range h.clients[serializedData.Client.gameId] {
+				if client.userId == targetClient.TargetId {
+					h.clientListBroadcast(serializedData.Client.gameId, ctx)
+					client.conn.Close()
+					return 
+				}
+			}
+			h.clientListBroadcast(serializedData.Client.gameId, ctx)
+		default:
+			log.Printf("unknown action : %s\n", serializedData.Action)
+	}
+}
+
 func (h *HubWs) Run(ctx context.Context) {
 	for {
 		select {
@@ -93,9 +131,12 @@ func (h *HubWs) Run(ctx context.Context) {
 		case client := <- h.unregister:
 			h.unregisterClient(client)
 			if !h.lobbyWsHandler.LeaveLobby(ctx, client.userId) {
-				return 
+				log.Println("error : the client can't leave the lobby in the database")
+				continue 
 			}
 			h.clientListBroadcast(client.gameId, ctx)
+		case serializedData := <- h.action:
+			h.handleAction(ctx, serializedData)
 		}
 	}
 }
