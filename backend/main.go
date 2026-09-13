@@ -18,6 +18,8 @@ import (
 	"backend/internal/router"
 	"github.com/gin-gonic/gin"
 	"github.com/sams96/rgeo"
+	"backend/internal/websockets/lobby"
+	"backend/internal/websockets/handlers"
 )
 
 /**
@@ -57,8 +59,17 @@ func main() {
 	}
 	h := handlers.NewHandlers(repo, reverser)
 
-	// 4. Router setup
-	r := router.NewRouter(h)
+	// 4. Instanciation of websockets handlers
+	wh := ws_handlers.NewWsHandlers(repo)
+
+	// 5. Run the hub websocket
+	appCtx, appCancel := context.WithCancel(context.Background())
+	defer appCancel()
+	hub := lobby_ws.NewHub(repo, wh)
+	go hub.Run(appCtx)
+
+	// 6. Router setup
+	r := router.NewRouter(h, hub)
 	srv := &http.Server{
 		Addr:         ":8080",
 		Handler:      r,
@@ -66,8 +77,8 @@ func main() {
 		WriteTimeout: 15 * time.Second,
 		IdleTimeout:  120 * time.Second,
 	}
-
-	// 5. Run the server in a goroutine to allow graceful shutdown
+	
+	// 7. Run the server in a goroutine to allow graceful shutdown
 	go func() {
 		log.Println("Starting server and listening on :8080...")
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -75,20 +86,20 @@ func main() {
 		}
 	}()
 
-	// 6. Graceful shutdown on SIGINT or SIGTERM
+	// 8. Graceful shutdown on SIGINT or SIGTERM
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 	log.Println("Shutdown signal received. Beginning graceful shutdown...")
 
-	// 7. Shutdown the server with a timeout context
+	// 9. Shutdown the server with a timeout context
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
 		log.Printf("Error during forced shutdown of HTTP server: %v", err)
 	}
 
-	// 8. Final cleanup of the asynchronous logs buffer
+	// 10. Final cleanup of the asynchronous logs buffer
 	log.Println("Closing location repository and flushing logs...")
 	repo.Location.Close()
 	log.Println("Application closed properly.")

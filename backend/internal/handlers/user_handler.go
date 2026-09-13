@@ -1,18 +1,26 @@
 package handlers
 
 import (
+	"crypto/sha256"
+	"log"
 	"fmt"
 	"net/http"
 	"os"
 	"time"
-
+	"errors"
+	"encoding/json"
+	"crypto/subtle"
 	"github.com/gin-gonic/gin"
+	"golang.org/x/oauth2"
 
 	"backend/internal/models/users"
 	"backend/internal/repositories"
+	"backend/internal/tools/code_generation"
+	"backend/internal/tools/cookie"
 	"backend/internal/tools/encryption"
 	"backend/internal/tools/mailing"
 	"backend/internal/tools/token_generation"
+	"backend/internal/models/users/tokens"
 )
 
 /**
@@ -24,18 +32,28 @@ import (
  * Basically, the handlers call the repository functions, manage any errors,
  * and return the result to the frontend (in JSON, plain text, etc.).
  */
-type UserHandler struct {
+ type UserHandler struct {
 	userRepo     *repositories.UserRepository
 	aTokenRepo   *repositories.ActivationTokenRepository
+	rTokenRepo   *repositories.RefreshTokenRepository
 	tokenHandler *TokenHandler
+	googleConf   *oauth2.Config
 }
 
-func NewUserHandler(userRepo *repositories.UserRepository,
+func NewUserHandler(
+	userRepo *repositories.UserRepository,
 	aTokenRepo *repositories.ActivationTokenRepository,
-	tokenHandler *TokenHandler) *UserHandler {
-	return &UserHandler{userRepo: userRepo, 
-		aTokenRepo: aTokenRepo,
-		tokenHandler: tokenHandler}
+	rTokenRepo *repositories.RefreshTokenRepository,
+	tokenHandler *TokenHandler,
+	googleConf *oauth2.Config,
+) *UserHandler {
+	return &UserHandler{
+		userRepo:     userRepo,
+		aTokenRepo:   aTokenRepo,
+		rTokenRepo:   rTokenRepo,
+		tokenHandler: tokenHandler,
+		googleConf:   googleConf,
+	}
 }
 
 func (h *UserHandler) createActivationToken(c *gin.Context, expiresAt time.Time,
@@ -81,6 +99,28 @@ func (h *UserHandler) createActivationToken(c *gin.Context, expiresAt time.Time,
 	return nil
 }
 
+func (h *UserHandler) jwtGeneration(c *gin.Context, userId int64) (*tokens.ActivationToken, bool) {
+	expiresAt := time.Now().Add(15 * time.Minute)
+	tokenObj, tokenErr := token_generation.GenerateToken(userId, expiresAt,
+		[]byte(os.Getenv("JWT_SECRET")))
+	if tokenErr != nil {
+        c.JSON(http.StatusInternalServerError,
+            gin.H{"message": "token creation went wrong"})
+		return nil, false
+	}
+	encodedKey, rTokenErr := h.tokenHandler.CreateRefreshToken(c.Request.Context(), userId)
+	if rTokenErr != nil {
+        c.JSON(http.StatusInternalServerError,
+            gin.H{"message": "Try to login again"})
+		return nil, false
+	}
+	cookie.Set(c, "/api/auth", "refresh_token",
+		encodedKey, 7*24*time.Hour, true)
+	cookie.Set(c, "/api", "Authorization",
+		tokenObj.Token, 15 * time.Minute, true)
+	return tokenObj, true
+}
+
 func (h *UserHandler) CreateUser() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		hashpassword, hashErr := encryption.HashPassword(c.PostForm("password"))
@@ -101,8 +141,8 @@ func (h *UserHandler) CreateUser() gin.HandlerFunc {
 		if len(username) == 0 {
 		    username = "player"	
 		}
-		userObj := &users.User{Login: login,
-			Password:    hashpassword,
+		userObj := &users.User{Login: &login,
+			Password:    &hashpassword,
 			Username:    username,
 			Email:       email,
 			Is_verified: false}
@@ -123,7 +163,7 @@ func (h *UserHandler) CreateUser() gin.HandlerFunc {
 	}
 }
 
-func (h *UserHandler) LoginUser() gin.HandlerFunc {
+func (h *UserHandler) Login() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		state, userId, err := h.userRepo.LoginUser(c.Request.Context(),
 			c.PostForm("login"), c.PostForm("password"))
@@ -132,7 +172,7 @@ func (h *UserHandler) LoginUser() gin.HandlerFunc {
 			if err := h.createActivationToken(c, expiresAt, userId); err != nil {
 				return
 			}
-			c.JSON(http.StatusOK,
+			c.JSON(http.StatusUnauthorized,
                 gin.H{"message": "The activation link has been sent on your email"})
             return
 		} else if err != nil {
@@ -143,25 +183,152 @@ func (h *UserHandler) LoginUser() gin.HandlerFunc {
 		if !state {
             c.JSON(http.StatusUnauthorized,
                 gin.H{"message": "Try to login again"})
+			return
 		} else {
 			// generate the jwt token here
-			expiresAt := time.Now().Add(15 * time.Minute)
-			tokenObj, tokenErr := token_generation.GenerateToken(userId, expiresAt,
-				[]byte(os.Getenv("JWT_SECRET")))
-			if tokenErr != nil {
-                c.JSON(http.StatusInternalServerError,
-                    gin.H{"message": "token creation went wrong"})
+			_, ok := h.jwtGeneration(c, userId)
+			if !ok {
 				return
 			}
-			encodedKey, rTokenErr := h.tokenHandler.CreateRefreshToken(c.Request.Context(), userId)
-			if rTokenErr != nil {
-                c.JSON(http.StatusInternalServerError,
-                    gin.H{"message": "Try to login again"})
-				return
-			}
+            // c.JSON(http.StatusOK,
+            //     gin.H{"Authorization": tokenObj.Token})
             c.JSON(http.StatusOK,
-                gin.H{"Authorization": tokenObj.Token, "Refresh-Token": encodedKey})
+                gin.H{"message": "success"})
 		}
+	}
+}
+
+func (h *UserHandler) GoogleLogin() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		state, err := code_generation.RandGenerate(32)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, 
+				gin.H{"message": "failed"})
+			return
+		}
+		cookie.Set(c, "/api/auth/google", "oauth_state",
+		state, 10*time.Minute, false)
+		url := h.googleConf.AuthCodeURL(state)
+		c.Redirect(http.StatusFound, url)
+	}
+}
+
+func (h *UserHandler) fetchGoogleUser(c *gin.Context, code string) (*users.GoogleUserInfo, error) {
+	token, err := h.googleConf.Exchange(c, code)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := h.googleConf.Client(c, token).Get("https://www.googleapis.com/oauth2/v3/userinfo")
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("userinfo: status %d", resp.StatusCode)
+	}
+	var info users.GoogleUserInfo
+	if err := json.NewDecoder(resp.Body).Decode(&info); err != nil {
+		return nil, err
+	}
+	return &info, nil
+}
+
+func (h *UserHandler) resolveGoogleUser(c *gin.Context, info *users.GoogleUserInfo) (*users.User, error) {
+	user, err := h.userRepo.UserByGoogleId(c.Request.Context(), &info.Sub)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "failed"})
+		return nil, err
+	}
+	if user != nil {
+		return user, nil
+	}
+
+	user, err = h.userRepo.UserByEmail(c.Request.Context(), info.Email)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "failed"})
+		return nil, err
+	}
+	if user != nil {
+		ok := h.setGoogleId(c, user.ID, &info.Sub)
+		if !ok {
+			c.JSON(http.StatusUnauthorized, gin.H{"message": "failed"})
+			return nil, errors.New("failed")
+		}
+		return user, nil
+	}
+	// création du compte à partir de info
+	userObj := &users.User{Login: nil,
+			Password:    nil,
+			Username:    info.Name,
+			Email:       info.Email,
+			Is_verified: true,
+			GoogleId: 	 &info.Sub,}
+	user, err = h.userRepo.CreateUser(c.Request.Context(), userObj)
+	if err != nil {
+        c.JSON(http.StatusInternalServerError,
+            gin.H{"message": "The account creation failed"})
+		return nil, errors.New("failed")
+	}
+	return user, nil
+}
+
+func (h *UserHandler) GoogleCallback() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		googleState := c.Query("state")
+		userState, err := c.Cookie("oauth_state")
+		if err != nil || c.Query("error") != "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"message": "failed"})
+			return
+		}
+		if subtle.ConstantTimeCompare([]byte(userState), []byte(googleState)) != 1 {
+			c.JSON(http.StatusUnauthorized, gin.H{"message": "failed"})
+			return
+		}
+		cookie.Clear(c, "/api/auth/google", "oauth_state")
+
+		userInfo, err := h.fetchGoogleUser(c, c.Query("code"))
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"message": "failed"})
+			return
+		}
+		if !userInfo.EmailVerified {
+			c.JSON(http.StatusUnauthorized, gin.H{"message": "failed"})
+			return
+		}
+
+		user, err := h.resolveGoogleUser(c, userInfo)
+		if err != nil {
+			return
+		}
+
+		_, ok := h.jwtGeneration(c, user.ID)
+		if !ok {
+			return
+		}
+		log.Printf("the user %d just logged in\n", user.ID)
+		// url := fmt.Sprintf("http://localhost:5130/home?Authorization=%s", tokenObj.Token)
+		url := "http://localhost:5130/home"
+		c.Redirect(http.StatusFound, url)
+	}
+}
+
+func (h *UserHandler) Logout() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		encodedKey, err := c.Cookie("refresh_token")
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"message": "You have to login"})
+			return
+		}
+		hashedKey := sha256.Sum256([]byte(encodedKey))
+		hashToken := fmt.Sprintf("%x", hashedKey)
+		if err := h.rTokenRepo.SetRefreshUsedAt(c.Request.Context(), hashToken); err != nil {
+			c.JSON(http.StatusUnauthorized,
+				gin.H{"message": "You have to login"})
+			return
+		}
+		cookie.Clear(c, "/api/auth", "refresh_token")
+		c.JSON(http.StatusOK,
+			gin.H{"message": "you are now logout"})
 	}
 }
 
@@ -212,7 +379,7 @@ func (h *UserHandler) Name() gin.HandlerFunc {
 		}
 	}
 }
-func (h *UserHandler) Login() gin.HandlerFunc {
+func (h *UserHandler) GetLogin() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userId, ok := c.Get("userId")
 		if !ok {
@@ -253,29 +420,6 @@ func (h *UserHandler) Email() gin.HandlerFunc {
 		}
 	}
 }
-func (h *UserHandler) OAuth() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		userId, ok := c.Get("userId")
-		if !ok {
-            c.JSON(http.StatusUnauthorized,
-                gin.H{"message": "The user id is empty"})
-			return
-		}
-		oauth, err := h.userRepo.OAuth(c.Request.Context(), userId.(int64))
-		if err != nil {
-            c.JSON(http.StatusInternalServerError, gin.H{"message": "failed"})
-			return
-		}
-        if oauth == nil {
-            c.JSON(http.StatusNotFound, gin.H{"message": "The user doesn't have a oauth"})
-			return
-		} else {
-            c.JSON(http.StatusOK, gin.H{
-            "message": "success",
-            "OAuth":  oauth})
-        }
-	}
-}
 
 func (h *UserHandler) UserByName() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -311,6 +455,19 @@ func (h *UserHandler) SetName() gin.HandlerFunc {
 		} else {
             c.JSON(http.StatusOK, gin.H{"message": "success"})
 		}
+	}
+}
+func (h *UserHandler) setGoogleId(c *gin.Context, userId int64, googleId *string) bool {
+	state, err := h.userRepo.SetGoogleId(c.Request.Context(), userId, googleId)
+	if err != nil {
+	    c.JSON(http.StatusInternalServerError, gin.H{"message": "failed"})
+		return false
+	}
+	if !state {
+	    c.JSON(http.StatusOK, gin.H{"message": "The googleId has not been modified"})
+		return false
+	} else {
+		return true
 	}
 }
 func (h *UserHandler) SetLogin() gin.HandlerFunc {

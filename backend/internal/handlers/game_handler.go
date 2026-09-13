@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"backend/internal/models/games"
 	"backend/internal/repositories"
-	"backend/internal/tools/join_code"
+	"backend/internal/tools/code_generation"
 )
 
 type GameHandler struct {
@@ -32,20 +32,16 @@ func initGameObj(c *gin.Context, locationRepo *repositories.LocationRepository) 
 	if err != nil {
 		return nil, err;
 	}
-	player_nb, err := strconv.ParseInt(c.PostForm("player_nb"), 10, 64)
-	if err != nil {
-		return nil, err;
-	}
 	if timer > 120 {
 		timer = 120
 	} else if (timer < 10) {
 		timer = 10
 	}
-	if round_total > 10 {
-		round_total = 2
+	if round_total > 5 {
+		round_total = 5
 	}
-	if player_nb > 2 {
-		player_nb = 2
+	if round_total < 0 {
+		round_total = 1
 	}
 
 	var locationIDs []int64
@@ -60,14 +56,15 @@ func initGameObj(c *gin.Context, locationRepo *repositories.LocationRepository) 
 		return nil, err;
 	}
 
+	// c.PostForm("mode")
 	gameObj := &games.Game{Title: "default",
-		Mode: c.PostForm("mode"),
-		Difficulty: "easy",
+		Mode: "Default",
+		Difficulty: "Default",
 		Timer: timer,
 		RoundTotal: round_total,
 		Finished: false,
-		PlayerNb: player_nb,
-		LocationIDs: locationIDs,}
+		PlayerNb: 10,
+		LocationIDs: locationIDs}
 	return gameObj, nil
 }
 
@@ -120,7 +117,7 @@ func (h *GameHandler) CreateLobby() gin.HandlerFunc {
 		lobbyObj := &games.Lobby{UserId: userId.(int64),
 								 IsCreator: true}
 		for i := 0; i < 50; i++ {
-			joinCode, err := join_code.RandGenerate()
+			joinCode, err := code_generation.RandGenerate(4)
 			if err != nil {
 				c.JSON(http.StatusUnauthorized,
 					gin.H{"message": "failed"})
