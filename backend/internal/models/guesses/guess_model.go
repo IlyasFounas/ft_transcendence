@@ -22,7 +22,7 @@ type Guess struct {
 	Score			int64			`bun:"score,notnull"` // score final avec multiplicateurs, utilisé pour le classement de la partie
 	RoundNb 		int64			`bun:"round_nb,notnull" json:"round_nb,omitempty"`
 	RoundID			int64			`bun:"round_id,notnull,unique:idx_guess_user_round"`
-	UserID			int64			`bun:"user_id,notnull,unique:idx_guess_user_round"`
+	UserID			int64			`bun:"user_id,notnull,unique:idx_guess_user_round" json:"user_id,omitempty"`
 
 	Round			*rounds.Round	`bun:"rel:belongs-to,join:round_id=id"`
 	User			*users.User		`bun:"rel:belongs-to,join:user_id=id"`
