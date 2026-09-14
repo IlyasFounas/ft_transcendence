@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 	"strconv"
+	// "fmt"
 
 	"github.com/gin-gonic/gin"
 
@@ -226,6 +227,8 @@ func (h *FriendHandler) FriendRequests() gin.HandlerFunc {
 		}
 		friendRequests, err := h.friendRepo.FriendRequests(c.Request.Context(), userId.(int64))
 		if err != nil {
+
+			// fmt.Println("FriendRequests error:", err)
 			c.JSON(http.StatusInternalServerError,
 				gin.H{"message": "Failed to get friend requests"})
 			return 

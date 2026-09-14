@@ -125,21 +125,20 @@ func (r *FriendRepository) RemoveFriend(ctx context.Context, userId int64, remov
 // 	return friends, nil
 // }
 
-func (r *FriendRepository) FriendRequests(ctx context.Context, userId int64) ([]*friends.Friend, error) {
-	var friendRequests []*friends.Friend
+func (r *FriendRepository) FriendRequests(ctx context.Context, userId int64) ([]*friends.FriendResponse, error) {
+	var friendRequests []*friends.FriendResponse
 	err := r.db.NewSelect().
-		Model(&friendRequests).
-		Column("id", "created_at").
-		Relation("Requester", func(q *bun.SelectQuery) *bun.SelectQuery {
-        	return q.Column("id", "name", "avatar")
-		}).
-		Where("receiver_id = ?", userId).
-		Where("status = ?", "pending").
-		Order("created_at DESC").
-		Scan(ctx)
+		TableExpr("friends AS f").
+        Join("JOIN users AS u ON u.id = f.requester_id").
+		Column("f.id", "u.name", "u.avatar", "f.created_at").
+		Where("f.receiver_id = ?", userId).
+		Where("f.status = ?", "pending").
+		Order("f.created_at DESC").
+		Scan(ctx, &friendRequests)
 
 	if err != nil {
 		return nil, err
 	}
 	return friendRequests, nil
 }
+
