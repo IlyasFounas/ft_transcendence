@@ -60,7 +60,7 @@ func main() {
 	h := handlers.NewHandlers(repo, reverser)
 
 	// 4. Instanciation of websockets handlers
-	wh := ws_handlers.NewWsHandlers(repo)
+	wh := ws_handlers.NewWsHandlers(repo, reverser)
 
 	// 5. Run the hub websocket
 	appCtx, appCancel := context.WithCancel(context.Background())

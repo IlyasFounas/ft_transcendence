@@ -32,6 +32,7 @@ type HubWs struct {
 	lobbyRepo *repositories.LobbyRepository
 	userRepo *repositories.UserRepository
 	lobbyWsHandler *ws_handlers.LobbyWsHandler
+	guessWsHandler *ws_handlers.GuessWsHandler
 }
 
 func NewHub(
@@ -45,6 +46,7 @@ func NewHub(
 		lobbyRepo: repo.Lobby,
 		userRepo: repo.User,
 		lobbyWsHandler: wsHandlers.Lobby,
+		guessWsHandler: wsHandlers.Guess,
 	}
 }
 
@@ -117,6 +119,9 @@ func (h *HubWs) handleAction(ctx context.Context,
 				}
 			}
 			h.clientListBroadcast(serializedData.Client.gameId, ctx)
+		case "guess" :
+			// attendre que tout le monde ait guess ou que le temps soit ecoulé
+			h.guessWsHandler.AddGuess(ctx, serializedData)
 		default:
 			log.Printf("unknown action : %s\n", serializedData.Action)
 	}
