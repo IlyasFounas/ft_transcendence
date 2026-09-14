@@ -1,12 +1,8 @@
 package handlers
 
 import (
-	"net/http"
-	"strconv"
-
-	"github.com/gin-gonic/gin"
-
-	"backend/internal/models/chats"
+	"log"
+	"context"
 	"backend/internal/repositories"
 )
 
