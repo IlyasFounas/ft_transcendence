@@ -169,6 +169,22 @@ func (r *FriendRepository) FriendStatus(ctx context.Context, userId int64, searc
     return &friendStatus, nil
 }
 
+func (r *FriendRepository) FriendshipExists(ctx context.Context, userId int64, searchID int64) (bool, error) {
+	exist, err := r.db.NewSelect().
+		Model((*friends.Friend)(nil)).
+		Where("(requester_id = ? AND receiver_id = ?)", userId, searchID).
+		WhereOr("(requester_id = ? AND receiver_id = ?)", searchID, userId).
+		Exists(ctx)
+		
+	if err != nil {
+		return false, err
+	}
+	if !exist {
+		return false, nil
+	}
+	return true, nil
+}
+
 func (r *FriendRepository) FriendRequests(ctx context.Context, userId int64) ([]*friends.FriendResponse, error) {
 	var friendRequests []*friends.FriendResponse
 	err := r.db.NewSelect().

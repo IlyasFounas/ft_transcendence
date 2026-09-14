@@ -3,7 +3,6 @@ package handlers
 import (
 	"net/http"
 	"strconv"
-	"fmt"
 
 	"github.com/gin-gonic/gin"
 
@@ -25,6 +24,7 @@ func NewFriendHandler (friendRepo *repositories.FriendRepository,
 func (h *FriendHandler) AddFriend() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userId, ok := c.Get("userId")
+		RequesterID := userId.(int64)
 		if !ok {
 			c.JSON(http.StatusUnauthorized,
 				gin.H{"message": "The userId is empty"})
@@ -37,8 +37,24 @@ func (h *FriendHandler) AddFriend() gin.HandlerFunc {
 				gin.H{"message": "can't get the user by name"})
 			return
 		}
+		if RequesterID == user.ID {
+			c.JSON(http.StatusBadRequest,
+				gin.H{"message": "user sent bad request"})
+			return
+		}
+		exists, err := h.friendRepo.FriendshipExists(c.Request.Context(), RequesterID, user.ID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError,
+				gin.H{"message": "Failed to get friendship"})
+			return
+		}
+		if exists {
+			c.JSON(http.StatusConflict,
+				gin.H{"message": "Friendship is already existed"})
+			return
+		}
 		friendObj := &friends.Friend{
-			Requester_ID: userId.(int64),
+			Requester_ID: RequesterID,
 			Receiver_ID: user.ID,
 		}
 		_, err = h.friendRepo.AddFriend(c.Request.Context(), friendObj)
@@ -223,7 +239,6 @@ func (h *FriendHandler) FriendStatus() gin.HandlerFunc {
 		searchUserID := user.ID
 		friendStatus, err := h.friendRepo.FriendStatus(c.Request.Context(), userId.(int64), searchUserID)
 		if err != nil {
-			// fmt.Println("FriendRequests error:", err)
 			c.JSON(http.StatusInternalServerError,
 				gin.H{"message": "Failed to get friend status"})
 			return
@@ -246,7 +261,6 @@ func (h *FriendHandler) FriendRequests() gin.HandlerFunc {
 		}
 		friendRequests, err := h.friendRepo.FriendRequests(c.Request.Context(), userId.(int64))
 		if err != nil {
-			// fmt.Println("FriendRequests error:", err)
 			c.JSON(http.StatusInternalServerError,
 				gin.H{"message": "Failed to get friend requests"})
 			return 
