@@ -3,7 +3,7 @@ package handlers
 import (
 	"net/http"
 	"strconv"
-	// "fmt"
+	"fmt"
 
 	"github.com/gin-gonic/gin"
 
@@ -21,22 +21,6 @@ func NewFriendHandler (friendRepo *repositories.FriendRepository,
 	return &FriendHandler{friendRepo: friendRepo,
 		userRepo: userRepo}
 }
-
-/**
- * func:
- * - AddFriend()
- * - RemoveFriend()
- * - AcceptRequest()
- * - RejectRequest()
- * - CancelRequest()
- * 
- * getter func:
- * - Friends(userID): get list of UserID friends
- * - IsFriend(userID): check if this id is friend
- * - FriendRequests()
- * - FriendPending()
- */
-
 
 func (h *FriendHandler) AddFriend() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -216,6 +200,42 @@ func (h *FriendHandler) Friends() gin.HandlerFunc {
 	}
 }
 
+func (h *FriendHandler) FriendStatus() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userId, ok := c.Get("userId")
+		if !ok {
+			c.JSON(http.StatusUnauthorized,
+				gin.H{"message": "The userId is empty"})
+			return
+		}
+		username := c.Param("username")
+		if username == "" {
+			c.JSON(http.StatusBadRequest,
+				gin.H{"message": "username is required"})
+			return
+		}
+		user, err := h.userRepo.UserByName(c.Request.Context(), username)
+		if err != nil {
+			c.JSON(http.StatusBadRequest,
+				gin.H{"message": "cannot find this user"})
+			return
+		}
+		searchUserID := user.ID
+		friendStatus, err := h.friendRepo.FriendStatus(c.Request.Context(), userId.(int64), searchUserID)
+		if err != nil {
+			// fmt.Println("FriendRequests error:", err)
+			c.JSON(http.StatusInternalServerError,
+				gin.H{"message": "Failed to get friend status"})
+			return
+		}
+		c.JSON(http.StatusOK,
+			gin.H{
+				"message": "success",
+				"friendStatus": friendStatus,
+			})
+	}
+}
+
 func (h *FriendHandler) FriendRequests() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userId, ok := c.Get("userId")
@@ -226,7 +246,6 @@ func (h *FriendHandler) FriendRequests() gin.HandlerFunc {
 		}
 		friendRequests, err := h.friendRepo.FriendRequests(c.Request.Context(), userId.(int64))
 		if err != nil {
-
 			// fmt.Println("FriendRequests error:", err)
 			c.JSON(http.StatusInternalServerError,
 				gin.H{"message": "Failed to get friend requests"})

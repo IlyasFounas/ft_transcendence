@@ -4,6 +4,8 @@ import (
 	"backend/internal/models/friends"
 	"context"
 	"github.com/uptrace/bun"
+	"errors"
+	"database/sql"
 )
 
 type FriendRepository struct {
@@ -132,6 +134,39 @@ func (r *FriendRepository) Friends(ctx context.Context, userId int64) ([]*friend
         return nil, err
     }
     return friendList, nil
+}
+
+func (r *FriendRepository) FriendStatus(ctx context.Context, userId int64, searchUserID int64) (*friends.FriendStatusResponse, error) {
+	var friendStatus friends.FriendStatusResponse
+	err := r.db.NewSelect().
+		TableExpr("friends AS f").
+		Join("JOIN users As u ON u.id = ?", searchUserID).
+		ColumnExpr("u.id AS user_id").
+		Column("u.name", "u.avatar", "f.status", "f.requester_id").
+		Where("(requester_id = ? AND receiver_id = ?)", userId, searchUserID).
+		WhereOr("(requester_id = ? AND receiver_id = ?)", searchUserID, userId).
+        Scan(ctx, &friendStatus)
+	
+	if err != nil {
+        if errors.Is(err, sql.ErrNoRows) {
+            return &friends.FriendStatusResponse{
+                UserID: searchUserID,
+                Status: "none",
+            }, nil
+        }
+        return nil, err
+    }
+	
+	if friendStatus.Status == "accepted" {
+        friendStatus.Status = "friends"
+    } else if friendStatus.Status == "pending" {
+        if friendStatus.RequesterID == userId {
+            friendStatus.Status = "pending_sent"
+        } else {
+            friendStatus.Status = "pending_received"
+        }
+    }
+    return &friendStatus, nil
 }
 
 func (r *FriendRepository) FriendRequests(ctx context.Context, userId int64) ([]*friends.FriendResponse, error) {
