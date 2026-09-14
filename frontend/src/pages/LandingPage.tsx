@@ -81,13 +81,6 @@ export default function LandingPage() {
                     >
                         Login
                     </PrimaryButton>
-
-                    <PrimaryButton 
-                        size="small"
-                        onClick={() => navigate("/game")}
-                    >
-                      Start Guest Mode
-                    </PrimaryButton>
                 </div>
 
                 <button

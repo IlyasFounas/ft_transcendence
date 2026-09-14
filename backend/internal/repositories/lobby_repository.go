@@ -60,6 +60,8 @@ func (r *LobbyRepository) ActualLobbyGameId(ctx context.Context,
 }
 
 // return the actual lobby / game the user is in
+// WARNING : if the user isn't in a lobby, it return nil
+// so you must check if the lobby is nil after calling this function
 func (r *LobbyRepository) ActualLobby(ctx context.Context,
 	userId int64) (*games.Lobby, error) {
 	lobby := new(games.Lobby)
@@ -127,7 +129,7 @@ func (r *LobbyRepository) IsCreator(ctx context.Context,
 	lobby := new(games.Lobby)
 	err := r.db.NewSelect().
 		Model(lobby).
-		Column("join_code").
+		Column("is_creator").
 		Where("user_id = ?", userId).
 		Where("game_id = ?", gameId).
 		Scan(ctx)

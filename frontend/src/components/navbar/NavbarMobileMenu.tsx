@@ -1,5 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { House, Users, Trophy, User, LogOut, } from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
 
 interface NavbarMobileMenuProps {
     isOpen: boolean;
@@ -10,6 +11,9 @@ export default function NavbarMobileMenu({
     isOpen,
     onClose,
 }: NavbarMobileMenuProps) {
+    
+    const { logout } = useAuth();
+
     return (
         <>
             {/* add background overlay */}
@@ -132,6 +136,7 @@ export default function NavbarMobileMenu({
 
                     <button
                         type="button"
+                        onClick={logout}
                         className="
                             flex
                             items-center
