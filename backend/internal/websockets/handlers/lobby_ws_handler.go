@@ -3,17 +3,27 @@ package ws_handlers
 import (
 	"log"
 	"context"
+	"encoding/json"
 	"backend/internal/repositories"
 )
 
 type LobbyWsHandler struct {
 	lobbyRepo *repositories.LobbyRepository
+	gameRepo *repositories.GameRepository
 	userRepo *repositories.UserRepository
 }
 
+type lobbyInfos struct {
+    JoinCode string  `json:"join_code"`
+    NbRounds int 	 `json:"nb_rounds"`
+    Timer 	 int64	 `json:"timer"`
+}
+
 func NewLobbyWsHandler(lobbyRepo *repositories.LobbyRepository, 
+	gameRepo *repositories.GameRepository,
 	userRepo *repositories.UserRepository) *LobbyWsHandler {
 	return &LobbyWsHandler{lobbyRepo: lobbyRepo,
+		gameRepo: gameRepo,
 		userRepo: userRepo}
 }
 
@@ -99,4 +109,31 @@ func (h *LobbyWsHandler) RemovePlayer(ctx context.Context,
 		return false
 	}
 	return true
+}
+
+func (h *LobbyWsHandler) Timer(ctx context.Context, gameId int64) (int64, bool) {
+	timer, err := h.gameRepo.Timer(ctx, gameId)
+	if err != nil {
+		log.Printf("error : %s\n", err)
+		return 0, false;
+	}
+	return timer, true
+}
+
+func (h *LobbyWsHandler) SendInfos(ctx context.Context, gameId int64) ([]byte, bool) {
+	timer, ok := h.Timer(ctx, gameId)
+	if !ok {
+		return nil, false;
+	}
+	data := lobbyInfos{
+		// JoinCode: joinCode,
+		// NbRounds: nbRounds,
+		Timer: timer,
+	}
+	resData, err := json.Marshal(data)
+	if err != nil {
+		log.Printf("error : %s\n", err)
+		return nil, false;
+	}
+	return resData, true
 }

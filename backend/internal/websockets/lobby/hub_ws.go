@@ -16,6 +16,7 @@ type playerInfos struct {
     ID       int64   `json:"id"`
     Username string  `json:"username"`
     Avatar   *string `json:"avatar"`
+	Host	 bool	 `json:host`
 }
 
 type DataInfos struct {
@@ -49,6 +50,35 @@ func NewHub(
 }
 
 func (h *HubWs) clientListBroadcast(gameId int64, ctx context.Context) {
+	lobbies, err := h.lobbyRepo.AllPlayers(ctx, gameId)
+	if err != nil {
+		log.Printf("error : %s\n", err)
+		return 
+	}
+	usersLobby := make([]playerInfos, 0, len(lobbies))
+	for _, lobby := range lobbies {
+		user, err := h.userRepo.User(ctx, lobby.UserId)
+		if err != nil {
+			log.Printf("error : %s\n", err)
+			return 
+		}
+		usersLobby = append(usersLobby, playerInfos{
+			ID:       user.ID,
+			Username: user.Username,
+			Avatar:   user.Avatar,
+		})
+	}
+	for client := range h.clients[gameId] {
+		serializedData, err := json.Marshal(usersLobby)
+		if err != nil {
+			log.Printf("error : %s\n", err)
+			return 
+		}
+		client.send <- serializedData
+	}
+}
+
+func (h *HubWs) pingClientList(gameId int64, ctx context.Context) {
 	lobbies, err := h.lobbyRepo.AllPlayers(ctx, gameId)
 	if err != nil {
 		log.Printf("error : %s\n", err)
@@ -128,6 +158,8 @@ func (h *HubWs) Run(ctx context.Context) {
 		select {
 		case client := <- h.register:
 			h.registerClient(client)
+			// send the infos
+			h.pingClientList(client.gameId, ctx)
 			h.clientListBroadcast(client.gameId, ctx)
 		case client := <- h.unregister:
 			h.unregisterClient(client)

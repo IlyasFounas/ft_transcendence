@@ -1,13 +1,15 @@
 package handlers
 
 import (
-	"fmt"
-	"strconv"
-	"net/http"
-	"github.com/gin-gonic/gin"
 	"backend/internal/models/games"
 	"backend/internal/repositories"
 	"backend/internal/tools/code_generation"
+	"fmt"
+	// "log"
+	"net/http"
+	"strconv"
+
+	"github.com/gin-gonic/gin"
 )
 
 type GameHandler struct {
@@ -31,8 +33,8 @@ func initGameObj(c *gin.Context) (*games.Game, error) {
 	}
 	if timer > 120 {
 		timer = 120
-	} else if (timer < 10) {
-		timer = 10
+	} else if (timer < 5) {
+		timer = 5
 	}
 	if round_nb > 5 {
 		round_nb = 5
@@ -40,13 +42,12 @@ func initGameObj(c *gin.Context) (*games.Game, error) {
 	if round_nb < 0 {
 		round_nb = 1
 	}
-	// c.PostForm("mode")
 	gameObj := &games.Game{Title: "default",
 		Mode: "Default",
 		Difficulty: "Default",
 		Timer: timer,
 		RoundNb: round_nb,
-		Finished: false,
+		FinishedAt: nil,
 		PlayerNb: 10}
 	return gameObj, nil
 }
@@ -135,6 +136,7 @@ func (h *GameHandler) CreateLobby() gin.HandlerFunc {
 	}
 }
 
+// Getters
 func (h *GameHandler) Game() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id, err := strconv.ParseInt(c.Param("id"), 10, 64)
@@ -306,6 +308,7 @@ func (h *GameHandler) CreatedAt() gin.HandlerFunc {
 	}
 }
 
+// Setters
 func (h *GameHandler) SetTitle() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id, err := strconv.ParseInt(c.Param("id"), 10, 64)
@@ -450,13 +453,7 @@ func (h *GameHandler) SetFinished() gin.HandlerFunc {
 				gin.H{"success": false})
 			return ;
 		}
-		finished, err := strconv.ParseBool(c.PostForm("finished"))
-		if err != nil {
-			c.JSON(http.StatusUnauthorized,
-				gin.H{"success": false})
-			return ;
-		}
-		err = h.gameRepo.SetFinished(c.Request.Context(), id, finished)
+		err = h.gameRepo.SetFinished(c.Request.Context(), id)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized,
 				gin.H{"success": false})

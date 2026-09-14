@@ -17,6 +17,8 @@ func registerLobbyRoutes(r *gin.Engine, h *handlers.GameHandler,
 		private.GET("/ws/lobby/join", lobby_ws.WsJoinLobby(hub))
 		private.DELETE("/lobby/leave", hl.LeaveLobby())
 		private.DELETE("/lobby/remove/:username", hl.RemovePlayer())
+		private.GET("/game/historic/:userid", hl.Historic())
+		private.GET("/game/nbgames/:userid", hl.NbGames())
 		private.GET("/lobby/allPlayers", hl.AllPlayers())
 	}
 }
