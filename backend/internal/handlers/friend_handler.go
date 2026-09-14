@@ -34,7 +34,7 @@ func (h *FriendHandler) AddFriend() gin.HandlerFunc {
 		user, err := h.userRepo.UserByName(c.Request.Context(), username)
 		if err != nil {
 			c.JSON(http.StatusBadRequest,
-				gin.H{"message": "can't get the user by name"})
+				gin.H{"message": "user not found")
 			return
 		}
 		if RequesterID == user.ID {
@@ -233,7 +233,7 @@ func (h *FriendHandler) FriendStatus() gin.HandlerFunc {
 		user, err := h.userRepo.UserByName(c.Request.Context(), username)
 		if err != nil {
 			c.JSON(http.StatusBadRequest,
-				gin.H{"message": "cannot find this user"})
+				gin.H{"message": "user not found"})
 			return
 		}
 		searchUserID := user.ID
