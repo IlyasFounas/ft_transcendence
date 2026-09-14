@@ -203,7 +203,7 @@ func (h *FriendHandler) RemoveFriend() gin.HandlerFunc {
 // 				gin.H{"message": "The userId is empty"})
 // 			return
 // 		}
-// 		friends, err := h.friendRepo.Friends(c.Request.Context(), userId.(int64))
+// 		friendList, err := h.friendRepo.Friends(c.Request.Context(), userId.(int64))
 // 		if err != nil {
 // 			c.JSON(http.StatusInternalServerError,
 // 				gin.H{"message": "Failed to get friend list"})
@@ -212,7 +212,7 @@ func (h *FriendHandler) RemoveFriend() gin.HandlerFunc {
 // 		c.JSON(http.StatusOK,
 // 			gin.H{
 // 				"message": "success",
-// 				"friends": friends,
+// 				"friends": friendList,
 // 			})
 // 	}
 // }

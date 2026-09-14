@@ -105,24 +105,21 @@ func (r *FriendRepository) RemoveFriend(ctx context.Context, userId int64, remov
 	return true, nil
 }
 
-// func (r *FriendRepository) Friends(ctx context.Context, userId int64) ([]*friends.Friend, error) {
-// 	var friends []*friends.Friend
+// func (r *FriendRepository) Friends(ctx context.Context, userId int64) ([]*friends.FriendResponse, error) {
+// 	var friendList []*friends.FriendResponse
 // 	err := r.db.NewSelect().
-// 		Model(&friends).
-// 		Relation("Requester", func(q *bun.SelectQuery) *bun.SelectQuery {
-//         	return q.Column("id", "name", "avatar")
-// 		}).
-// 		Relation("Receiver", func(q *bun.SelectQuery) *bun.SelectQuery {
-//         	return q.Column("id", "name", "avatar")
-// 		}).
-// 		Where("(requester_id = ? OR receiver_id = ?) AND status = ?", userId, userId, "accepted").
-// 		Order("created_at DESC").
-// 		Scan(ctx)
+// 		TableExpr("friends AS f").
+// 		Join("JOIN users AS u ON u.id = f.requester_id").
+// 		Column("u.id", "u.name", "u.avatar").
+// 		Where("(f.requester_id = ? OR f.receiver_id = ?)", userId, userId).
+// 		Where("f.status = ?", "accepted")
+// 		Order("u.name ASC").
+// 		Scan(ctx, &friendList)
 
 // 	if err != nil {
 // 		return nil, err
 // 	}
-// 	return friends, nil
+// 	return friendList, nil
 // }
 
 func (r *FriendRepository) FriendRequests(ctx context.Context, userId int64) ([]*friends.FriendResponse, error) {
@@ -131,6 +128,7 @@ func (r *FriendRepository) FriendRequests(ctx context.Context, userId int64) ([]
 		TableExpr("friends AS f").
         Join("JOIN users AS u ON u.id = f.requester_id").
 		Column("f.id", "u.name", "u.avatar", "f.created_at").
+		ColumnExpr("f.requester_id AS user_id").
 		Where("f.receiver_id = ?", userId).
 		Where("f.status = ?", "pending").
 		Order("f.created_at DESC").
@@ -141,4 +139,3 @@ func (r *FriendRepository) FriendRequests(ctx context.Context, userId int64) ([]
 	}
 	return friendRequests, nil
 }
-
