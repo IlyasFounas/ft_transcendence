@@ -2,7 +2,6 @@ package friends
 
 import (
 	"github.com/uptrace/bun"
-	"backend/internal/models/users"
 	"time"
 )
 

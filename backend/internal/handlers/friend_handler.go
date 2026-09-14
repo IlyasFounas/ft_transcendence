@@ -239,3 +239,25 @@ func (h *FriendHandler) FriendRequests() gin.HandlerFunc {
 			})
 	}
 }
+
+func (h *FriendHandler) FriendPending() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userId, ok := c.Get("userId")
+		if !ok {
+			c.JSON(http.StatusUnauthorized,
+				gin.H{"message": "The userId is empty"})
+			return
+		}
+		friendPending, err := h.friendRepo.FriendPending(c.Request.Context(), userId.(int64))
+		if err != nil {
+			c.JSON(http.StatusInternalServerError,
+				gin.H{"message": "Failed to get friend pending list"})
+			return 
+		}
+		c.JSON(http.StatusOK,
+			gin.H{
+				"message": "success",
+				"friendPending": friendPending,
+			})
+	}
+}

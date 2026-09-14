@@ -14,6 +14,7 @@ func registerFriendRoutes(r *gin.Engine, h *handlers.FriendHandler) {
 
 		private.GET("/friend", h.Friends())
 		private.GET("/friend/requests", h.FriendRequests())
+		private.GET("/friend/requests/pending", h.FriendPending())
 
 		private.PATCH("/friend/requests/:id/accept", h.AcceptRequest())
 

@@ -151,3 +151,21 @@ func (r *FriendRepository) FriendRequests(ctx context.Context, userId int64) ([]
 	}
 	return friendRequests, nil
 }
+
+func (r *FriendRepository) FriendPending(ctx context.Context, userId int64) ([]*friends.FriendResponse, error) {
+	var friendPending []*friends.FriendResponse
+	err := r.db.NewSelect().
+		TableExpr("friends AS f").
+        Join("JOIN users AS u ON u.id = f.receiver_id").
+		Column("f.id", "u.name", "u.avatar", "f.created_at").
+		ColumnExpr("f.receiver_id AS user_id").
+		Where("f.requester_id = ?", userId).
+		Where("f.status = ?", "pending").
+		Order("f.created_at DESC").
+		Scan(ctx, &friendPending)
+
+	if err != nil {
+		return nil, err
+	}
+	return friendPending, nil
+}
