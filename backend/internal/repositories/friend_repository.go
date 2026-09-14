@@ -105,22 +105,34 @@ func (r *FriendRepository) RemoveFriend(ctx context.Context, userId int64, remov
 	return true, nil
 }
 
-// func (r *FriendRepository) Friends(ctx context.Context, userId int64) ([]*friends.FriendResponse, error) {
-// 	var friendList []*friends.FriendResponse
-// 	err := r.db.NewSelect().
-// 		TableExpr("friends AS f").
-// 		Join("JOIN users AS u ON u.id = f.requester_id").
-// 		Column("u.id", "u.name", "u.avatar").
-// 		Where("(f.requester_id = ? OR f.receiver_id = ?)", userId, userId).
-// 		Where("f.status = ?", "accepted")
-// 		Order("u.name ASC").
-// 		Scan(ctx, &friendList)
+func (r *FriendRepository) Friends(ctx context.Context, userId int64) ([]*friends.FriendResponse, error) {
+    var friendList []*friends.FriendResponse
+    err := r.db.NewSelect().
+        TableExpr("friends AS f").
+        Join(`
+            JOIN users AS u ON u.id =
+            CASE
+                WHEN f.requester_id = ? THEN f.receiver_id
+                ELSE f.requester_id
+            END
+        `, userId).
+        ColumnExpr(`
+            CASE
+                WHEN f.requester_id = ? THEN f.receiver_id
+                ELSE f.requester_id
+            END AS user_id
+        `, userId).
+        Column("f.id", "u.name", "u.avatar").
+		Where("(f.requester_id = ? OR f.receiver_id = ?)", userId, userId).
+		Where("f.status = ?", "accepted").
+        Order("f.created_at DESC").
+        Scan(ctx, &friendList)
 
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return friendList, nil
-// }
+    if err != nil {
+        return nil, err
+    }
+    return friendList, nil
+}
 
 func (r *FriendRepository) FriendRequests(ctx context.Context, userId int64) ([]*friends.FriendResponse, error) {
 	var friendRequests []*friends.FriendResponse

@@ -192,30 +192,29 @@ func (h *FriendHandler) RemoveFriend() gin.HandlerFunc {
 	}
 }
 
-
 // getter
 
-// func (h *FriendHandler) Friends() gin.HandlerFunc {
-// 	return func(c *gin.Context) {
-// 		userId, ok := c.Get("userId")
-// 		if !ok {
-// 			c.JSON(http.StatusUnauthorized,
-// 				gin.H{"message": "The userId is empty"})
-// 			return
-// 		}
-// 		friendList, err := h.friendRepo.Friends(c.Request.Context(), userId.(int64))
-// 		if err != nil {
-// 			c.JSON(http.StatusInternalServerError,
-// 				gin.H{"message": "Failed to get friend list"})
-// 			return
-// 		}
-// 		c.JSON(http.StatusOK,
-// 			gin.H{
-// 				"message": "success",
-// 				"friends": friendList,
-// 			})
-// 	}
-// }
+func (h *FriendHandler) Friends() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userId, ok := c.Get("userId")
+		if !ok {
+			c.JSON(http.StatusUnauthorized,
+				gin.H{"message": "The userId is empty"})
+			return
+		}
+		friendList, err := h.friendRepo.Friends(c.Request.Context(), userId.(int64))
+		if err != nil {
+			c.JSON(http.StatusInternalServerError,
+				gin.H{"message": "Failed to get friend list"})
+			return
+		}
+		c.JSON(http.StatusOK,
+			gin.H{
+				"message": "success",
+				"friends": friendList,
+			})
+	}
+}
 
 func (h *FriendHandler) FriendRequests() gin.HandlerFunc {
 	return func(c *gin.Context) {
