@@ -3,8 +3,10 @@ package handlers
 import (
 	"net/http"
 	"strconv"
+	"errors"
 
 	"github.com/gin-gonic/gin"
+	"database/sql"
 
 	"backend/internal/models/friends"
 	"backend/internal/repositories"
@@ -24,17 +26,17 @@ func NewFriendHandler (friendRepo *repositories.FriendRepository,
 func (h *FriendHandler) AddFriend() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userId, ok := c.Get("userId")
-		RequesterID := userId.(int64)
 		if !ok {
 			c.JSON(http.StatusUnauthorized,
 				gin.H{"message": "The userId is empty"})
-			return
-		}
+				return
+			}
+		RequesterID := userId.(int64)
 		username := c.PostForm("username")
 		user, err := h.userRepo.UserByName(c.Request.Context(), username)
 		if err != nil {
 			c.JSON(http.StatusBadRequest,
-				gin.H{"message": "user not found")
+				gin.H{"message": "user not found"})
 			return
 		}
 		if RequesterID == user.ID {
@@ -59,9 +61,14 @@ func (h *FriendHandler) AddFriend() gin.HandlerFunc {
 		}
 		_, err = h.friendRepo.AddFriend(c.Request.Context(), friendObj)
 		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				c.JSON(http.StatusNotFound,
+					gin.H{"message": "user not found"})
+				return
+			}
 			c.JSON(http.StatusInternalServerError,
-				gin.H{"message": "Failed to add friend"})
-			return
+					gin.H{"message": "Failed to add friend"})
+				return
 		}
 		c.JSON(http.StatusCreated,
 			gin.H{"message": "friend request sent"})

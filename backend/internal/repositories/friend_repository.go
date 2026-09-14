@@ -175,7 +175,7 @@ func (r *FriendRepository) FriendshipExists(ctx context.Context, userId int64, s
 		Where("(requester_id = ? AND receiver_id = ?)", userId, searchID).
 		WhereOr("(requester_id = ? AND receiver_id = ?)", searchID, userId).
 		Exists(ctx)
-		
+
 	if err != nil {
 		return false, err
 	}
