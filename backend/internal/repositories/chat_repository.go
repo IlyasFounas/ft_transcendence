@@ -13,3 +13,13 @@ type ChatRepository struct {
 func NewChatRepository(db *bun.DB) *ChatRepository {
 	return &ChatRepository{db: db}
 }
+
+func (r *ChatRepository) Send(ctx context.Context, chat *chats.Chat) (*chats.Chat, error) {
+	_, err := r.db.NewInsert().
+		Model(chat).
+		Exec(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return chat, nil
+}
