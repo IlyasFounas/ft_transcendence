@@ -12,6 +12,7 @@ type Repositories struct {
 	Game     *GameRepository
 	Lobby    *LobbyRepository
 	Friend   *FriendRepository
+	Chat     *ChatRepository
 }
 
 // NewRepositories instanciates and assembles all the repositories
@@ -29,5 +30,6 @@ func NewRepositories(db *bun.DB) (*Repositories, error) {
 		Game:     NewGameRepository(db),
 		Lobby:    NewLobbyRepository(db),
 		Friend:	  NewFriendRepository(db),
+		Chat: 	  NewChatRepository(db),
 	}, nil
 }
