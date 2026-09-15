@@ -1,17 +1,13 @@
 export async function apiFetch (
     url: string,
     options: RequestInit = {},
-    accessToken?: string | null
 ) {
     try {
         const response = await fetch(url, {
             ...options,
             credentials: "include",
             headers: {
-                ...options.headers,
-                ...(accessToken
-                    ? { Authorization: accessToken }
-                    : {}),
+                ...options.headers
             },
         });
         
