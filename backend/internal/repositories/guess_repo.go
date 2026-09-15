@@ -219,6 +219,19 @@ func (r *GuessRepository) GetLeaderboardByGameID(ctx context.Context, game_id in
     return results, nil
 }
 
+// READ - using round ID (to get all guesses for that round)
+func (r *GuessRepository) GetByRoundID(ctx context.Context, round_id int64) ([]*guesses.Guess, error) {
+	var guesses []*guesses.Guess
+	err := r.db.NewSelect().
+				Model(&guesses).
+				Where("round_id = ?", round_id).
+				Scan(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get guesses by round ID: %w", err)
+	}
+	return guesses, nil
+}
+
 // DELETE - using guess ID
 func (r *GuessRepository) DeleteByID(ctx context.Context, guess_id int64) error {
 	res, err := r.db.NewDelete().Model((*guesses.Guess)(nil)).Where("guess_id = ?", guess_id).Exec(ctx)

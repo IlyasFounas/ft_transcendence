@@ -1,36 +1,56 @@
 package lobby_ws
 
 import (
+	"backend/internal/models/guesses"
 	"backend/internal/repositories"
 	"backend/internal/websockets/handlers"
 	"context"
 	"encoding/json"
 	"log"
+	"time"
 )
 
 type kickPlayer struct {
-	TargetId int64 	 `json:"target_id"`
+	TargetId int64 `json:"target_id"`
 }
 
 type playerInfos struct {
-    ID       int64   `json:"id"`
-    Username string  `json:"username"`
-    Avatar   *string `json:"avatar"`
+	ID       int64   `json:"id"`
+	Username string  `json:"username"`
+	Avatar   *string `json:"avatar"`
+}
+
+type roundTimeoutPayload struct {
+	RoundID int64 `json:"round_id"`
+}
+
+type startRoundPayload struct {
+	RoundID         int64 `json:"round_id"`
+	DurationSeconds int64 `json:"duration_seconds"`
 }
 
 type DataInfos struct {
-	Action	string
+	Action  string
 	Payload json.RawMessage
-	Client	*ClientWs
+	Client *ClientWs
+	GameId int64
+}
+
+func (d *DataInfos) resolveGameId() int64 {
+	if d.Client != nil {
+		return d.Client.gameId
+	}
+	return d.GameId
 }
 
 type HubWs struct {
-	clients map[int64]map[*ClientWs]bool
-	register chan *ClientWs
-	unregister chan *ClientWs
-	action chan *DataInfos
-	lobbyRepo *repositories.LobbyRepository
-	userRepo *repositories.UserRepository
+	clients        map[int64]map[*ClientWs]bool
+	register       chan *ClientWs
+	unregister     chan *ClientWs
+	action         chan *DataInfos
+	roundTimers    map[int64]*time.Timer // clé = gameId, uniquement touché depuis Run()
+	lobbyRepo      *repositories.LobbyRepository
+	userRepo       *repositories.UserRepository
 	lobbyWsHandler *ws_handlers.LobbyWsHandler
 	guessWsHandler *ws_handlers.GuessWsHandler
 }
@@ -39,12 +59,14 @@ func NewHub(
 	repo *repositories.Repositories,
 	wsHandlers *ws_handlers.WsHandlers,
 ) *HubWs {
-	return &HubWs{clients: make(map[int64]map[*ClientWs]bool),
-		register: make(chan *ClientWs),
-		unregister: make(chan *ClientWs),
-		action: make(chan *DataInfos),
-		lobbyRepo: repo.Lobby,
-		userRepo: repo.User,
+	return &HubWs{
+		clients:        make(map[int64]map[*ClientWs]bool),
+		register:       make(chan *ClientWs),
+		unregister:     make(chan *ClientWs),
+		action:         make(chan *DataInfos),
+		roundTimers:    make(map[int64]*time.Timer),
+		lobbyRepo:      repo.Lobby,
+		userRepo:       repo.User,
 		lobbyWsHandler: wsHandlers.Lobby,
 		guessWsHandler: wsHandlers.Guess,
 	}
@@ -54,14 +76,14 @@ func (h *HubWs) clientListBroadcast(gameId int64, ctx context.Context) {
 	lobbies, err := h.lobbyRepo.AllPlayers(ctx, gameId)
 	if err != nil {
 		log.Printf("error : %s\n", err)
-		return 
+		return
 	}
 	usersLobby := make([]playerInfos, 0, len(lobbies))
 	for _, lobby := range lobbies {
 		user, err := h.userRepo.User(ctx, lobby.UserId)
 		if err != nil {
 			log.Printf("error : %s\n", err)
-			return 
+			return
 		}
 		usersLobby = append(usersLobby, playerInfos{
 			ID:       user.ID,
@@ -69,12 +91,18 @@ func (h *HubWs) clientListBroadcast(gameId int64, ctx context.Context) {
 			Avatar:   user.Avatar,
 		})
 	}
+	h.broadcast(gameId, usersLobby)
+}
+
+// broadcast sérialise payload une seule fois et l'envoie à tous les
+// clients actuellement connectés pour gameId.
+func (h *HubWs) broadcast(gameId int64, payload interface{}) {
+	serializedData, err := json.Marshal(payload)
+	if err != nil {
+		log.Printf("error : %s\n", err)
+		return
+	}
 	for client := range h.clients[gameId] {
-		serializedData, err := json.Marshal(usersLobby)
-		if err != nil {
-			log.Printf("error : %s\n", err)
-			return 
-		}
 		client.send <- serializedData
 	}
 }
@@ -87,61 +115,137 @@ func (h *HubWs) registerClient(client *ClientWs) {
 }
 
 func (h *HubWs) unregisterClient(client *ClientWs) {
-	if _, ok := h.clients[client.lobbyId]; ok {
-		delete(h.clients[client.lobbyId], client)
+	if _, ok := h.clients[client.gameId]; ok {
+		delete(h.clients[client.gameId], client)
 	}
 	if len(h.clients[client.gameId]) == 0 {
 		delete(h.clients, client.gameId)
 	}
+	close(client.send)
 }
 
-func (h *HubWs) handleAction(ctx context.Context,
-	serializedData *DataInfos) {
-	switch serializedData.Action {
-		case "leave":
-			serializedData.Client.conn.Close()
-		case "kick_player":
-			var targetClient kickPlayer
-			err := json.Unmarshal(serializedData.Payload, &targetClient)
-			if err != nil {
-				log.Printf("error : %s\n", err)
-				return 
+func (h *HubWs) handleAction(ctx context.Context, data *DataInfos) {
+	switch data.Action {
+	case "leave":
+		data.Client.conn.Close()
+
+	case "kick_player":
+		var targetClient kickPlayer
+		if err := json.Unmarshal(data.Payload, &targetClient); err != nil {
+			log.Printf("error : %s\n", err)
+			return
+		}
+		if !h.lobbyWsHandler.RemovePlayer(ctx, data.Client.userId, targetClient.TargetId) {
+			return
+		}
+		for client := range h.clients[data.Client.gameId] {
+			if client.userId == targetClient.TargetId {
+				h.clientListBroadcast(data.Client.gameId, ctx)
+				client.conn.Close()
+				return
 			}
-			if !h.lobbyWsHandler.RemovePlayer(ctx,
-				serializedData.Client.userId, targetClient.TargetId) {
-					return 
-			}
-			for client := range h.clients[serializedData.Client.gameId] {
-				if client.userId == targetClient.TargetId {
-					h.clientListBroadcast(serializedData.Client.gameId, ctx)
-					client.conn.Close()
-					return 
-				}
-			}
-			h.clientListBroadcast(serializedData.Client.gameId, ctx)
-		case "guess" :
-			// attendre que tout le monde ait guess ou que le temps soit ecoulé
-			h.guessWsHandler.AddGuess(ctx, serializedData)
-		default:
-			log.Printf("unknown action : %s\n", serializedData.Action)
+		}
+		h.clientListBroadcast(data.Client.gameId, ctx)
+
+	case "guess":
+		h.handleGuess(ctx, data)
+
+	case "start_round":
+		var payload startRoundPayload
+		if err := json.Unmarshal(data.Payload, &payload); err != nil {
+			log.Printf("error : %s\n", err)
+			return
+		}
+		h.startRoundTimer(data.resolveGameId(), payload.RoundID, time.Duration(payload.DurationSeconds)*time.Second)
+
+	case "round_timeout":
+		var payload roundTimeoutPayload
+		if err := json.Unmarshal(data.Payload, &payload); err != nil {
+			log.Printf("error : %s\n", err)
+			return
+		}
+		gameId := data.resolveGameId()
+		delete(h.roundTimers, gameId) // le timer vient de sonner, plus besoin de le garder
+		roundGuesses, err := h.guessWsHandler.GetRoundGuesses(ctx, payload.RoundID)
+		if err != nil {
+			log.Printf("error : %s\n", err)
+			return
+		}
+		h.finalizeRound(ctx, gameId, roundGuesses)
+
+	default:
+		log.Printf("unknown action : %s\n", data.Action)
 	}
+}
+
+
+func (h *HubWs) handleGuess(ctx context.Context, data *DataInfos) {
+	createdGuess, ok := h.guessWsHandler.AddGuess(ctx, data.Payload, data.Client.userId, data.Client.gameId)
+	if !ok {
+		// TODO : renvoyer une erreur ciblée uniquement à data.Client, par ex. data.Client.send <- []byte(`{"error":"guess refused"}`)
+		return
+	}
+
+	activePlayers, err := h.lobbyRepo.AllPlayers(ctx, data.Client.gameId)
+	if err != nil {
+		log.Printf("error : %s\n", err)
+		return
+	}
+
+	roundGuesses, err := h.guessWsHandler.GetRoundGuesses(ctx, createdGuess.RoundID)
+	if err != nil {
+		log.Printf("error : %s\n", err)
+		return
+	}
+
+	if len(roundGuesses) >= len(activePlayers) {
+		h.finalizeRound(ctx, data.Client.gameId, roundGuesses)
+	}
+}
+
+
+func (h *HubWs) finalizeRound(ctx context.Context, gameId int64, roundGuesses []*guesses.Guess) {
+	if timer, ok := h.roundTimers[gameId]; ok {
+		timer.Stop()
+		delete(h.roundTimers, gameId)
+	}
+
+	results, err := h.guessWsHandler.BuildRoundResults(ctx, gameId, roundGuesses)
+	if err != nil {
+		log.Printf("error : %s\n", err)
+		return
+	}
+	h.broadcast(gameId, results)
+
+	// TODO déclencher la création/le démarrage du round suivant (ou la fin de partie si c'était le dernier round)
+}
+
+
+func (h *HubWs) startRoundTimer(gameId, roundId int64, duration time.Duration) {
+	if existing, ok := h.roundTimers[gameId]; ok {
+		existing.Stop()
+	}
+	h.roundTimers[gameId] = time.AfterFunc(duration, func() {
+		payload, _ := json.Marshal(roundTimeoutPayload{RoundID: roundId})
+		h.action <- &DataInfos{Action: "round_timeout", Payload: payload, GameId: gameId}
+	})
 }
 
 func (h *HubWs) Run(ctx context.Context) {
 	for {
 		select {
-		case client := <- h.register:
+		case client := <-h.register:
 			h.registerClient(client)
 			h.clientListBroadcast(client.gameId, ctx)
-		case client := <- h.unregister:
+		case client := <-h.unregister:
 			h.unregisterClient(client)
 			if !h.lobbyWsHandler.LeaveLobby(ctx, client.userId) {
 				log.Println("error : the client can't leave the lobby in the database")
-				continue 
+				continue
 			}
 			h.clientListBroadcast(client.gameId, ctx)
-		case serializedData := <- h.action:
-			h.handleAction(ctx, serializedData)
+		case data := <-h.action:
+			h.handleAction(ctx, data)
 		}
 	}
 }
