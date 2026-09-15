@@ -190,6 +190,21 @@ func (r *LobbyRepository) Historic(ctx context.Context,
 	return games, nil
 }
 
+func (r *LobbyRepository) JoinCode(ctx context.Context,
+	gameId int64) (*string, error) {
+	lobby := new(games.Lobby)
+	err := r.db.NewSelect().
+		Model(lobby).
+		Column("join_code").
+		Where("game_id = ?", gameId).
+		Where("join_code IS NOT NULL").
+		Scan(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return lobby.JoinCode, nil
+}
+
 // Setters
 func (r *LobbyRepository) SetGameId(ctx context.Context, lobby_id int64, 
 	game_id int64) error {

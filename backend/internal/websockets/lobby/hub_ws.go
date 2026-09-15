@@ -16,7 +16,7 @@ type playerInfos struct {
     ID       int64   `json:"id"`
     Username string  `json:"username"`
     Avatar   *string `json:"avatar"`
-	Host	 bool	 `json:host`
+	Host	 bool	 `json:"host"`
 }
 
 type DataInfos struct {
@@ -49,36 +49,18 @@ func NewHub(
 	}
 }
 
-func (h *HubWs) clientListBroadcast(gameId int64, ctx context.Context) {
-	lobbies, err := h.lobbyRepo.AllPlayers(ctx, gameId)
-	if err != nil {
-		log.Printf("error : %s\n", err)
-		return 
-	}
-	usersLobby := make([]playerInfos, 0, len(lobbies))
-	for _, lobby := range lobbies {
-		user, err := h.userRepo.User(ctx, lobby.UserId)
-		if err != nil {
-			log.Printf("error : %s\n", err)
-			return 
-		}
-		usersLobby = append(usersLobby, playerInfos{
-			ID:       user.ID,
-			Username: user.Username,
-			Avatar:   user.Avatar,
-		})
-	}
-	for client := range h.clients[gameId] {
-		serializedData, err := json.Marshal(usersLobby)
-		if err != nil {
-			log.Printf("error : %s\n", err)
-			return 
-		}
-		client.send <- serializedData
-	}
+func (h *HubWs) broadcast(gameId int64, payload interface{}) {
+    serializedData, err := json.Marshal(payload)
+    if err != nil {
+        log.Printf("error : %s\n", err)
+        return
+    }
+    for client := range h.clients[gameId] {
+        client.send <- serializedData
+    }
 }
 
-func (h *HubWs) pingClientList(gameId int64, ctx context.Context) {
+func (h *HubWs) clientLobbyBroadcast(gameId int64, ctx context.Context) {
 	lobbies, err := h.lobbyRepo.AllPlayers(ctx, gameId)
 	if err != nil {
 		log.Printf("error : %s\n", err)
@@ -95,15 +77,22 @@ func (h *HubWs) pingClientList(gameId int64, ctx context.Context) {
 			ID:       user.ID,
 			Username: user.Username,
 			Avatar:   user.Avatar,
+			Host:     lobby.IsCreator,
 		})
 	}
+	h.broadcast(gameId, usersLobby)
+}
+
+func (h *HubWs) broadcastClient(gameId int64, userId int64, payload interface{}) {
+    serializedData, err := json.Marshal(payload)
+    if err != nil {
+        log.Printf("error : %s\n", err)
+        return
+    }
 	for client := range h.clients[gameId] {
-		serializedData, err := json.Marshal(usersLobby)
-		if err != nil {
-			log.Printf("error : %s\n", err)
-			return 
-		}
-		client.send <- serializedData
+		if client.userId == userId {
+			client.send <- serializedData
+		}	
 	}
 }
 
@@ -141,12 +130,12 @@ func (h *HubWs) handleAction(ctx context.Context,
 			}
 			for client := range h.clients[serializedData.Client.gameId] {
 				if client.userId == targetClient.TargetId {
-					h.clientListBroadcast(serializedData.Client.gameId, ctx)
+					h.clientLobbyBroadcast(serializedData.Client.gameId, ctx)
 					client.conn.Close()
 					return 
 				}
 			}
-			h.clientListBroadcast(serializedData.Client.gameId, ctx)
+			h.clientLobbyBroadcast(serializedData.Client.gameId, ctx)
 		
 		default:
 			log.Printf("unknown action : %s\n", serializedData.Action)
@@ -159,15 +148,19 @@ func (h *HubWs) Run(ctx context.Context) {
 		case client := <- h.register:
 			h.registerClient(client)
 			// send the infos
-			h.pingClientList(client.gameId, ctx)
-			h.clientListBroadcast(client.gameId, ctx)
+			h.clientLobbyBroadcast(client.gameId, ctx)
+			data, ok := h.lobbyWsHandler.SendInfos(ctx, client.gameId)
+			if !ok {
+				continue
+			}
+			h.broadcastClient(client.gameId, client.userId, data)
 		case client := <- h.unregister:
 			h.unregisterClient(client)
 			if !h.lobbyWsHandler.LeaveLobby(ctx, client.userId) {
 				log.Println("error : the client can't leave the lobby in the database")
 				continue 
 			}
-			h.clientListBroadcast(client.gameId, ctx)
+			h.clientLobbyBroadcast(client.gameId, ctx)
 		case serializedData := <- h.action:
 			h.handleAction(ctx, serializedData)
 		}

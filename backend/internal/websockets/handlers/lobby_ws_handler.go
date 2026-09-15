@@ -3,7 +3,6 @@ package ws_handlers
 import (
 	"log"
 	"context"
-	"encoding/json"
 	"backend/internal/repositories"
 )
 
@@ -15,7 +14,7 @@ type LobbyWsHandler struct {
 
 type lobbyInfos struct {
     JoinCode string  `json:"join_code"`
-    NbRounds int 	 `json:"nb_rounds"`
+    RoundNb  int64 	 `json:"round_nb"`
     Timer 	 int64	 `json:"timer"`
 }
 
@@ -120,20 +119,33 @@ func (h *LobbyWsHandler) Timer(ctx context.Context, gameId int64) (int64, bool) 
 	return timer, true
 }
 
-func (h *LobbyWsHandler) SendInfos(ctx context.Context, gameId int64) ([]byte, bool) {
+func (h *LobbyWsHandler) RoundNb(ctx context.Context, gameId int64) (int64, bool) {
+	roundNb, err := h.gameRepo.RoundNb(ctx, gameId)
+	if err != nil {
+		log.Printf("error : %s\n", err)
+		return 0, false;
+	}
+	return roundNb, true
+}
+
+func (h *LobbyWsHandler) SendInfos(ctx context.Context, gameId int64) (interface{}, bool) {
 	timer, ok := h.Timer(ctx, gameId)
 	if !ok {
 		return nil, false;
 	}
-	data := lobbyInfos{
-		// JoinCode: joinCode,
-		// NbRounds: nbRounds,
-		Timer: timer,
-	}
-	resData, err := json.Marshal(data)
+	joinCode, err := h.lobbyRepo.JoinCode(ctx, gameId)
 	if err != nil {
 		log.Printf("error : %s\n", err)
 		return nil, false;
 	}
-	return resData, true
+	roundNb, ok := h.RoundNb(ctx, gameId)
+	if !ok {
+		return nil, false;
+	}
+	data := lobbyInfos{
+		JoinCode: *joinCode,
+		RoundNb: roundNb,
+		Timer: timer,
+	}
+	return data, true
 }
