@@ -9,7 +9,7 @@ import { ChatLayout } from './layouts/ChatLayout';
 import { MainLayout } from './layouts/MainLayout';
 import AuthenticationPage from './pages/AuthenticationPage';
 import ProtectedRoute from './components/routes/ProtectedRoute';
-import PublicRoute from './components/routes/PlublicRoute';
+import PublicRoute from './components/routes/PublicRoute';
 
 function App() {
     return (
