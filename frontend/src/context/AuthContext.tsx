@@ -9,6 +9,11 @@ interface AuthContextType {
     isAuthenticated: boolean;
     login: () => Promise<void>;
     logout: () => Promise<void>;
+    refreshAccessToken: () => Promise<boolean>;
+    authFetch: (url: string, options?: RequestInit) => Promise<{
+        status: number,
+        data: any,
+    } | null >;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -17,6 +22,8 @@ const AuthContext = createContext<AuthContextType>({
     isAuthenticated: false,
     login: async () => {},
     logout: async () => {},
+    refreshAccessToken: async () => false,
+    authFetch: async () => null,
 });
 
 function AuthProvider({children}: {children: ReactNode}) {
@@ -47,7 +54,7 @@ function AuthProvider({children}: {children: ReactNode}) {
 
     const logout = async () => {
         
-        const result = await apiFetch("/api/auth/logout", {
+        const result = await authFetch("/api/auth/logout", {
             method: "POST",
         });
 
@@ -58,7 +65,46 @@ function AuthProvider({children}: {children: ReactNode}) {
             setUser(null);
         }
     };
+
+     const refreshAccessToken = async () => {
+
+        const result = await apiFetch("/api/auth/refresh");
+
+        if (result === null) {
+            return false;
+        }
+
+        if (result.status === 200)
+        {
+            await getUser();
+            return true;
+        }
+
+        return false;
+    }
     
+    const authFetch = async (
+        url: string,
+        options: RequestInit = {}
+        ) => {
+
+        const result = await apiFetch(url, options);
+        if (result === null) {
+            return null;
+        }
+        
+        if (result.status !== 401) {
+            return result;
+        }
+
+        const refreshed = await refreshAccessToken();
+        if (!refreshed) {
+            return null;
+        }
+
+        return await apiFetch(url, options);
+    }
+
     useEffect(() => {
         const checkAuth = async () => {
             await getUser();
@@ -75,6 +121,8 @@ function AuthProvider({children}: {children: ReactNode}) {
                 isAuthenticated,
                 login,
                 logout,
+                refreshAccessToken,
+                authFetch,
             }}
         >
             {children}
