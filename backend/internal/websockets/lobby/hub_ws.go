@@ -60,6 +60,19 @@ func (h *HubWs) broadcast(gameId int64, payload interface{}) {
     }
 }
 
+func (h *HubWs) broadcastClient(gameId int64, userId int64, payload interface{}) {
+    serializedData, err := json.Marshal(payload)
+    if err != nil {
+        log.Printf("error : %s\n", err)
+        return
+    }
+	for client := range h.clients[gameId] {
+		if client.userId == userId {
+			client.send <- serializedData
+		}	
+	}
+}
+
 func (h *HubWs) clientLobbyBroadcast(gameId int64, ctx context.Context) {
 	lobbies, err := h.lobbyRepo.AllPlayers(ctx, gameId)
 	if err != nil {
@@ -83,18 +96,6 @@ func (h *HubWs) clientLobbyBroadcast(gameId int64, ctx context.Context) {
 	h.broadcast(gameId, usersLobby)
 }
 
-func (h *HubWs) broadcastClient(gameId int64, userId int64, payload interface{}) {
-    serializedData, err := json.Marshal(payload)
-    if err != nil {
-        log.Printf("error : %s\n", err)
-        return
-    }
-	for client := range h.clients[gameId] {
-		if client.userId == userId {
-			client.send <- serializedData
-		}	
-	}
-}
 
 func (h *HubWs) registerClient(client *ClientWs) {
 	if _, ok := h.clients[client.gameId]; !ok {
@@ -147,7 +148,6 @@ func (h *HubWs) Run(ctx context.Context) {
 		select {
 		case client := <- h.register:
 			h.registerClient(client)
-			// send the infos
 			h.clientLobbyBroadcast(client.gameId, ctx)
 			data, ok := h.lobbyWsHandler.SendInfos(ctx, client.gameId)
 			if !ok {
