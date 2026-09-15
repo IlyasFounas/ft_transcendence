@@ -7,7 +7,7 @@ export async function apiFetch (
             ...options,
             credentials: "include",
             headers: {
-                ...options.headers
+                ...options.headers,
             },
         });
         
