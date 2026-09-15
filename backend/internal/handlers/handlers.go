@@ -14,6 +14,7 @@ type Handlers struct {
 	Token    *TokenHandler
 	Game	 *GameHandler
 	Lobby	 *LobbyHandler
+	Friend	 *FriendHandler
 }
 
 func googleConfigInit() *oauth2.Config {
@@ -36,5 +37,6 @@ func NewHandlers(repo *repositories.Repositories) *Handlers {
 		Token:    tokenHandler,
 		Game:     NewGameHandler(repo.Game, repo.Lobby),
 		Lobby:    NewLobbyHandler(repo.Game, repo.Lobby, repo.User),
+		Friend:	  NewFriendHandler(repo.Friend, repo.User),
 	}
 }
