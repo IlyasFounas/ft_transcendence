@@ -1,6 +1,7 @@
 package lobby_ws
 
 import (
+	"backend/internal/models/games"
 	"backend/internal/models/guesses"
 	"backend/internal/repositories"
 	"backend/internal/websockets/handlers"
@@ -11,29 +12,35 @@ import (
 )
 
 type kickPlayer struct {
-	TargetId int64 `json:"target_id"`
+	TargetId	int64 `json:"target_id"`
 }
 
 type playerInfos struct {
-	ID       int64   `json:"id"`
-	Username string  `json:"username"`
-	Avatar   *string `json:"avatar"`
-}
-
-type roundTimeoutPayload struct {
-	RoundID int64 `json:"round_id"`
+	ID			int64   `json:"id"`
+	Username	string  `json:"username"`
+	Avatar		*string `json:"avatar"`
 }
 
 type startRoundPayload struct {
-	RoundID         int64 `json:"round_id"`
-	DurationSeconds int64 `json:"duration_seconds"`
+	RoundID	int64 `json:"round_id"`
+	RoundNb	int64 `json:"round_nb"`
+}
+
+type roundTimeoutPayload struct {
+	RoundID	int64 `json:"round_id"`
+	RoundNb	int64 `json:"round_nb"`
+}
+
+type roundStartedPayload struct {
+	RoundID		int64  `json:"round_id"`
+	RoundEndsAt	string `json:"round_ends_at"` // RFC3339 UTC
 }
 
 type DataInfos struct {
-	Action  string
-	Payload json.RawMessage
-	Client *ClientWs
-	GameId int64
+	Action	string
+	Payload	json.RawMessage
+	Client	*ClientWs
+	GameId	int64
 }
 
 func (d *DataInfos) resolveGameId() int64 {
@@ -44,15 +51,16 @@ func (d *DataInfos) resolveGameId() int64 {
 }
 
 type HubWs struct {
-	clients        map[int64]map[*ClientWs]bool
-	register       chan *ClientWs
-	unregister     chan *ClientWs
-	action         chan *DataInfos
-	roundTimers    map[int64]*time.Timer // clé = gameId, uniquement touché depuis Run()
-	lobbyRepo      *repositories.LobbyRepository
-	userRepo       *repositories.UserRepository
-	lobbyWsHandler *ws_handlers.LobbyWsHandler
-	guessWsHandler *ws_handlers.GuessWsHandler
+	clients			map[int64]map[*ClientWs]bool
+	register		chan *ClientWs
+	unregister		chan *ClientWs
+	action			chan *DataInfos
+	roundTimers		map[int64]*time.Timer // clé = gameId, uniquement touché depuis Run()
+	lobbyRepo		*repositories.LobbyRepository
+	userRepo		*repositories.UserRepository
+	gameRepo		*repositories.GameRepository
+	lobbyWsHandler	*ws_handlers.LobbyWsHandler
+	guessWsHandler	*ws_handlers.GuessWsHandler
 }
 
 func NewHub(
@@ -60,15 +68,16 @@ func NewHub(
 	wsHandlers *ws_handlers.WsHandlers,
 ) *HubWs {
 	return &HubWs{
-		clients:        make(map[int64]map[*ClientWs]bool),
-		register:       make(chan *ClientWs),
-		unregister:     make(chan *ClientWs),
-		action:         make(chan *DataInfos),
-		roundTimers:    make(map[int64]*time.Timer),
-		lobbyRepo:      repo.Lobby,
-		userRepo:       repo.User,
-		lobbyWsHandler: wsHandlers.Lobby,
-		guessWsHandler: wsHandlers.Guess,
+		clients:		make(map[int64]map[*ClientWs]bool),
+		register:		make(chan *ClientWs),
+		unregister:		make(chan *ClientWs),
+		action:			make(chan *DataInfos),
+		roundTimers:	make(map[int64]*time.Timer),
+		lobbyRepo:		repo.Lobby,
+		userRepo:		repo.User,
+		gameRepo:		repo.Game,
+		lobbyWsHandler:	wsHandlers.Lobby,
+		guessWsHandler:	wsHandlers.Guess,
 	}
 }
 
@@ -86,9 +95,9 @@ func (h *HubWs) clientListBroadcast(gameId int64, ctx context.Context) {
 			return
 		}
 		usersLobby = append(usersLobby, playerInfos{
-			ID:       user.ID,
-			Username: user.Username,
-			Avatar:   user.Avatar,
+			ID:			user.ID,
+			Username:	user.Username,
+			Avatar:		user.Avatar,
 		})
 	}
 	h.broadcast(gameId, usersLobby)
@@ -156,7 +165,20 @@ func (h *HubWs) handleAction(ctx context.Context, data *DataInfos) {
 			log.Printf("error : %s\n", err)
 			return
 		}
-		h.startRoundTimer(data.resolveGameId(), payload.RoundID, time.Duration(payload.DurationSeconds)*time.Second)
+		gameId := data.resolveGameId()
+
+		timerSeconds, err := h.gameRepo.Timer(ctx, gameId)
+		if err != nil {
+			log.Printf("error : %s\n", err)
+			return
+		}
+		duration := time.Duration(timerSeconds) * time.Second
+
+		h.startRoundTimer(gameId, payload.RoundID, payload.RoundNb, duration)
+		h.broadcast(gameId, roundStartedPayload{
+			RoundID:		payload.RoundID,
+			RoundEndsAt:	time.Now().UTC().Add(duration).Format(time.RFC3339),
+		})
 
 	case "round_timeout":
 		var payload roundTimeoutPayload
@@ -165,13 +187,19 @@ func (h *HubWs) handleAction(ctx context.Context, data *DataInfos) {
 			return
 		}
 		gameId := data.resolveGameId()
-		delete(h.roundTimers, gameId) // le timer vient de sonner, plus besoin de le garder
+		delete(h.roundTimers, gameId)
+
+		activePlayers, err := h.lobbyRepo.AllPlayers(ctx, gameId)
+		if err != nil {
+			log.Printf("error : %s\n", err)
+			return
+		}
 		roundGuesses, err := h.guessWsHandler.GetRoundGuesses(ctx, payload.RoundID)
 		if err != nil {
 			log.Printf("error : %s\n", err)
 			return
 		}
-		h.finalizeRound(ctx, gameId, roundGuesses)
+		h.finalizeRound(ctx, gameId, payload.RoundID, payload.RoundNb, activePlayers, roundGuesses)
 
 	default:
 		log.Printf("unknown action : %s\n", data.Action)
@@ -182,7 +210,6 @@ func (h *HubWs) handleAction(ctx context.Context, data *DataInfos) {
 func (h *HubWs) handleGuess(ctx context.Context, data *DataInfos) {
 	createdGuess, ok := h.guessWsHandler.AddGuess(ctx, data.Payload, data.Client.userId, data.Client.gameId)
 	if !ok {
-		// TODO : renvoyer une erreur ciblée uniquement à data.Client, par ex. data.Client.send <- []byte(`{"error":"guess refused"}`)
 		return
 	}
 
@@ -199,34 +226,32 @@ func (h *HubWs) handleGuess(ctx context.Context, data *DataInfos) {
 	}
 
 	if len(roundGuesses) >= len(activePlayers) {
-		h.finalizeRound(ctx, data.Client.gameId, roundGuesses)
+		h.finalizeRound(ctx, data.Client.gameId, createdGuess.RoundID, createdGuess.RoundNb, activePlayers, roundGuesses)
 	}
 }
 
 
-func (h *HubWs) finalizeRound(ctx context.Context, gameId int64, roundGuesses []*guesses.Guess) {
+func (h *HubWs) finalizeRound(ctx context.Context, gameId, roundId, roundNb int64,
+	activePlayers []*games.Lobby, roundGuesses []*guesses.Guess) {
 	if timer, ok := h.roundTimers[gameId]; ok {
 		timer.Stop()
 		delete(h.roundTimers, gameId)
 	}
 
-	results, err := h.guessWsHandler.BuildRoundResults(ctx, gameId, roundGuesses)
+	results, err := h.guessWsHandler.BuildRoundResults(ctx, gameId, roundId, roundNb, activePlayers, roundGuesses)
 	if err != nil {
 		log.Printf("error : %s\n", err)
 		return
 	}
 	h.broadcast(gameId, results)
-
-	// TODO déclencher la création/le démarrage du round suivant (ou la fin de partie si c'était le dernier round)
 }
 
-
-func (h *HubWs) startRoundTimer(gameId, roundId int64, duration time.Duration) {
+func (h *HubWs) startRoundTimer(gameId, roundId, roundNb int64, duration time.Duration) {
 	if existing, ok := h.roundTimers[gameId]; ok {
 		existing.Stop()
 	}
 	h.roundTimers[gameId] = time.AfterFunc(duration, func() {
-		payload, _ := json.Marshal(roundTimeoutPayload{RoundID: roundId})
+		payload, _ := json.Marshal(roundTimeoutPayload{RoundID: roundId, RoundNb: roundNb})
 		h.action <- &DataInfos{Action: "round_timeout", Payload: payload, GameId: gameId}
 	})
 }

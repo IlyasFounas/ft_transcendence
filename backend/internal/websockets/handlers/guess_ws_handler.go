@@ -2,6 +2,7 @@ package ws_handlers
 
 import (
 	"backend/internal/handlers"
+	"backend/internal/models/games"
 	"backend/internal/models/guesses"
 	"backend/internal/repositories"
 	"backend/internal/tools/haversine"
@@ -9,8 +10,6 @@ import (
 	"encoding/json"
 	"errors"
 	"log"
-	"time"
-
 	"github.com/sams96/rgeo"
 )
 
@@ -32,33 +31,114 @@ func NewGuessWsHandler(
 	reverser *rgeo.Rgeo,
 ) *GuessWsHandler {
 	return &GuessWsHandler{
-		guessRepo: guessRepo,
-		roundRepo: roundRepo,
-		lobbyRepo: lobbyRepo,
-		gameRepo:  gameRepo,
-		userRepo:  userRepo,
-		reverser:  reverser,
+		guessRepo:	guessRepo,
+		roundRepo:	roundRepo,
+		lobbyRepo:	lobbyRepo,
+		gameRepo:	gameRepo,
+		userRepo:	userRepo,
+		reverser:	reverser,
 	}
 }
 
-type RoundInfos struct {
-	Distance     int64         `json:"distance"`
-	Score        int64         `json:"score"`
-	BaseScore    int64         `json:"base_score"`
-	CountryFound bool          `json:"country_found"`
-	BaseCC       string        `json:"base_cc"`
-	GuessedCC    string        `json:"guessed_cc"`
-	Streak       int64         `json:"streak"`
-	TimeLeft     time.Duration `json:"time_left"`
+type LocationInfo struct {
+	Lat		float64	`json:"lat"`
+	Long	float64	`json:"long"`
+	CC		string	`json:"country_code"`
 }
 
-// résultat d'un joueur pour un round donné, avec son score total à jour dans la partie.
+type RoundInfos struct {
+	Distance		int64			`json:"distance"`
+	Score			int64			`json:"score"`
+	BaseScore		int64			`json:"base_score"`
+	CountryFound	bool			`json:"country_found"`
+	Base			LocationInfo	`json:"base"`
+	Guess			LocationInfo	`json:"guess"`
+	Streak			int64			`json:"streak"`
+	TimeLeftSeconds	int64			`json:"time_left_seconds"`
+}
+
+// résultat d'un joueur pour un round donné, avec son score total à jour dans la partie
 type PlayerRoundResult struct {
-	UserID     int64      `json:"user_id"`
-	Username   string     `json:"username"`
-	RoundNb    int64      `json:"round_nb"`
-	RoundInfos RoundInfos `json:"round_infos"`
-	TotalScore int64      `json:"total_score"`
+	UserID		int64		`json:"user_id"`
+	Username	string		`json:"username"`
+	RoundNb		int64		`json:"round_nb"`
+	HasGuessed	bool		`json:"has_guessed"`
+	RoundInfos	*RoundInfos	`json:"round_infos,omitempty"`
+	TotalScore	int64		`json:"total_score"`
+}
+
+// renvoie tous les guess déjà soumis pour roundID
+func (h *GuessWsHandler) GetRoundGuesses(ctx context.Context, roundID int64) ([]*guesses.Guess, error) {
+	return h.guessRepo.GetByRoundID(ctx, roundID)
+}
+
+// Transforme les guess bruts d'un round en payload de diffusion :
+// un résultat détaillé par joueur, avec son score total à jour dans la partie.
+// Construit un résultat pour CHAQUE joueur actif de la game, pas seulement ceux qui ont deviné.
+func (h *GuessWsHandler) BuildRoundResults(ctx context.Context, gameID, roundID, roundNb int64,
+	activePlayers []*games.Lobby, roundGuesses []*guesses.Guess) ([]PlayerRoundResult, error) {
+
+	locationID, err := h.guessRepo.GetLocationIDByRoundID(ctx, roundID)
+	if err != nil {
+		return nil, err
+	}
+	baseLat, baseLong, err := h.roundRepo.GetCoordinatesByLocationID(ctx, locationID)
+	if err != nil {
+		return nil, err
+	}
+	baseCC, err := h.roundRepo.GetCCByLocationID(ctx, locationID)
+	if err != nil {
+		return nil, err
+	}
+
+	guessByUser := make(map[int64]*guesses.Guess, len(roundGuesses))
+	for _, g := range roundGuesses {
+		guessByUser[g.UserID] = g
+	}
+
+	results := make([]PlayerRoundResult, 0, len(activePlayers))
+	for _, player := range activePlayers {
+		user, err := h.userRepo.User(ctx, player.UserId)
+		if err != nil {
+			log.Printf("error : %s\n", err)
+			continue
+		}
+		totalScore, err := h.guessRepo.GetTotalScoreByGameAndUserID(ctx, gameID, player.UserId)
+		if err != nil {
+			log.Printf("error : %s\n", err)
+			continue
+		}
+
+		g, hasGuessed := guessByUser[player.UserId]
+		result := PlayerRoundResult{
+			UserID:     player.UserId,
+			Username:   user.Username,
+			RoundNb:    roundNb,
+			HasGuessed: hasGuessed,
+			TotalScore: totalScore,
+		}
+		if hasGuessed {
+			var guessLat, guessLong float64
+			if g.Lat != nil {
+				guessLat = *g.Lat
+			}
+			if g.Long != nil {
+				guessLong = *g.Long
+			}
+			result.RoundInfos = &RoundInfos{
+				Distance:        g.Distance,
+				Score:           g.Score,
+				BaseScore:       g.BaseScore,
+				CountryFound:    g.CountryFound,
+				Base:            LocationInfo{Lat: baseLat, Long: baseLong, CC: baseCC},
+				Guess:           LocationInfo{Lat: guessLat, Long: guessLong, CC: g.CC},
+				Streak:          g.Streak,
+				TimeLeftSeconds: int64(g.TimeLeft.Seconds()),
+			}
+		}
+		results = append(results, result)
+	}
+	return results, nil
 }
 
 // valide et persiste le guess envoyé par un client WebSocket.
@@ -157,57 +237,4 @@ func (h *GuessWsHandler) AddGuess(ctx context.Context, payload json.RawMessage, 
 	}
 
 	return createdGuess, true
-}
-
-// renvoie tous les guess déjà soumis pour roundID
-func (h *GuessWsHandler) GetRoundGuesses(ctx context.Context, roundID int64) ([]*guesses.Guess, error) {
-	return h.guessRepo.GetByRoundID(ctx, roundID)
-}
-
-// transforme les guess bruts d'un round en payload de diffusion :
-// un résultat détaillé par joueur, avec son score total à jour dans la partie
-func (h *GuessWsHandler) BuildRoundResults(ctx context.Context, gameID int64, roundGuesses []*guesses.Guess) ([]PlayerRoundResult, error) {
-	if len(roundGuesses) == 0 {
-		return []PlayerRoundResult{}, nil
-	}
-
-	locationID, err := h.guessRepo.GetLocationIDByRoundID(ctx, roundGuesses[0].RoundID)
-	if err != nil {
-		return nil, err
-	}
-	baseCC, err := h.roundRepo.GetCCByLocationID(ctx, locationID)
-	if err != nil {
-		return nil, err
-	}
-
-	results := make([]PlayerRoundResult, 0, len(roundGuesses))
-	for _, g := range roundGuesses {
-		user, err := h.userRepo.User(ctx, g.UserID)
-		if err != nil {
-			log.Printf("error : %s\n", err)
-			continue
-		}
-		totalScore, err := h.guessRepo.GetTotalScoreByGameAndUserID(ctx, gameID, g.UserID)
-		if err != nil {
-			log.Printf("error : %s\n", err)
-			continue
-		}
-		results = append(results, PlayerRoundResult{
-			UserID:   g.UserID,
-			Username: user.Username,
-			RoundNb:  g.RoundNb,
-			RoundInfos: RoundInfos{
-				Distance:     g.Distance,
-				Score:        g.Score,
-				BaseScore:    g.BaseScore,
-				CountryFound: g.CountryFound,
-				BaseCC:       baseCC,
-				GuessedCC:    g.CC,
-				Streak:       g.Streak,
-				TimeLeft:     g.TimeLeft,
-			},
-			TotalScore: totalScore,
-		})
-	}
-	return results, nil
 }
