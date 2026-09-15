@@ -11,6 +11,7 @@ type Repositories struct {
 	RToken		*RefreshTokenRepository
 	Game		*GameRepository
 	Lobby		*LobbyRepository
+	Friend		*FriendRepository
 	Round		*RoundRepository
 	Guess		*GuessRepository
 }
@@ -29,6 +30,7 @@ func NewRepositories(db *bun.DB) (*Repositories, error) {
 		RToken:		NewRefreshTokenRepository(db),
 		Game:		NewGameRepository(db),
 		Lobby:		NewLobbyRepository(db),
+		Friend:		NewFriendRepository(db),
 		Round:		NewRoundRepository(db, locationRepo),
 		Guess:		NewGuessRepository(db),
 	}, nil

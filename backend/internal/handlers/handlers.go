@@ -14,6 +14,7 @@ type Handlers struct {
 	Token		*TokenHandler
 	Game		*GameHandler
 	Lobby		*LobbyHandler
+	Friend		*FriendHandler
 	Round		*RoundHandler
 	Guess		*GuessHandler
 }
@@ -38,6 +39,7 @@ func NewHandlers(repo *repositories.Repositories, reverser *rgeo.Rgeo) *Handlers
 		Token:		tokenHandler,
 		Game:		NewGameHandler(repo.Game, repo.Lobby, repo.Location),
 		Lobby:		NewLobbyHandler(repo.Game, repo.Lobby, repo.User),
+		Friend:		NewFriendHandler(repo.Friend, repo.User),
 		Round:		NewRoundHandler(repo.Round),
 		Guess:		NewGuessHandler(repo.Guess, repo.Round, repo.Lobby, repo.Game, reverser),
 	}
