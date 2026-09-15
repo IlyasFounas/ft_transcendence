@@ -375,6 +375,7 @@ func (h *UserHandler) Logout() gin.HandlerFunc {
 			return
 		}
 		cookie.Clear(c, "/api/auth", "refresh_token")
+		cookie.Clear(c, "/api", "Authorization")
 		c.JSON(http.StatusOK,
 			gin.H{"message": "you are now logout"})
 	}

@@ -54,7 +54,7 @@ func main() {
 	// 3. Instanciation of handlers
 	h := handlers.NewHandlers(repo)
 
-	// 4. Instanciation of websockets handlers
+	// 4. Instanciation of websockets
 	wh := ws_handlers.NewWsHandlers(repo)
 
 	// 4.bis Run the hub websocket

@@ -1,20 +1,24 @@
-package handlers
+package ws_handlers
 
 import (
 	"log"
 	"context"
-	"string"
+	"strings"
+	"backend/internal/models/chats"
 	"backend/internal/repositories"
 )
 
 type ChatHandler struct {
 	chatRepo	*repositories.ChatRepository
+	friendRepo	*repositories.FriendRepository
 	userRepo	*repositories.UserRepository
 }
 
 func NewChatHandler (chatRepo *repositories.ChatRepository,
+	friendRepo	*repositories.FriendRepository,
 	userRepo	*repositories.UserRepository) *ChatHandler {
 	return &ChatHandler{chatRepo: chatRepo,
+		friendRepo: friendRepo,
 		userRepo: userRepo}
 }
 
@@ -40,7 +44,7 @@ func (h *ChatHandler) Send(ctx context.Context,
 	chatObj := &chats.Chat{
 		SRC_user_ID: userId,
 		DST_user_ID: target_id,
-		Message: message
+		Message: message,
 	}
 	_, err = h.chatRepo.Send(ctx, chatObj)
 	if err != nil {

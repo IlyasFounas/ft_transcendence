@@ -105,8 +105,8 @@ func (h *HubWs) registerClient(client *ClientWs) {
 }
 
 func (h *HubWs) unregisterClient(client *ClientWs) {
-	if _, ok := h.clients[client.lobbyId]; ok {
-		delete(h.clients[client.lobbyId], client)
+	if _, ok := h.clients[client.gameId]; ok {
+		delete(h.clients[client.gameId], client)
 	}
 	if len(h.clients[client.gameId]) == 0 {
 		delete(h.clients, client.gameId)
