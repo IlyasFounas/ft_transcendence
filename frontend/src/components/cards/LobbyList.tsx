@@ -4,11 +4,11 @@ import EmptyLobbyRow from './EmptyLobbyRow'
 import type { StatusBadgeProps } from "../primitives/StatusBadge";
 
 interface Player {
-  id: string;
+  id: number;
   username: string;
   role: string;
   status: StatusBadgeProps["status"];
-  avatar: string;
+  avatar: string | null;
 }
 
 interface LobbyListProps{

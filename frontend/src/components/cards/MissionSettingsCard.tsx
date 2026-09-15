@@ -1,13 +1,8 @@
 import {useState} from 'react';
-import { Minus } from 'lucide-react';
-import { Plus } from 'lucide-react';
-
 
 interface MissionSettingsCardProps {
 	className?: string;
 };
-
-
 
 export default function MissionSettingsCard({className = ""}: MissionSettingsCardProps)
 {
@@ -21,7 +16,6 @@ export default function MissionSettingsCard({className = ""}: MissionSettingsCar
 
    		return `${value} min`;
 	}
-
 
 	return (
 		<div 

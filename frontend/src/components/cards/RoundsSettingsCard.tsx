@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Minus, Plus } from "lucide-react"
 
 interface RoundsSettingsCardProps{
@@ -7,11 +7,21 @@ interface RoundsSettingsCardProps{
 	interval: number;
 	settings: string;
 	formatValue?: (value: number) => string;
+	onChange: (value: number) => void;
 }
 
-export default function RoundsSettingsCard({min, max, interval, settings, formatValue} : RoundsSettingsCardProps) 
+export default function RoundsSettingsCard({min, max, interval, settings, formatValue, onChange} : RoundsSettingsCardProps) 
 {
 	const [value, setValue] = useState(min);
+
+	function updateValue(newValue: number) {
+		setValue(newValue);
+		onChange(newValue);
+	}
+
+	useEffect(() => {
+    onChange(min);
+  	}, []);
 
 	return (
 		<div>
@@ -30,7 +40,7 @@ export default function RoundsSettingsCard({min, max, interval, settings, format
 						`}
 						onClick={() => {
 							if (value > min) {
-								setValue(value - interval);
+								updateValue(value - interval);
 							}
 						}}
 						>
@@ -49,7 +59,7 @@ export default function RoundsSettingsCard({min, max, interval, settings, format
 						`}
 						onClick={() => {
 							if (value < max) {
-								setValue(value + interval);
+								updateValue(value + interval);
 							}
 						}}
 						>
