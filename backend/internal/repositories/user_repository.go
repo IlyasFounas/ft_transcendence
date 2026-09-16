@@ -52,7 +52,7 @@ func (r *UserRepository) LoginUser(ctx context.Context,
 		return false, 0, err
 	}
 	if user.Password == nil || !encryption.CheckPasswordHash(password, *user.Password) {
-		return false, user.ID, errors.New("The user has not set a password")
+		return false, 0, errors.New("The user has not set a password")
 	} else if !user.Is_verified {
 		return false, user.ID, errors.New("The user has not verified his email")
 	}
@@ -86,6 +86,22 @@ func (r *UserRepository) Name(ctx context.Context, userId int64) (*string, error
 	return &user.Username, nil
 }
 
+func (r *UserRepository) ExistingName(ctx context.Context, name string) (string, error) {
+	user := new(users.User)
+	err := r.db.NewSelect().
+		Model(user).
+		Column("name").
+		Where("name = ?", name).
+		Scan(ctx)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return "", nil
+		}
+		return "", err
+	}
+	return user.Username, nil
+}
+
 func (r *UserRepository) Login(ctx context.Context, userId int64) (*string, error) {
 	user := new(users.User)
 	err := r.db.NewSelect().
@@ -94,6 +110,22 @@ func (r *UserRepository) Login(ctx context.Context, userId int64) (*string, erro
 		Where("id = ?", userId).
 		Scan(ctx)
 	if err != nil {
+		return nil, err
+	}
+	return user.Login, nil
+}
+
+func (r *UserRepository) ExistingLogin(ctx context.Context, login string) (*string, error) {
+	user := new(users.User)
+	err := r.db.NewSelect().
+		Model(user).
+		Column("login").
+		Where("login = ?", login).
+		Scan(ctx)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
 		return nil, err
 	}
 	return user.Login, nil
