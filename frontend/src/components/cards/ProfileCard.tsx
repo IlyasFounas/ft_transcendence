@@ -38,7 +38,7 @@ export default function ProfileCard({
                     <Avatar avatar={avatar} size={100} />
                 </div>
                 <div className="flex flex-col gap-1 w-full items-center lg:items-start lg:min-w-0 lg:flex-1">
-                    <div className="truncate min-w-0 w-full text-heading-large text-text-primary uppercase">
+                    <div className="truncate min-w-0 w-full text-center lg:text-left text-heading-large text-text-primary uppercase">
                         <span>Agent </span>{username}
                     </div>
                     <div className="text-heading-small text-primary uppercase">
