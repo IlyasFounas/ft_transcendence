@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"strings"
+	"net/mail"
 	"crypto/sha256"
 	"log"
 	"fmt"
@@ -62,20 +64,20 @@ func (h *UserHandler) createActivationToken(c *gin.Context, expiresAt time.Time,
 		[]byte(os.Getenv("ACTIVATION_JWT_SECRET")))
 	if tokenErr != nil {
         c.JSON(http.StatusUnauthorized,
-            gin.H{"message": "Send a new activation link"})
+			gin.H{"message": "The activation link sending went wrong. Please try again."})
 		return tokenErr
 	}
 	err := h.aTokenRepo.DeleteActivationToken(c.Request.Context(), userId)
 	if err != nil {
         c.JSON(http.StatusInternalServerError,
-            gin.H{"message": "Send a new activation link"})
+			gin.H{"message": "The activation link sending went wrong. Please try again."})
 		return err
 	}
 	err = h.aTokenRepo.CreateAToken(c.Request.Context(), tokenObj, expiresAt)
 	if err != nil {
         fmt.Printf("Token creation error message : %s\n", err)
         c.JSON(http.StatusInternalServerError,
-            gin.H{"message": "Send a new activation link"})
+			gin.H{"message": "The activation link sending went wrong. Please try again."})
 		return err
 	}
 	email := c.PostForm("email")
@@ -83,7 +85,7 @@ func (h *UserHandler) createActivationToken(c *gin.Context, expiresAt time.Time,
 		emailString, err := h.userRepo.Email(c.Request.Context(), userId)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError,
-				gin.H{"message": "can't find the email"})
+				gin.H{"message": "Something went wrong. Please try again."})
 			return err
 		}
 		err = mailing.SendActivationEmail(*emailString, tokenObj.Token);
@@ -92,7 +94,7 @@ func (h *UserHandler) createActivationToken(c *gin.Context, expiresAt time.Time,
 	}
 	if err != nil {
 		c.JSON(http.StatusInternalServerError,
-			gin.H{"message": "Send a new activation link"})
+			gin.H{"message": "The activation link sending went wrong. Please try again."})
 		fmt.Printf("\n%s\n", err)
 		return err
 	}
@@ -105,13 +107,13 @@ func (h *UserHandler) jwtGeneration(c *gin.Context, userId int64) (*tokens.Activ
 		[]byte(os.Getenv("JWT_SECRET")))
 	if tokenErr != nil {
         c.JSON(http.StatusInternalServerError,
-            gin.H{"message": "token creation went wrong"})
+            gin.H{"message": "token creation went wrong."})
 		return nil, false
 	}
 	encodedKey, rTokenErr := h.tokenHandler.CreateRefreshToken(c.Request.Context(), userId)
 	if rTokenErr != nil {
         c.JSON(http.StatusInternalServerError,
-            gin.H{"message": "Try to login again"})
+            gin.H{"message": "Try to login again."})
 		return nil, false
 	}
 	cookie.Set(c, "/api/auth", "refresh_token",
@@ -126,7 +128,7 @@ func (h *UserHandler) CreateUser() gin.HandlerFunc {
 		hashpassword, hashErr := encryption.HashPassword(c.PostForm("password"))
 		if hashErr != nil {
             c.JSON(http.StatusInternalServerError,
-                gin.H{"message": "Something went wrong"})
+                gin.H{"message": "Something went wrong. Please try again."})
 			return
 		}
 		login := c.PostForm("login")
@@ -135,18 +137,47 @@ func (h *UserHandler) CreateUser() gin.HandlerFunc {
 		if len(login) == 0 || len(username) == 0 ||
 			len(email) == 0 {
 		    c.JSON(http.StatusBadRequest,
-                gin.H{"message": "failed"})
+                gin.H{"message": "Please fill in all required fields."})
 			return
 		}
 		if len(username) == 0 {
 		    username = "player"	
 		}
+		parsedEmail, err := mail.ParseAddress(email)
+		if err != nil {
+            c.JSON(http.StatusBadRequest,
+                gin.H{"message": "Please enter a valid email address."})
+			return
+		}
+		existingLogin, err := h.userRepo.ExistingLogin(c.Request.Context(), login)
+		if err != nil {
+            c.JSON(http.StatusUnauthorized,
+                gin.H{"message": "Something went wrong. Please try again."})
+			return
+		}
+		if existingLogin != nil && *existingLogin != "" {
+            c.JSON(http.StatusBadRequest,
+                gin.H{"message": "This login or this username are unavailable. Please try another one."})
+			return
+		}
+		existingUsername, err := h.userRepo.ExistingName(c.Request.Context(), username)
+		if err != nil {
+            c.JSON(http.StatusUnauthorized,
+                gin.H{"message": "Something went wrong. Please try again."})
+			return
+		}
+		if existingUsername != "" {
+            c.JSON(http.StatusBadRequest,
+                gin.H{"message": "This username is unavailable. Please try another one."})
+			return
+		}
+
 		userObj := &users.User{Login: &login,
 			Password:    &hashpassword,
 			Username:    username,
-			Email:       email,
+			Email:       strings.ToLower(parsedEmail.Address),
 			Is_verified: false}
-
+		// check if the email is correct
 		user, err := h.userRepo.CreateUser(c.Request.Context(), userObj)
 		if err != nil {
             c.JSON(http.StatusInternalServerError,
@@ -173,25 +204,23 @@ func (h *UserHandler) Login() gin.HandlerFunc {
 				return
 			}
 			c.JSON(http.StatusUnauthorized,
-                gin.H{"message": "The activation link has been sent on your email"})
+                gin.H{"message": "The activation link has been resent on your email"})
             return
 		} else if err != nil {
-			c.JSON(http.StatusInternalServerError,
-				gin.H{"state": "failed"})
+			c.JSON(http.StatusUnauthorized,
+				gin.H{"message": "Invalid login ID or password. Please try again."})
 			return
 		}
 		if !state {
-            c.JSON(http.StatusUnauthorized,
-                gin.H{"message": "Try to login again"})
+            c.JSON(http.StatusBadRequest,
+                gin.H{"message": "Invalid login ID or password. Please try again."})
 			return
 		} else {
-			// generate the jwt token here
+			// generate the jwt token in the cookies
 			_, ok := h.jwtGeneration(c, userId)
 			if !ok {
 				return
 			}
-            // c.JSON(http.StatusOK,
-            //     gin.H{"Authorization": tokenObj.Token})
             c.JSON(http.StatusOK,
                 gin.H{"message": "success"})
 		}
@@ -236,7 +265,7 @@ func (h *UserHandler) fetchGoogleUser(c *gin.Context, code string) (*users.Googl
 func (h *UserHandler) resolveGoogleUser(c *gin.Context, info *users.GoogleUserInfo) (*users.User, error) {
 	user, err := h.userRepo.UserByGoogleId(c.Request.Context(), &info.Sub)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"message": "failed"})
+		log.Printf("error : %s\n", err)
 		return nil, err
 	}
 	if user != nil {
@@ -245,28 +274,44 @@ func (h *UserHandler) resolveGoogleUser(c *gin.Context, info *users.GoogleUserIn
 
 	user, err = h.userRepo.UserByEmail(c.Request.Context(), info.Email)
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"message": "failed"})
+		log.Printf("error : %s\n", err)
 		return nil, err
 	}
 	if user != nil {
 		ok := h.setGoogleId(c, user.ID, &info.Sub)
 		if !ok {
-			c.JSON(http.StatusUnauthorized, gin.H{"message": "failed"})
+			log.Printf("error : failed\n")
 			return nil, errors.New("failed")
 		}
 		return user, nil
 	}
-	// création du compte à partir de info
+	// change the username if it already exist
+	checkUsername := info.Name
+	for i := 0; i < 50; i++ {
+		existingName, err := h.userRepo.ExistingName(c.Request.Context(), checkUsername)
+		if err != nil  {
+			log.Printf("error : %s\n", err)
+			return nil, errors.New("failed")
+		}
+		if existingName == "" {
+			break 
+		}
+		code, err := code_generation.RandGenerate(4)
+		if err != nil {
+			log.Printf("error : %s\n", err)
+			return nil, errors.New("failed")
+		}
+		checkUsername = fmt.Sprintf("%s_%s", info.Name, code)
+	}
 	userObj := &users.User{Login: nil,
 			Password:    nil,
-			Username:    info.Name,
+			Username:    checkUsername,
 			Email:       info.Email,
 			Is_verified: true,
 			GoogleId: 	 &info.Sub,}
 	user, err = h.userRepo.CreateUser(c.Request.Context(), userObj)
 	if err != nil {
-        c.JSON(http.StatusInternalServerError,
-            gin.H{"message": "The account creation failed"})
+		log.Printf("error : The account creation failed\n")
 		return nil, errors.New("failed")
 	}
 	return user, nil
@@ -276,39 +321,42 @@ func (h *UserHandler) GoogleCallback() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		googleState := c.Query("state")
 		userState, err := c.Cookie("oauth_state")
-		if err != nil || c.Query("error") != "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"message": "failed"})
+		queryError := c.Query("error") 
+		if err != nil || queryError != "" {
+			if err != nil {
+				log.Printf("error : %s\n", err)
+			} else if queryError != "" {
+				log.Printf("error : %s\n", queryError)
+			}
+			c.Redirect(http.StatusFound, "http://localhost:5130/login")
 			return
 		}
 		if subtle.ConstantTimeCompare([]byte(userState), []byte(googleState)) != 1 {
-			c.JSON(http.StatusUnauthorized, gin.H{"message": "failed"})
+			c.Redirect(http.StatusFound, "http://localhost:5130/login")
 			return
 		}
 		cookie.Clear(c, "/api/auth/google", "oauth_state")
 
 		userInfo, err := h.fetchGoogleUser(c, c.Query("code"))
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"message": "failed"})
-			return
+			c.Redirect(http.StatusFound, "http://localhost:5130/login")
+			return 
 		}
 		if !userInfo.EmailVerified {
-			c.JSON(http.StatusUnauthorized, gin.H{"message": "failed"})
+			c.Redirect(http.StatusFound, "http://localhost:5130/login")
 			return
 		}
-
 		user, err := h.resolveGoogleUser(c, userInfo)
 		if err != nil {
+			c.Redirect(http.StatusFound, "http://localhost:5130/login")
 			return
 		}
-
 		_, ok := h.jwtGeneration(c, user.ID)
 		if !ok {
+			c.Redirect(http.StatusFound, "http://localhost:5130/login")
 			return
 		}
-		log.Printf("the user %d just logged in\n", user.ID)
-		// url := fmt.Sprintf("http://localhost:5130/home?Authorization=%s", tokenObj.Token)
-		url := "http://localhost:5130/home"
-		c.Redirect(http.StatusFound, url)
+		c.Redirect(http.StatusFound, "http://localhost:5130/home")
 	}
 }
 
@@ -327,6 +375,7 @@ func (h *UserHandler) Logout() gin.HandlerFunc {
 			return
 		}
 		cookie.Clear(c, "/api/auth", "refresh_token")
+		cookie.Clear(c, "/api", "Authorization")
 		c.JSON(http.StatusOK,
 			gin.H{"message": "you are now logout"})
 	}
