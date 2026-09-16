@@ -15,7 +15,7 @@ import (
 type RoundGetter interface {
 	Create(ctx context.Context, round *rounds.Round) (*rounds.Round, error)
 	GetGame(ctx context.Context, game_id int64) error
-	// GetByID(ctx context.Context, round_id int64) (*rounds.Round, error)
+	GetByID(ctx context.Context, round_id int64) (*rounds.Round, error)
 	GetNextRoundNb(ctx context.Context, game_id int64) (int64, error)
 	CheckLastRound(ctx context.Context, game_id int64, round_nb int64) (bool, error)
 	GetLocationID(ctx context.Context, game_id int64, round_nb int64) (int64, error)

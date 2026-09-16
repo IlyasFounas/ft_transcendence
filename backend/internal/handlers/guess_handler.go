@@ -1,22 +1,24 @@
 package handlers
 
 import (
-	"context"
-	"net/http"
-	"errors"
-	"log"
-	"strconv"
-	"github.com/gin-gonic/gin"
-	"backend/internal/tools/haversine"
 	"backend/internal/models/guesses"
 	"backend/internal/repositories"
+	"backend/internal/tools/haversine"
+	"context"
+	"errors"
+	"log"
+	"net/http"
+	"strconv"
+	"time"
+
+	"github.com/gin-gonic/gin"
 	"github.com/sams96/rgeo"
 )
 
 // GuessGetter — methods expected from the repository by the handler
 type GuessGetter interface {
 	Create(ctx context.Context, guess *guesses.Guess) (*guesses.Guess, error)
-	
+
 	GetByID(ctx context.Context, guess_id int64) (*guesses.Guess, error)
 	GetLatitudeByID(ctx context.Context, guess_id int64) (float64, error)
 	GetLongitudeByID(ctx context.Context, guess_id int64) (float64, error)
@@ -41,25 +43,25 @@ type GuessGetter interface {
 }
 
 type GuessHandler struct {
-	guessRepo GuessGetter;
-	roundRepo RoundGetter;
-	lobbyRepo *repositories.LobbyRepository;
-	gameRepo *repositories.GameRepository;
-	reverser *rgeo.Rgeo;
+	guessRepo	GuessGetter
+	roundRepo	RoundGetter
+	lobbyRepo	*repositories.LobbyRepository
+	gameRepo	*repositories.GameRepository
+	reverser	*rgeo.Rgeo
 }
 
-func NewGuessHandler(guessRepo GuessGetter, roundRepo RoundGetter, lobbyRepo *repositories.LobbyRepository, 
+func NewGuessHandler(guessRepo GuessGetter, roundRepo RoundGetter, lobbyRepo *repositories.LobbyRepository,
 	gameRepo *repositories.GameRepository, reverser *rgeo.Rgeo) *GuessHandler {
 	return &GuessHandler{
-		guessRepo: guessRepo, 
-		roundRepo: roundRepo, 
-		lobbyRepo: lobbyRepo, 
-		gameRepo: gameRepo, 
-		reverser: reverser}
+		guessRepo:	guessRepo,
+		roundRepo:	roundRepo,
+		lobbyRepo:	lobbyRepo,
+		gameRepo:	gameRepo,
+		reverser:	reverser}
 }
 
 // Calculates distance based on lat + long compared to actual location
-func CalculateDistance(location, guessCoords haversine.Coordinates) (int64) {
+func CalculateDistance(location, guessCoords haversine.Coordinates) int64 {
 	m, ft := haversine.Distance(location, guessCoords)
 	_ = ft // currently not used, but can be returned if needed
 	//TODO add an option to choose between m and ft in the request body
@@ -68,8 +70,10 @@ func CalculateDistance(location, guessCoords haversine.Coordinates) (int64) {
 	return dist
 }
 
-// Calculate score based on distance and multipliers/dividers (time, cc, streaks)
-func CalculateScore(createdGuess *guesses.Guess) {
+// // Calculate score based on distance and multipliers/dividers (time, cc, streaks)
+// TODO totalTime est la durée totale configurée pour la partie (game.Timer,
+// convertie en time.Duration) > jamais codee en dur ici
+func CalculateScore(createdGuess *guesses.Guess, totalTime time.Duration) {
 	if createdGuess.Distance < 0 {
 		log.Printf("Error: negative distance %d for guess", createdGuess.Distance)
 		createdGuess.Score = 0
@@ -86,11 +90,13 @@ func CalculateScore(createdGuess *guesses.Guess) {
 	createdGuess.Score = distance * 1000 / haversine.EarthDiameterMeters //put score on base 1000 (ex: if the distance is 0, the score is 1000, if the distance is 12742176, the score is 0)
 	createdGuess.BaseScore = createdGuess.Score // store the base score before multipliers for XP calculation
 
-	//multiplier time left (0 to 1, based on time max being one, and time min being zero, and time left being the difference between the time the time at the moment of validating guess and the time max)
-	totalTime := int64(120000000000) // TODO:  get total duration in nanoseconds (from game table where it is stored in seconds) here: maxtime to be taken from game table !
-	createdGuess.TimeLeft = 120000000000 //TODO: calculate based on StoppedAt time.Time (given when user guesses , and StartedAt time.Time stored in round table)
-	createdGuess.Score *= createdGuess.TimeLeft.Nanoseconds() // not in one line because it is not a float64, and does not handle decimals
-	createdGuess.Score /= totalTime
+	// multiplier time left (0 to 1, based on time max being one, and time min being zero), and time left being the difference between the time the time at the moment of validating guess and the time max)
+	totalTime = time.Duration(120000000000) // TODO:  is it in nanoseconds???? + get total duration in nanoseconds (from game table where it is stored in seconds) here: maxtime to be taken from game table !
+	// timeleft has been calculated before being sent here
+	if totalTime > 0 {
+		createdGuess.Score *= createdGuess.TimeLeft.Nanoseconds() // not in one line because it is not a float64, and does not handle decimals
+		createdGuess.Score /= totalTime.Nanoseconds()
+	}
 
 	// multiplier correct country code
 	if createdGuess.CountryFound == true {
@@ -103,7 +109,7 @@ func CalculateScore(createdGuess *guesses.Guess) {
 		createdGuess.Score *= createdGuess.Streak
 	} else if createdGuess.Distance >= 1000 || createdGuess.CountryFound == false {
 		createdGuess.Streak = 0
-	} 
+	}
 }
 
 // // POST /guesses
@@ -120,7 +126,7 @@ func CalculateScore(createdGuess *guesses.Guess) {
 //     	c.JSON(http.StatusBadRequest, gin.H{"error": "latitude and longitude must be provided"})
 //     	return
 // 	}
-	
+
 // 	if guess.RoundNb == 0 {
 // 		c.JSON(http.StatusBadRequest, gin.H{"error": "round_nb must be provided"})
 // 		return
@@ -214,7 +220,7 @@ func CalculateScore(createdGuess *guesses.Guess) {
 // 	log.Printf("Country code for this guess: %s", guess.CC) // TODO: remove this log after testing
 // 	if guess.CC == baseCC {
 // 		guess.CountryFound = true
-// 	} 
+// 	}
 
 // 	// Calculate distance and score before persisting
 // 	guess.Distance = CalculateDistance(haversine.Coordinates{Lat: baseLat, Lon: baseLong}, haversine.Coordinates{Lat: *guess.Lat, Lon: *guess.Long})
@@ -315,7 +321,7 @@ func (h *GuessHandler) GetGuessLatitude(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"latitude": lat}) 
+	c.JSON(http.StatusOK, gin.H{"latitude": lat})
 }
 
 // GET /guesses/:id/longitude
@@ -422,7 +428,7 @@ func (h *GuessHandler) GetGuessScoreByRoundAndUser(c *gin.Context) {
 			gin.H{"message": "The userId is empty"})
 		return
 	}
-	
+
 	ctx := c.Request.Context()
 
 	round_id, err := strconv.ParseInt(c.Param("round_id"), 10, 64)
@@ -482,7 +488,7 @@ func (h *GuessHandler) GetUserXP(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
-	
+
 	userXP, err := h.guessRepo.GetXPByUserID(ctx, userID.(int64))
 	if err != nil {
 		log.Printf("Error getting total score for user %d: %v", userID.(int64), err)

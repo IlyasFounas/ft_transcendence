@@ -35,18 +35,18 @@ func (r *RoundRepository) Create(ctx context.Context, round *rounds.Round) (*rou
 	return round, nil
 }
 
-// // READ all - using round ID
-// func (r *RoundRepository) GetByID(ctx context.Context, round_id int64) (*rounds.Round, error) {
-// 	round := new(rounds.Round)
-// 	err := r.db.NewSelect().Model(round).Where("round_id = ?", round_id).Scan(ctx)
-// 	if err != nil {
-// 		if errors.Is(err, sql.ErrNoRows) {
-// 			return nil, ErrRoundNotFound
-// 		}
-// 		return nil, fmt.Errorf("failed to get round by ID: %w", err)
-// 	}
-// 	return round, nil
-// }
+// READ all - using round ID
+func (r *RoundRepository) GetByID(ctx context.Context, round_id int64) (*rounds.Round, error) {
+	round := new(rounds.Round)
+	err := r.db.NewSelect().Model(round).Where("id = ?", round_id).Scan(ctx)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrRoundNotFound
+		}
+		return nil, fmt.Errorf("failed to get round by ID: %w", err)
+	}
+	return round, nil
+}
 
 // READ - using game ID
 func (r *RoundRepository) GetGame(ctx context.Context, game_id int64) error {
