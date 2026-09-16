@@ -39,7 +39,6 @@ func (r *UserRepository) CreateUser(ctx context.Context, user *users.User) (*use
 
 func (r *UserRepository) LoginUser(ctx context.Context,
 	login string, password string) (bool, int64, error) {
-
 	if len(login) == 0 || len(password) == 0 {
 		return false, 0, nil
 	}
@@ -52,7 +51,7 @@ func (r *UserRepository) LoginUser(ctx context.Context,
 		return false, 0, err
 	}
 	if user.Password == nil || !encryption.CheckPasswordHash(password, *user.Password) {
-		return false, user.ID, errors.New("The user has not set a password")
+		return false, 0, errors.New("The user has not set a password")
 	} else if !user.Is_verified {
 		return false, user.ID, errors.New("The user has not verified his email")
 	}

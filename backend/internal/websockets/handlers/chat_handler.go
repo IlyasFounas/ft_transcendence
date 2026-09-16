@@ -1,11 +1,12 @@
 package ws_handlers
 
 import (
-	"log"
-	"context"
-	"strings"
 	"backend/internal/models/chats"
+	"backend/internal/models/friends"
 	"backend/internal/repositories"
+	"context"
+	"log"
+	"strings"
 )
 
 type ChatHandler struct {
@@ -52,4 +53,14 @@ func (h *ChatHandler) Send(ctx context.Context,
 		return false
 	}
 	return true
-} 
+}
+
+func (h *ChatHandler) FriendList(ctx context.Context,
+	userId int64) ([]*friends.FriendResponse, bool) {
+	friends, err := h.friendRepo.Friends(ctx, userId)
+	if err != nil {
+		log.Printf("error : %s\n", err)
+		return nil, false
+	}
+	return friends, true
+}

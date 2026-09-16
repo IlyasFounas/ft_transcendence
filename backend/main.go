@@ -16,9 +16,11 @@ import (
 	"backend/internal/handlers"
 	"backend/internal/repositories"
 	"backend/internal/router"
-	"github.com/gin-gonic/gin"
-	"backend/internal/websockets/lobby"
+	chat_ws "backend/internal/websockets/chat"
 	"backend/internal/websockets/handlers"
+	"backend/internal/websockets/lobby"
+
+	"github.com/gin-gonic/gin"
 )
 
 /**
@@ -63,8 +65,11 @@ func main() {
 	hub := lobby_ws.NewHub(repo, wh)
 	go hub.Run(appCtx)
 
+	chat := chat_ws.NewChat(repo, wh)
+	go chat.Run(appCtx)
+
 	// 5. Router setup
-	r := router.NewRouter(h, hub)
+	r := router.NewRouter(h, hub, chat)
 	srv := &http.Server{
 		Addr:         ":8080",
 		Handler:      r,
