@@ -52,9 +52,16 @@ export default function HomePage() {
                     <p className="text-heading-small lg:text-hero font-semibold text-text-primary">LOCATE.</p>
                     <p className="text-heading-small lg:text-hero font-semibold text-text-primary">REPORT.</p>
                 </div>
-                <PrimaryButton size="small" subtitle="Launch a new operation">
-                    Start Mission
-                </PrimaryButton>
+                <div className="w-full lg:hidden">
+                    <PrimaryButton size="small" subtitle="Launch a new operation">
+                        Start Mission
+                    </PrimaryButton>
+                </div>
+                <div className="w-full hidden lg:block">
+                    <PrimaryButton size="large" subtitle="Launch a new operation">
+                        Start Mission
+                    </PrimaryButton>
+                </div>              
             </div>
         </main>
     );
