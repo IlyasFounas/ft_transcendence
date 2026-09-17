@@ -88,11 +88,11 @@ func (h *GuessWsHandler) AddGuess(ctx context.Context, payload json.RawMessage, 
 		log.Println("error : latitude and longitude must be provided")
 		return nil, false
 	}
-	if guess.RoundNb == 0 {
+	if guess.RoundNb <= 0 {
 		log.Println("error : round_nb must be provided")
 		return nil, false
 	}
-	if guess.UserID == 0 {
+	if guess.UserID <= 0 {
 		log.Println("error : user_id must be provided")
 		return nil, false
 	}
@@ -151,9 +151,7 @@ func (h *GuessWsHandler) AddGuess(ctx context.Context, payload json.RawMessage, 
 		return nil, false
 	}
 	guess.CC = loc.CountryCode2
-	if guess.CC == baseCC {
-		guess.CountryFound = true
-	}
+	guess.CountryFound = guess.CC == baseCC
 
 	guess.Distance = handlers.CalculateDistance(
 		haversine.Coordinates{Lat: baseLat, Lon: baseLong},
