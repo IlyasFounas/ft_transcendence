@@ -70,9 +70,7 @@ func CalculateDistance(location, guessCoords haversine.Coordinates) int64 {
 	return dist
 }
 
-// // Calculate score based on distance and multipliers/dividers (time, cc, streaks)
-// TODO totalTime est la durée totale configurée pour la partie (game.Timer,
-// convertie en time.Duration) > jamais codee en dur ici
+// Calculate score based on distance and multipliers/dividers (time, cc, streaks)
 func CalculateScore(createdGuess *guesses.Guess, totalTime time.Duration) {
 	if createdGuess.Distance < 0 {
 		log.Printf("Error: negative distance %d for guess", createdGuess.Distance)
@@ -91,10 +89,10 @@ func CalculateScore(createdGuess *guesses.Guess, totalTime time.Duration) {
 	createdGuess.BaseScore = createdGuess.Score // store the base score before multipliers for XP calculation
 
 	// multiplier time left (0 to 1, based on time max being one, and time min being zero), and time left being the difference between the time the time at the moment of validating guess and the time max)
-	totalTime = time.Duration(120000000000) // TODO:  is it in nanoseconds???? + get total duration in nanoseconds (from game table where it is stored in seconds) here: maxtime to be taken from game table !
-	// timeleft has been calculated before being sent here
+	log.Printf("Score before time left multiplier: %d (TimeLeft: %v, totalTime: %v)\n", createdGuess.Score, createdGuess.TimeLeft, totalTime)
+	createdGuess.Score *= createdGuess.TimeLeft.Nanoseconds() // not in one line because it is not a float64, and does not handle decimals
+	log.Printf("Score after time left multiplier: %d (TimeLeft: %v, totalTime: %v)\n", createdGuess.Score, createdGuess.TimeLeft, totalTime)
 	if totalTime > 0 {
-		createdGuess.Score *= createdGuess.TimeLeft.Nanoseconds() // not in one line because it is not a float64, and does not handle decimals
 		createdGuess.Score /= totalTime.Nanoseconds()
 	}
 
