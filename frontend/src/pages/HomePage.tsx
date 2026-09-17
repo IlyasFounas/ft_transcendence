@@ -16,13 +16,16 @@ export default function HomePage() {
                 bg-no-repeat
                 flex
                 flex-col
+                
                 items-center
                 justify-start
+                lg:items-start
+
                 px-5
                 py-12
                 lg:px-20
                 lg:py-20
-                lg:items-start
+
                 gap-6
                 md:gap-20
             "
@@ -39,8 +42,32 @@ export default function HomePage() {
                     xpToNextRank={2940}
                 />
             </div>
-            <div className="flex flex-col space-y-2 lg:space-y-6 items-center lg:self-center mt-auto lg:pb-12 lg:pr-100 xl:pr-0">
-                <div className="flex w-[250px] lg:w-[500px] gap-4 items-center sm:px-6">
+            <div className="
+                flex
+                flex-col
+                mt-auto
+                
+                items-center
+                lg:self-center
+                
+                space-y-2
+                lg:space-y-6
+                
+                lg:pb-12
+                lg:pr-100
+                xl:pr-0
+                "
+            >
+                <div className="
+                    flex
+                    w-[250px]
+                    gap-4
+                    items-center
+
+                    sm:px-6
+                    lg:w-[500px]
+                    "
+                >
                     <hr className="h-px flex-1 border-primary" />
                     <span className="text-body-primary lg:text-heading-medium text-primary uppercase">
                         your mission awaits
