@@ -75,9 +75,17 @@ func WsJoinLobby(hub *HubWs) gin.HandlerFunc {
         }
         // Check if the player is in the right lobby
         lobby, err := hub.lobbyRepo.ActualLobby(c.Request.Context(), userId.(int64))
-        if err != nil || lobby == nil {
-            log.Println("error : can't find the lobby")
-            return    
+        if err != nil {
+            log.Printf("error : %s\n", err)
+            c.JSON(http.StatusInternalServerError, gin.H{"message": "could not verify lobby"})
+            return
+        }
+        if lobby == nil {
+            // Previously this returned with no response at all: 
+            // the client's upgrade request was simply left hanging (neither a WS handshake nor an HTTP error)
+            // so this message avoids a hung connection
+            c.JSON(http.StatusForbidden, gin.H{"message": "you are not in a lobby"})
+            return
         }
         // We pass to an HTTP request to a websocket connexion
         conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
