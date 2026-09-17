@@ -34,7 +34,13 @@ func AuthMiddleWare() gin.HandlerFunc {
       c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "you have to login"})
       return
     }
-    id, err := strconv.ParseInt(claims["sub"].(string), 10, 64)
+    // avoids panic error when the token is valid but the "sub" claim is missing or not a string
+    sub, ok := claims["sub"].(string)
+    if !ok {
+      c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "you have to login"})
+      return
+    }
+    id, err := strconv.ParseInt(sub, 10, 64)
     if err != nil {
       c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "you have to login"})
       return
