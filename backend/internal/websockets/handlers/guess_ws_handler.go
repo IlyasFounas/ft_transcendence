@@ -175,6 +175,13 @@ func (h *GuessWsHandler) AddGuess(ctx context.Context, payload json.RawMessage, 
 		guess.TimeLeft = 0
 	}
 
+	// retrieval of the last streak (avoids client injection)
+	guess.Streak, err = h.guessRepo.GetLastStreakByGameAndUserID(ctx, gameID, guess.UserID, guess.RoundNb)
+	if err != nil {
+		log.Printf("error getting last streak for user %d in game %d: %s\n", guess.UserID, gameID, err)
+		return nil, false
+	}
+
 	handlers.CalculateScore(&guess, duration)
 
 	createdGuess, err := h.guessRepo.Create(ctx, &guess)

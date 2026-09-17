@@ -219,6 +219,28 @@ func (r *GuessRepository) GetLeaderboardByGameID(ctx context.Context, game_id in
     return results, nil
 }
 
+// READ - streak value for the last round - using game ID and user ID
+func (r *GuessRepository) GetLastStreakByGameAndUserID(ctx context.Context, game_id int64, user_id int64, round_nb int64) (int64, error) {
+	if round_nb <= 1 {
+		return 0, nil
+	}
+	var streak int64
+	err := r.db.NewSelect().
+		Model((*guesses.Guess)(nil)).
+		ColumnExpr("g.streak").
+		Join("JOIN rounds AS r ON r.id = g.round_id").
+		Where("r.game_id = ? AND g.user_id = ? AND r.round_nb = ?", game_id, user_id, round_nb-1).
+		Limit(1).
+		Scan(ctx, &streak)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return 0, nil
+		}
+		return 0, fmt.Errorf("failed to get last streak for user %d in game %d: %w", user_id, game_id, err)
+	}
+	return streak, nil
+}
+
 // READ - using round ID (to get all guesses for that round)
 func (r *GuessRepository) GetByRoundID(ctx context.Context, round_id int64) ([]*guesses.Guess, error) {
 	var guesses []*guesses.Guess
