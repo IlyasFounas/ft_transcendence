@@ -11,7 +11,7 @@ import (
 	"backend/internal/websockets/chat"
 )
 
-func NewRouter(h *handlers.Handlers, hub *lobby_ws.HubWs, 
+func NewRouter(h *handlers.Handlers, hub *lobby_ws.Hub, 
 	chat *chat_ws.Chat) *gin.Engine {
 	r := gin.Default()    //when you first create a var :=
 	r.Use(cors.Default()) // TODO: global middleware now but accept only localhost:3000 request

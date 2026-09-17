@@ -2,15 +2,8 @@ package client_ws
 
 import (
 	"log"
-	"net/http"
 	"github.com/gorilla/websocket"
 )
-
-var upgrader = websocket.Upgrader {
-    ReadBufferSize: 1024,
-    WriteBufferSize: 1024,
-    CheckOrigin: func(r *http.Request) bool {return true},
-}
 
 type Connexion struct {
     Conn    *websocket.Conn
@@ -46,20 +39,3 @@ func (c *Connexion) ReadPump(action func([]byte), unregister func()) {
         }
     }
 }
-
-// type ClientHub struct {
-//     connx     *Connexion
-//     userId  int64
-//     lobbyId int64
-//     gameId  int64
-// }
-
-
-// func NewClientHub(hub any, connx *Connexion,
-//     userId int64, lobbyId int64, gameId int64) *ClientHub {
-//     return &ClientHub{connx: connx,
-//     userId: userId,
-//     lobbyId: lobbyId,
-//     gameId: gameId,
-//     hub: hub}
-// }

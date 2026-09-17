@@ -107,6 +107,12 @@ func (h *LobbyWsHandler) RemovePlayer(ctx context.Context,
 		log.Printf("error : %s\n", err)
 		return false
 	}
+	err = h.lobbyRepo.SetIsCreator(ctx,
+		lobby.ID, false)
+	if err != nil {
+		log.Printf("error : %s\n", err)
+		return false
+	}
 	return true
 }
 

@@ -160,11 +160,11 @@ func JoinChat(chat *Chat) gin.HandlerFunc {
 			if err != nil {
 				log.Printf("error : %s\n", err)
 				return
-			}
+			}			
+			dataInfos.Client = clientChat
 			chat.Action <- &dataInfos
 		}
-
-		unregisterClient := func () {
+		unregisterClient := func() {
 			chat.Unregister <- clientChat
 		}
 		clientChat.Connx.ReadPump(actionClient,
