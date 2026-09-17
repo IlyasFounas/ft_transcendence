@@ -31,6 +31,7 @@ export default function ProfileCard({
                 p-6
                 md:p-5
                 w-[300px]
+                md:w-[380px]
                 lg:w-[480px]
             "
         >
@@ -56,6 +57,7 @@ export default function ProfileCard({
                         text-center
                         lg:text-left
                         text-heading-small
+                        md:text-heading-medium
                         lg:text-heading-large
                         text-text-primary
                         uppercase
@@ -63,7 +65,7 @@ export default function ProfileCard({
                     >
                         <span>Agent </span>{username}
                     </div>
-                    <div className="text-body-primary lg:text-heading-small text-primary uppercase">
+                    <div className="text-body-primary md:text-heading-small text-primary uppercase">
                         {role}
                     </div>
                 </div>
@@ -71,21 +73,21 @@ export default function ProfileCard({
 
             <div className="flex flex-row uppercase">
                 <div className="flex-1">
-                    <p className="text-label-small lg:text-body-primary text-text-secondary">Operation</p>
-                    <p className="text-heading-small lg:text-heading-medium text-text-primary">{operations}</p>
+                    <p className="text-label-small md:text-body-primary text-text-secondary">Operation</p>
+                    <p className="text-heading-small md:text-heading-medium text-text-primary">{operations}</p>
                 </div>
                 <div className="flex-1">
-                    <p className="text-label-small lg:text-body-primary text-text-secondary">Accuracy</p>
-                    <span className="text-heading-small lg:text-heading-medium text-text-primary">{accuracy}</span><span> %</span>
+                    <p className="text-label-small md:text-body-primary text-text-secondary">Accuracy</p>
+                    <span className="text-heading-small md:text-heading-medium text-text-primary">{accuracy}</span><span> %</span>
                 </div>
                 <div className="flex-1">
-                    <p className="text-label-small lg:text-body-primary text-text-secondary">Highest Score</p>
-                    <p className="text-heading-small lg:text-heading-medium text-text-primary">{score}</p>
+                    <p className="text-label-small md:text-body-primary text-text-secondary">Highest Score</p>
+                    <p className="text-heading-small md:text-heading-medium text-text-primary">{score}</p>
                 </div>
             </div>
 
             <div className="flex flex-col uppercase space-y-1 lg:space-y-2">
-                <p className="text-label-small lg:text-body-primary text-text-secondary">Next Rank</p>
+                <p className="text-label-small md:text-body-primary text-text-secondary">Next Rank</p>
                 <p className="text-body-primary text-text-primary">{nextRank}</p>
                 <div className="space-y-1">
                     <div className="h-1 bg-white rounded-2xl">

@@ -23,8 +23,8 @@ export default function HomePage() {
 
                 px-5
                 py-12
+                md:py-20
                 lg:px-20
-                lg:py-20
 
                 gap-6
                 md:gap-20
@@ -52,7 +52,7 @@ export default function HomePage() {
                 
                 space-y-2
                 lg:space-y-6
-                
+                lg:px-20
                 lg:pb-12
                 lg:pr-100
                 xl:pr-0
@@ -65,25 +65,32 @@ export default function HomePage() {
                     items-center
 
                     sm:px-6
+
+                    md:w-[420px]
                     lg:w-[500px]
                     "
                 >
                     <hr className="h-px flex-1 border-primary" />
-                    <span className="text-body-primary lg:text-heading-medium text-primary uppercase">
+                    <span className="text-body-primary md:text-heading-small lg:text-heading-medium text-primary uppercase">
                         your mission awaits
                     </span>
                     <hr className="h-px flex-1 border-primary" />
                 </div>
                 <div className="flex gap-3 lg:gap-8">
-                    <p className="text-heading-small lg:text-hero font-semibold text-text-primary">ANALYZE.</p>
-                    <p className="text-heading-small lg:text-hero font-semibold text-text-primary">LOCATE.</p>
-                    <p className="text-heading-small lg:text-hero font-semibold text-text-primary">REPORT.</p>
+                    <p className="text-heading-small md:text-heading-medium lg:text-hero font-semibold text-text-primary">ANALYZE.</p>
+                    <p className="text-heading-small md:text-heading-medium lg:text-hero font-semibold text-text-primary">LOCATE.</p>
+                    <p className="text-heading-small md:text-heading-medium lg:text-hero font-semibold text-text-primary">REPORT.</p>
                 </div>
-                <div className="w-full lg:hidden">
+                <div className="w-full md:hidden">
                     <PrimaryButton size="small" subtitle="Launch a new operation">
                         Start Mission
                     </PrimaryButton>
                 </div>
+                <div className="w-full hidden md:block lg:hidden text-center">
+                    <PrimaryButton size="medium" subtitle="Launch a new operation">
+                        Start Mission
+                    </PrimaryButton>
+                </div>    
                 <div className="w-full hidden lg:block">
                     <PrimaryButton size="large" subtitle="Launch a new operation">
                         Start Mission
