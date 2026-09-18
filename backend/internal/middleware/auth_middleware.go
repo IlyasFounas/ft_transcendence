@@ -28,6 +28,10 @@ func AuthMiddleWare() gin.HandlerFunc {
     }
     claims := jwt.MapClaims{}
     _, err = jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+        // so we reject anything not signed with the HMAC family
+        if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+          return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+        }
         return []byte(os.Getenv("JWT_SECRET")), nil })
     if err != nil {
       fmt.Printf("%s\n", err)
