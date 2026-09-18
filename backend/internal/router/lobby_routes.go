@@ -8,17 +8,17 @@ import (
 )
 
 func registerLobbyRoutes(r *gin.Engine, h *handlers.GameHandler,
-	hl *handlers.LobbyHandler, hub *lobby_ws.HubWs) {
+	hl *handlers.LobbyHandler, hub *lobby_ws.Hub) {
 	private := r.Group("/")
 	private.Use(middleware.AuthMiddleWare())
 	{
 		private.POST("/lobby/create", h.CreateLobby())
 		private.POST("/lobby/join", hl.JoinLobby())
-		// private.GET("/ws/lobby/join", client_ws.WsLobby())
+		private.GET("/ws/lobby/join", lobby_ws.JoinLobby(hub))
 		private.DELETE("/lobby/leave", hl.LeaveLobby())
 		private.DELETE("/lobby/remove/:username", hl.RemovePlayer())
+		private.GET("/game/historic/:userid", hl.Historic())
+		private.GET("/game/nbgames/:userid", hl.NbGames())
 		private.GET("/lobby/allPlayers", hl.AllPlayers())
 	}
-	public := r.Group("/")
-	public.GET("/ws/lobby/join", lobby_ws.WsJoinLobby(hub))
 }

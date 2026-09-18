@@ -8,10 +8,22 @@ import (
 
 type LobbyWsHandler struct {
 	lobbyRepo *repositories.LobbyRepository
+	gameRepo *repositories.GameRepository
+	userRepo *repositories.UserRepository
 }
 
-func NewLobbyWsHandler(lobbyRepo *repositories.LobbyRepository) *LobbyWsHandler {
-	return &LobbyWsHandler{lobbyRepo: lobbyRepo}
+type lobbyInfos struct {
+    JoinCode string  `json:"join_code"`
+    RoundNb  int64 	 `json:"round_nb"`
+    Timer 	 int64	 `json:"timer"`
+}
+
+func NewLobbyWsHandler(lobbyRepo *repositories.LobbyRepository, 
+	gameRepo *repositories.GameRepository,
+	userRepo *repositories.UserRepository) *LobbyWsHandler {
+	return &LobbyWsHandler{lobbyRepo: lobbyRepo,
+		gameRepo: gameRepo,
+		userRepo: userRepo}
 }
 
 func (h *LobbyWsHandler) LeaveLobby(ctx context.Context,
@@ -62,4 +74,84 @@ func (h *LobbyWsHandler) LeaveLobby(ctx context.Context,
 		}
 	}
 	return true
+}
+
+func (h *LobbyWsHandler) RemovePlayer(ctx context.Context,
+	request_id int64, target_id int64) bool {
+	if request_id == target_id {
+		log.Println("error : you can't kick yourself out of the lobby")
+		return false	
+	}
+	user, err := h.userRepo.User(ctx, target_id)
+	if err != nil {
+		log.Printf("error : %s\n", err)
+		return false
+	}
+	lobby, err := h.lobbyRepo.ActualLobby(ctx, user.ID)
+	if err != nil {
+		log.Printf("error : %s\n", err)
+		return false
+	}
+	isCreator, err := h.lobbyRepo.IsCreator(ctx,
+		request_id, lobby.GameId)
+	if err != nil {
+		log.Printf("error : %s\n", err)
+		return false
+	}
+	if !isCreator {
+		log.Println("error : you're not allowed to remove the player")
+		return false
+	}
+	err = h.lobbyRepo.SetLeftAt(ctx, lobby.ID)
+	if err != nil {
+		log.Printf("error : %s\n", err)
+		return false
+	}
+	err = h.lobbyRepo.SetIsCreator(ctx,
+		lobby.ID, false)
+	if err != nil {
+		log.Printf("error : %s\n", err)
+		return false
+	}
+	return true
+}
+
+func (h *LobbyWsHandler) Timer(ctx context.Context, gameId int64) (int64, bool) {
+	timer, err := h.gameRepo.Timer(ctx, gameId)
+	if err != nil {
+		log.Printf("error : %s\n", err)
+		return 0, false;
+	}
+	return timer, true
+}
+
+func (h *LobbyWsHandler) RoundNb(ctx context.Context, gameId int64) (int64, bool) {
+	roundNb, err := h.gameRepo.RoundNb(ctx, gameId)
+	if err != nil {
+		log.Printf("error : %s\n", err)
+		return 0, false;
+	}
+	return roundNb, true
+}
+
+func (h *LobbyWsHandler) SendInfos(ctx context.Context, gameId int64) (interface{}, bool) {
+	timer, ok := h.Timer(ctx, gameId)
+	if !ok {
+		return nil, false;
+	}
+	joinCode, err := h.lobbyRepo.JoinCode(ctx, gameId)
+	if err != nil {
+		log.Printf("error : %s\n", err)
+		return nil, false;
+	}
+	roundNb, ok := h.RoundNb(ctx, gameId)
+	if !ok {
+		return nil, false;
+	}
+	data := lobbyInfos{
+		JoinCode: *joinCode,
+		RoundNb: roundNb,
+		Timer: timer,
+	}
+	return data, true
 }

@@ -129,7 +129,7 @@ func (r *LobbyRepository) IsCreator(ctx context.Context,
 	lobby := new(games.Lobby)
 	err := r.db.NewSelect().
 		Model(lobby).
-		Column("join_code").
+		Column("is_creator").
 		Where("user_id = ?", userId).
 		Where("game_id = ?", gameId).
 		Scan(ctx)
@@ -151,6 +151,58 @@ func (r *LobbyRepository) AllPlayers(ctx context.Context,
 		return nil, err
 	}
 	return lobbies, nil
+}
+
+func (r *LobbyRepository) NbGames(ctx context.Context,
+	userId int64) (int, error){
+	count, err := r.db.NewSelect().
+		Model((*games.Lobby)(nil)).
+		Relation("Game", func(q *bun.SelectQuery) *bun.SelectQuery {
+			return q.Where("finished_at IS NOT NULL")
+		}).
+		Where("user_id = ?", userId).
+		Where("left_at >= game.finished_at").
+		Count(ctx)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+func (r *LobbyRepository) Historic(ctx context.Context,
+	userId int64) ([]*games.Game, error){
+	var games []*games.Game
+	err := r.db.NewSelect().
+		Model(games).
+		Column("id", "").
+		Relation("Game", func(q *bun.SelectQuery) *bun.SelectQuery {
+			return q.Where("finished_at IS NOT NULL")
+		}).
+		Where("user_id = ?", userId).
+		Where("left_at >= game.finished_at").
+		Scan(ctx)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, errors.New("You don't have any games")
+		}
+		return nil, err
+	}
+	return games, nil
+}
+
+func (r *LobbyRepository) JoinCode(ctx context.Context,
+	gameId int64) (*string, error) {
+	lobby := new(games.Lobby)
+	err := r.db.NewSelect().
+		Model(lobby).
+		Column("join_code").
+		Where("game_id = ?", gameId).
+		Where("join_code IS NOT NULL").
+		Scan(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return lobby.JoinCode, nil
 }
 
 // Setters

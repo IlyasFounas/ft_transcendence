@@ -20,9 +20,14 @@ import (
 
 func AuthMiddleWare() gin.HandlerFunc {
   return func(c *gin.Context) {
-    tokenString := c.GetHeader("Authorization")
+    // tokenString := c.GetHeader("Authorization")
+		tokenString, err := c.Cookie("Authorization")
+    if err != nil {
+      c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "you have to login"})
+      return 
+    }
     claims := jwt.MapClaims{}
-    _, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+    _, err = jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
         return []byte(os.Getenv("JWT_SECRET")), nil })
     if err != nil {
       fmt.Printf("%s\n", err)

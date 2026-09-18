@@ -24,6 +24,7 @@ import (
  * PATCH = modify a unique field
  */
 func registerUserRoutes(r *gin.Engine, h *handlers.UserHandler, ht *handlers.TokenHandler) {
+	r.Static("/uploads", "./uploads")
 	public := r.Group("/")
 	{
 		public.POST("/user/create", h.CreateUser())
@@ -48,5 +49,6 @@ func registerUserRoutes(r *gin.Engine, h *handlers.UserHandler, ht *handlers.Tok
 		private.PATCH("/user/login", h.SetLogin())
 		private.PATCH("/user/avatar", h.SetAvatar())
 		private.POST("/auth/logout", h.Logout())
+		private.POST("/user/avatar/upload", h.UploadAvatar())
 	}
 }
