@@ -39,7 +39,6 @@ func (r *UserRepository) CreateUser(ctx context.Context, user *users.User) (*use
 
 func (r *UserRepository) LoginUser(ctx context.Context,
 	login string, password string) (bool, int64, error) {
-
 	if len(login) == 0 || len(password) == 0 {
 		return false, 0, nil
 	}

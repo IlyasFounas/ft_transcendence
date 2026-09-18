@@ -8,12 +8,21 @@ import (
 
 type LobbyWsHandler struct {
 	lobbyRepo *repositories.LobbyRepository
+	gameRepo *repositories.GameRepository
 	userRepo *repositories.UserRepository
 }
 
+type lobbyInfos struct {
+    JoinCode string  `json:"join_code"`
+    RoundNb  int64 	 `json:"round_nb"`
+    Timer 	 int64	 `json:"timer"`
+}
+
 func NewLobbyWsHandler(lobbyRepo *repositories.LobbyRepository, 
+	gameRepo *repositories.GameRepository,
 	userRepo *repositories.UserRepository) *LobbyWsHandler {
 	return &LobbyWsHandler{lobbyRepo: lobbyRepo,
+		gameRepo: gameRepo,
 		userRepo: userRepo}
 }
 
@@ -98,5 +107,51 @@ func (h *LobbyWsHandler) RemovePlayer(ctx context.Context,
 		log.Printf("error : %s\n", err)
 		return false
 	}
+	err = h.lobbyRepo.SetIsCreator(ctx,
+		lobby.ID, false)
+	if err != nil {
+		log.Printf("error : %s\n", err)
+		return false
+	}
 	return true
+}
+
+func (h *LobbyWsHandler) Timer(ctx context.Context, gameId int64) (int64, bool) {
+	timer, err := h.gameRepo.Timer(ctx, gameId)
+	if err != nil {
+		log.Printf("error : %s\n", err)
+		return 0, false;
+	}
+	return timer, true
+}
+
+func (h *LobbyWsHandler) RoundNb(ctx context.Context, gameId int64) (int64, bool) {
+	roundNb, err := h.gameRepo.RoundNb(ctx, gameId)
+	if err != nil {
+		log.Printf("error : %s\n", err)
+		return 0, false;
+	}
+	return roundNb, true
+}
+
+func (h *LobbyWsHandler) SendInfos(ctx context.Context, gameId int64) (interface{}, bool) {
+	timer, ok := h.Timer(ctx, gameId)
+	if !ok {
+		return nil, false;
+	}
+	joinCode, err := h.lobbyRepo.JoinCode(ctx, gameId)
+	if err != nil {
+		log.Printf("error : %s\n", err)
+		return nil, false;
+	}
+	roundNb, ok := h.RoundNb(ctx, gameId)
+	if !ok {
+		return nil, false;
+	}
+	data := lobbyInfos{
+		JoinCode: *joinCode,
+		RoundNb: roundNb,
+		Timer: timer,
+	}
+	return data, true
 }
