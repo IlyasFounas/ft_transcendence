@@ -2,12 +2,22 @@ package lobby_ws
 
 import (
 	"backend/internal/repositories"
+	"backend/internal/websockets/client"
 	"backend/internal/websockets/handlers"
 	"context"
 	"encoding/json"
 	"log"
 	"time"
+	"net/http"
+	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
 )
+
+var upgrader = websocket.Upgrader {
+    ReadBufferSize: 1024,
+    WriteBufferSize: 1024,
+    CheckOrigin: func(r *http.Request) bool {return true},
+}
 
 // duration of the pause between the end of a round and the start of the next one (if any), no pause if it was the last round.
 const postRoundPause = 10 * time.Second
@@ -17,9 +27,17 @@ type kickPlayer struct {
 }
 
 type playerInfos struct {
-	ID       int64   `json:"id"`
-	Username string  `json:"username"`
-	Avatar   *string `json:"avatar"`
+	ID			int64	`json:"id"`
+	Username	string	`json:"username"`
+	Avatar		*string	`json:"avatar"`
+	Host		bool	`json:"host"`
+}
+
+type ClientHub struct {
+    Connx     *client_ws.Connexion
+    UserId  int64
+    LobbyId int64
+	GameId  int64
 }
 
 // internalRoundEvent carries the game_id/round_nb for events the HUB ITSELF generates
@@ -78,52 +96,98 @@ type gameRoundState struct {
 // DataInfos carries one action through the hubw
 // it can comes from a real client or be generated internally by a timer callback
 type DataInfos struct {
-	Action  string
+	Action	string
 	Payload json.RawMessage
 	// Client is nil for events generated internally by the hub
-	Client *ClientWs
+	Client *ClientHub
 }
 
-type HubWs struct {
-	clients        map[int64]map[*ClientWs]bool
-	register       chan *ClientWs
-	unregister     chan *ClientWs
-	action         chan *DataInfos
-	roundTimers    map[int64]*time.Timer // means map[gameId]timer
-	roundState     map[int64]*gameRoundState // means map[gameId]currentState, used to resync reconnecting clients
-	lobbyRepo      *repositories.LobbyRepository
-	userRepo       *repositories.UserRepository
-	lobbyWsHandler *ws_handlers.LobbyWsHandler
-	guessWsHandler *ws_handlers.GuessWsHandler
+type Hub struct {
+	Clients        map[int64]map[*ClientHub]bool
+	Register       chan *ClientHub
+	Unregister     chan *ClientHub
+	Action         chan *DataInfos
+	RoundTimers    map[int64]*time.Timer // means map[gameId]timer
+	RoundState     map[int64]*gameRoundState // means map[gameId]currentState, used to resync reconnecting clients
+	LobbyRepo      *repositories.LobbyRepository
+	UserRepo       *repositories.UserRepository
+	LobbyWsHandler *ws_handlers.LobbyWsHandler
+	GuessWsHandler *ws_handlers.GuessWsHandler
 }
+
 
 func NewHub(
 	repo *repositories.Repositories,
 	wsHandlers *ws_handlers.WsHandlers,
-) *HubWs {
-	return &HubWs{
-		clients:        make(map[int64]map[*ClientWs]bool),
-		register:       make(chan *ClientWs),
-		unregister:     make(chan *ClientWs),
-		action:         make(chan *DataInfos),
-		roundTimers:    make(map[int64]*time.Timer),
-		roundState:     make(map[int64]*gameRoundState),
-		lobbyRepo:      repo.Lobby,
-		userRepo:       repo.User,
-		lobbyWsHandler: wsHandlers.Lobby,
-		guessWsHandler: wsHandlers.Guess,
+) *Hub {
+	return &Hub{Clients:	make(map[int64]map[*ClientHub]bool),
+		Register:			make(chan *ClientHub),
+		Unregister:			make(chan *ClientHub),
+		Action:				make(chan *DataInfos),
+		RoundTimers:		make(map[int64]*time.Timer),
+		RoundState:			make(map[int64]*gameRoundState),
+		LobbyRepo:			repo.Lobby,
+		UserRepo:			repo.User,
+		LobbyWsHandler:		wsHandlers.Lobby,
+		GuessWsHandler:		wsHandlers.Guess,
 	}
 }
 
-func (h *HubWs) clientListBroadcast(gameId int64, ctx context.Context) {
-	lobbies, err := h.lobbyRepo.AllPlayers(ctx, gameId)
+func NewClientHub(connx *client_ws.Connexion,
+    userId int64, lobbyId int64, gameId int64) *ClientHub {
+    return &ClientHub{Connx: connx,
+    UserId: userId,
+    LobbyId: lobbyId,
+    GameId: gameId}
+}
+
+// broadcast serializes the payload once and sends it to all currently connected clients for gameId
+// -> serialization means that the payload is converted to JSON format before being sent to the clients
+// -> deserialization means that the backend will convert the JSON back to the original data structure when it receives it
+func (h *Hub) broadcast(gameId int64, payload interface{}) {
+	serializedData, err := json.Marshal(payload)
+	if err != nil {
+		log.Printf("error : %s\n", err)
+		return
+	}
+	for client := range h.Clients[gameId] {
+		client.Connx.Send <- serializedData
+	}
+}
+
+// sendToClient serializes the payload once and sends it to ONE single client 
+// unlike broadcast, it is used for resync messages that only concern the reconnecting client
+func (h *Hub) sendToClient(client *ClientHub, payload interface{}) {
+	serializedData, err := json.Marshal(payload)
+	if err != nil {
+		log.Printf("error : %s\n", err)
+		return
+	}
+	client.Connx.Send <- serializedData
+}
+
+func (h *Hub) sendToClientByUserID(gameId int64, userId int64, payload interface{}) {
+    serializedData, err := json.Marshal(payload)
+    if err != nil {
+        log.Printf("error : %s\n", err)
+        return
+    }
+	for client := range h.Clients[gameId] {
+		if client.UserId == userId {
+			client.Connx.Send <- serializedData
+		}	
+	}
+}
+
+func (h *Hub) clientLobbyBroadcast(gameId int64, ctx context.Context) {
+	lobbies, err := h.LobbyRepo.AllPlayers(ctx, gameId)
 	if err != nil {
 		log.Printf("error : %s\n", err)
 		return
 	}
 	usersLobby := make([]playerInfos, 0, len(lobbies))
 	for _, lobby := range lobbies {
-		user, err := h.userRepo.User(ctx, lobby.UserId)
+		user, err := h.UserRepo.User(ctx, lobby.UserId)
 		if err != nil {
 			log.Printf("error : %s\n", err)
 			return
@@ -132,39 +196,15 @@ func (h *HubWs) clientListBroadcast(gameId int64, ctx context.Context) {
 			ID:       user.ID,
 			Username: user.Username,
 			Avatar:   user.Avatar,
+			Host:     lobby.IsCreator,
 		})
 	}
 	h.broadcast(gameId, WsMessage{Type: "lobby_players", Data: usersLobby})
 }
 
-// broadcast serializes the payload once and sends it to all currently connected clients for gameId
-// -> serialization means that the payload is converted to JSON format before being sent to the clients
-// -> deserialization means that the backend will convert the JSON back to the original data structure when it receives it
-func (h *HubWs) broadcast(gameId int64, payload interface{}) {
-	serializedData, err := json.Marshal(payload)
-	if err != nil {
-		log.Printf("error : %s\n", err)
-		return
-	}
-	for client := range h.clients[gameId] {
-		client.send <- serializedData
-	}
-}
-
-// sendToClient serializes the payload once and sends it to ONE single client 
-// unlike broadcast, it is used for resync messages that only concern the reconnecting client
-func (h *HubWs) sendToClient(client *ClientWs, payload interface{}) {
-	serializedData, err := json.Marshal(payload)
-	if err != nil {
-		log.Printf("error : %s\n", err)
-		return
-	}
-	client.send <- serializedData
-}
-
 // resyncClient sends the newly reconnected client whatever the hub currently knows about the game's round state
-func (h *HubWs) resyncClient(client *ClientWs) {
-	state, ok := h.roundState[client.gameId]
+func (h *Hub) resyncClient(client *ClientHub) {
+	state, ok := h.RoundState[client.GameId]
 	if !ok {
 		// no round has started yet for this game (e.g. still in the lobby) : nothing to resync.
 		return
@@ -190,8 +230,8 @@ func (h *HubWs) resyncClient(client *ClientWs) {
 //   - phasePlaying: a round is already running, so this is just a client resyncing
 //     (StartRound/EnsureRound is idempotent for a round that already exists, which means it won't recreate it or extend its timer)
 //   - phasePause: we're between two rounds, so it's the next one
-func (h *HubWs) resolveRoundToStart(gameId int64) int64 {
-	state, ok := h.roundState[gameId]
+func (h *Hub) resolveRoundToStart(gameId int64) int64 {
+	state, ok := h.RoundState[gameId]
 	if !ok {
 		return 1
 	}
@@ -201,34 +241,34 @@ func (h *HubWs) resolveRoundToStart(gameId int64) int64 {
 	return state.RoundNb + 1
 }
 
-func (h *HubWs) registerClient(client *ClientWs) {
-	if _, ok := h.clients[client.gameId]; !ok {
-		h.clients[client.gameId] = make(map[*ClientWs]bool)
+func (h *Hub) registerClient(client *ClientHub) {
+	if _, ok := h.Clients[client.GameId]; !ok {
+		h.Clients[client.GameId] = make(map[*ClientHub]bool)
 	}
-	h.clients[client.gameId][client] = true
+	h.Clients[client.GameId][client] = true
 }
 
-func (h *HubWs) unregisterClient(client *ClientWs) {
-	if _, ok := h.clients[client.gameId]; ok {
-		delete(h.clients[client.gameId], client)
+func (h *Hub) unregisterClient(client *ClientHub) {
+	if _, ok := h.Clients[client.GameId]; ok {
+		delete(h.Clients[client.GameId], client)
 	}
-	if len(h.clients[client.gameId]) == 0 {
-		delete(h.clients, client.gameId)
+	if len(h.Clients[client.GameId]) == 0 {
+		delete(h.Clients, client.GameId)
 		// states' deletion (pause or playing) 
-		if state, ok := h.roundState[client.gameId]; ok && state.IsLastRound {
-			delete(h.roundState, client.gameId)
+		if state, ok := h.RoundState[client.GameId]; ok && state.IsLastRound {
+			delete(h.RoundState, client.GameId)
 		}
 	}
-	close(client.send)
+	close(client.Connx.Send)
 }
 
 // Routes an action received (from a client or generated by the hub) to the appropriate handler.
 // Handled sequentially (only one goroutine reads h.action in Run) : no race condition possible between
 // two actions for the same gameId, even if they come from different clients.
-func (h *HubWs) handleAction(ctx context.Context, data *DataInfos) {
+func (h *Hub) handleAction(ctx context.Context, data *DataInfos) {
 	switch data.Action {
 	case "leave":
-		data.Client.conn.Close()
+		data.Client.Connx.Conn.Close()
 
 	case "kick_player":
 		var targetClient kickPlayer
@@ -236,17 +276,17 @@ func (h *HubWs) handleAction(ctx context.Context, data *DataInfos) {
 			log.Printf("error : %s\n", err)
 			return
 		}
-		if !h.lobbyWsHandler.RemovePlayer(ctx, data.Client.userId, targetClient.TargetId) {
+		if !h.LobbyWsHandler.RemovePlayer(ctx, data.Client.UserId, targetClient.TargetId) {
 			return
 		}
-		for client := range h.clients[data.Client.gameId] {
-			if client.userId == targetClient.TargetId {
-				h.clientListBroadcast(data.Client.gameId, ctx)
-				client.conn.Close()
+		for client := range h.Clients[data.Client.GameId] {
+			if client.UserId == targetClient.TargetId {
+				h.clientLobbyBroadcast(data.Client.GameId, ctx)
+				client.Connx.Conn.Close()
 				return
 			}
 		}
-		h.clientListBroadcast(data.Client.gameId, ctx)
+		h.clientLobbyBroadcast(data.Client.GameId, ctx)
 
 	case "guess":
 		h.handleGuess(ctx, data)
@@ -254,8 +294,8 @@ func (h *HubWs) handleAction(ctx context.Context, data *DataInfos) {
 	case "start_round":
 		if data.Client != nil {
 			// client != nil > real client request
-			roundNb := h.resolveRoundToStart(data.Client.gameId)
-			h.StartRound(ctx, data.Client.gameId, roundNb)
+			roundNb := h.resolveRoundToStart(data.Client.GameId)
+			h.StartRound(ctx, data.Client.GameId, roundNb)
 			return
 		}
 		// client == nil > this is the auto relaunch of the next round server-generated
@@ -269,7 +309,7 @@ func (h *HubWs) handleAction(ctx context.Context, data *DataInfos) {
 	case "round_timeout":
 		if data.Client != nil {
 			// round_timeout must only ever be generated internally by armRoundTimer
-			log.Printf("warning : client %d tried to trigger round_timeout directly, ignored\n", data.Client.userId)
+			log.Printf("warning : client %d tried to trigger round_timeout directly, ignored\n", data.Client.UserId)
 			return
 		}
 		var evt internalRoundEvent
@@ -285,27 +325,27 @@ func (h *HubWs) handleAction(ctx context.Context, data *DataInfos) {
 }
 
 // handleGuess persists the received guess, then ends the round if all active players in the game have guessed
-func (h *HubWs) handleGuess(ctx context.Context, data *DataInfos) {
-	createdGuess, ok := h.guessWsHandler.AddGuess(ctx, data.Payload, data.Client.userId, data.Client.gameId)
+func (h *Hub) handleGuess(ctx context.Context, data *DataInfos) {
+	createdGuess, ok := h.GuessWsHandler.AddGuess(ctx, data.Payload, data.Client.UserId, data.Client.GameId)
 	if !ok {
 		// TODO : renvoyer une erreur ciblée uniquement à data.Client
 		return
 	}
 
-	activePlayers, err := h.lobbyRepo.AllPlayers(ctx, data.Client.gameId)
+	activePlayers, err := h.LobbyRepo.AllPlayers(ctx, data.Client.GameId)
 	if err != nil {
 		log.Printf("error : %s\n", err)
 		return
 	}
 
-	roundGuesses, err := h.guessWsHandler.GetRoundGuesses(ctx, createdGuess.RoundID)
+	roundGuesses, err := h.GuessWsHandler.GetRoundGuesses(ctx, createdGuess.RoundID)
 	if err != nil {
 		log.Printf("error : %s\n", err)
 		return
 	}
 
 	if len(roundGuesses) >= len(activePlayers) {
-		h.EndRound(ctx, data.Client.gameId, createdGuess.RoundNb)
+		h.EndRound(ctx, data.Client.GameId, createdGuess.RoundNb)
 	}
 }
 
@@ -314,14 +354,14 @@ func (h *HubWs) handleGuess(ctx context.Context, data *DataInfos) {
 // If the round has already expired (remaining <= 0), it immediately ends the round instead of arming a negative timer.
 // This ensures that clients who reconnect late or experience double triggers do not get more time than expected, and keeps all clients
 // synchronized with the actual round start time.
-func (h *HubWs) StartRound(ctx context.Context, gameId, roundNb int64) {
+func (h *Hub) StartRound(ctx context.Context, gameId, roundNb int64) {
 	// TODO vérif que le joueur est autorisé à démarrer un round
-	round, err := h.guessWsHandler.EnsureRound(ctx, gameId, roundNb)
+	round, err := h.GuessWsHandler.EnsureRound(ctx, gameId, roundNb)
 	if err != nil {
 		log.Printf("error : %s\n", err)
 		return
 	}
-	duration, err := h.guessWsHandler.GetRoundDuration(ctx, gameId)
+	duration, err := h.GuessWsHandler.GetRoundDuration(ctx, gameId)
 	if err != nil {
 		log.Printf("error : %s\n", err)
 		return
@@ -335,7 +375,7 @@ func (h *HubWs) StartRound(ctx context.Context, gameId, roundNb int64) {
 		return
 	}
 
-	h.roundState[gameId] = &gameRoundState{
+	h.RoundState[gameId] = &gameRoundState{
 		Phase:       phasePlaying,
 		RoundNb:     roundNb,
 		RoundEndsAt: roundEndsAt,
@@ -350,53 +390,53 @@ func (h *HubWs) StartRound(ctx context.Context, gameId, roundNb int64) {
 
 // this starts the countdown for the round's guess phase: when the timer expires,
 // the round is ended even if not all players have guessed
-func (h *HubWs) armRoundTimer(gameId, roundNb int64, duration time.Duration) {
-	if existing, ok := h.roundTimers[gameId]; ok {
+func (h *Hub) armRoundTimer(gameId, roundNb int64, duration time.Duration) {
+	if existing, ok := h.RoundTimers[gameId]; ok {
 		existing.Stop()
 	}
-	h.roundTimers[gameId] = time.AfterFunc(duration, func() {
+	h.RoundTimers[gameId] = time.AfterFunc(duration, func() {
 		payload, err := json.Marshal(internalRoundEvent{GameId: gameId, RoundNb: roundNb})
 		if err != nil {
 			log.Printf("error : %s\n", err)
 			return
 		}
-		h.action <- &DataInfos{Action: "round_timeout", Payload: payload}
+		h.Action <- &DataInfos{Action: "round_timeout", Payload: payload}
 	})
 }
 
 // Finalises the round roundNb: broadcasts the results of ALL active players (whether they guessed or not),
 // then schedules a 10s pause before the next round — unless it was the last round.
-func (h *HubWs) EndRound(ctx context.Context, gameId, roundNb int64) {
-	if state, ok := h.roundState[gameId]; ok && state.Phase == phasePause && state.RoundNb == roundNb {
+func (h *Hub) EndRound(ctx context.Context, gameId, roundNb int64) {
+	if state, ok := h.RoundState[gameId]; ok && state.Phase == phasePause && state.RoundNb == roundNb {
 		// happens when the last guess of a round is processed at almost the same instant the round's timer fires
 		return
 	}
-	if timer, ok := h.roundTimers[gameId]; ok {
+	if timer, ok := h.RoundTimers[gameId]; ok {
 		timer.Stop()
-		delete(h.roundTimers, gameId)
+		delete(h.RoundTimers, gameId)
 	}
 
-	roundID, err := h.guessWsHandler.ResolveRoundID(ctx, gameId, roundNb)
+	roundID, err := h.GuessWsHandler.ResolveRoundID(ctx, gameId, roundNb)
 	if err != nil {
 		log.Printf("error : %s\n", err)
 		return
 	}
-	activePlayers, err := h.lobbyRepo.AllPlayers(ctx, gameId)
+	activePlayers, err := h.LobbyRepo.AllPlayers(ctx, gameId)
 	if err != nil {
 		log.Printf("error : %s\n", err)
 		return
 	}
-	roundGuesses, err := h.guessWsHandler.GetRoundGuesses(ctx, roundID)
+	roundGuesses, err := h.GuessWsHandler.GetRoundGuesses(ctx, roundID)
 	if err != nil {
 		log.Printf("error : %s\n", err)
 		return
 	}
-	results, err := h.guessWsHandler.BuildRoundResults(ctx, gameId, roundID, roundNb, activePlayers, roundGuesses)
+	results, err := h.GuessWsHandler.BuildRoundResults(ctx, gameId, roundID, roundNb, activePlayers, roundGuesses)
 	if err != nil {
 		log.Printf("error : %s\n", err)
 		return
 	}
-	isLastRound, err := h.guessWsHandler.IsLastRound(ctx, gameId, roundNb)
+	isLastRound, err := h.GuessWsHandler.IsLastRound(ctx, gameId, roundNb)
 	if err != nil {
 		log.Printf("error : %s\n", err)
 		return
@@ -410,7 +450,7 @@ func (h *HubWs) EndRound(ctx context.Context, gameId, roundNb int64) {
 		nextRoundAt = time.Now().Add(postRoundPause)
 		broadcastPayload.NextRoundAt = &nextRoundAt
 	}
-		h.roundState[gameId] = &gameRoundState{
+		h.RoundState[gameId] = &gameRoundState{
 		Phase:       phasePause,
 		RoundNb:     roundNb,
 		NextRoundAt: nextRoundAt,
@@ -431,28 +471,81 @@ func (h *HubWs) EndRound(ctx context.Context, gameId, roundNb int64) {
 			log.Printf("error : %s\n", err)
 			return
 		}
-		h.action <- &DataInfos{Action: "start_round", Payload: payload}
+		h.Action <- &DataInfos{Action: "start_round", Payload: payload}
 	})
 }
 
-func (h *HubWs) Run(ctx context.Context) {
+func JoinLobby(hub *Hub) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userId, ok := c.Get("userId")
+		if !ok {
+			c.JSON(http.StatusUnauthorized, 
+				gin.H{"message": "The userId is empty"})
+			return
+		}        
+		// Check if the player is in the right lobby
+        lobby, err := hub.LobbyRepo.ActualLobby(c.Request.Context(), userId.(int64))
+		if err != nil {
+            log.Printf("error : %s\n", err)
+            c.JSON(http.StatusInternalServerError, gin.H{"message": "could not verify lobby"})
+            return
+        }
+        if lobby == nil {
+            // Previously this returned with no response at all: the client's upgrade request was left hanging
+            // so this message avoids a hung connection
+            c.JSON(http.StatusForbidden, gin.H{"message": "you are not in a lobby"})
+            return
+		}
+		conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
+		if err != nil {
+			log.Printf("error : %s\n", err)
+			return 
+		}
+		connx := client_ws.NewConnexion(conn)
+		clientHub := NewClientHub(connx, userId.(int64),
+			lobby.ID, lobby.GameId)
+		hub.Register <- clientHub
+		go clientHub.Connx.WritePump()
+		actionClient := func(data []byte) {
+			var dataInfos DataInfos
+			err := json.Unmarshal(data, &dataInfos)
+			if err != nil {
+				log.Printf("error : %s\n", err)
+				return
+			}
+			dataInfos.Client = clientHub
+			hub.Action <- &dataInfos 
+		}
+		unregisterClient := func() {
+			hub.Unregister <- clientHub
+		}
+		clientHub.Connx.ReadPump(actionClient, unregisterClient)
+	}
+}
+
+func (h *Hub) Run(ctx context.Context) {
 	for {
 		select {
-		case client := <-h.register:
+		case client := <- h.Register:
 			h.registerClient(client)
-			h.clientListBroadcast(client.gameId, ctx)
+			h.clientLobbyBroadcast(client.GameId, ctx)
 			// send this client (and only this client) the current round state, if any exists
 			// so joining mid-game or reconnecting doesn't leave it blind until the next broadcast
 			h.resyncClient(client) // TODO check if client reconnects only if it was already registered before (h.clients[gameId][client] == true) : if so, skip resyncClient because it already has the current state. Otherwise a reconnecting client will get two resyncs (one from the first registration, one from the second) and see the same round_started broadcast twice.
-		case client := <-h.unregister:
+			data, ok := h.LobbyWsHandler.SendInfos(ctx, client.GameId)
+			if !ok {
+				continue
+			}
+			h.sendToClientByUserID(client.GameId, client.UserId, data)
+		case client := <-h.Unregister:
 			h.unregisterClient(client)
-			if !h.lobbyWsHandler.LeaveLobby(ctx, client.userId) {
+			if !h.LobbyWsHandler.LeaveLobby(ctx, client.UserId) {
 				log.Println("error : the client can't leave the lobby in the database")
 				continue
 			}
-			h.clientListBroadcast(client.gameId, ctx)
-		case data := <-h.action:
-			h.handleAction(ctx, data)
+			h.clientLobbyBroadcast(client.GameId, ctx)
+		case serializedData := <- h.Action:
+			h.handleAction(ctx, serializedData)
 		}
 	}
 }

@@ -6,13 +6,15 @@ import (
 )
 
 type WsHandlers struct {
-	Lobby *LobbyWsHandler
-	Guess *GuessWsHandler
+	Lobby	*LobbyWsHandler
+	Guess	*GuessWsHandler
+	Chat	*ChatHandler
 }
 
 func NewWsHandlers(repo *repositories.Repositories, reverser *rgeo.Rgeo) *WsHandlers {
 	return &WsHandlers{
-		Lobby: NewLobbyWsHandler(repo.Lobby, repo.User),
+		Lobby: NewLobbyWsHandler(repo.Lobby, repo.Game, repo.User),
 		Guess: NewGuessWsHandler(repo.Guess, repo.Round, repo.Lobby, repo.Game, repo.User, reverser),
+		Chat: NewChatHandler(repo.Chat, repo.Friend, repo.User),
 	}
 }

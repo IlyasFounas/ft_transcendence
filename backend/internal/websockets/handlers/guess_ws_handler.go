@@ -111,7 +111,7 @@ func (h *GuessWsHandler) AddGuess(ctx context.Context, payload json.RawMessage, 
 		log.Printf("error checking if game %d is finished: %s\n", gameID, err)
 		return nil, false
 	}
-	if finished {
+	if finished != nil && !finished.After(time.Now()){
 		log.Printf("game %d is already finished, user %d cannot guess\n", gameID, guess.UserID)
 		return nil, false
 	}

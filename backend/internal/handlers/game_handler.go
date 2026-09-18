@@ -5,10 +5,10 @@ import (
 	"log"
 	"strconv"
 	"net/http"
-	"github.com/gin-gonic/gin"
 	"backend/internal/models/games"
 	"backend/internal/repositories"
 	"backend/internal/tools/code_generation"
+	"github.com/gin-gonic/gin"
 )
 
 type GameHandler struct {
@@ -34,8 +34,8 @@ func initGameObj(c *gin.Context, locationRepo *repositories.LocationRepository) 
 	}
 	if timer > 120 {
 		timer = 120
-	} else if (timer < 10) {
-		timer = 10
+	} else if (timer < 5) {
+		timer = 5
 	}
 	if round_total > 5 {
 		round_total = 5
@@ -62,7 +62,7 @@ func initGameObj(c *gin.Context, locationRepo *repositories.LocationRepository) 
 		Difficulty: "Default",
 		Timer: timer,
 		RoundTotal: round_total,
-		Finished: false,
+		FinishedAt: nil,
 		PlayerNb: 10,
 		LocationIDs: locationIDs}
 	return gameObj, nil
@@ -159,6 +159,7 @@ func (h *GameHandler) CreateLobby() gin.HandlerFunc {
 	}
 }
 
+// Getters
 func (h *GameHandler) Game() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id, err := strconv.ParseInt(c.Param("id"), 10, 64)
@@ -262,14 +263,14 @@ func (h *GameHandler) RoundTotal() gin.HandlerFunc {
 				gin.H{"message": "failed"})
 			return ;
 		}
-		roundNb, err := h.gameRepo.RoundTotal(c.Request.Context(), id)
+		roundTotal, err := h.gameRepo.RoundTotal(c.Request.Context(), id)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized,
 				gin.H{"message": "failed"})
 			return ;
 		}
 		c.JSON(http.StatusOK,
-			gin.H{"message": "success", "roundNb": roundNb})
+			gin.H{"message": "success", "roundTotal": roundTotal})
 	}
 }
 
@@ -330,6 +331,7 @@ func (h *GameHandler) CreatedAt() gin.HandlerFunc {
 	}
 }
 
+// Setters
 func (h *GameHandler) SetTitle() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id, err := strconv.ParseInt(c.Param("id"), 10, 64)
@@ -474,13 +476,7 @@ func (h *GameHandler) SetFinished() gin.HandlerFunc {
 				gin.H{"success": false})
 			return ;
 		}
-		finished, err := strconv.ParseBool(c.PostForm("finished"))
-		if err != nil {
-			c.JSON(http.StatusUnauthorized,
-				gin.H{"success": false})
-			return ;
-		}
-		err = h.gameRepo.SetFinished(c.Request.Context(), id, finished)
+		err = h.gameRepo.SetFinished(c.Request.Context(), id)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized,
 				gin.H{"success": false})

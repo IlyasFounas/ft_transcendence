@@ -1,7 +1,6 @@
 package main
 
 import (
-	// EXTERNAL PACKAGE
 	"context"
 	"errors"
 	"log"
@@ -10,16 +9,15 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
-
-	// OUR PACKAGE
 	"backend/internal/database"
 	"backend/internal/handlers"
 	"backend/internal/repositories"
 	"backend/internal/router"
-	"github.com/gin-gonic/gin"
-	"github.com/sams96/rgeo"
 	"backend/internal/websockets/lobby"
 	"backend/internal/websockets/handlers"
+	chat_ws "backend/internal/websockets/chat"
+	"github.com/gin-gonic/gin"
+	"github.com/sams96/rgeo"
 )
 
 /**
@@ -68,8 +66,11 @@ func main() {
 	hub := lobby_ws.NewHub(repo, wh)
 	go hub.Run(appCtx)
 
+	chat := chat_ws.NewChat(repo, wh)
+	go chat.Run(appCtx)
+
 	// 6. Router setup
-	r := router.NewRouter(h, hub)
+	r := router.NewRouter(h, hub, chat)
 	srv := &http.Server{
 		Addr:         ":8080",
 		Handler:      r,

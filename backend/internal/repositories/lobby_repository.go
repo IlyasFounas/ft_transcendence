@@ -41,42 +41,62 @@ func (r *LobbyRepository) JoinLobby(ctx context.Context,
 }
 
 // return the actual lobby of the userid and gameid
-func (r *LobbyRepository) ActualLobbyGameId(ctx context.Context,
-	userId int64, gameId int64) (*games.Lobby, error) {
+func (r *LobbyRepository) ActualLobbyGameId(ctx context.Context, userId int64, gameId int64) (*games.Lobby, error) {
+	// verify if it exists without triggering sql.ErrNoRows
+	exists, err := r.db.NewSelect().
+		Model((*games.Lobby)(nil)).
+		Where("user_id = ?", userId).
+		Where("game_id = ?", gameId).
+		Where("left_at IS NULL").
+		Exists(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if !exists {
+		return nil, nil
+	}
+
+	// retrieve the lobby if it exists
 	lobby := new(games.Lobby)
-	err := r.db.NewSelect().
+	err = r.db.NewSelect().
 		Model(lobby).
 		Where("user_id = ?", userId).
 		Where("game_id = ?", gameId).
 		Where("left_at IS NULL").
 		Scan(ctx)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, nil
-		}
 		return nil, err
 	}
+
 	return lobby, nil
 }
 
 // return the actual lobby / game the user is in
 // WARNING : if the user isn't in a lobby, it return nil
 // so you must check if the lobby is nil after calling this function
-func (r *LobbyRepository) ActualLobby(ctx context.Context,
-	userId int64) (*games.Lobby, error) {
+func (r *LobbyRepository) ActualLobby(ctx context.Context, userId int64) (*games.Lobby, error) {
+	// checks if a lobby exists without triggering sql.ErrNoRows
+	exists, err := r.db.NewSelect().
+		Model((*games.Lobby)(nil)).
+		Where("lo.user_id = ?", userId).
+		Where("lo.left_at IS NULL").
+		Exists(ctx)
+	if err != nil {
+		return nil, err
+	}
+	// if no lobby exists, return nil
+	if !exists {
+		return nil, nil
+	}
+
+	// if lobby exists, it retrieves it and returns it
 	lobby := new(games.Lobby)
-	err := r.db.NewSelect().
+	err = r.db.NewSelect().
 		Model(lobby).
-		// Relation("Game", func(q *bun.SelectQuery) *bun.SelectQuery {
-		// 	return q.Where("finished = false")
-		// }).
 		Where("lo.user_id = ?", userId).
 		Where("lo.left_at IS NULL").
 		Scan(ctx)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, nil
-		}
 		return nil, err
 	}
 	return lobby, nil
@@ -124,19 +144,13 @@ func (r *LobbyRepository) LobbyPlayerNb(ctx context.Context,
 	return count, nil
 }
 
-func (r *LobbyRepository) IsCreator(ctx context.Context,
-	userId int64, gameId int64) (bool, error) {
-	lobby := new(games.Lobby)
-	err := r.db.NewSelect().
-		Model(lobby).
-		Column("is_creator").
+func (r *LobbyRepository) IsCreator(ctx context.Context, userId int64, gameId int64) (bool, error) {
+	return r.db.NewSelect().
+		Model((*games.Lobby)(nil)).
 		Where("user_id = ?", userId).
 		Where("game_id = ?", gameId).
-		Scan(ctx)
-	if err != nil {
-		return false, err
-	}
-	return lobby.IsCreator, nil
+		Where("is_creator = ?", true).
+		Exists(ctx)
 }
 
 func (r *LobbyRepository) AllPlayers(ctx context.Context,
@@ -151,6 +165,58 @@ func (r *LobbyRepository) AllPlayers(ctx context.Context,
 		return nil, err
 	}
 	return lobbies, nil
+}
+
+func (r *LobbyRepository) NbGames(ctx context.Context,
+	userId int64) (int, error){
+	count, err := r.db.NewSelect().
+		Model((*games.Lobby)(nil)).
+		Relation("Game", func(q *bun.SelectQuery) *bun.SelectQuery {
+			return q.Where("finished_at IS NOT NULL")
+		}).
+		Where("user_id = ?", userId).
+		Where("left_at >= game.finished_at").
+		Count(ctx)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+func (r *LobbyRepository) Historic(ctx context.Context,
+	userId int64) ([]*games.Game, error){
+	var games []*games.Game
+	err := r.db.NewSelect().
+		Model(games).
+		Column("id", "").
+		Relation("Game", func(q *bun.SelectQuery) *bun.SelectQuery {
+			return q.Where("finished_at IS NOT NULL")
+		}).
+		Where("user_id = ?", userId).
+		Where("left_at >= game.finished_at").
+		Scan(ctx)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, errors.New("You don't have any games")
+		}
+		return nil, err
+	}
+	return games, nil
+}
+
+func (r *LobbyRepository) JoinCode(ctx context.Context,
+	gameId int64) (*string, error) {
+	lobby := new(games.Lobby)
+	err := r.db.NewSelect().
+		Model(lobby).
+		Column("join_code").
+		Where("game_id = ?", gameId).
+		Where("join_code IS NOT NULL").
+		Scan(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return lobby.JoinCode, nil
 }
 
 // Setters

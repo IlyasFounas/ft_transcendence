@@ -51,9 +51,7 @@ export default function AuthenticationLogin ({
             return;
         }
         if (result.status === 200) {
-            const accessToken = result.data.Authorization;
-
-            login(accessToken);
+            await login();
 
             const from = location.state?.from?.pathname || "/home";
 
