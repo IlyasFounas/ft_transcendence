@@ -24,7 +24,7 @@ func NewChatHandler (chatRepo *repositories.ChatRepository,
 }
 
 func (h *ChatHandler) Send(ctx context.Context, 
-	userId int64, target_id int64, message string) bool {
+	userId int64, targetId int64, message string) bool {
 	if strings.TrimSpace(message) == "" {
 		log.Printf("error : empty message")
 		return false
@@ -33,7 +33,7 @@ func (h *ChatHandler) Send(ctx context.Context,
 		log.Printf("error : message is too long")
 		return false
 	}
-	target, err := h.userRepo.User(ctx, target_id)
+	target, err := h.userRepo.User(ctx, targetId)
 	if err != nil {
 		log.Printf("error : %s\n", err)
 		return false
@@ -42,9 +42,18 @@ func (h *ChatHandler) Send(ctx context.Context,
 		log.Printf("error : destination user id is invalid")
 		return false
 	}
+	friendStatus, err := h.friendRepo.FriendStatus(ctx, userId, targetId)
+	if err != nil {
+		log.Printf("error : %s\n", err)
+		return false
+	}
+	if friendStatus.Status != "friends" {
+		log.Println("error : the friendship doesn't exist")
+		return false
+	}
 	chatObj := &chats.Chat{
 		SRC_user_ID: userId,
-		DST_user_ID: target_id,
+		DST_user_ID: targetId,
 		Message: message,
 	}
 	_, err = h.chatRepo.Send(ctx, chatObj)
@@ -53,6 +62,35 @@ func (h *ChatHandler) Send(ctx context.Context,
 		return false
 	}
 	return true
+}
+
+func (h *ChatHandler) Receive(ctx context.Context,
+	userId int64, friendId int64, actualMsgNb int64) ([]*chats.Chat, bool) {
+	friend, err := h.userRepo.User(ctx, friendId)
+	if err != nil {
+		log.Printf("error : %s\n", err)
+		return nil, false
+	}
+	if friend == nil {
+		log.Printf("error : destination user id is invalid")
+		return nil, false
+	}
+	friendStatus, err := h.friendRepo.FriendStatus(ctx, userId, friendId)
+	if err != nil {
+		log.Printf("error : %s\n", err)
+		return nil, false
+	}
+	if friendStatus.Status != "friends" {
+		log.Println("error : the friendship doesn't exist")
+		return nil, false
+	}
+	// we want the 20 more messages
+	chats, err := h.chatRepo.Receive(ctx, userId, friendId, actualMsgNb + 20)
+	if err != nil {
+		log.Printf("error : %s\n", err)
+		return nil, false
+	}
+	return chats, true
 }
 
 func (h *ChatHandler) FriendList(ctx context.Context,

@@ -40,7 +40,11 @@ type ClientInfo struct {
 type ClientChat struct {
 	Connx    *client_ws.Connexion
 	UserId   int64
-	TargetId int64
+}
+
+type ClientTarget struct {
+	TargetId 	int64  `json:"target_id"`
+	Message		string `json:"message"`
 }
 
 type DataInfos struct {
@@ -124,12 +128,23 @@ func (c *Chat) unregisterClient(client *ClientChat) {
 	}
 }
 
-func (c *Chat) handleAction(serializedData *DataInfos) {
+
+
+func (c *Chat) handleAction(ctx context.Context, serializedData *DataInfos) {
 	switch serializedData.Action {
 	case "open_chat":
 		// TODO open the chat and give the 20 last messages
 	case "send":
 		// TODO send the message to the friend
+		var payload ClientTarget
+		err := json.Unmarshal(serializedData.Payload, &payload)
+		if err != nil {
+			log.Printf("error : %s\n", err)
+			return
+		}
+		c.ChatHandler.Send(ctx, serializedData.Client.UserId,
+			payload.TargetId, payload.Message)
+		// TODO ping the new messages
 	case "receive_messages":
 		// TODO give the 20 more last messages
 	default:
@@ -185,7 +200,7 @@ func (c *Chat) Run(ctx context.Context) {
 		case client := <-c.Unregister:
 			c.unregisterClient(client)
 		case data := <-c.Action:
-			c.handleAction(data)
+			c.handleAction(ctx, data)
 		}
 	}
 }

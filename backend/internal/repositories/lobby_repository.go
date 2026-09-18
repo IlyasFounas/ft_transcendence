@@ -169,12 +169,13 @@ func (r *LobbyRepository) NbGames(ctx context.Context,
 	return count, nil
 }
 
+// TODO finish
 func (r *LobbyRepository) Historic(ctx context.Context,
 	userId int64) ([]*games.Game, error){
 	var games []*games.Game
 	err := r.db.NewSelect().
 		Model(games).
-		Column("id", "").
+		Column("id", "round_nb").
 		Relation("Game", func(q *bun.SelectQuery) *bun.SelectQuery {
 			return q.Where("finished_at IS NOT NULL")
 		}).
