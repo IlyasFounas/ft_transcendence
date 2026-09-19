@@ -136,6 +136,19 @@ func (r *LocationRepository) GetByID(ctx context.Context, location_id int64) (*l
 	return loc, nil
 }
 
+// READ (using internal ID)
+func (r *LocationRepository) GetMIDByID(ctx context.Context, location_id int64) (int64, error) {
+	loc := new(locations.Location)
+	err := r.db.NewSelect().Model(loc).Where("location_id = ?", location_id).Scan(ctx)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return 0, ErrLocationNotFound
+		}
+		return 0, err
+	}
+	return *loc.MID, nil
+}
+
 // READ coordinates - using internal ID
 func (r *LocationRepository) GetCoordinatesByID(ctx context.Context, location_id int64) (float64, float64, error) {
 	var lat, long float64

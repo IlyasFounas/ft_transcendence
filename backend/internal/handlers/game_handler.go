@@ -282,7 +282,7 @@ func (h *GameHandler) Finished() gin.HandlerFunc {
 				gin.H{"message": "failed"})
 			return ;
 		}
-		finished, err := h.gameRepo.Finished(c.Request.Context(), id)
+		finished, err := h.gameRepo.FinishedAt(c.Request.Context(), id)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized,
 				gin.H{"message": "failed"})

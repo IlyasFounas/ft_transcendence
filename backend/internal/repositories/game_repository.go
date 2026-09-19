@@ -104,7 +104,15 @@ func (r *GameRepository) RoundTotal(ctx context.Context, gameId int64) (int64, e
 	return game.RoundTotal, nil
 }
 
-func (r *GameRepository) Finished(ctx context.Context, gameId int64) (*time.Time, error){
+func (r *GameRepository) Finished(ctx context.Context, gameId int64) (bool, error){
+	return r.db.NewSelect().
+		Model((*games.Game)(nil)).
+		Column("finished_at").
+		Where("id = ?", gameId).
+		Exists(ctx)
+}
+
+func (r *GameRepository) FinishedAt(ctx context.Context, gameId int64) (*time.Time, error){
 	game := new(games.Game)
 	err := r.db.NewSelect().
 		Model(game).

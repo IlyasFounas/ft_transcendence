@@ -65,7 +65,6 @@ type RoundInfos struct {
 // Struct containing the result of a round for a player, sent to the front for display and scoring
 // sent to the front for each player in the lobby, even if they did not guess 
 // (for their own HasGuessed:false and RoundInfos nil)
-// TODO missing MID ??
 type PlayerRoundResult struct {
 	UserID     int64       `json:"user_id"`
 	Username   string      `json:"username"`
@@ -97,7 +96,7 @@ func (h *GuessWsHandler) AddGuess(ctx context.Context, payload json.RawMessage, 
 		return nil, false
 	}
 
-	// TODO check if the player has not left the lobby (h.lobbyRepo.ActualLobby)
+	// TODO check if the player has not left the lobby (h.lobbyRepo.ActualLobby) > is not it done in the lobby handler already ?
 
 	var err error
 	guess.RoundID, err = h.roundRepo.GetIDByGameIDAndRoundNb(ctx, gameID, guess.RoundNb)
@@ -106,7 +105,7 @@ func (h *GuessWsHandler) AddGuess(ctx context.Context, payload json.RawMessage, 
 		return nil, false
 	}
 
-	finished, err := h.gameRepo.Finished(ctx, gameID)
+	finished, err := h.gameRepo.FinishedAt(ctx, gameID)
 	if err != nil {
 		log.Printf("error checking if game %d is finished: %s\n", gameID, err)
 		return nil, false
@@ -297,18 +296,28 @@ func (h *GuessWsHandler) IsLastRound(ctx context.Context, gameID, roundNb int64)
 // Finds the round for gameID and roundNb, or creates it if it doesn't exist yet. 
 // Returns the full round (not just its ID) because we need to retrieve StartedAt as well.
 func (h *GuessWsHandler) EnsureRound(ctx context.Context, gameID, roundNb int64) (*rounds.Round, error) {
+	// check if the round already exists
 	roundID, err := h.roundRepo.GetIDByGameIDAndRoundNb(ctx, gameID, roundNb)
+	// if it exists, return it because we need to retrieve StartedAt as well
 	if err == nil {
 		return h.roundRepo.GetByID(ctx, roundID)
 	}
+	// if any other error than "round not found" occurs, return it
 	if !errors.Is(err, repositories.ErrRoundNotFound) {
 		return nil, err
 	}
 
+	// TODO only host can create the round
+	// TODO if multiplayer, only first round can be created by the host, the rest are created automatically
+	// else, host can create each round in order, but cannot create a round if the previous one is not finished yet (or if the game is finished)
+
+	//get the locationID for the round, to create the round
 	locationID, err := h.roundRepo.GetLocationID(ctx, gameID, roundNb)
 	if err != nil {
 		return nil, err
 	}
+
+	// check if this is the last round of the game
 	isLastRound, err := h.roundRepo.CheckLastRound(ctx, gameID, roundNb)
 	if err != nil {
 		return nil, err
