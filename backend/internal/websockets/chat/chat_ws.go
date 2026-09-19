@@ -2,6 +2,7 @@ package chat_ws
 
 import (
 	"backend/internal/models/friends"
+	"backend/internal/models/chats"
 	"backend/internal/repositories"
 	"backend/internal/websockets/client"
 	"backend/internal/websockets/handlers"
@@ -45,6 +46,12 @@ type ClientChat struct {
 type ClientTarget struct {
 	TargetId 	int64  `json:"target_id"`
 	Message		string `json:"message"`
+	End			*int64 `json:"end"`
+}
+
+type Chats struct {
+	Chats 	[]*chats.Chat  `json:"chats"`
+	End		*int64 `json:"end,omitempty"`
 }
 
 type DataInfos struct {
@@ -112,6 +119,19 @@ func (c *Chat) sendToClient(userId int64, friends []*friends.FriendResponse) {
 	}
 }
 
+func (c *Chat) sendToClientMessages(userId int64, chatsList []*chats.Chat,
+	client *client_ws.Connexion) {
+	chatsMessage := &Chats{Chats: chatsList,
+		End: chats.NewCursor(chatsList).End,
+	}
+	data, err := json.Marshal(chatsMessage)
+	if err != nil {
+		log.Printf("error : %s\n", err)
+		return
+	}
+	client.Send <- data
+}
+
 func (c *Chat) registerClient(client *ClientChat) {
 	if _, ok := c.Clients[client.UserId]; !ok {
 		c.Clients[client.UserId] = make(map[*ClientChat]bool)
@@ -128,12 +148,28 @@ func (c *Chat) unregisterClient(client *ClientChat) {
 	}
 }
 
-
-
 func (c *Chat) handleAction(ctx context.Context, serializedData *DataInfos) {
 	switch serializedData.Action {
 	case "open_chat":
-		// TODO open the chat and give the 20 last messages
+		var payload ClientTarget
+		err := json.Unmarshal(serializedData.Payload, &payload)
+		if err != nil {
+			log.Printf("error : %s\n", err)
+			return
+		}
+		var end int64
+		if payload.End != nil {
+			end = *payload.End
+		} else {
+			end = 0
+		}
+		chats, ok := c.ChatHandler.Receive(ctx, serializedData.Client.UserId,
+			payload.TargetId, end)
+		if !ok {
+			log.Println("error : no message found")
+			return 
+		}
+		c.sendToClientMessages(serializedData.Client.UserId, chats, serializedData.Client.Connx)
 	case "send":
 		// TODO send the message to the friend
 		var payload ClientTarget

@@ -80,12 +80,16 @@ func (h *ChatHandler) Receive(ctx context.Context,
 		log.Printf("error : %s\n", err)
 		return nil, false
 	}
+	if friendStatus == nil {
+		log.Println("error : friendStatus is NULL")
+		return nil, false
+	}
 	if friendStatus.Status != "friends" {
 		log.Println("error : the friendship doesn't exist")
 		return nil, false
 	}
 	// we want the 20 more messages
-	chats, err := h.chatRepo.Receive(ctx, userId, friendId, actualMsgNb + 20)
+	chats, err := h.chatRepo.Receive(ctx, userId, friendId, actualMsgNb)
 	if err != nil {
 		log.Printf("error : %s\n", err)
 		return nil, false
