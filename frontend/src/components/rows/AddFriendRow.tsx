@@ -2,11 +2,15 @@ import UserProfile from "../user/UserProfile";
 import SmallButton from "../buttons/SmallButton";
 import type { UserProps } from "../../types/user.types";
 
+interface AddFriendRowProps extends UserProps {
+    onAdd?: () => void;
+}
 export default function AddFriendRow({
     username,
     role,
     avatar,
-}: UserProps) {
+    onAdd,
+}: AddFriendRowProps) {
     return (
         <div className="
             flex
@@ -20,11 +24,11 @@ export default function AddFriendRow({
             "
         >
             <UserProfile 
-            username={username}
-            role={role}
-            avatar={avatar}
+                username={username}
+                role={role}
+                avatar={avatar}
             />
-            <SmallButton>Add Friend</SmallButton>
+            <SmallButton onClick={onAdd} >Add Friend</SmallButton>
         </div>
     );
 }

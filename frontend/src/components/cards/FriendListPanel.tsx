@@ -1,16 +1,22 @@
 import { useState, useEffect } from "react";
 import FriendListRow from "../rows/FriendListRow";
 import FriendRequestRow from "../rows/FriendRequestRow";
-import type { UserProps, UserStatusType } from "../../types/user.types";
+import type { UserStatusType } from "../../types/user.types";
 import { Search } from "lucide-react";
 import PendingFriendRow from "../rows/PendingFriendRow";
 import { useAuth } from "../../context/AuthContext";
 import type { FriendResponse } from "../../types/friend.type";
+import AddFriendRow from "../rows/AddFriendRow";
 
-interface Friend extends UserProps {
+interface Friend {
+    id?: number;
+    username: string;
+    avatar: string;
+    role?: string;
     userId: number;
     status?: UserStatusType;
     rank?: number;
+    friendStatus?: string;
 }
 
 export default function FriendListPanel() {
@@ -22,9 +28,11 @@ export default function FriendListPanel() {
     const [friends, setFriends] = useState<Friend[]>([]);
     const [requests, setRequests] = useState<Friend[]>([]);
     const [pending, setPending] = useState<Friend[]>([]);
+    const [searchResult, setSearchResult] = useState<Friend | null>(null);
+    const [searchNotFound, setSearchNotFound] = useState(false);
     
     const getFriends = async () => {
-
+        
             const result = await authFetch("api/friend");
             
             if (!result) {
@@ -76,6 +84,41 @@ export default function FriendListPanel() {
 
         setPending(formattedPending);
     }
+
+    const searchUser = async () => {
+        const username = search.trim();
+
+        if (username === "") {
+            setSearchResult(null);
+            setSearchNotFound(false);
+            return;
+        }
+
+        const result = await authFetch(`api/friend/status/${encodeURIComponent(username)}`);
+
+        if (!result || result.status !== 200) {
+            setSearchResult(null);
+            setSearchNotFound(true);
+            return;
+        }
+
+        const user = result.data.friendStatus;
+
+        if (!user) {
+            setSearchResult(null);
+            setSearchNotFound(true);
+            return;
+        }
+
+        setSearchResult({
+            userId: user.user_id,
+            username: user.name,
+            avatar: user.avatar || "/avatars/avatar1.png",
+            friendStatus: user.status,
+        });
+
+        setSearchNotFound(false);
+    };
 
     useEffect(() => {
         getFriends();
@@ -158,6 +201,31 @@ export default function FriendListPanel() {
         );
     }
 
+    const handleAddFriend = async (friend: Friend) => {
+        const body = new URLSearchParams({
+            username: friend.username,
+        });
+
+        const result = await authFetch("api/friend/add", {
+            method: "POST",
+            body,
+        });
+
+        if (!result) {
+            return;
+        }
+
+        if (result.status !== 201) {
+            return;
+        }
+
+        setSearchResult(null);
+        setSearch("");
+        setSearchNotFound(false);
+
+        await getPending();
+    };
+
     return (
         <div className="bg-surface-base border border-border-default rounded-lg px-4 py-4">
             <h2 className="text-heading-medium text-center uppercase">
@@ -238,7 +306,16 @@ export default function FriendListPanel() {
                 <input
                     type="text"
                     value={search}
-                    onChange={(e) => setSearch(e.target.value)}
+                    onChange={(e) => {
+                        setSearch(e.target.value);
+                        setSearchResult(null);
+                        setSearchNotFound(false);
+                    }}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                            searchUser();
+                        }
+                    }}
                     placeholder="Search"
                     className="
                         flex-1
@@ -253,6 +330,7 @@ export default function FriendListPanel() {
 
                 <Search
                     size={28}
+                    onClick={searchUser}
                     className="text-primary shrink-0 cursor-pointer"
                 />
             </div>
@@ -268,6 +346,7 @@ export default function FriendListPanel() {
                     friends.map((friend) => (
                     <FriendListRow
                         key={friend.userId}
+                        role={friend.role || "Agent"}
                         {...friend}
                         onRemove={() => handleRemoveFriend(friend.userId)}
                     />
@@ -277,20 +356,43 @@ export default function FriendListPanel() {
                     requests.map((request) => (
                     <FriendRequestRow
                         key={request.username}
+                        role={request.role || "Agent"}
                         {...request}
                         onAccept={() => handleAcceptFriend(request.userId)}
                         onReject={() => handleRejectRequest(request.userId)}
                     />
                 ))}
 
-                {activeTab === "add" &&
+                {activeTab === "add" && search.trim() === "" &&
                     pending.map((pending) => (
-                    <PendingFriendRow
-                        key={pending.username}
-                        {...pending}
-                        onCancel={() => handleCancelRequest(pending.userId)}
-                    />
-                ))}
+                        <PendingFriendRow
+                            key={pending.userId}
+                            role={pending.role || ""}
+                            {...pending}
+                            onCancel={() => handleCancelRequest(pending.userId)}
+                        />
+                    ))
+                }
+
+                {activeTab === "add" &&
+                    search.trim() !== "" &&
+                    searchNotFound && (
+                        <p className="text-text-secondary text-heading-small text-center py-6">
+                            User not found
+                        </p>
+                    )
+                }
+
+                {activeTab === "add" &&
+                    search.trim() !== "" &&
+                    searchResult?.friendStatus === "none" && (
+                        <AddFriendRow
+                            {...searchResult}
+                            role={searchResult.role || ""}
+                            onAdd={() => handleAddFriend(searchResult)}
+                        />
+                    )
+                }
                 
             </div>
         </div>

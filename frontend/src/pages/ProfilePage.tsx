@@ -7,7 +7,6 @@ import StatCard from "../components/cards/StatCard";
 import OperationHistory from "../components/cards/OperationHistory";
 import { operations } from "../data/operations";
 import FriendListPanel from "../components/cards/FriendListPanel";
-import { pending } from "../data/friends";
 
 export default function ProfilePage() {
 
@@ -50,7 +49,7 @@ export default function ProfilePage() {
 				<div className="shrink-0">
                     <Avatar
                         avatar={user?.Avatar ?? "/avatars/avatar1.png"}
-                        size={200}
+                        size={180}
                     />
                 </div>
 
@@ -165,9 +164,7 @@ export default function ProfilePage() {
 				"
             >
 				<OperationHistory operations={operations} />
-				<FriendListPanel 
-					pending={pending}
-				/>
+				<FriendListPanel />
 			</section>
       	</main>					    
   	);
