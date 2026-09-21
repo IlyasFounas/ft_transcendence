@@ -22,7 +22,7 @@ export function MainLayout () {
                 onClick={() => setIsChatOpen(false)}
             />
         )}
-        <div className="min-h-dvh flex flex-col">
+        <div className="h-dvh flex flex-col overflow-hidden">
             <Navbar
                 status="online"
                 isChatOpen={isChatOpen}
