@@ -7,7 +7,7 @@ import StatCard from "../components/cards/StatCard";
 import OperationHistory from "../components/cards/OperationHistory";
 import { operations } from "../data/operations";
 import FriendListPanel from "../components/cards/FriendListPanel";
-import { friends, requests, pending } from "../data/friends";
+import { requests, pending } from "../data/friends";
 
 export default function ProfilePage() {
 
@@ -165,8 +165,7 @@ export default function ProfilePage() {
 				"
             >
 				<OperationHistory operations={operations} />
-				<FriendListPanel
-					friends={friends}
+				<FriendListPanel 
 					requests={requests}
 					pending={pending}
 				/>

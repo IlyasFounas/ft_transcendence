@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import FriendListRow from "../rows/FriendListRow";
 import FriendRequestRow from "../rows/FriendRequestRow";
 import type { UserProps, UserStatusType } from "../../types/user.types";
 import { Search } from "lucide-react";
 import PendingFriendRow from "../rows/PendingFriendRow";
+import { useAuth } from "../../context/AuthContext";
+import type { FriendResponse } from "../../types/friend.type";
 
 interface Friend extends UserProps {
   status: UserStatusType;
@@ -11,19 +13,42 @@ interface Friend extends UserProps {
 }
 
 interface FriendListPanelProps {
-  friends: Friend[];
   requests: UserProps[];
   pending: UserProps[];
 }
 
 export default function FriendListPanel({
-  friends,
   requests,
   pending,
 }: FriendListPanelProps) {
+    
+    const { authFetch } = useAuth();
 
     const [activeTab, setActiveTab] = useState("friends");
     const [search, setSearch] = useState("");
+    const [friends, setFriends] = useState<Friend[]>([]);
+
+    useEffect(() => {
+        const getFriends = async () => {
+
+            const result = await authFetch("api/friend");
+
+            if (!result) {
+                return;
+            }
+
+            const formattedFriends: Friend[] = result.data.friends.map(
+                (friend: FriendResponse) => ({
+                    username: friend.name,
+                    avatar: friend.avatar || "/avatars/avatar1.png"
+                })
+            );
+
+            setFriends(formattedFriends);
+        };
+
+        getFriends();
+    }, [authFetch]);
 
     return (
         <div className="bg-surface-base border border-border-default rounded-lg px-4 py-4">
