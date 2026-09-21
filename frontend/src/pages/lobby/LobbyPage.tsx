@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState} from "react";
 import { useNavigate } from "react-router-dom";
 import SecondaryButton from "../../components/buttons/SecondaryButton";
 import PrimaryButton from "../../components/buttons/PrimaryButton";
@@ -11,7 +11,7 @@ export default function LobbyPage()
 {
 	const [mode, setMode] = useState<"create" | "join">("join");
 	const [rounds, setRounds] = useState(1);
-  	const [timeLimitMinutes, setTimeLimitMinutes] = useState(0.5);
+  	const [timeLimit, setTimeLimit] = useState(30);
 	const navigate = useNavigate();
 	const { authFetch } = useAuth();
 	const [isChecking, setIsChecking] = useState(false);
@@ -20,10 +20,9 @@ export default function LobbyPage()
 	const [code, setCode] = useState("");
 	
 	async function handleCreateOperation() {
-		const timerInSeconds = Math.round(timeLimitMinutes * 60);
 
 		const body = new URLSearchParams();
-		body.append("timer", timerInSeconds.toString());
+		body.append("timer", timeLimit.toString());
 		body.append("round_nb", rounds.toString());
 
 		setIsChecking(true);
@@ -107,7 +106,7 @@ export default function LobbyPage()
 						bg-[#020B16]
 						opacity-90">
 					{mode === "create" ? (
-						<CreateOperationCard onRoundsChange={setRounds} onTimeChange={setTimeLimitMinutes} />
+						<CreateOperationCard onRoundsChange={setRounds} onTimeChange={setTimeLimit} />
 					) : (
 						<JoinOperationCard onChange={(setCode)} code={code} onSubmit={handleJoinOperation} isChecking={isChecking} isShaking={isShaking} errorMessage={errorMessage}/>
 					)}

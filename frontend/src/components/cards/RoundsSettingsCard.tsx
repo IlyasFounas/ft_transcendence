@@ -5,14 +5,15 @@ interface RoundsSettingsCardProps{
 	min: number;
 	max: number; 
 	interval: number;
+	defaultValue: number;
 	settings: string;
 	formatValue?: (value: number) => string;
 	onChange: (value: number) => void;
 }
 
-export default function RoundsSettingsCard({min, max, interval, settings, formatValue, onChange} : RoundsSettingsCardProps) 
+export default function RoundsSettingsCard({min, max, interval, defaultValue, settings, formatValue, onChange} : RoundsSettingsCardProps) 
 {
-	const [value, setValue] = useState(min);
+	const [value, setValue] = useState(defaultValue);
 
 	function updateValue(newValue: number) {
 		setValue(newValue);
@@ -20,7 +21,7 @@ export default function RoundsSettingsCard({min, max, interval, settings, format
 	}
 
 	useEffect(() => {
-    onChange(min);
+    onChange(defaultValue);
   	}, []);
 
 	return (

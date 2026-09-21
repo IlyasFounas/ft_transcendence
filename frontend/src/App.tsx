@@ -24,7 +24,8 @@ function App() {
                 <Route element={<ProtectedRoute />}>
                     <Route element={<ChatLayout />}>
                         <Route path="/home" element={<HomePage />} />
-                        <Route path="/multiplayer" element={<MultiplayerPage />} />
+                        <Route path="/multiplayer" element={<LobbyPage />} />
+						<Route path="/lobbyroom" element={<LobbyRoomPage />} />
                     </Route>
                     <Route element={<MainLayout />}>
                         <Route path="/leaderboard" element={<LeaderboardPage />} />

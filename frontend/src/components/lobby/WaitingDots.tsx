@@ -13,7 +13,7 @@ export default function WaitingDots() {
 
   return (
 	<span>
-	  Waiting for others
+	  Waiting
 	  <span className="inline-block w-4 text-left">{".".repeat(dotCount)}</span>
 	</span>
   );

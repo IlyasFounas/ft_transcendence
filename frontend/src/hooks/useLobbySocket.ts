@@ -1,14 +1,11 @@
 import { useEffect, useState, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
-import type { StatusBadgeProps } from "../components/primitives/StatusBadge";
 
 const DEFAULT_AVATAR = "avatars/avatar1.png";
 
 interface Player {
   id: number;
   username: string;
-  role: string;
-  status: StatusBadgeProps["status"];
   avatar: string;
   isHost?: boolean;
 }
@@ -17,15 +14,24 @@ interface RawPlayer {
   id: number;
   username: string;
   avatar: string | null;
-  isHost: boolean;
+  host: boolean;
+}
+
+interface LobbyInfos {
+	join_code : string;
+	round_nb: number;
+	timer: number;
 }
 
 export function useLobbySocket() {
 	
 	const { user, isAuthLoading } = useAuth();
 	const [players, setPlayers] = useState<Player[]>([]);
+	const [lobbyInfos, setLobbyInfos] = useState<LobbyInfos | null >(null);
 	const [isConnected, setIsConnected] = useState(false);
 	const socketRef = useRef<WebSocket | null>(null);
+	const [isClosed, setIsClosed] = useState(false);
+	const isCurrentUserHost = players.find((p) => p.id === user?.ID)?.isHost ?? false;
 
 	useEffect(() => {
 		if (isAuthLoading || !user) return;
@@ -40,30 +46,38 @@ export function useLobbySocket() {
 		};
 
 		socket.onmessage = (event) => {
-		const rawPlayers: RawPlayer[] = JSON.parse(event.data);
+			const data = JSON.parse(event.data);
 
-		const mappedPlayers: Player[] = rawPlayers.map((p) => ({
-			id: p.id,
-			username: p.username,
-			role: "",
-			status: "waiting",
-			avatar: p.avatar ?? DEFAULT_AVATAR,
-		}));
-
-		setPlayers(mappedPlayers);
-		};
+			if (Array.isArray(data))
+			{
+				const mappedPlayers: Player[] = data.map((p: RawPlayer) => ({
+					id: p.id,
+					username: p.username,
+					avatar: p.avatar ?? DEFAULT_AVATAR,
+					isHost: p.host,
+				}));
+				
+				setPlayers(mappedPlayers);
+			}
+			else
+			{
+				setLobbyInfos(data);
+			}
+		}
 
 		socket.onerror = (err) => {
 		console.log("WS error:", err);
 		};
 
 		socket.onclose = () => {
-		setIsConnected(false);
+			setIsConnected(false);
+			setIsClosed(true);
 		};
 
 		return () => {
-		socket.close();
-		socketRef.current = null;
+			socket.onclose = null;
+			socket.close();
+			socketRef.current = null;
 		};
 	}, [user, isAuthLoading]);
 
@@ -71,5 +85,12 @@ export function useLobbySocket() {
 		socketRef.current?.send(JSON.stringify({ Action: "leave", Payload: "" }));
 	}
 
-	return { players, isConnected, leaveLobby };
+	function kickPlayer(targetId: number) {
+	socketRef.current?.send(JSON.stringify({
+		Action: "kick_player",
+		Payload: { target_id: targetId },
+	}));
+	}
+
+	return { players, isConnected, isClosed, isCurrentUserHost, leaveLobby, kickPlayer, lobbyInfos };
 }

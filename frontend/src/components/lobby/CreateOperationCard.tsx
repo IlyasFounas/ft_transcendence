@@ -23,8 +23,8 @@ export default function CreateOperationCard({onRoundsChange, onTimeChange} : Cre
 
 	return (
 		<div className="w-full h-full flex flex-col justify-center items-center gap-6 lg:gap-8 text-heading-small lg:text-heading-medium uppercase">
-				<RoundsSettingsCard min={1} max={5} interval={1} settings="Rounds" onChange={onRoundsChange}></RoundsSettingsCard>
-				<RoundsSettingsCard min={10} max={120} interval={10} settings="Time Limits" formatValue={formatTime} onChange={onTimeChange}></RoundsSettingsCard>
+				<RoundsSettingsCard min={1} max={5} interval={1} defaultValue={3} settings="Rounds" onChange={onRoundsChange}></RoundsSettingsCard>
+				<RoundsSettingsCard min={10} max={120} interval={10} defaultValue={60} settings="Time Limits" formatValue={formatTime} onChange={onTimeChange}></RoundsSettingsCard>
 		</div>
 	)
 }
