@@ -8,18 +8,17 @@ import { useAuth } from "../../context/AuthContext";
 import type { FriendResponse } from "../../types/friend.type";
 
 interface Friend extends UserProps {
-  status: UserStatusType;
-  rank: number;
+    userId: number;
+    status?: UserStatusType;
+    rank?: number;
 }
 
 interface FriendListPanelProps {
-  requests: UserProps[];
-  pending: UserProps[];
+    pending: UserProps[];
 }
 
 export default function FriendListPanel({
-  requests,
-  pending,
+    pending,
 }: FriendListPanelProps) {
     
     const { authFetch } = useAuth();
@@ -27,18 +26,19 @@ export default function FriendListPanel({
     const [activeTab, setActiveTab] = useState("friends");
     const [search, setSearch] = useState("");
     const [friends, setFriends] = useState<Friend[]>([]);
-
-    useEffect(() => {
-        const getFriends = async () => {
+    const [requests, setRequests] = useState<Friend[]>([]);
+    
+    const getFriends = async () => {
 
             const result = await authFetch("api/friend");
-
+            
             if (!result) {
                 return;
             }
-
+            console.log(result.data);
             const formattedFriends: Friend[] = result.data.friends.map(
                 (friend: FriendResponse) => ({
+                    userId: friend.user_id,
                     username: friend.name,
                     avatar: friend.avatar || "/avatars/avatar1.png"
                 })
@@ -46,9 +46,86 @@ export default function FriendListPanel({
 
             setFriends(formattedFriends);
         };
+    
+    const getFriendRequests = async () => {
+        const result = await authFetch("api/friend/requests");
+        
+        if (!result) {
+            return;
+        }
+        console.log(result.data);
+        const formattedRequests: Friend[] = result.data.friendRequests.map(
+            (request: FriendResponse) => ({
+                userId: request.user_id,
+                username: request.name,
+                avatar: request.avatar || "/avatars/avatar1.png"
+            })
+        );
 
+        setRequests(formattedRequests);
+    };
+    
+    useEffect(() => {
         getFriends();
+        getFriendRequests();
     }, [authFetch]);
+
+    const handleRemoveFriend = async (userId: number) => {
+        const result = await authFetch(`api/friend/${userId}/remove`, {
+            method: "DELETE",
+        });
+
+        if (!result) {
+            return;
+        }
+
+        if (result.status !== 200) {
+            return;
+        }
+
+        setFriends((currentFriends) =>
+            currentFriends.filter((friend) => friend.userId !== userId)
+        );
+    };
+
+    const handleAcceptFriend = async (userId: number) => {
+        const result = await authFetch(`api/friend/requests/${userId}/accept`, {
+            method: "PATCH",
+        });
+        
+        if (!result) {
+            return;
+        }
+
+        if (result.status !== 200) {
+            return;
+        }
+        
+        setRequests((currentRequests) => 
+            currentRequests.filter((request) => request.userId !== userId)
+        );
+
+        await getFriends();
+
+    }
+
+    const handleRejectRequest = async (userId: number) => {
+        const result = await authFetch(`api/friend/requests/${userId}/reject`, {
+            method: "DELETE",
+        });
+        
+        if (!result) {
+            return;
+        }
+
+        if (result.status !== 200) {
+            return;
+        }
+        
+        setRequests((currentRequests) => 
+            currentRequests.filter((request) => request.userId !== userId)
+        );
+    }
 
     return (
         <div className="bg-surface-base border border-border-default rounded-lg px-4 py-4">
@@ -159,8 +236,9 @@ export default function FriendListPanel({
                 {activeTab === "friends" &&
                     friends.map((friend) => (
                     <FriendListRow
-                        key={friend.username}
+                        key={friend.userId}
                         {...friend}
+                        onRemove={() => handleRemoveFriend(friend.userId)}
                     />
                 ))}
 
@@ -169,6 +247,8 @@ export default function FriendListPanel({
                     <FriendRequestRow
                         key={request.username}
                         {...request}
+                        onAccept={() => handleAcceptFriend(request.userId)}
+                        onReject={() => handleRejectRequest(request.userId)}
                     />
                 ))}
 

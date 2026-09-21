@@ -1,6 +1,7 @@
 export interface FriendResponse {
-    user_id: number;
     id: number;
+    user_id: number;
     name: string;
-    avatar: string;
+    avatar: string | null;
+    created_at: string;
 }
