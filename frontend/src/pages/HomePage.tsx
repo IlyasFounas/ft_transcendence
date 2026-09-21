@@ -1,13 +1,17 @@
 import PrimaryButton from "../components/buttons/PrimaryButton";
 import ProfileCard from "../components/cards/ProfileCard";
 import { useAuth } from "../context/AuthContext";
+import CalculateRank from "../utils/rank";
 
 export default function HomePage() {
     const { user } = useAuth();
+    const totalScore = 24658; // need to call api + api for operation + accuracy
+    const rank = CalculateRank(totalScore);
     return (
         <main
             className="
                 flex-1
+                min-h-0
                 w-full
                 bg-surface-base
                 bg-cover
@@ -34,12 +38,13 @@ export default function HomePage() {
                 <ProfileCard 
                     username={user?.Username ?? "player"}
                     avatar={user?.Avatar ?? "/avatars/avatar1.png"}
-                    role="field analyst"
+                    role={rank.currentRank}
                     operations={123}
                     accuracy={74}
-                    score={24658}
-                    nextRank="Senior Analyst"
-                    xpToNextRank={2940}
+                    score={totalScore}
+                    nextRank={rank.nextRank ?? ""}
+                    xpToNextRank={rank.xpRemaining}
+                    progress={rank.progress}
                 />
             </div>
             <div className="

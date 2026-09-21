@@ -9,6 +9,7 @@ interface ProfileCardProps {
     score: number;
     nextRank: string;
     xpToNextRank: number;
+    progress: number;
 }
 
 export default function ProfileCard({
@@ -20,6 +21,7 @@ export default function ProfileCard({
     score,
     nextRank,
     xpToNextRank,
+    progress,
 }: ProfileCardProps) {
     return (
         <div className="
@@ -35,7 +37,7 @@ export default function ProfileCard({
                 lg:w-[480px]
             "
         >
-            <div className="w-full flex flex-col lg:flex-1 lg:item lg:text-left lg:flex-row gap-2 lg:gap-6 items-center">
+            <div className="w-full flex flex-col lg:flex-row lg:text-left gap-2 lg:gap-6 items-center">
                 <div className="shrink-0">
                     <Avatar avatar={avatar} size={100} />
                 </div>
@@ -73,7 +75,7 @@ export default function ProfileCard({
 
             <div className="flex flex-row uppercase">
                 <div className="flex-1">
-                    <p className="text-label-small md:text-body-primary text-text-secondary">Operation</p>
+                    <p className="text-label-small md:text-body-primary text-text-secondary">Operations</p>
                     <p className="text-heading-small md:text-heading-medium text-text-primary">{operations}</p>
                 </div>
                 <div className="flex-1">
@@ -91,7 +93,10 @@ export default function ProfileCard({
                 <p className="text-body-primary text-text-primary">{nextRank}</p>
                 <div className="space-y-1">
                     <div className="h-1 bg-white rounded-2xl">
-                        <div className="h-1 bg-primary rounded-2xl w-1/2"></div>
+                        <div
+                            className="h-1 bg-primary rounded-2xl"
+                            style={{ width: `${progress}%` }}
+                        ></div>
                     </div>
                     <span className="text-label-small text-text-secondary uppercase">
                         {xpToNextRank} XP to Next Rank
