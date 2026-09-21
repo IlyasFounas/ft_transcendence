@@ -42,7 +42,7 @@ export default function LobbyList({listOfPlayers, onKick, isCurrentUserHost}: Lo
         					Agents
         				</span>
 						<span>
-							{numberOfPlayers} agents
+  						{numberOfPlayers} {numberOfPlayers > 1 ? "agents" : "agent"}
 						</span>
       			</div>
 			<div className="flex flex-col max-h-[350px] lg:max-h-full overflow-y-auto">

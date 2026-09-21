@@ -16,7 +16,6 @@ import AuthenticationLogin from '../components/authentication/AuthenticationLogi
 import PrimaryButton from '../components/buttons/PrimaryButton.tsx';
 import SecondaryButton from '../components/buttons/SecondaryButton.tsx';
 import Avatar from '../components/primitives/Avatar.tsx';
-import GameResultRow from '../components/results/GameResultRow.tsx';
 import ChatBoxCard from '../components/cards/ChatBox.tsx';
 import Podium from '../components/cards/podium/Podium.tsx';
 

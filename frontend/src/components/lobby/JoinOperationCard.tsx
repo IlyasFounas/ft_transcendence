@@ -1,7 +1,4 @@
-import { useState, useRef, useEffect } from "react";
-import { useAuth } from "../../context/AuthContext";
-import { checkRoomCode } from "../../services/lobby";
-import { useNavigate } from "react-router-dom";
+import { useRef, useEffect } from "react";
 
 interface JoinOperationCardProps {
 	code: string;
