@@ -13,13 +13,7 @@ interface Friend extends UserProps {
     rank?: number;
 }
 
-interface FriendListPanelProps {
-    pending: UserProps[];
-}
-
-export default function FriendListPanel({
-    pending,
-}: FriendListPanelProps) {
+export default function FriendListPanel() {
     
     const { authFetch } = useAuth();
 
@@ -27,6 +21,7 @@ export default function FriendListPanel({
     const [search, setSearch] = useState("");
     const [friends, setFriends] = useState<Friend[]>([]);
     const [requests, setRequests] = useState<Friend[]>([]);
+    const [pending, setPending] = useState<Friend[]>([]);
     
     const getFriends = async () => {
 
@@ -64,10 +59,28 @@ export default function FriendListPanel({
 
         setRequests(formattedRequests);
     };
-    
+
+    const getPending = async () => {
+        const result = await authFetch("api/friend/requests/pending");
+        if (!result) {
+            return;
+        }
+        console.log(result.data);
+        const formattedPending: Friend[] = result.data.friendPending.map(
+            (pending: FriendResponse) => ({
+                userId: pending.user_id,
+                username: pending.name,
+                avatar: pending.avatar || "/avatars/avatar1.png"
+            })
+        );
+
+        setPending(formattedPending);
+    }
+
     useEffect(() => {
         getFriends();
         getFriendRequests();
+        getPending();
     }, [authFetch]);
 
     const handleRemoveFriend = async (userId: number) => {
@@ -124,6 +137,24 @@ export default function FriendListPanel({
         
         setRequests((currentRequests) => 
             currentRequests.filter((request) => request.userId !== userId)
+        );
+    }
+
+    const handleCancelRequest = async (userId: number) => {
+        const result = await authFetch(`api/friend/requests/${userId}/cancel`, {
+            method: "DELETE",
+        });
+        
+        if (!result) {
+            return;
+        }
+
+        if (result.status !== 200) {
+            return;
+        }
+
+        setPending((currentPending) => 
+            currentPending.filter((pending) => pending.userId !== userId)
         );
     }
 
@@ -257,6 +288,7 @@ export default function FriendListPanel({
                     <PendingFriendRow
                         key={pending.username}
                         {...pending}
+                        onCancel={() => handleCancelRequest(pending.userId)}
                     />
                 ))}
                 
