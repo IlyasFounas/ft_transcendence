@@ -6,6 +6,8 @@ import SecondaryButton from "../components/buttons/SecondaryButton";
 import StatCard from "../components/cards/StatCard";
 import OperationHistory from "../components/cards/OperationHistory";
 import { operations } from "../data/operations";
+import FriendListPanel from "../components/cards/FriendListPanel";
+import { friends, requests, pending } from "../data/friends";
 
 export default function ProfilePage() {
 
@@ -152,7 +154,7 @@ export default function ProfilePage() {
                 </div>
 
             </section>
-			
+
 			<section
 				className="
 					mt-2
@@ -163,6 +165,11 @@ export default function ProfilePage() {
 				"
             >
 				<OperationHistory operations={operations} />
+				<FriendListPanel
+					friends={friends}
+					requests={requests}
+					pending={pending}
+				/>
 			</section>
       	</main>					    
   	);
