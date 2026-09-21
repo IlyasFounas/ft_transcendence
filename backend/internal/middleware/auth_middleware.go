@@ -20,16 +20,31 @@ import (
 
 func AuthMiddleWare() gin.HandlerFunc {
   return func(c *gin.Context) {
-    tokenString := c.GetHeader("Authorization")
+    // tokenString := c.GetHeader("Authorization")
+		tokenString, err := c.Cookie("Authorization")
+    if err != nil {
+      c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "you have to login"})
+      return 
+    }
     claims := jwt.MapClaims{}
-    _, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+    _, err = jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+        // so we reject anything not signed with the HMAC family
+        if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+          return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+        }
         return []byte(os.Getenv("JWT_SECRET")), nil })
     if err != nil {
       fmt.Printf("%s\n", err)
       c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "you have to login"})
       return
     }
-    id, err := strconv.ParseInt(claims["sub"].(string), 10, 64)
+    // avoids panic error when the token is valid but the "sub" claim is missing or not a string
+    sub, ok := claims["sub"].(string)
+    if !ok {
+      c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "you have to login"})
+      return
+    }
+    id, err := strconv.ParseInt(sub, 10, 64)
     if err != nil {
       c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "you have to login"})
       return

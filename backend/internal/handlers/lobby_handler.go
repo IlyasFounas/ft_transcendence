@@ -2,10 +2,13 @@ package handlers
 
 import (
 	// "strconv"
-	"net/http"
-	"github.com/gin-gonic/gin"
 	"backend/internal/models/games"
 	"backend/internal/repositories"
+	"log"
+	"net/http"
+	"strconv"
+
+	"github.com/gin-gonic/gin"
 )
 
 type LobbyHandler struct {
@@ -207,7 +210,7 @@ func (h *LobbyHandler) AllPlayers() gin.HandlerFunc {
         }
 		lobby, err := h.lobbyRepo.ActualLobby(c.Request.Context(),
 			userId.(int64))
-		if err != nil {
+		if err != nil || lobby == nil {
 			c.JSON(http.StatusNotFound,
 				gin.H{"message": "You are not in a lobby"})
 			return 
@@ -221,6 +224,47 @@ func (h *LobbyHandler) AllPlayers() gin.HandlerFunc {
 		}
 		c.JSON(http.StatusOK,
 			gin.H{"message": "success", "lobbies": lobbies})
-		
+	}
+}
+
+func (h *LobbyHandler) NbGames() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userId, err := strconv.ParseInt(c.Param("userId"), 10, 64)
+		if err != nil {
+			log.Printf("error : %s\n", err)
+			c.JSON(http.StatusUnauthorized, 
+				gin.H{"message": "An error occured. Please try again."})
+			return
+		} 
+		nbGames, err := h.lobbyRepo.NbGames(c.Request.Context(), userId)
+		if err != nil {
+			log.Printf("error : %s\n", err)
+			c.JSON(http.StatusUnauthorized, 
+				gin.H{"message": "An error occured. Please try again."})
+			return
+		}
+		c.JSON(http.StatusOK,
+			gin.H{"message": "success", "nb_games": nbGames})
+	}
+}
+
+func (h *LobbyHandler) Historic() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userId, err := strconv.ParseInt(c.Param("userId"), 10, 64)
+		if err != nil {
+			log.Printf("error : %s\n", err)
+			c.JSON(http.StatusUnauthorized, 
+				gin.H{"message": "An error occured. Please try again."})
+			return
+		} 
+		games, err := h.lobbyRepo.Historic(c.Request.Context(), userId)
+		if err != nil {
+			log.Printf("error : %s\n", err)
+			c.JSON(http.StatusUnauthorized, 
+				gin.H{"message": "An error occured. Please try again."})
+			return
+		}
+		c.JSON(http.StatusOK,
+			gin.H{"message": "success", "historic": games})
 	}
 }

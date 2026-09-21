@@ -2,6 +2,7 @@ import { ChevronDown, User, LogOut, } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import Avatar from "../primitives/Avatar";
 import type { UserStatusType } from "../../types/user.types";
+import { useAuth } from "../../context/AuthContext";
 
 interface NavbarUserProps {
     username: string;
@@ -14,6 +15,8 @@ export default function NavbarUser({
     status,
     avatar,
 }: NavbarUserProps) {
+
+    const { logout } = useAuth();
 
     const statusClasses = {
     online: "text-status-green",
@@ -142,6 +145,7 @@ export default function NavbarUser({
 
                     <button
                         type="button"
+                        onClick={logout}
                         className="
                             flex
                             items-center

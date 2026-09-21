@@ -1,19 +1,22 @@
 package handlers
 
 import (
-	// OUR PACKAGE
-	"os"
 	"backend/internal/repositories"
+	"github.com/sams96/rgeo"
+	"os"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 )
 
 type Handlers struct {
-	Location *LocationHandler
-	User     *UserHandler
-	Token    *TokenHandler
-	Game	 *GameHandler
-	Lobby	 *LobbyHandler
+	Location	*LocationHandler
+	User		*UserHandler
+	Token		*TokenHandler
+	Game		*GameHandler
+	Lobby		*LobbyHandler
+	Friend		*FriendHandler
+	Round		*RoundHandler
+	Guess		*GuessHandler
 }
 
 func googleConfigInit() *oauth2.Config {
@@ -27,14 +30,17 @@ func googleConfigInit() *oauth2.Config {
 }
 
 // NewHandlers instanciates and assembles all the handlers
-func NewHandlers(repo *repositories.Repositories) *Handlers {
+func NewHandlers(repo *repositories.Repositories, reverser *rgeo.Rgeo) *Handlers {
 	tokenHandler := NewTokenHandler(repo.User, repo.AToken, repo.RToken)
 	googleConfig := googleConfigInit()
 	return &Handlers{
-		Location: NewLocationHandler(repo.Location),
-		User:     NewUserHandler(repo.User, repo.AToken, tokenHandler, googleConfig),
-		Token:    tokenHandler,
-		Game:     NewGameHandler(repo.Game, repo.Lobby),
-		Lobby:    NewLobbyHandler(repo.Game, repo.Lobby, repo.User),
+		Location:	NewLocationHandler(repo.Location),
+		User:	 	NewUserHandler(repo.User, repo.AToken, repo.RToken, tokenHandler, googleConfig),
+		Token:		tokenHandler,
+		Game:		NewGameHandler(repo.Game, repo.Lobby, repo.Location),
+		Lobby:		NewLobbyHandler(repo.Game, repo.Lobby, repo.User),
+		Friend:		NewFriendHandler(repo.Friend, repo.User),
+		Round:		NewRoundHandler(repo.Round),
+		Guess:		NewGuessHandler(repo.Guess, repo.Round, repo.Lobby, repo.Game, reverser),
 	}
 }
