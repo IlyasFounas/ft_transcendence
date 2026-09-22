@@ -6,8 +6,8 @@ import (
 )
 
 type Connexion struct {
-    Conn    *websocket.Conn
-    Send    chan []byte
+    Conn        *websocket.Conn
+    Send        chan []byte
 }
 
 func NewConnexion(conn *websocket.Conn) *Connexion {
