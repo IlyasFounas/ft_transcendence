@@ -228,7 +228,7 @@ export default function FriendListPanel() {
 
     return (
         <div className="bg-surface-base border border-border-default rounded-lg px-4 py-4">
-            <h2 className="text-heading-medium text-center uppercase">
+            <h2 className="text-heading-small lg:text-heading-medium text-center uppercase">
                 Friends List
             </h2>
 
@@ -237,7 +237,8 @@ export default function FriendListPanel() {
             onClick={() => setActiveTab("friends")}
             className={`
                 py-3
-                text-heading-small
+                text-label-small
+                lg:text-heading-small
                 uppercase
                 border-b
                 cursor-pointer
@@ -255,7 +256,8 @@ export default function FriendListPanel() {
             onClick={() => setActiveTab("requests")}
             className={`
                 py-3
-                text-heading-small
+                text-label-small
+                lg:text-heading-small
                 uppercase
                 border-b
                 cursor-pointer
@@ -273,7 +275,8 @@ export default function FriendListPanel() {
                 onClick={() => setActiveTab("add")}
                 className={`
                     py-3
-                    text-heading-small
+                    text-label-small
+                    lg:text-heading-small
                     uppercase
                     border-b
                     cursor-pointer
@@ -321,7 +324,8 @@ export default function FriendListPanel() {
                         flex-1
                         bg-transparent
                         text-text-primary
-                        text-heading-small
+                        text-body-primary
+                        lg:text-heading-small
                         uppercase
                         outline-none
                         placeholder:text-text-secondary
@@ -329,7 +333,7 @@ export default function FriendListPanel() {
                 />
 
                 <Search
-                    size={28}
+                    size={22}
                     onClick={searchUser}
                     className="text-primary shrink-0 cursor-pointer"
                 />
@@ -377,7 +381,7 @@ export default function FriendListPanel() {
                 {activeTab === "add" &&
                     search.trim() !== "" &&
                     searchNotFound && (
-                        <p className="text-text-secondary text-heading-small text-center py-6">
+                        <p className="text-text-secondary text-body-primary lg:text-heading-small text-center py-6">
                             User not found
                         </p>
                     )

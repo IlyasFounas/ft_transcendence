@@ -22,7 +22,7 @@ export default function ProfilePage() {
 			min-h-0
 			w-full
 			bg-surface-base
-			px-5
+			px-8
 			py-5
 			lg:px-12
 			overflow-y-auto
@@ -40,39 +40,45 @@ export default function ProfilePage() {
                     flex
                     flex-col
                     lg:flex-row
-                    gap-6
+                    gap-4
                     lg:gap-10
                     items-center
                     lg:items-start
                 "
             >
-				<div className="shrink-0">
+				<div className="shrink-0 lg:hidden">
+                    <Avatar
+                        avatar={user?.Avatar ?? "/avatars/avatar1.png"}
+                        size={80}
+                    />
+                </div>
+                <div className="shrink-0 hidden lg:block">
                     <Avatar
                         avatar={user?.Avatar ?? "/avatars/avatar1.png"}
                         size={180}
                     />
                 </div>
 
-				<div className="flex-1 w-full flex flex-col gap-3 lg:mt-5">
+				<div className="flex-1 w-full flex flex-col gap-3 text-center lg:text-left lg:mt-5">
 
 					<div>
-                        <h1 className="text-hero font-semibold text-text-primary uppercase">
+                        <h1 className="text-heading-medium lg:text-hero font-semibold text-text-primary uppercase">
                             Agent {user?.Username ?? "Player"}
                         </h1>
-                        <p className="text-heading-medium text-primary uppercase">
+                        <p className="text-label-small lg:text-heading-medium text-primary uppercase">
                             {rank.currentRank}
                         </p>
                     </div>
 					<div className="w-full max-w-xl">
 
-                        <div className="flex justify-between text-heading-small text-text-secondary uppercase mb-1">
+                        <div className="flex justify-between text-label-small lg:text-heading-small text-text-secondary uppercase mb-1">
 							<span>Next Rank</span>
 							<span>
 								{totalScore.toLocaleString()} / {(totalScore + rank.xpRemaining).toLocaleString()} XP
 							</span>
 						</div>
 
-						<p className="text-heading-small text-text-primary uppercase mb-2">
+						<p className="text-label-small text-left lg:text-heading-small text-text-primary uppercase mb-2">
 							{rank.nextRank}
 						</p>
 
@@ -82,23 +88,21 @@ export default function ProfilePage() {
                                 style={{ width: `${rank.progress}%` }}
                             />
                         </div>
-						
-
                     </div>
 				</div>
-				<div className="flex items-center justify-center text-center gap-20 lg:self-center lg:mr-10">
+				<div className="flex items-center justify-center text-center lg:gap-20 lg:self-center lg:mr-10">
 
-					<div className="text-center uppercase">
-						<p className="text-heading-medium text-text-secondary">
+					<div className="text-center uppercase hidden lg-block">
+						<p className="text-label-small lg:text-heading-medium text-text-secondary">
 							Global Rank
 						</p>
 
-						<p className="text-[48px] text-primary font-bold">
+						<p className="text-heading-small lg:text-[48px] text-primary font-bold">
 							#18
 						</p>
 					</div>
-					<div className="pt-5">
-						<SecondaryButton>
+					<div className="lg:pt-5">
+						<SecondaryButton className="scale-60">
 							<Pencil size={18} />
 							Edit Profile
 						</SecondaryButton>
@@ -119,7 +123,7 @@ export default function ProfilePage() {
                 "
             >
 
-                <h2 className="text-center text-heading-medium text-text-primary uppercase mb-4">
+                <h2 className="text-center text-heading-small lg:text-heading-medium text-text-primary uppercase mb-4">
                     Statistics
                 </h2>
 
@@ -129,25 +133,25 @@ export default function ProfilePage() {
                         title="Operations"
                         value="152"
                         subtitle="Total Completed"
-                        icon={<ClipboardList size={75} strokeWidth={1.5}  />}
+                        icon={<ClipboardList size={60} strokeWidth={1.5} />}
                     />
                     <StatCard
                         title="Accuracy"
                         value="74%"
                         subtitle="Across All Operations"
-                        icon={<Crosshair size={75} strokeWidth={1.5} className="text-status-green"/>}
+                        icon={<Crosshair size={60} strokeWidth={1.5} className="text-status-green"/>}
                     />
                     <StatCard
                         title="Best Score"
                         value="24,580"
                         subtitle="Single Round Best"
-                        icon={<Trophy size={75} strokeWidth={1.5} className="text-status-yellow"/>}
+                        icon={<Trophy size={60} strokeWidth={1.5} className="text-status-yellow"/>}
                     />
                     <StatCard
                         title="Closest Guess"
                         value="1.2 KM"
                         subtitle="Best Distance To Target"
-					icon={<MapPin size={75} strokeWidth={1.5} className="text-[#C87BFF]"/>}
+					icon={<MapPin size={60} strokeWidth={1.5} className="text-[#C87BFF]"/>}
                     />
 
                 </div>
@@ -160,7 +164,8 @@ export default function ProfilePage() {
 					grid
 					grid-cols-1
 					lg:grid-cols-2
-					gap-8
+                    gap-2
+					lg:gap-8
 				"
             >
 				<OperationHistory operations={operations} />

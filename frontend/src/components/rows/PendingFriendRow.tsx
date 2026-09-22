@@ -32,7 +32,8 @@ export default function PendingFriendRow({
 
             <div className="flex items-center gap-6">
                 <span className="
-                    text-heading-small
+                    text-label-small
+                    lg:text-heading-small
                     text-text-secondary
                     uppercase
                     "
