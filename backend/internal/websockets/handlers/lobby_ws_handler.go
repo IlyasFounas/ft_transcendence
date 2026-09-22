@@ -155,3 +155,14 @@ func (h *LobbyWsHandler) SendInfos(ctx context.Context, gameId int64) (interface
 	}
 	return data, true
 }
+
+func (h *LobbyWsHandler) UpdateStartAt(ctx context.Context, LobbyId int64, RoundNb int64) error {
+	if RoundNb == 1 {
+		err := h.lobbyRepo.SetStartAt(ctx, LobbyId)
+		if err != nil {
+			log.Printf("error : %s\n", err)
+			return err
+		}
+	}
+	return nil
+}

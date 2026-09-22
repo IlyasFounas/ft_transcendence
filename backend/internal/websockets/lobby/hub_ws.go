@@ -119,7 +119,6 @@ type Hub struct {
 	GuessWsHandler	*ws_handlers.GuessWsHandler
 }
 
-
 func NewHub(
 	repo *repositories.Repositories,
 	wsHandlers *ws_handlers.WsHandlers,
@@ -309,9 +308,15 @@ func (h *Hub) handleAction(ctx context.Context, data *DataInfos) {
 
 	case "start_round":
 		if data.Client != nil {
+			// TODO or if the client plays in singleplayer, rounds should not start automatically
+			
 			// client != nil > real client request
 			roundNb := h.resolveRoundToStart(data.Client.GameId)
 			h.StartRound(ctx, data.Client.GameId, roundNb)
+			err := h.LobbyWsHandler.UpdateStartAt(ctx, data.Client.LobbyId, roundNb)
+			if err != nil {
+				return
+			}
 			return
 		}
 		// client == nil > this is the auto relaunch of the next round server-generated

@@ -226,6 +226,21 @@ func (r *LobbyRepository) SetLeftAt(ctx context.Context,
 	return nil
 }
 
+func (r *LobbyRepository) SetStartAt(ctx context.Context,
+	lobby_id int64) error {
+	actualTime := time.Now()
+	lobby := &games.Lobby{StartAt: &actualTime}
+	_, err := r.db.NewUpdate().
+		Model(lobby).
+		Column("start_at").
+		Where("id = ?", lobby_id).
+		Exec(ctx)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (r *LobbyRepository) SetIsCreator(ctx context.Context,
 	lobby_id int64, state bool) error {
 	lobby := &games.Lobby{IsCreator: state}
