@@ -38,6 +38,8 @@ export default function FriendListRow({
             border-border-default
             px-4
             h-16
+            xl:h-20
+            xl:px-8
             "
         >
             <UserProfile 

@@ -23,6 +23,7 @@ export default function StatCard({
                 py-2
                 md:px-8
                 lg:p-4
+                xl:p-10
                 flex
                 items-center
                 lg:justify-center
@@ -34,13 +35,13 @@ export default function StatCard({
             </div>
 
             <div className="uppercase">
-                <p className="text-body-primary md:text-heading-small text-text-primary">
+                <p className="text-body-primary md:text-heading-small xl:text-heading-medium text-text-primary">
                     {title}
                 </p>
                 <p className="text-heading-small md:text-heading-medium lg:text-hero text-text-primary">
                     {value}
                 </p>
-                <p className="text-label-small md:text-body-primary text-text-secondary">
+                <p className="text-label-small md:text-body-primary xl:text-heading-small text-text-secondary">
                     {subtitle}
                 </p>
             </div>

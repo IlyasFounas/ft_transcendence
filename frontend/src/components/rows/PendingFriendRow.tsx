@@ -21,7 +21,9 @@ export default function PendingFriendRow({
             border
             border-border-default
             px-4
+            xl:px-8
             h-16
+            xl:h-20
             "
         >
             <UserProfile

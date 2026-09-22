@@ -227,8 +227,22 @@ export default function FriendListPanel() {
     };
 
     return (
-        <div className="bg-surface-base border border-border-default rounded-lg px-4 py-4">
-            <h2 className="text-heading-small lg:text-heading-medium text-center uppercase">
+        <div
+            className="
+                bg-surface-base
+                border
+                border-border-default
+                rounded-lg
+                p-4
+                xl:p-10
+
+                xl:h-full
+                xl:min-h-0
+                xl:flex
+                xl:flex-col
+            "
+        >
+            <h2 className="text-heading-small lg:text-heading-medium xl:text-heading-large text-center uppercase">
                 Friends List
             </h2>
 
@@ -237,8 +251,10 @@ export default function FriendListPanel() {
             onClick={() => setActiveTab("friends")}
             className={`
                 py-3
+                xl:py-6
                 text-label-small
                 md:text-heading-small
+                xl:text-heading-medium
                 uppercase
                 border-b
                 cursor-pointer
@@ -256,8 +272,10 @@ export default function FriendListPanel() {
             onClick={() => setActiveTab("requests")}
             className={`
                 py-3
+                xl:py-6
                 text-label-small
                 md:text-heading-small
+                xl:text-heading-medium
                 uppercase
                 border-b
                 cursor-pointer
@@ -275,8 +293,10 @@ export default function FriendListPanel() {
                 onClick={() => setActiveTab("add")}
                 className={`
                     py-3
+                    xl:py-6
                     text-label-small
                     md:text-heading-small
+                    xl:text-heading-medium
                     uppercase
                     border-b
                     cursor-pointer
@@ -290,7 +310,7 @@ export default function FriendListPanel() {
                 Add Friends
             </button>
         </div>
-        <div className="flex flex-col min-h-0">
+        <div className="flex flex-col min-h-0 xl:flex-1">
 
         {activeTab === "add" && (
             <div className="
@@ -300,6 +320,7 @@ export default function FriendListPanel() {
                 bg-surface-elevated
                 px-4
                 py-3
+                xl:p-4
                 border-b
                 border-border-default
                 rounded-lg
@@ -326,6 +347,7 @@ export default function FriendListPanel() {
                         text-text-primary
                         text-body-primary
                         md:text-heading-small
+                        xl:text-heading-medium
                         uppercase
                         outline-none
                         placeholder:text-text-secondary
@@ -340,11 +362,14 @@ export default function FriendListPanel() {
             </div>
             )}
 
-            <div className={`
-                ${activeTab === "add" ? "h-48" : "h-64"}
-                overflow-y-auto
-                custom-scrollbar
-                `}
+            <div
+                className="
+                    h-64
+                    xl:flex-1
+                    xl:min-h-0
+                    overflow-y-auto
+                    custom-scrollbar
+                "
             >
                 {activeTab === "friends" &&
                     friends.map((friend) => (
@@ -381,7 +406,7 @@ export default function FriendListPanel() {
                 {activeTab === "add" &&
                     search.trim() !== "" &&
                     searchNotFound && (
-                        <p className="text-text-secondary text-body-primary lg:text-heading-small text-center py-6">
+                        <p className="text-text-secondary text-body-primary lg:text-heading-small xl:text-heading-medium text-center py-6">
                             User not found
                         </p>
                     )

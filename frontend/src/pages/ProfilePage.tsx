@@ -26,6 +26,9 @@ export default function ProfilePage() {
 			py-5
 			lg:px-12
 			overflow-y-auto
+            xl:gap-5
+            xl:flex
+            xl:flex-col
           	"
       	>
 			<section
@@ -37,13 +40,16 @@ export default function ProfilePage() {
                     bg-surface-base
                     p-5
                     md:p-6
+                    xl:p-20
                     flex
                     flex-col
                     xl:flex-row
                     gap-4
                     lg:gap-10
+                    xl:gap-15
                     items-center
                     xl:items-start
+                    xl:shrink-0
                 "
             >
 				<div className="shrink-0 md:hidden">
@@ -61,11 +67,11 @@ export default function ProfilePage() {
                 <div className="shrink-0 hidden xl:block">
                     <Avatar
                         avatar={user?.Avatar ?? "/avatars/avatar1.png"}
-                        size={180}
+                        size={200}
                     />
                 </div>
 
-				<div className="flex-1 w-full flex flex-col gap-3 text-center xl:text-left xl:mt-5">
+				<div className="flex-1 w-full flex flex-col gap-3 xl:gap-8 text-center xl:text-left xl:mt-5">
 
 					<div>
                         <h1 className="text-heading-medium md:text-heading-large xl:text-hero font-semibold text-text-primary uppercase">
@@ -77,14 +83,14 @@ export default function ProfilePage() {
                     </div>
 					<div className="w-full xl:max-w-xl">
 
-                        <div className="flex justify-between text-label-small md:text-body-primary lg:text-heading-small text-text-secondary uppercase mb-1">
+                        <div className="flex justify-between text-label-small md:text-body-primary lg:text-heading-small xl:text-heading-medium text-text-secondary uppercase mb-1">
 							<span>Next Rank</span>
 							<span>
 								{totalScore.toLocaleString()} / {(totalScore + rank.xpRemaining).toLocaleString()} XP
 							</span>
 						</div>
 
-						<p className="text-label-small md:text-body-primary lg:text-heading-small text-left text-text-primary uppercase mb-2">
+						<p className="text-label-small md:text-body-primary lg:text-heading-small xl:text-heading-medium text-left text-text-primary uppercase mb-2">
 							{rank.nextRank}
 						</p>
 
@@ -96,19 +102,19 @@ export default function ProfilePage() {
                         </div>
                     </div>
 				</div>
-				<div className="flex items-center justify-center text-center xl:gap-20 xl:self-center xl:mr-10">
+				<div className="flex items-center justify-center text-center xl:self-center xl:gap-20">
 
 					<div className="text-center uppercase hidden md:block">
 						<p className="text-label-small md:text-heading-small xl:text-heading-medium text-text-secondary">
 							Global Rank
 						</p>
 
-						<p className="text-heading-medium xl:text-[48px] text-primary font-bold">
+						<p className="text-heading-medium xl:text-hero text-primary font-bold">
 							#18
 						</p>
 					</div>
 					<div className="xl:pt-5">
-						<SecondaryButton className="scale-60 md:scale-70">
+						<SecondaryButton className="scale-60 md:scale-70 xl:scale-100">
 							<Pencil size={18} />
 							Edit Profile
 						</SecondaryButton>
@@ -125,11 +131,12 @@ export default function ProfilePage() {
                     border-border-default
                     rounded-md
                     p-4
-                    xl:p-5
+                    xl:p-10
+                    xl:shrink-0
                 "
             >
 
-                <h2 className="text-center text-heading-small xl:text-heading-medium text-text-primary uppercase mb-4">
+                <h2 className="text-center text-heading-small xl:text-heading-large text-text-primary uppercase mb-4">
                     Statistics
                 </h2>
 
@@ -172,6 +179,9 @@ export default function ProfilePage() {
 					xl:grid-cols-2
                     gap-2
 					xl:gap-8
+
+                    xl:flex-1
+                    xl:min-h-0
 				"
             >
 				<OperationHistory operations={operations} />
