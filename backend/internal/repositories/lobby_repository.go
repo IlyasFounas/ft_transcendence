@@ -41,62 +41,39 @@ func (r *LobbyRepository) JoinLobby(ctx context.Context,
 }
 
 // return the actual lobby of the userid and gameid
-func (r *LobbyRepository) ActualLobbyGameId(ctx context.Context, userId int64, gameId int64) (*games.Lobby, error) {
-	// verify if it exists without triggering sql.ErrNoRows
-	exists, err := r.db.NewSelect().
-		Model((*games.Lobby)(nil)).
-		Where("user_id = ?", userId).
-		Where("game_id = ?", gameId).
-		Where("left_at IS NULL").
-		Exists(ctx)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, nil
-	}
-
-	// retrieve the lobby if it exists
+func (r *LobbyRepository) ActualLobbyGameId(ctx context.Context,
+	userId int64, gameId int64) (*games.Lobby, error) {
 	lobby := new(games.Lobby)
-	err = r.db.NewSelect().
+	err := r.db.NewSelect().
 		Model(lobby).
 		Where("user_id = ?", userId).
 		Where("game_id = ?", gameId).
 		Where("left_at IS NULL").
 		Scan(ctx)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
 		return nil, err
 	}
-
 	return lobby, nil
 }
 
 // return the actual lobby / game the user is in
 // WARNING : if the user isn't in a lobby, it return nil
 // so you must check if the lobby is nil after calling this function
-func (r *LobbyRepository) ActualLobby(ctx context.Context, userId int64) (*games.Lobby, error) {
-	// checks if a lobby exists without triggering sql.ErrNoRows
-	exists, err := r.db.NewSelect().
-		Model((*games.Lobby)(nil)).
-		Where("lo.user_id = ?", userId).
-		Where("lo.left_at IS NULL").
-		Exists(ctx)
-	if err != nil {
-		return nil, err
-	}
-	// if no lobby exists, return nil
-	if !exists {
-		return nil, nil
-	}
-
-	// if lobby exists, it retrieves it and returns it
+func (r *LobbyRepository) ActualLobby(ctx context.Context,
+	userId int64) (*games.Lobby, error) {
 	lobby := new(games.Lobby)
-	err = r.db.NewSelect().
+	err := r.db.NewSelect().
 		Model(lobby).
 		Where("lo.user_id = ?", userId).
 		Where("lo.left_at IS NULL").
 		Scan(ctx)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
 		return nil, err
 	}
 	return lobby, nil

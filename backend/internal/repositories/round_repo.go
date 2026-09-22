@@ -123,27 +123,16 @@ func (r *RoundRepository) GetCCByLocationID(ctx context.Context, location_id int
 }
 
 func (r *RoundRepository) GetIDByGameIDAndRoundNb(ctx context.Context, game_id int64, round_nb int64) (int64, error) {
-	// verify if it exists without triggering sql.ErrNoRows
-	exists, err := r.db.NewSelect().
-		Model((*rounds.Round)(nil)).
-		Column("id").
-		Where("game_id = ? AND round_nb = ?", game_id, round_nb).
-		Exists(ctx)
-	if err != nil {
-		return 0, fmt.Errorf("failed to get round id by game id %d and round_nb %d: %w", game_id, round_nb, err)
-	}
-	if !exists {
-		return 0, ErrRoundNotFound
-	}
-	
-	// if it exists, retrieve the round ID
 	var roundID int64
-	err = r.db.NewSelect().
+	err := r.db.NewSelect().
 		Model((*rounds.Round)(nil)).
 		Column("id").
 		Where("game_id = ? AND round_nb = ?", game_id, round_nb).
 		Scan(ctx, &roundID)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return 0, ErrRoundNotFound
+		}
 		return 0, fmt.Errorf("failed to get round id by game id %d and round_nb %d: %w", game_id, round_nb, err)
 	}
 	return roundID, nil
