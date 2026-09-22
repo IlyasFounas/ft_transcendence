@@ -22,7 +22,7 @@ interface Friend {
 
 export default function FriendListPanel() {
     
-    const { authFetch } = useAuth();
+    const { authFetch, user } = useAuth();
 
     const [activeTab, setActiveTab] = useState("friends");
     const [search, setSearch] = useState("");
@@ -102,20 +102,26 @@ export default function FriendListPanel() {
             setSearchNotFound(true);
             return;
         }
+        
+        if (username.toLowerCase() === user?.Username?.toLowerCase()) {
+            setSearchResult(null);
+            setSearchNotFound(false);
+            return;
+        }
+        
+        const searchedUser = result.data.friendStatus;
 
-        const user = result.data.friendStatus;
-
-        if (!user) {
+        if (!searchedUser) {
             setSearchResult(null);
             setSearchNotFound(true);
             return;
         }
 
         setSearchResult({
-            userId: user.user_id,
-            username: user.name,
-            avatar: user.avatar || "/avatars/avatar1.png",
-            friendStatus: user.status,
+            userId: searchedUser.user_id,
+            username: searchedUser.name,
+            avatar: searchedUser.avatar || "/avatars/avatar1.png",
+            friendStatus: searchedUser.status,
         });
 
         setSearchNotFound(false);
