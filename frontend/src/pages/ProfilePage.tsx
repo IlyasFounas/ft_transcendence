@@ -36,49 +36,55 @@ export default function ProfilePage() {
                     rounded-md
                     bg-surface-base
                     p-5
-                    lg:p-6
+                    md:p-6
                     flex
                     flex-col
-                    lg:flex-row
+                    xl:flex-row
                     gap-4
                     lg:gap-10
                     items-center
-                    lg:items-start
+                    xl:items-start
                 "
             >
-				<div className="shrink-0 lg:hidden">
+				<div className="shrink-0 md:hidden">
                     <Avatar
                         avatar={user?.Avatar ?? "/avatars/avatar1.png"}
                         size={80}
                     />
                 </div>
-                <div className="shrink-0 hidden lg:block">
+                <div className="shrink-0 hidden md:block xl:hidden">
+                    <Avatar
+                        avatar={user?.Avatar ?? "/avatars/avatar1.png"}
+                        size={120}
+                    />
+                </div>
+                <div className="shrink-0 hidden xl:block">
                     <Avatar
                         avatar={user?.Avatar ?? "/avatars/avatar1.png"}
                         size={180}
                     />
                 </div>
 
-				<div className="flex-1 w-full flex flex-col gap-3 text-center lg:text-left lg:mt-5">
+				<div className="flex-1 w-full flex flex-col gap-3 text-center xl:text-left xl:mt-5">
 
 					<div>
-                        <h1 className="text-heading-medium lg:text-hero font-semibold text-text-primary uppercase">
+                        <h1 className="text-heading-medium md:text-heading-large xl:text-hero font-semibold text-text-primary uppercase">
                             Agent {user?.Username ?? "Player"}
                         </h1>
-                        <p className="text-label-small lg:text-heading-medium text-primary uppercase">
+                        <p className="text-label-small md:text-heading-small lg:text-heading-medium text-primary uppercase">
                             {rank.currentRank}
                         </p>
                     </div>
-					<div className="w-full max-w-xl">
+					<div className="w-full xl:max-w-xl">
 
-                        <div className="flex justify-between text-label-small lg:text-heading-small text-text-secondary uppercase mb-1">
+                        <div className="flex justify-between text-label-small md:text-body-primary lg:text-heading-small text-text-secondary uppercase mb-1">
 							<span>Next Rank</span>
 							<span>
 								{totalScore.toLocaleString()} / {(totalScore + rank.xpRemaining).toLocaleString()} XP
 							</span>
 						</div>
 
-						<p className="text-label-small text-left lg:text-heading-small text-text-primary uppercase mb-2">
+						<p className="text-label-small md:text-body-primary lg:text-heading-small text-left text-text-primary uppercase mb-2">
 							{rank.nextRank}
 						</p>
 
@@ -90,19 +96,19 @@ export default function ProfilePage() {
                         </div>
                     </div>
 				</div>
-				<div className="flex items-center justify-center text-center lg:gap-20 lg:self-center lg:mr-10">
+				<div className="flex items-center justify-center text-center xl:gap-20 xl:self-center xl:mr-10">
 
-					<div className="text-center uppercase hidden lg-block">
-						<p className="text-label-small lg:text-heading-medium text-text-secondary">
+					<div className="text-center uppercase hidden md:block">
+						<p className="text-label-small md:text-heading-small xl:text-heading-medium text-text-secondary">
 							Global Rank
 						</p>
 
-						<p className="text-heading-small lg:text-[48px] text-primary font-bold">
+						<p className="text-heading-medium xl:text-[48px] text-primary font-bold">
 							#18
 						</p>
 					</div>
-					<div className="lg:pt-5">
-						<SecondaryButton className="scale-60">
+					<div className="xl:pt-5">
+						<SecondaryButton className="scale-60 md:scale-70">
 							<Pencil size={18} />
 							Edit Profile
 						</SecondaryButton>
@@ -119,15 +125,15 @@ export default function ProfilePage() {
                     border-border-default
                     rounded-md
                     p-4
-                    lg:p-5
+                    xl:p-5
                 "
             >
 
-                <h2 className="text-center text-heading-small lg:text-heading-medium text-text-primary uppercase mb-4">
+                <h2 className="text-center text-heading-small xl:text-heading-medium text-text-primary uppercase mb-4">
                     Statistics
                 </h2>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
 
                     <StatCard
                         title="Operations"
@@ -163,9 +169,9 @@ export default function ProfilePage() {
 					mt-2
 					grid
 					grid-cols-1
-					lg:grid-cols-2
+					xl:grid-cols-2
                     gap-2
-					lg:gap-8
+					xl:gap-8
 				"
             >
 				<OperationHistory operations={operations} />

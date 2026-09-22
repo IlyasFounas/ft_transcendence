@@ -11,7 +11,7 @@ function TableHeader() {
             grid-cols-3
             bg-surface-elevated
             text-label-small
-            lg:text-heading-small
+            md:text-heading-small
             items-center
             text-text-primary
             uppercase
@@ -31,7 +31,7 @@ export default function OperationHistory({
 }: OperationHistoryProps) {
     return (
         <div className="bg-surface-base px-4 py-4 border border-border-default rounded-lg">
-            <h2 className="text-heading-small lg:text-heading-medium text-center uppercase mb-2">
+            <h2 className="text-heading-small lg:text-heading-medium text-center uppercase mb-4">
                 Operation History
             </h2>
             <TableHeader />

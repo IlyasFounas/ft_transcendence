@@ -10,11 +10,11 @@ export default function UserProfile({
         <div className="flex items-center gap-4 min-w-0 flex-1">
             <Avatar avatar={avatar} size={45}/>
             <div className="min-w-0 flex-1">
-                <div className="text-body-primary lg:text-heading-small text-text-primary uppercase truncate">
+                <div className="text-body-primary md:text-heading-small text-text-primary uppercase truncate">
                     <span>Agent </span>
                     {username}
                 </div>
-                <div className="text-label-small lg:text-body-primary text-text-secondary uppercase">{role}</div>
+                <div className="text-label-small md:text-body-primary text-text-secondary uppercase">{role}</div>
             </div>
         </div>
     );

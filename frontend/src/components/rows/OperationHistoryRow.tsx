@@ -21,7 +21,7 @@ export default function OperationHistoryRow({
             items-center
             text-text-secondary
             text-label-small
-            lg:text-heading-small
+            md:text-heading-small
             "
         >
             <span className="text-left">{operationId}</span>

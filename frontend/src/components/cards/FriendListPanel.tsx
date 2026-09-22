@@ -238,7 +238,7 @@ export default function FriendListPanel() {
             className={`
                 py-3
                 text-label-small
-                lg:text-heading-small
+                md:text-heading-small
                 uppercase
                 border-b
                 cursor-pointer
@@ -257,7 +257,7 @@ export default function FriendListPanel() {
             className={`
                 py-3
                 text-label-small
-                lg:text-heading-small
+                md:text-heading-small
                 uppercase
                 border-b
                 cursor-pointer
@@ -276,7 +276,7 @@ export default function FriendListPanel() {
                 className={`
                     py-3
                     text-label-small
-                    lg:text-heading-small
+                    md:text-heading-small
                     uppercase
                     border-b
                     cursor-pointer
@@ -325,7 +325,7 @@ export default function FriendListPanel() {
                         bg-transparent
                         text-text-primary
                         text-body-primary
-                        lg:text-heading-small
+                        md:text-heading-small
                         uppercase
                         outline-none
                         placeholder:text-text-secondary
