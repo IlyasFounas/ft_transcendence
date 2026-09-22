@@ -4,7 +4,6 @@ import (
 	"backend/internal/handlers"
 	"backend/internal/models/games"
 	"backend/internal/models/guesses"
-	"backend/internal/models/rounds"
 	"backend/internal/repositories"
 	"backend/internal/tools/haversine"
 	"context"
@@ -74,25 +73,33 @@ type PlayerRoundResult struct {
 	TotalScore int64       `json:"total_score"` // partial when we have not reached the last round, final when we have reached the last round
 }
 
-// Validates and calculates (distance/cc/score) and persists a player's guess for the current round.
-func (h *GuessWsHandler) AddGuess(ctx context.Context, payload json.RawMessage, userID, gameID int64) (*guesses.Guess, bool) {
+func (h *GuessWsHandler) ValidatesGuessInfos(payload json.RawMessage, userID int64) *guesses.Guess {
 	var guess guesses.Guess
 	if err := json.Unmarshal(payload, &guess); err != nil {
 		log.Printf("error : %s\n", err)
-		return nil, false
+		return nil
 	}
 	guess.UserID = userID
 
 	if guess.Lat == nil || guess.Long == nil {
 		log.Println("error : latitude and longitude must be provided")
-		return nil, false
+		return nil
 	}
 	if guess.RoundNb <= 0 {
 		log.Println("error : round_nb must be provided")
-		return nil, false
+		return nil
 	}
 	if guess.UserID <= 0 {
 		log.Println("error : user_id must be provided")
+		return nil
+	}
+	return &guess
+}
+
+// Validates and calculates (distance/cc/score) and persists a player's guess for the current round.
+func (h *GuessWsHandler) AddGuess(ctx context.Context, payload json.RawMessage, userID, gameID int64) (*guesses.Guess, bool) {
+	guess := h.ValidatesGuessInfos(payload, userID)
+	if (guess == nil) {
 		return nil, false
 	}
 
@@ -281,53 +288,4 @@ func (h *GuessWsHandler) BuildRoundResults(
 		results = append(results, result)
 	}
 	return results, nil
-}
-
-// Retrieves the internal ID of a round from its round_nb: the front never needs to know round_id
-func (h *GuessWsHandler) ResolveRoundID(ctx context.Context, gameID, roundNb int64) (int64, error) {
-	return h.roundRepo.GetIDByGameIDAndRoundNb(ctx, gameID, roundNb)
-}
-
-// Checks if roundNb is the last round of the game gameID.
-func (h *GuessWsHandler) IsLastRound(ctx context.Context, gameID, roundNb int64) (bool, error) {
-	return h.roundRepo.CheckLastRound(ctx, gameID, roundNb)
-}
-
-// Finds the round for gameID and roundNb, or creates it if it doesn't exist yet. 
-// Returns the full round (not just its ID) because we need to retrieve StartedAt as well.
-func (h *GuessWsHandler) EnsureRound(ctx context.Context, gameID, roundNb int64) (*rounds.Round, error) {
-	// check if the round already exists
-	roundID, err := h.roundRepo.GetIDByGameIDAndRoundNb(ctx, gameID, roundNb)
-	// if it exists, return it because we need to retrieve StartedAt as well
-	if err == nil {
-		return h.roundRepo.GetByID(ctx, roundID)
-	}
-	// if any other error than "round not found" occurs, return it
-	if !errors.Is(err, repositories.ErrRoundNotFound) {
-		return nil, err
-	}
-
-	// TODO only host can create the round
-	// TODO if multiplayer, only first round can be created by the host, the rest are created automatically
-	// else, host can create each round in order, but cannot create a round if the previous one is not finished yet (or if the game is finished)
-
-	//get the locationID for the round, to create the round
-	locationID, err := h.roundRepo.GetLocationID(ctx, gameID, roundNb)
-	if err != nil {
-		return nil, err
-	}
-
-	// check if this is the last round of the game
-	isLastRound, err := h.roundRepo.CheckLastRound(ctx, gameID, roundNb)
-	if err != nil {
-		return nil, err
-	}
-
-	return h.roundRepo.Create(ctx, &rounds.Round{
-		GameId:     gameID,
-		RoundNb:    roundNb,
-		LocationId: locationID,
-		LastRound:  isLastRound,
-		StartedAt:  time.Now(),
-	})
 }
