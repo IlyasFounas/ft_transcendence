@@ -33,6 +33,7 @@ function App() {
                         <Route path="/profile" element={<ProfilePage />} />
                     </Route>
 					<Route path="/game/:gameId" element={<GamePlayPage />} />
+					<Route path="/game" element={<GamePlayPage />} />
                 </Route>
             </Routes>
         </Router>

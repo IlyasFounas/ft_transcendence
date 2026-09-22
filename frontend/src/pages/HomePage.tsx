@@ -2,10 +2,26 @@ import PrimaryButton from "../components/buttons/PrimaryButton";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
+
+
 export default function HomePage() {
-    const {
-        isAuthenticated,
-    } = useAuth();
+    const {isAuthenticated, authFetch} = useAuth();
+	const handlePlaySolo = async () => {
+    const body = new URLSearchParams({
+        timer: "60",
+        round_total: "3",
+    });
+
+    const result = await authFetch("/api/game/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: body.toString(),
+    });
+
+    if (result?.status === 200) {
+        navigate(`/game/${result.data.game_id}`);
+    }
+	};
 
 	const navigate = useNavigate();
 
@@ -21,7 +37,7 @@ export default function HomePage() {
                 ) : (
                   <span>false</span>
                 )}
-				<PrimaryButton onClick={() => navigate("/game")}>Play</PrimaryButton>
+				<PrimaryButton onClick={handlePlaySolo}>Play</PrimaryButton>
             </div>
         </div>
     );
