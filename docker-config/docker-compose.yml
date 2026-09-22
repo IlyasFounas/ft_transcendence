@@ -61,6 +61,7 @@ services:
     working_dir: /app
     environment:
       ENV: ${ENV}
+      VITE_MAPILLARY_ACCESS_TOKEN: ${VITE_MAPILLARY_ACCESS_TOKEN}
     depends_on:
       - golang
     stdin_open: true

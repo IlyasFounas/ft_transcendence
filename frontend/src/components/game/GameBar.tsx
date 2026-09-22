@@ -1,4 +1,4 @@
-import { Cog, LogOut } from 'lucide-react'
+import { CircleQuestionMark, LogOut } from 'lucide-react'
 import LogoHorizontal from '../primitives/LogoHorizontal'
 import Countdown from './Countdown'
 import GameInfosCard from './GameInfosCard'
@@ -52,10 +52,9 @@ export default function GameBar({countdown, totalTime, gameId, round, totalRound
 						duration-200
 						ease-out
 						hover:scale-[1.2]
-						hover:-rotate-60
-						
+
 						active:scale-[0.9]">
-						<Cog></Cog>
+						<CircleQuestionMark></CircleQuestionMark>
 					</button>
 					<button className="
 						cursor-pointer

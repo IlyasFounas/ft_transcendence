@@ -12,6 +12,7 @@ import LobbyRoomPage from './pages/lobby/LobbyRoomPage';
 import AuthenticationPage from './pages/AuthenticationPage';
 import ProtectedRoute from './components/routes/ProtectedRoute';
 import PublicRoute from './components/routes/PublicRoute';
+import GamePlayPage from './pages/game/GamePlayPage';
 
 function App() {
     return (
@@ -31,6 +32,7 @@ function App() {
                         <Route path="/leaderboard" element={<LeaderboardPage />} />
                         <Route path="/profile" element={<ProfilePage />} />
                     </Route>
+					<Route path="/game/:gameId" element={<GamePlayPage />} />
                 </Route>
             </Routes>
         </Router>

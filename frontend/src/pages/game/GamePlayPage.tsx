@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { mockGame } from "../../mocks/game.mock";
-
+import { useAuth } from "../../context/AuthContext";
+import { useParams } from "react-router-dom";
 import PrimaryButton from "../../components/buttons/PrimaryButton";
 import GameBar from "../../components/game/GameBar";
 import Countdown from "../../components/game/Countdown";
@@ -8,11 +9,24 @@ import LoadStreetView from "./StreetView/LoadStreetView";
 import Load2DMap from "./2DMap/Load2DMap";
 import Preview2DMap from "./2DMap/Preview2DMap";
 
-
 export default function GamePlayPage() {
 
     const [countdown, setCountDown] = useState(mockGame.totalTime);
     const [isMapMain, setIsMapMain] = useState(false);
+	const { gameId } = useParams();
+	const { authFetch } = useAuth();
+	const [game, setGame] = useState<{ ID: number; Timer: number; RoundTotal: number } | null>(null);
+
+	useEffect(() => {
+		const loadGame = async () => {
+			const result = await authFetch(`/api/game/${gameId}`);
+			if (result?.status === 200) {
+				setGame(result.data.game);
+				setCountDown(result.data.game.Timer);
+			}
+		};
+		loadGame();
+	}, [gameId]);
 
 	useEffect(() => {
     if (countdown <= 0)
@@ -25,16 +39,18 @@ export default function GamePlayPage() {
     return () => clearInterval(timer);
 	}, [countdown]);
 
+	if (!game) return null;
+
 	return (
 		<div className="flex flex-col h-screen">
 
 			<div className="hidden lg:flex">
 				<GameBar
-					gameId={mockGame.id}
+					gameId={game.ID}
+					totalRounds={game.RoundTotal}
+					totalTime={game.Timer}
 					round={mockGame.currentRound}
-					totalRounds={mockGame.totalRounds}
 					countdown={countdown}
-					totalTime={mockGame.totalTime}
 				/>
 			</div>
 
