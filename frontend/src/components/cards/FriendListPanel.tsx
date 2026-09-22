@@ -7,6 +7,7 @@ import PendingFriendRow from "../rows/PendingFriendRow";
 import { useAuth } from "../../context/AuthContext";
 import type { FriendResponse } from "../../types/friend.type";
 import AddFriendRow from "../rows/AddFriendRow";
+import FriendRow from "../rows/FriendRow";
 
 interface Friend {
     id?: number;
@@ -422,7 +423,44 @@ export default function FriendListPanel() {
                         />
                     )
                 }
+
+                {activeTab === "add" &&
+                    search.trim() !== "" &&
+                    searchResult?.friendStatus === "friends" && (
+                        <FriendRow
+                            {...searchResult}
+                            role={searchResult.role || ""}
+                        />
+                    )
+                }
                 
+                {activeTab === "add" &&
+                    search.trim() !== "" &&
+                    searchResult?.friendStatus === "pending_sent" && 
+                        pending.map((searchResult) => (
+                        <PendingFriendRow
+                            key={searchResult.userId}
+                            role={searchResult.role || ""}
+                            {...searchResult}
+                            onCancel={() => handleCancelRequest(searchResult.userId)}
+                        />
+                    ))
+                }
+
+                {activeTab === "add" &&
+                    search.trim() !== "" &&
+                    searchResult?.friendStatus === "pending_received" && 
+                        requests.map((searchResult) => (
+                        <FriendRequestRow
+                            key={searchResult.username}
+                            role={searchResult.role || "Agent"}
+                            {...searchResult}
+                            onAccept={() => handleAcceptFriend(searchResult.userId)}
+                            onReject={() => handleRejectRequest(searchResult.userId)}
+                        />
+                    ))
+                }
+               
             </div>
         </div>
     </div>
