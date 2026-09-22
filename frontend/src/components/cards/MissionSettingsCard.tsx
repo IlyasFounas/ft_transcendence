@@ -1,28 +1,24 @@
-import {useState} from 'react';
-import { Minus } from 'lucide-react';
-import { Plus } from 'lucide-react';
-
-
 interface MissionSettingsCardProps {
-	className?: string;
+  rounds: number;
+  timeLimit: number;
+  className?: string;
 };
 
-
-
-export default function MissionSettingsCard({className = ""}: MissionSettingsCardProps)
+export default function MissionSettingsCard({className = "", rounds, timeLimit}: MissionSettingsCardProps)
 {
-	const [rounds, setRounds] = useState(5);
-	const [timeLimit, setTimeLimit] = useState(2.5);
-
-	function formatTime(value : number)
+	function formatTime(value: number)
 	{
-		if (value % 1 === 0.5)
-			 return `${Math.floor(value)} min 30`;
+		if (value < 60)
+			return `${value} sec`;
 
-   		return `${value} min`;
+		const minutes = Math.floor(value / 60);
+		const seconds = value % 60;
+
+		if (seconds === 0)
+			return `${minutes} min`;
+
+		return `${minutes} min ${seconds}`;
 	}
-
-
 	return (
 		<div 
 		className={`rounded-[12px] bg-surface-base

@@ -1,24 +1,23 @@
 import { getAgentColorByIndex } from "../../utils/agentColor.ts";
 import Avatar from "../primitives/Avatar.tsx"
-import StatusBadge from '../primitives/StatusBadge.tsx'
-import type {StatusBadgeProps}  from "../primitives/StatusBadge.tsx";
+import { X } from "lucide-react"
 
 interface LobbyRowProps {
 	username?: string;
-	role?: string;
-	index: number;
 	avatar: string;
-	status?: StatusBadgeProps["status"];
-	currentUsername: string; 
+	currentUsername: string;
+	isHost?: boolean;
+	isCurrentUserHost?: boolean;
+	onKick?: () => void;
 }
 
 export default function LobbyRow({
 		username,
-		index,
-		role,
-		status,
 		avatar,
 		currentUsername,
+		isHost,
+		isCurrentUserHost,
+		onKick,
 }: LobbyRowProps) {
 
 		const isCurrentPlayer = username === currentUsername;
@@ -41,15 +40,22 @@ export default function LobbyRow({
   			<div className="flex items-center gap-[12px]">
 			<Avatar size={45} avatar={avatar} borderColor={agentColor}/>
 			<div className="flex flex-col px-[10px]">
-	  			<span className="text-heading-small text-white">
-	   				{username}
-	 			</span>
-	  			<span className="text-body-primary">
-					{role}
-	  			</span>
+				<span className={`text-heading-small ${rowColor}`}>
+					{username}{isHost && " (host)"}
+				</span>
 			</div>
   		</div>
- 		<StatusBadge status={status ?? "waiting"} />
+ 		{isCurrentUserHost && !isHost && 
+		<button onClick={onKick}>
+			<X className="
+				cursor-pointer
+				transition-transform
+				duration-200
+				ease-out
+				hover:scale-[1.2]
+				active:scale-[0.8]
+				"/>
+		</button>}
 		</div>
 	);
 }

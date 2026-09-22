@@ -1,25 +1,25 @@
 import LobbyRow from './LobbyRow'
 import EmptyLobbyRow from './EmptyLobbyRow'
-
-import type { StatusBadgeProps } from "../primitives/StatusBadge";
+import { useAuth } from '../../context/AuthContext';
 
 interface Player {
-  id: string;
+  id: number;
   username: string;
-  role: string;
-  status: StatusBadgeProps["status"];
   avatar: string;
+  isHost?: boolean;
 }
 
 interface LobbyListProps{
 	numberOfPlayers: number;
 	listOfPlayers: Player[];
+	onKick: (playerId: number) => void;
+	isCurrentUserHost?: boolean;
 }
 
-export default function LobbyList({listOfPlayers}: LobbyListProps)
+export default function LobbyList({listOfPlayers, onKick, isCurrentUserHost}: LobbyListProps)
 {
-	const playersReady = listOfPlayers.filter((player) => player.status == "ready").length;
 	const numberOfPlayers = listOfPlayers.length;
+	const { user } = useAuth();
 
 	return (
 		<div 
@@ -36,12 +36,13 @@ export default function LobbyList({listOfPlayers}: LobbyListProps)
 					justify-between 
 					border
 					border-border-default/30 
-                  	bg-surface-title px-4 py-3">
-        				<span className="text-heading-small text-text-primary/70 uppercase">
+                  	bg-surface-title px-4 py-3
+					uppercase">
+        				<span className="text-heading-small text-text-primary/70">
         					Agents
         				</span>
 						<span>
-							{playersReady}/{numberOfPlayers}
+  						{numberOfPlayers} {numberOfPlayers > 1 ? "agents" : "agent"}
 						</span>
       			</div>
 			<div className="flex flex-col max-h-[350px] lg:max-h-full overflow-y-auto">
@@ -53,10 +54,11 @@ export default function LobbyList({listOfPlayers}: LobbyListProps)
 						key={player.id}
 						index={index}
 						username={player.username}
-						role={player.role}
-						status={player.status}
 						avatar={player.avatar}
-						currentUsername="Agent Tommy"
+						currentUsername={user?.Username ?? ""}
+						isHost={player.isHost}
+						isCurrentUserHost={isCurrentUserHost}
+						onKick={() => onKick(player.id)}
 					/>
 				) : (
 					<EmptyLobbyRow key={`empty-${index}`} />
