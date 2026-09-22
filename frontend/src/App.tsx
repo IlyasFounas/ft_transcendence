@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Outlet } from 'react-router-dom'
 import ComponentsPage from './pages/ComponentsPage';
 import LandingPage from './pages/LandingPage';
 import HomePage from './pages/HomePage';
@@ -12,6 +12,7 @@ import AuthenticationPage from './pages/AuthenticationPage';
 import ProtectedRoute from './components/routes/ProtectedRoute';
 import PublicRoute from './components/routes/PublicRoute';
 import GamePlayPage from './pages/game/GamePlayPage';
+import { GameSocketProvider } from './context/GameSocketContext';
 
 function App() {
     return (
@@ -32,8 +33,11 @@ function App() {
                         <Route path="/leaderboard" element={<LeaderboardPage />} />
                         <Route path="/profile" element={<ProfilePage />} />
                     </Route>
-					<Route path="/game/:gameId" element={<GamePlayPage />} />
-					<Route path="/game" element={<GamePlayPage />} />
+					<Route element={<GameSocketProvider> <Outlet /> </GameSocketProvider>}>
+						<Route path="/game/:gameId" element={<GamePlayPage />} />
+						<Route path="/game" element={<GamePlayPage />} />
+                        <Route path="/lobbyroom" element={<LobbyRoomPage />} />
+                     </Route>
                 </Route>
             </Routes>
         </Router>
