@@ -43,7 +43,7 @@ export default function ProfilePage() {
                     bg-surface-base
                     p-5
                     md:p-6
-                    xl:p-20
+                    xl:p-10
                     flex
                     flex-col
                     xl:flex-row
@@ -178,17 +178,16 @@ export default function ProfilePage() {
             </section>
 
 			<section
-				className="
-					mt-2
-					grid
-					grid-cols-1
-					xl:grid-cols-2
+                className="
+                    mt-2
+                    grid
+                    grid-cols-1
+                    xl:grid-cols-2
                     gap-2
-					xl:gap-8
-
-                    xl:flex-1
-                    xl:min-h-0
-				"
+                    xl:gap-8
+                    xl:h-112.5
+                    shrink-0
+                "
             >
 				<OperationHistory operations={operations} />
 				<FriendListPanel />
