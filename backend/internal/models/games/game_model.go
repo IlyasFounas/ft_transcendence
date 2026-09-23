@@ -2,7 +2,6 @@ package games
 
 import (
 	"time"
-
 	"github.com/uptrace/bun"
 )
 

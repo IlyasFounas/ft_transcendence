@@ -468,6 +468,7 @@ func (h *GameHandler) SetRoundTotal() gin.HandlerFunc {
 	}
 }
 
+
 func (h *GameHandler) SetFinished() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id, err := strconv.ParseInt(c.Param("id"), 10, 64)

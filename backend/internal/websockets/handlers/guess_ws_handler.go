@@ -4,21 +4,21 @@ import (
 	"backend/internal/handlers"
 	"backend/internal/models/games"
 	"backend/internal/models/guesses"
-	"backend/internal/models/rounds"
 	"backend/internal/repositories"
 	"backend/internal/tools/haversine"
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/sams96/rgeo"
+	"fmt"
 	"log"
 	"time"
+
+	"github.com/sams96/rgeo"
 )
 
 type GuessWsHandler struct {
 	guessRepo *repositories.GuessRepository
 	roundRepo *repositories.RoundRepository
-	lobbyRepo *repositories.LobbyRepository
 	gameRepo  *repositories.GameRepository
 	userRepo  *repositories.UserRepository
 	reverser  *rgeo.Rgeo
@@ -27,7 +27,6 @@ type GuessWsHandler struct {
 func NewGuessWsHandler(
 	guessRepo *repositories.GuessRepository,
 	roundRepo *repositories.RoundRepository,
-	lobbyRepo *repositories.LobbyRepository,
 	gameRepo *repositories.GameRepository,
 	userRepo *repositories.UserRepository,
 	reverser *rgeo.Rgeo,
@@ -35,7 +34,6 @@ func NewGuessWsHandler(
 	return &GuessWsHandler{
 		guessRepo: guessRepo,
 		roundRepo: roundRepo,
-		lobbyRepo: lobbyRepo,
 		gameRepo:  gameRepo,
 		userRepo:  userRepo,
 		reverser:  reverser,
@@ -63,7 +61,7 @@ type RoundInfos struct {
 }
 
 // Struct containing the result of a round for a player, sent to the front for display and scoring
-// sent to the front for each player in the lobby, even if they did not guess 
+// sent to the front for each player in the lobby, even if they did not guess
 // (for their own HasGuessed:false and RoundInfos nil)
 type PlayerRoundResult struct {
 	UserID     int64       `json:"user_id"`
@@ -74,29 +72,68 @@ type PlayerRoundResult struct {
 	TotalScore int64       `json:"total_score"` // partial when we have not reached the last round, final when we have reached the last round
 }
 
-// Validates and calculates (distance/cc/score) and persists a player's guess for the current round.
-func (h *GuessWsHandler) AddGuess(ctx context.Context, payload json.RawMessage, userID, gameID int64) (*guesses.Guess, bool) {
+// baseLocation groups the true location for a round — used both to score a guess against
+// (AddGuess) and to build a round's results (BuildRoundResults).
+type baseLocation struct {
+	Lat  float64
+	Long float64
+	CC   string
+}
+
+func (h *GuessWsHandler) getBaseLocation(ctx context.Context, roundID int64) (baseLocation, error) {
+	locationID, err := h.guessRepo.GetLocationIDByRoundID(ctx, roundID)
+	if err != nil {
+		return baseLocation{}, fmt.Errorf("getting location id for round %d: %w", roundID, err)
+	}
+	lat, long, err := h.roundRepo.GetCoordinatesByLocationID(ctx, locationID)
+	if err != nil {
+		return baseLocation{}, fmt.Errorf("getting base coordinates for location %d: %w", locationID, err)
+	}
+	cc, err := h.roundRepo.GetCCByLocationID(ctx, locationID)
+	if err != nil {
+		return baseLocation{}, fmt.Errorf("getting country code for location %d: %w", locationID, err)
+	}
+	return baseLocation{Lat: lat, Long: long, CC: cc}, nil
+}
+
+// ValidatesGuessInfos decodes and sanity-checks a guess payload. userID always comes from the
+// authenticated connection, never from the payload — guesses.Guess tags UserID (and every other
+// score-relevant field: CC, Distance, CountryFound, TimeLeft, Streak, BaseScore, Score, RoundID)
+// as json:"-", so even a client that includes them in the payload has them silently ignored by
+// json.Unmarshal. Only Lat/Long/RoundNb are ever taken from what the client sends.
+func (h *GuessWsHandler) ValidatesGuessInfos(payload json.RawMessage, userID int64) *guesses.Guess {
 	var guess guesses.Guess
 	if err := json.Unmarshal(payload, &guess); err != nil {
 		log.Printf("error : %s\n", err)
-		return nil, false
+		return nil
 	}
 	guess.UserID = userID
 
 	if guess.Lat == nil || guess.Long == nil {
 		log.Println("error : latitude and longitude must be provided")
-		return nil, false
+		return nil
+	}
+	if *guess.Lat < -90 || *guess.Lat > 90 || *guess.Long < -180 || *guess.Long > 180 {
+		log.Println("error : latitude/longitude out of range")
+		return nil
 	}
 	if guess.RoundNb <= 0 {
 		log.Println("error : round_nb must be provided")
-		return nil, false
+		return nil
 	}
 	if guess.UserID <= 0 {
 		log.Println("error : user_id must be provided")
+		return nil
+	}
+	return &guess
+}
+
+// Validates and calculates (distance/cc/score) and persists a player's guess for the current round.
+func (h *GuessWsHandler) AddGuess(ctx context.Context, payload json.RawMessage, userID, gameID int64) (*guesses.Guess, bool) {
+	guess := h.ValidatesGuessInfos(payload, userID)
+	if guess == nil {
 		return nil, false
 	}
-
-	// TODO check if the player has not left the lobby (h.lobbyRepo.ActualLobby) > is not it done in the lobby handler already ?
 
 	var err error
 	guess.RoundID, err = h.roundRepo.GetIDByGameIDAndRoundNb(ctx, gameID, guess.RoundNb)
@@ -105,15 +142,15 @@ func (h *GuessWsHandler) AddGuess(ctx context.Context, payload json.RawMessage, 
 		return nil, false
 	}
 
-	finished, err := h.gameRepo.FinishedAt(ctx, gameID)
+	_ , err = h.gameRepo.FinishedAt(ctx, gameID)
 	if err != nil {
 		log.Printf("error checking if game %d is finished: %s\n", gameID, err)
 		return nil, false
 	}
-	if finished != nil && !finished.After(time.Now()){
-		log.Printf("game %d is already finished, user %d cannot guess\n", gameID, guess.UserID)
-		return nil, false
-	}
+	// if h.gameRepo.IsFinished(finished) {
+	// 	log.Printf("game %d is already finished, user %d cannot guess\n", gameID, guess.UserID)
+	// 	return nil, false
+	// }
 
 	nextRoundNb, err := h.roundRepo.GetNextRoundNb(ctx, gameID)
 	if err != nil {
@@ -126,39 +163,14 @@ func (h *GuessWsHandler) AddGuess(ctx context.Context, payload json.RawMessage, 
 		return nil, false
 	}
 
-	locationID, err := h.guessRepo.GetLocationIDByRoundID(ctx, guess.RoundID)
-	if err != nil {
-		log.Printf("error getting location id for user %d at round %d: %s\n", guess.UserID, guess.RoundID, err)
-		return nil, false
-	}
-
-	baseLat, baseLong, err := h.roundRepo.GetCoordinatesByLocationID(ctx, locationID)
-	if err != nil {
-		log.Printf("error getting base coordinates for round %d: %s\n", guess.RoundID, err)
-		return nil, false
-	}
-
-	baseCC, err := h.roundRepo.GetCCByLocationID(ctx, locationID)
-	if err != nil {
-		log.Printf("error getting country code for location %d: %s\n", locationID, err)
-		return nil, false
-	}
-
-	loc, err := h.reverser.ReverseGeocode([]float64{*guess.Long, *guess.Lat})
-	if err != nil {
-		log.Printf("error reverse geocoding guess coordinates (%f, %f): %s\n", *guess.Lat, *guess.Long, err)
-		return nil, false
-	}
-	guess.CC = loc.CountryCode2
-	guess.CountryFound = guess.CC == baseCC
-
-	guess.Distance = handlers.CalculateDistance(
-		haversine.Coordinates{Lat: baseLat, Lon: baseLong},
-		haversine.Coordinates{Lat: *guess.Lat, Lon: *guess.Long},
-	)
-
-	// Time left is calculated here to avoid discrepancies between players in multiplayer
-	// TODO put it all in one function
+	// Le temps restant est calculé ici, exclusivement à partir de
+	// round.StartedAt (persisté en base) comparé à l'heure du serveur au
+	// moment du traitement — jamais depuis une valeur envoyée par le
+	// client. Un guess arrivé après l'échéance est refusé plutôt
+	// qu'accepté avec un bonus de temps à zéro : sinon il pourrait être
+	// persisté — et compter dans le score total du joueur — après que
+	// EndRound a déjà diffusé les résultats du round à tout le monde,
+	// sans jamais y apparaître.
 	round, err := h.roundRepo.GetByID(ctx, guess.RoundID)
 	if err != nil {
 		log.Printf("error getting round %d: %s\n", guess.RoundID, err)
@@ -169,21 +181,51 @@ func (h *GuessWsHandler) AddGuess(ctx context.Context, payload json.RawMessage, 
 		log.Printf("error getting round duration for game %d: %s\n", gameID, err)
 		return nil, false
 	}
-	guess.TimeLeft = duration - time.Since(round.StartedAt)
-	if guess.TimeLeft < 0 {
-		guess.TimeLeft = 0
+	elapsed := time.Since(round.StartedAt)
+	if elapsed < 0 {
+		// round.StartedAt is set ahead of time, when the round's pre-round pause begins — a
+		// guess arriving before that pause has elapsed means the round hasn't actually started
+		// its guess phase yet.
+		log.Printf("user %d's guess for round %d arrived before the round started (starts in %s)\n",
+			guess.UserID, guess.RoundID, -elapsed)
+		return nil, false
+	}
+	if elapsed > duration {
+		log.Printf("user %d's guess for round %d arrived after the time limit (%s > %s)\n",
+			guess.UserID, guess.RoundID, elapsed, duration)
+		return nil, false
+	}
+	guess.TimeLeft = duration - elapsed
+
+	base, err := h.getBaseLocation(ctx, guess.RoundID)
+	if err != nil {
+		log.Printf("error getting base location for user %d at round %d: %s\n", guess.UserID, guess.RoundID, err)
+		return nil, false
 	}
 
-	// retrieval of the last streak (avoids client injection)
+	loc, err := h.reverser.ReverseGeocode([]float64{*guess.Long, *guess.Lat})
+	if err != nil {
+		log.Printf("error reverse geocoding guess coordinates (%f, %f): %s\n", *guess.Lat, *guess.Long, err)
+		return nil, false
+	}
+	guess.CC = loc.CountryCode2
+	guess.CountryFound = guess.CC == base.CC
+
+	guess.Distance = handlers.CalculateDistance(
+		haversine.Coordinates{Lat: base.Lat, Lon: base.Long},
+		haversine.Coordinates{Lat: *guess.Lat, Lon: *guess.Long},
+	)
+
+	// Retrieved server-side (not trusted from the client) to prevent streak injection.
 	guess.Streak, err = h.guessRepo.GetLastStreakByGameAndUserID(ctx, gameID, guess.UserID, guess.RoundNb)
 	if err != nil {
 		log.Printf("error getting last streak for user %d in game %d: %s\n", guess.UserID, gameID, err)
 		return nil, false
 	}
 
-	handlers.CalculateScore(&guess, duration)
+	handlers.CalculateScore(guess, duration)
 
-	createdGuess, err := h.guessRepo.Create(ctx, &guess)
+	createdGuess, err := h.guessRepo.Create(ctx, guess)
 	if err != nil {
 		if errors.Is(err, repositories.ErrGuessNotFound) || err.Error() == "pq: duplicate key value violates unique constraint" {
 			log.Printf("user %d has already submitted a guess for round %d\n", guess.UserID, guess.RoundID)
@@ -211,8 +253,8 @@ func (h *GuessWsHandler) GetRoundGuesses(ctx context.Context, roundID int64) ([]
 }
 
 // Transforms the raw guesses of a round into detailed results per player.
-// Builds an entry for EACH active player in the game (activePlayers), 
-// not just those who guessed (a player who did not guess in time appears 
+// Builds an entry for EACH active player in the game (activePlayers),
+// not just those who guessed (a player who did not guess in time appears
 // with HasGuessed:false and RoundInfos nil, rather than being absent from the payload).
 func (h *GuessWsHandler) BuildRoundResults(
 	ctx context.Context,
@@ -220,15 +262,7 @@ func (h *GuessWsHandler) BuildRoundResults(
 	activePlayers []*games.Lobby,
 	roundGuesses []*guesses.Guess,
 ) ([]PlayerRoundResult, error) {
-	locationID, err := h.guessRepo.GetLocationIDByRoundID(ctx, roundID)
-	if err != nil {
-		return nil, err
-	}
-	baseLat, baseLong, err := h.roundRepo.GetCoordinatesByLocationID(ctx, locationID)
-	if err != nil {
-		return nil, err
-	}
-	baseCC, err := h.roundRepo.GetCCByLocationID(ctx, locationID)
+	base, err := h.getBaseLocation(ctx, roundID)
 	if err != nil {
 		return nil, err
 	}
@@ -272,7 +306,7 @@ func (h *GuessWsHandler) BuildRoundResults(
 				Score:           g.Score,
 				BaseScore:       g.BaseScore,
 				CountryFound:    g.CountryFound,
-				Base:            LocationInfo{Lat: baseLat, Long: baseLong, CC: baseCC},
+				Base:            LocationInfo{Lat: base.Lat, Long: base.Long, CC: base.CC},
 				Guess:           LocationInfo{Lat: guessLat, Long: guessLong, CC: g.CC},
 				Streak:          g.Streak,
 				TimeLeftSeconds: int64(g.TimeLeft.Seconds()),
@@ -281,53 +315,4 @@ func (h *GuessWsHandler) BuildRoundResults(
 		results = append(results, result)
 	}
 	return results, nil
-}
-
-// Retrieves the internal ID of a round from its round_nb: the front never needs to know round_id
-func (h *GuessWsHandler) ResolveRoundID(ctx context.Context, gameID, roundNb int64) (int64, error) {
-	return h.roundRepo.GetIDByGameIDAndRoundNb(ctx, gameID, roundNb)
-}
-
-// Checks if roundNb is the last round of the game gameID.
-func (h *GuessWsHandler) IsLastRound(ctx context.Context, gameID, roundNb int64) (bool, error) {
-	return h.roundRepo.CheckLastRound(ctx, gameID, roundNb)
-}
-
-// Finds the round for gameID and roundNb, or creates it if it doesn't exist yet. 
-// Returns the full round (not just its ID) because we need to retrieve StartedAt as well.
-func (h *GuessWsHandler) EnsureRound(ctx context.Context, gameID, roundNb int64) (*rounds.Round, error) {
-	// check if the round already exists
-	roundID, err := h.roundRepo.GetIDByGameIDAndRoundNb(ctx, gameID, roundNb)
-	// if it exists, return it because we need to retrieve StartedAt as well
-	if err == nil {
-		return h.roundRepo.GetByID(ctx, roundID)
-	}
-	// if any other error than "round not found" occurs, return it
-	if !errors.Is(err, repositories.ErrRoundNotFound) {
-		return nil, err
-	}
-
-	// TODO only host can create the round
-	// TODO if multiplayer, only first round can be created by the host, the rest are created automatically
-	// else, host can create each round in order, but cannot create a round if the previous one is not finished yet (or if the game is finished)
-
-	//get the locationID for the round, to create the round
-	locationID, err := h.roundRepo.GetLocationID(ctx, gameID, roundNb)
-	if err != nil {
-		return nil, err
-	}
-
-	// check if this is the last round of the game
-	isLastRound, err := h.roundRepo.CheckLastRound(ctx, gameID, roundNb)
-	if err != nil {
-		return nil, err
-	}
-
-	return h.roundRepo.Create(ctx, &rounds.Round{
-		GameId:     gameID,
-		RoundNb:    roundNb,
-		LocationId: locationID,
-		LastRound:  isLastRound,
-		StartedAt:  time.Now(),
-	})
 }
