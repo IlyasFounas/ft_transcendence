@@ -7,8 +7,8 @@ import (
 	"context"
 	"encoding/json"
 	"log"
-	"net/http"
 	"time"
+	"net/http"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 )
@@ -18,6 +18,9 @@ var upgrader = websocket.Upgrader {
     WriteBufferSize: 1024,
     CheckOrigin: func(r *http.Request) bool {return true},
 }
+
+// duration of the pause between the end of a round and the start of the next one (if any), no pause if it was the last round.
+const postRoundPause = 10 * time.Second
 
 type kickPlayer struct {
 	TargetId int64 `json:"target_id"`
@@ -37,11 +40,59 @@ type ClientHub struct {
 	GameId  int64
 }
 
+// internalRoundEvent carries the game_id/round_nb for events the HUB ITSELF generates
+// like : round_timeout firing, automatic start of the next round after the post-round pause
+// -> these events never come from a client — they're sent on h.action from a timer callback (Client is nil in that case)
+type internalRoundEvent struct {
+	GameId  int64 `json:"game_id"`
+	RoundNb int64 `json:"round_nb"`
+}
+
+// It will be sent to all clients when a round starts, with the round number and the absolute end time of the round
+// (not a relative duration). Each client will calculate its own countdown using (RoundEndsAt - now), so all clients
+// will converge to the same final instant regardless of their network latency at the time of reception.
+type RoundStartedBroadcast struct {
+	RoundNb     int64		`json:"round_nb"`
+	RoundEndsAt time.Time	`json:"round_ends_at"`
+	MID			int64		`json:"mid"`
+}
+
+// It shares the results of the round to all players, even those who did not guess (they will see their own result as "not guessed").
+// The results are sorted by player ID for consistency across clients.
+// It is shared at the end of a round, with an indication of whether it was the last round or not :
+// 	-> if it is not the last round, NextRoundAt is provided as an absolute timestamp for when the next round will start.
+// It will be nil or omitted if IsLastRound is true.
+type RoundResultBroadcast struct {
+	Results     []ws_handlers.PlayerRoundResult `json:"results"`
+	IsLastRound bool                            `json:"is_last_round"`
+	NextRoundAt *time.Time                      `json:"next_round_at,omitempty"`
+}
+
 // encapsulation of the message sent to the client, with a type and a data payload interface{}
 // that can be any struct (RoundStartedBroadcast, RoundResultBroadcast, etc.)
 type WsMessage struct {
 	Type string      `json:"type"`
 	Data interface{} `json:"data"`
+}
+
+// roundPhase describes what h.roundState[gameId] currently represents
+// so a resyncing client gets the right kind of message (a running round vs the pause between rounds)
+type roundPhase string
+
+const (
+	phasePlaying	roundPhase = "playing" // a round is currently running: look at RoundEndsAt
+	phasePause		roundPhase = "pause"   // between two rounds (or after the last one): look at LastResults/NextRoundAt
+)
+
+// to be checked when a client reconnects mid-game - refresh, dropped wifi, joining a game already in progress
+type gameRoundState struct {
+	Phase		roundPhase
+	RoundNb		int64
+	RoundEndsAt	time.Time // valid when Phase == Playing
+	NextRoundAt	time.Time // valid when Phase == Pause and !IsLastRound
+	IsLastRound	bool
+	LastResults	[]ws_handlers.PlayerRoundResult // results of the round that just ended, valid when Phase == phasePause
+	MID			int64 // the Mapillary ID of the location for the current round, valid when Phase == Playing
 }
 
 // DataInfos carries one action through the hubw
@@ -58,11 +109,14 @@ type Hub struct {
 	Register		chan *ClientHub
 	Unregister		chan *ClientHub
 	Action			chan *DataInfos
+	RoundTimers		map[int64]*time.Timer // means map[gameId]timer
+	RoundState		map[int64]*gameRoundState // means map[gameId]currentState, used to resync reconnecting clients
+	LocationRepo	*repositories.LocationRepository
 	LobbyRepo		*repositories.LobbyRepository
 	GameRepo		*repositories.GameRepository
 	UserRepo		*repositories.UserRepository
 	LobbyWsHandler	*ws_handlers.LobbyWsHandler
-	RoundWsHandler	*ws_handlers.RoundWsHandler
+	GuessWsHandler	*ws_handlers.GuessWsHandler
 }
 
 func NewHub(
@@ -73,11 +127,14 @@ func NewHub(
 		Register:			make(chan *ClientHub),
 		Unregister:			make(chan *ClientHub),
 		Action:				make(chan *DataInfos),
+		RoundTimers:		make(map[int64]*time.Timer),
+		RoundState:			make(map[int64]*gameRoundState),
+		LocationRepo:		repo.Location,
 		LobbyRepo:			repo.Lobby,
 		GameRepo:			repo.Game,
 		UserRepo:			repo.User,
 		LobbyWsHandler:		wsHandlers.Lobby,
-		RoundWsHandler:		wsHandlers.Round,
+		GuessWsHandler:		wsHandlers.Guess,
 	}
 }
 
@@ -150,6 +207,55 @@ func (h *Hub) clientLobbyBroadcast(gameId int64, ctx context.Context) {
 	h.broadcast(gameId, WsMessage{Type: "lobby_players", Data: usersLobby})
 }
 
+// resyncClient sends the newly reconnected client whatever the hub currently knows about the game's round state
+func (h *Hub) resyncClient(client *ClientHub) {
+	state, ok := h.RoundState[client.GameId]
+	if !ok {
+		// no round has started yet for this game (e.g. still in the lobby) : nothing to resync.
+		return
+	}
+	switch state.Phase {
+	case phasePlaying:
+		h.sendToClient(client, WsMessage{
+			Type: "round_started",
+			Data: RoundStartedBroadcast{
+				RoundNb: state.RoundNb, 
+				RoundEndsAt: state.RoundEndsAt.UTC(),
+				MID: state.MID},
+		})
+	case phasePause:
+		payload := RoundResultBroadcast{Results: state.LastResults, IsLastRound: state.IsLastRound}
+		if !state.IsLastRound {
+			nextRoundAt := state.NextRoundAt
+			payload.NextRoundAt = &nextRoundAt
+		} else {
+			//set finished_at in the database for the game, since the last round has ended
+			err := h.GameRepo.SetFinished(context.Background(), client.GameId)
+			if err != nil {
+				log.Printf("error : %s\n", err)
+				return
+			}
+		}
+		h.sendToClient(client, WsMessage{Type: "round_results", Data: payload})
+	}
+}
+
+// this decides, from the hub's state, which round a "start_round" request from a client should actually restart from (but never from anything the client sent):
+//   - no state at all: the game hasn't started, so it's round 1
+//   - phasePlaying: a round is already running, so this is just a client resyncing
+//     (StartRound/EnsureRound is idempotent for a round that already exists, which means it won't recreate it or extend its timer)
+//   - phasePause: we're between two rounds, so it's the next one
+func (h *Hub) resolveRoundToStart(gameId int64) int64 {
+	state, ok := h.RoundState[gameId]
+	if !ok {
+		return 1
+	}
+	if state.Phase == phasePlaying || state.IsLastRound {
+		return state.RoundNb
+	}
+	return state.RoundNb + 1
+}
+
 func (h *Hub) registerClient(client *ClientHub) {
 	if _, ok := h.Clients[client.GameId]; !ok {
 		h.Clients[client.GameId] = make(map[*ClientHub]bool)
@@ -163,8 +269,10 @@ func (h *Hub) unregisterClient(client *ClientHub) {
 	}
 	if len(h.Clients[client.GameId]) == 0 {
 		delete(h.Clients, client.GameId)
-		// TODO to put inside round ws.handlers > states' deletion (pause or playing) 
-		h.RoundWsHandler.DeleteRoundState(client.GameId)
+		// states' deletion (pause or playing) 
+		if state, ok := h.RoundState[client.GameId]; ok && state.IsLastRound {
+			delete(h.RoundState, client.GameId)
+		}
 	}
 	close(client.Connx.Send)
 }
@@ -178,19 +286,76 @@ func (h *Hub) handleAction(ctx context.Context, data *DataInfos) {
 		data.Client.Connx.Conn.Close()
 
 	case "kick_player":
-		h.handleKickPlayer(ctx, data)
+		var targetClient kickPlayer
+		if err := json.Unmarshal(data.Payload, &targetClient); err != nil {
+			log.Printf("error : %s\n", err)
+			return
+		}
+		if !h.LobbyWsHandler.RemovePlayer(ctx, data.Client.UserId, targetClient.TargetId) {
+			return
+		}
+		for client := range h.Clients[data.Client.GameId] {
+			if client.UserId == targetClient.TargetId {
+				h.clientLobbyBroadcast(data.Client.GameId, ctx)
+				client.Connx.Conn.Close()
+				return
+			}
+		}
+		h.clientLobbyBroadcast(data.Client.GameId, ctx)
 
 	case "guess":
 		h.handleGuess(ctx, data)
 
 	case "start_round":
-		h.handleStartRound(ctx, data)
+		if data.Client != nil {
+			// TODO or if the client plays in singleplayer, rounds should not start automatically
+			
+			// client != nil > real client request
+			roundNb := h.resolveRoundToStart(data.Client.GameId)
+			h.StartRound(ctx, data.Client.GameId, roundNb)
+			err := h.LobbyWsHandler.UpdateStartAt(ctx, data.Client.LobbyId, roundNb)
+			if err != nil {
+				return
+			}
+			return
+		}
+		// client == nil > this is the auto relaunch of the next round server-generated
+		var evt internalRoundEvent
+		if err := json.Unmarshal(data.Payload, &evt); err != nil {
+			log.Printf("error : %s\n", err)
+			return
+		}
+		h.StartRound(ctx, evt.GameId, evt.RoundNb)
 
 	case "round_timeout":
-		h.handleRoundTimeout(ctx, data)
+		if data.Client != nil {
+			// round_timeout must only ever be generated internally by armRoundTimer
+			log.Printf("warning : client %d tried to trigger round_timeout directly, ignored\n", data.Client.UserId)
+			return
+		}
+		var evt internalRoundEvent
+		if err := json.Unmarshal(data.Payload, &evt); err != nil {
+			log.Printf("error : %s\n", err)
+			return
+		}
+		h.EndRound(ctx, evt.GameId, evt.RoundNb)
 
 	case "finished":
-		h.handleGameFinished(ctx, data)
+		//check if the game is finished, if so, update the left_at timestamp in the database and leave the lobby
+		if data.Client != nil {
+			isFinished, err := h.GameRepo.Finished(ctx, data.Client.GameId)
+			if err != nil {
+				log.Printf("error : %s\n", err)
+				return
+			}
+			if isFinished {
+				log.Printf("game %d finished, client %d left the lobby\n", data.Client.GameId, data.Client.UserId)
+				data.Client.Connx.Conn.Close()
+				return
+			}
+			log.Printf("game %d is not finished\n", data.Client.GameId)
+			return
+		}
 	default:
 		log.Printf("unknown action : %s\n", data.Action)
 	}
@@ -198,97 +363,166 @@ func (h *Hub) handleAction(ctx context.Context, data *DataInfos) {
 
 // handleGuess persists the received guess, then ends the round if all active players in the game have guessed
 func (h *Hub) handleGuess(ctx context.Context, data *DataInfos) {
-	createdGuess, ok := h.RoundWsHandler.AddGuess(ctx, data.Payload, data.Client.UserId, data.Client.GameId)
+	createdGuess, ok := h.GuessWsHandler.AddGuess(ctx, data.Payload, data.Client.UserId, data.Client.GameId)
 	if !ok {
 		// TODO : renvoyer une erreur ciblée uniquement à data.Client
 		return
 	}
-	isLastRound, err := h.RoundWsHandler.isLastRound(ctx, data.Client.GameId, createdGuess.RoundNb)
+
+	activePlayers, err := h.LobbyRepo.AllPlayers(ctx, data.Client.GameId)
 	if err != nil {
 		log.Printf("error : %s\n", err)
 		return
 	}
-	broadcastPayload, nextRoundAt, err := h.RoundWsHandler.EndRound(ctx, data.Client.GameId, createdGuess.RoundNb, false, isLastRound)
+
+	roundGuesses, err := h.GuessWsHandler.GetRoundGuesses(ctx, createdGuess.RoundID)
 	if err != nil {
 		log.Printf("error : %s\n", err)
 		return
 	}
-	h.broadcast(data.Client.GameId, WsMessage{Type: "round_results", Data: broadcastPayload})
-	if !isLastRound {
-		nextRoundNb := createdGuess.RoundNb + 1
-		payload := h.RoundWsHandler.StartAutoNextRound(ctx, data.Client.GameId, createdGuess.RoundNb, nextRoundNb)
-		if payload == nil {
-			log.Printf("error : could not start next round automatically for game %d\n", data.Client.GameId)
-			//TODO finish the game
-			return
-		}
-		time.AfterFunc(time.Until(nextRoundAt), func() {
-		h.Action <- &DataInfos{Action: "start_round", Payload: payload}
-		})
+
+	if len(roundGuesses) >= len(activePlayers) {
+		h.EndRound(ctx, data.Client.GameId, createdGuess.RoundNb)
 	}
 }
 
-func (h *Hub) handleKickPlayer(ctx context.Context, data *DataInfos) {
-var targetClient kickPlayer
-	if err := json.Unmarshal(data.Payload, &targetClient); err != nil {
-		log.Printf("error : %s\n", err)
+// It arms the round timer for the given gameId and roundNb, and broadcasts the round_started event to all clients.
+// The timer is set to the remaining duration of the round, calculated from the round's StartedAt timestamp and the round duration.
+// If the round has already expired (remaining <= 0), it immediately ends the round instead of arming a negative timer.
+// This ensures that clients who reconnect late or experience double triggers do not get more time than expected, and keeps all clients
+// synchronized with the actual round start time.
+func (h *Hub) StartRound(ctx context.Context, gameId, roundNb int64) {
+	// TODO check if the player is authorized to start a round
+	round, err := h.GuessWsHandler.EnsureRound(ctx, gameId, roundNb)
+	if err != nil {
+		log.Printf("error starting round: %s\n", err)
 		return
 	}
-	if !h.LobbyWsHandler.RemovePlayer(ctx, data.Client.UserId, targetClient.TargetId) {
+
+	duration, err := h.GuessWsHandler.GetRoundDuration(ctx, gameId)
+	if err != nil {
+		log.Printf("error getting round duration: %s\n", err)
 		return
 	}
-	for client := range h.Clients[data.Client.GameId] {
-		if client.UserId == targetClient.TargetId {
-			h.clientLobbyBroadcast(data.Client.GameId, ctx)
-			client.Connx.Conn.Close()
-			return
-		}
+
+	roundEndsAt := round.StartedAt.Add(duration)
+	remaining := time.Until(roundEndsAt)
+	if remaining <= 0 {
+		// round has expired (ex: late reconnection): end it immediately
+		h.EndRound(ctx, gameId, roundNb)
+		return
 	}
-	h.clientLobbyBroadcast(data.Client.GameId, ctx)
+
+	MID, err := h.LocationRepo.GetMIDByID(ctx, round.LocationId)
+	if err != nil {
+		log.Printf("error getting MID: %s\n", err)
+		return
+	}
+
+	h.RoundState[gameId] = &gameRoundState{
+		Phase:       phasePlaying,
+		RoundNb:     roundNb,
+		RoundEndsAt: roundEndsAt,
+		MID:         MID, //TODO should be kept server side if we fetch through the proxy, not sent to clients
+	}
+
+	h.armRoundTimer(gameId, roundNb, remaining)
+
+	h.broadcast(gameId, WsMessage{
+		Type: "round_started",
+		Data: RoundStartedBroadcast{
+			RoundNb:		roundNb,
+			RoundEndsAt:	roundEndsAt.UTC(),
+			MID:			MID, 
+		},
+	})
 }
 
-func (h *Hub) handleStartRound(ctx context.Context, data *DataInfos) {
-		if data.Client != nil {
-		// TODO or if the client plays in singleplayer, rounds should not start automatically
-		
-		// client != nil > real client request
-		roundNb := h.RoundWsHandler.ResolveRoundToStart(data.Client.GameId)
-		h.RoundWsHandler.StartRound(ctx, data.Client.GameId, roundNb)
-		err := h.LobbyWsHandler.UpdateStartAt(ctx, data.Client.LobbyId, roundNb)
-		if err != nil {
-			return
-		}
-		return
+// this starts the countdown for the round's guess phase: when the timer expires,
+// the round is ended even if not all players have guessed
+func (h *Hub) armRoundTimer(gameId, roundNb int64, duration time.Duration) {
+	if existing, ok := h.RoundTimers[gameId]; ok {
+		existing.Stop()
 	}
-	// client == nil > this is the auto relaunch of the next round server-generated
-	h.RoundWsHandler.HandleInternalRoundStart(ctx, data.Payload)
-}
-
-func (h *Hub) handleRoundTimeout(ctx context.Context, data *DataInfos) {
-if data.Client != nil {
-		// round_timeout must only ever be generated internally by armRoundTimer
-		log.Printf("warning : client %d tried to trigger round_timeout directly, ignored\n", data.Client.UserId)
-		return
-	}
-	h.RoundWsHandler.HandleInternalRoundTimeout(ctx, data.Payload)
-}
-
-// Checks if the game is finished, if so, update the left_at timestamp in the database and leave the lobby
-func (h *Hub) handleGameFinished(ctx context.Context, data *DataInfos) {
-	if data.Client != nil {
-		isFinished, err := h.GameRepo.Finished(ctx, data.Client.GameId)
+	h.RoundTimers[gameId] = time.AfterFunc(duration, func() {
+		payload, err := json.Marshal(internalRoundEvent{GameId: gameId, RoundNb: roundNb})
 		if err != nil {
 			log.Printf("error : %s\n", err)
 			return
 		}
-		if isFinished {
-			log.Printf("game %d finished, client %d left the lobby\n", data.Client.GameId, data.Client.UserId)
-			data.Client.Connx.Conn.Close()
-			return
-		}
-		log.Printf("game %d is not finished\n", data.Client.GameId)
+		h.Action <- &DataInfos{Action: "round_timeout", Payload: payload}
+	})
+}
+
+// Finalises the round roundNb: broadcasts the results of ALL active players (whether they guessed or not),
+// then schedules a 10s pause before the next round — unless it was the last round.
+func (h *Hub) EndRound(ctx context.Context, gameId, roundNb int64) {
+	if state, ok := h.RoundState[gameId]; ok && state.Phase == phasePause && state.RoundNb == roundNb {
+		// happens when the last guess of a round is processed at almost the same instant the round's timer fires
 		return
 	}
+	if timer, ok := h.RoundTimers[gameId]; ok {
+		timer.Stop()
+		delete(h.RoundTimers, gameId)
+	}
+
+	roundID, err := h.GuessWsHandler.ResolveRoundID(ctx, gameId, roundNb)
+	if err != nil {
+		log.Printf("error : %s\n", err)
+		return
+	}
+	activePlayers, err := h.LobbyRepo.AllPlayers(ctx, gameId)
+	if err != nil {
+		log.Printf("error : %s\n", err)
+		return
+	}
+	roundGuesses, err := h.GuessWsHandler.GetRoundGuesses(ctx, roundID)
+	if err != nil {
+		log.Printf("error : %s\n", err)
+		return
+	}
+	results, err := h.GuessWsHandler.BuildRoundResults(ctx, gameId, roundID, roundNb, activePlayers, roundGuesses)
+	if err != nil {
+		log.Printf("error : %s\n", err)
+		return
+	}
+	isLastRound, err := h.GuessWsHandler.IsLastRound(ctx, gameId, roundNb)
+	if err != nil {
+		log.Printf("error : %s\n", err)
+		return
+	}
+
+	broadcastPayload := RoundResultBroadcast{Results: results, IsLastRound: isLastRound}
+	var nextRoundAt time.Time
+	if !isLastRound {
+		// calculated once: this value is the reference. The AfterFunc below is based on the remaining time
+		// until this same instant (time.Until), so the next round starts exactly when all clients have seen their countdown reach zero.
+		nextRoundAt = time.Now().Add(postRoundPause)
+		broadcastPayload.NextRoundAt = &nextRoundAt
+	}
+		h.RoundState[gameId] = &gameRoundState{
+		Phase:       phasePause,
+		RoundNb:     roundNb,
+		NextRoundAt: nextRoundAt,
+		IsLastRound: isLastRound,
+		LastResults: results,
+	}
+
+	h.broadcast(gameId, WsMessage{Type: "round_results", Data: broadcastPayload})
+
+	if isLastRound {
+		return
+	}
+
+	nextRoundNb := roundNb + 1
+	time.AfterFunc(time.Until(nextRoundAt), func() {
+		payload, err := json.Marshal(internalRoundEvent{GameId: gameId, RoundNb: nextRoundNb})
+		if err != nil {
+			log.Printf("error : %s\n", err)
+			return
+		}
+		h.Action <- &DataInfos{Action: "start_round", Payload: payload}
+	})
 }
 
 func JoinLobby(hub *Hub) gin.HandlerFunc {
@@ -299,7 +533,7 @@ func JoinLobby(hub *Hub) gin.HandlerFunc {
 				gin.H{"message": "The userId is empty"})
 			return
 		}        
-		// Checks if the player is in the right lobby
+		// Check if the player is in the right lobby
         lobby, err := hub.LobbyRepo.ActualLobby(c.Request.Context(), userId.(int64))
 		if err != nil {
             log.Printf("error : %s\n", err)
@@ -339,26 +573,15 @@ func JoinLobby(hub *Hub) gin.HandlerFunc {
 	}
 }
 
-// Resyncs a client if at least one round has already started, if the game is still ongoing,
-// and if the client is not new in this game
-func (h *Hub) resyncClient(client *ClientHub) {
-	// TODO check if the client is not new > do not rsync then
-	state, data := h.RoundWsHandler.GetRoundState(client.GameId)
-	if (state == true) {
-		h.sendToClient(client, data)
-	}
-	return
-}
-
 func (h *Hub) Run(ctx context.Context) {
 	for {
 		select {
 		case client := <- h.Register:
 			h.registerClient(client)
 			h.clientLobbyBroadcast(client.GameId, ctx)
-			// TODO send this client (and only this client) the current round state, if any exists
+			// send this client (and only this client) the current round state, if any exists
 			// so joining mid-game or reconnecting doesn't leave it blind until the next broadcast
-			h.resyncClient(client)
+			h.resyncClient(client) // TODO check if client reconnects only if it was already registered before (h.clients[gameId][client] == true) : if so, skip resyncClient because it already has the current state. Otherwise a reconnecting client will get two resyncs (one from the first registration, one from the second) and see the same round_started broadcast twice.
 			data, ok := h.LobbyWsHandler.SendInfos(ctx, client.GameId)
 			if !ok {
 				continue
