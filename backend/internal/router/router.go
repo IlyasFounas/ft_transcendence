@@ -1,11 +1,8 @@
 package router
 
 import (
-	// EXTERNAL PACKAGE
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-
-	// OUR PACKAGE
 	"backend/internal/handlers"
 	"backend/internal/websockets/lobby"
 	"backend/internal/websockets/chat"
@@ -21,8 +18,9 @@ func NewRouter(h *handlers.Handlers, hub *lobby_ws.Hub,
 	registerLocationRoutes(r, h.Location)
 	registerGameRoutes(r, h.Game)
 	registerLobbyRoutes(r, h.Game, h.Lobby, hub)
+	registerRoundRoutes(r, h.Round)
+	registerGuessRoutes(r, h.Guess)
 	registerFriendRoutes(r, h.Friend)
 	registerChatRoutes(r, chat)
 	return r
 }
-

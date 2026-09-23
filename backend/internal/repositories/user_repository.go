@@ -86,19 +86,19 @@ func (r *UserRepository) Name(ctx context.Context, userId int64) (*string, error
 }
 
 func (r *UserRepository) ExistingName(ctx context.Context, name string) (string, error) {
-	user := new(users.User)
-	err := r.db.NewSelect().
-		Model(user).
-		Column("name").
+	exists, err := r.db.NewSelect().
+		Model((*users.User)(nil)).
 		Where("name = ?", name).
-		Scan(ctx)
+		Exists(ctx)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return "", nil
-		}
 		return "", err
 	}
-	return user.Username, nil
+
+	if !exists {
+		return "", nil
+	}
+
+	return name, nil
 }
 
 func (r *UserRepository) Login(ctx context.Context, userId int64) (*string, error) {
@@ -115,19 +115,19 @@ func (r *UserRepository) Login(ctx context.Context, userId int64) (*string, erro
 }
 
 func (r *UserRepository) ExistingLogin(ctx context.Context, login string) (*string, error) {
-	user := new(users.User)
-	err := r.db.NewSelect().
-		Model(user).
-		Column("login").
+	exists, err := r.db.NewSelect().
+		Model((*users.User)(nil)).
 		Where("login = ?", login).
-		Scan(ctx)
+		Exists(ctx)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
-		}
 		return nil, err
 	}
-	return user.Login, nil
+
+	if !exists {
+		return nil, nil
+	}
+
+	return &login, nil
 }
 
 func (r *UserRepository) Email(ctx context.Context, userId int64) (*string, error) {

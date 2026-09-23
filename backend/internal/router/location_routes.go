@@ -24,6 +24,8 @@ func registerLocationRoutes(r *gin.Engine, h *handlers.LocationHandler) {
 		// })
 		public.POST("/locations", h.AddLocations) // TODO: put in admin group when admin exists
 		public.GET("/locations/:location_id", h.GetLocationByID)
+		// public.GET("/locations/:location_id/coordinates", h.GetCoordinatesByID)
+		// public.GET("/locations/:location_id/cc", h.GetCountryCodeByID)
 		public.GET("/locations/mapillary/:mid", h.GetLocationByMID)
 		public.GET("/locations/random", h.GetRandomLocation)
 		public.GET("/locations/random/country/:cc", h.GetRandomLocationByCC)

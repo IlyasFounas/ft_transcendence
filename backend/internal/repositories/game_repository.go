@@ -1,13 +1,11 @@
 package repositories
 
 import (
-	"context"
-	"time"
-
-	// "errors"
 	"backend/internal/models/games"
-
+	"context"
+	"errors"
 	"github.com/uptrace/bun"
+	"time"
 )
 
 type GameRepository struct {
@@ -93,24 +91,32 @@ func (r *GameRepository) Timer(ctx context.Context, gameId int64) (int64, error)
 	return game.Timer, nil
 }
 
-func (r *GameRepository) RoundNb(ctx context.Context, gameId int64) (int64, error){
+func (r *GameRepository) RoundTotal(ctx context.Context, gameId int64) (int64, error){
 	game := new(games.Game)
 	err := r.db.NewSelect().
 		Model(game).
-		Column("round_nb").
+		Column("round_total").
 		Where("id = ?", gameId).
 		Scan(ctx)
 	if err != nil {
 		return -1, err
 	}
-	return game.RoundNb, nil
+	return game.RoundTotal, nil
 }
 
-func (r *GameRepository) Finished(ctx context.Context, gameId int64) (*time.Time, error){
+func (r *GameRepository) Finished(ctx context.Context, gameId int64) (bool, error){
+	return r.db.NewSelect().
+		Model((*games.Game)(nil)).
+		Column("finished_at").
+		Where("id = ?", gameId).
+		Exists(ctx)
+}
+
+func (r *GameRepository) FinishedAt(ctx context.Context, gameId int64) (*time.Time, error){
 	game := new(games.Game)
 	err := r.db.NewSelect().
 		Model(game).
-		Column("finished").
+		Column("finished_at").
 		Where("id = ?", gameId).
 		Scan(ctx)
 	if err != nil {
@@ -202,12 +208,12 @@ func (r *GameRepository) SetTimer(ctx context.Context, gameId int64,
 	return nil
 }
 
-func (r *GameRepository) SetRoundNb(ctx context.Context, gameId int64, 
-	round_nb int64) error {
-	game := &games.Game{RoundNb: round_nb}
+func (r *GameRepository) SetRoundTotal(ctx context.Context, gameId int64, 
+	round_total int64) error {
+	game := &games.Game{RoundTotal: round_total}
 	_, err := r.db.NewUpdate().
 		Model(game).
-		Column("round_nb").
+		Column("round_total").
 		Where("id = ?", gameId).
 		Exec(ctx)
 	if err != nil {
@@ -243,4 +249,36 @@ func (r *GameRepository) SetPlayerNb(ctx context.Context, game_id int64,
 		return err
 	}
 	return nil
+}
+
+// Check if round_total is smaller than the number of available locations (else error)
+func (r *LocationRepository) CheckEnoughLocations(ctx context.Context, round_total int64) (error) {
+	var count int
+	count, err := r.db.NewSelect().
+		TableExpr("locations").
+		Count(ctx)
+	if err != nil {
+		return err
+	}
+	if int(round_total) > count {
+		return errors.New("not enough unique locations available")
+	}
+	return nil
+}
+
+// GetRandomLocations returns a list of unique random location IDs based on the total number of rounds
+func (r *LocationRepository) GetRandomLocations(ctx context.Context, round_total int64) ([]int64, error) {
+	locations := make([]int64, 0)
+	err := r.db.NewSelect().
+		Model(&locations).
+		TableExpr("locations").
+		OrderExpr("RANDOM()").
+		Limit(int(round_total)). // limits to the exact number of rounds
+		Group("location_id"). // ensures unique locations by grouping same location_id
+		Column("location_id"). // select only the location id column
+		Scan(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return locations, nil
 }
