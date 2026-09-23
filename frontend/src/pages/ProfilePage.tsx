@@ -7,13 +7,16 @@ import StatCard from "../components/cards/StatCard";
 import OperationHistory from "../components/cards/OperationHistory";
 import { operations } from "../data/operations";
 import FriendListPanel from "../components/cards/FriendListPanel";
+import { useState } from "react";
+import EditProfileModal from "../components/cards/EditProfileModal";
 
 export default function ProfilePage() {
 
 	const { user } = useAuth();
-
+    
 	const totalScore = 24658;
 	const rank = CalculateRank(totalScore);
+    const [showEditProfile, setShowEditProfile] = useState(false);
 
     return (
     	<main
@@ -114,7 +117,10 @@ export default function ProfilePage() {
 						</p>
 					</div>
 					<div className="xl:pt-5">
-						<SecondaryButton className="scale-60 md:scale-70 xl:scale-100">
+						<SecondaryButton 
+                            className="scale-60 md:scale-70 xl:scale-100"
+                            onClick={() => setShowEditProfile(true)}
+                        >
 							<Pencil size={18} />
 							Edit Profile
 						</SecondaryButton>
@@ -187,6 +193,38 @@ export default function ProfilePage() {
 				<OperationHistory operations={operations} />
 				<FriendListPanel />
 			</section>
+
+            {showEditProfile && (
+                <EditProfileModal
+                    username={user?.Username ?? ""}
+                    avatar={user?.Avatar ?? "/avatars/avatar1.png"}
+                    avatars={[
+                        "/avatars/avatar1.png",
+                        "/avatars/avatar2.png",
+                        "/avatars/avatar3.png",
+                        "/avatars/avatar4.png",
+                        "/avatars/avatar5.png",
+                        "/avatars/avatar6.png",
+                        "/avatars/avatar7.png",
+                        "/avatars/avatar8.png",
+                        "/avatars/avatar9.png",
+                        "/avatars/avatar10.png",
+                        "/avatars/avatar11.png",
+                        "/avatars/avatar12.png",
+                        "/avatars/avatar13.png",
+                        "/avatars/avatar14.png",
+                        "/avatars/avatar15.png",
+                        "/avatars/avatar16.png",
+                        "/avatars/avatar17.png",
+                        "/avatars/avatar18.png",
+                    ]}
+                    onClose={() => setShowEditProfile(false)}
+                    onSave={(username, avatar) => {
+                        console.log(username, avatar);
+                        setShowEditProfile(false);
+                    }}
+                />
+            )}
       	</main>					    
   	);
 }		
