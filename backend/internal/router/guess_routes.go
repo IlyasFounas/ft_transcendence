@@ -17,7 +17,7 @@ func registerGuessRoutes(r *gin.Engine, h *handlers.GuessHandler) {
 		public.GET("/guesses/:id/country", h.GetGuessCountryCode) //get country_code for a guess
 		public.GET("/guesses/:id/distance", h.GetGuessDistance) //get distance for a guess
 		public.GET("/guesses/:id/score", h.GetGuessScore) //get score for a guess
-		public.GET("/guesses/leaderboard/:game_id", h.GetLeaderboardByGame) //get leaderboard for a game (map of map with user_id, total_score)
+		public.GET("/guesses/results/:game_id", h.GetGameResults) //get results for a game (map of map with user_id, total_score)
 
 		// public.PATCH("/guesses/:id", h.UpdateGuessByID) //update a guess  by id (latitude, longitude, round_id, user_id, game_id)
 
@@ -30,6 +30,7 @@ func registerGuessRoutes(r *gin.Engine, h *handlers.GuessHandler) {
 	private := r.Group("/")
 	private.Use(middleware.AuthMiddleWare())
 	{
+		private.GET("/guesses/leaderboard", h.GetLeaderboard) //get leaderboard for all games (map of map with user_id, xp total score)
 		private.GET("/guesses/xp/:user_id", h.GetUserXP) //get total of all games of a user = total XP of a user
 		private.GET("/guesses/score/:round_id/:user_id", h.GetGuessScoreByRoundAndUser) //get score for a guess by round and user
 		private.GET("/guesses/total_score/:game_id/:user_id", h.GetTotalScoreByGameAndUser) //get total score for a user in a game

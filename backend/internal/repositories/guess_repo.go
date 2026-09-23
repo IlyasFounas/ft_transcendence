@@ -8,10 +8,17 @@ import (
 
 	"backend/internal/models/guesses"
 	"backend/internal/models/rounds"
+
 	"github.com/uptrace/bun"
 )
 
 var ErrGuessNotFound = errors.New("guess not found")
+
+type LeaderboardEntry struct {
+	Position int64  `json:"position"`
+	Username string `json:"username"`
+	Total    int64  `json:"total"`
+}
 
 type GuessRepository struct {
 	db *bun.DB
@@ -56,7 +63,7 @@ func (r *GuessRepository) GetCoordinatesByID(ctx context.Context, guess_id int64
 	return coordinates, nil
 }
 
-	// "backend/internal/models/locations"
+// "backend/internal/models/locations"
 func (r *GuessRepository) GetLocationIDByRoundID(ctx context.Context, round_id int64) (int64, error) {
 	var locID int64
 	err := r.db.NewSelect().Model((*rounds.Round)(nil)).Column("loc_id").Where("id = ?", round_id).Limit(1).Scan(ctx, &locID)
@@ -192,13 +199,14 @@ func (r *GuessRepository) GetXPByUserID(ctx context.Context, user_id int64) (int
 	return total, nil
 }
 
-func (r *GuessRepository) GetLeaderboardByGameID(ctx context.Context, game_id int64) ([][2]int64, error) {
-	type leaderboard struct {
-        UserID int64 `bun:"user_id"`
-        Total  int64 `bun:"total"`
-    }
+// READ - using game ID (to get the results for that game)
+func (r *GuessRepository) GetResultsByGameID(ctx context.Context, game_id int64) ([][2]int64, error) {
+	type results struct {
+		UserID int64 `bun:"user_id"`
+		Total  int64 `bun:"total"`
+	}
 
-	var rows []leaderboard
+	var rows []results
 	err := r.db.NewSelect().
 		Model((*guesses.Guess)(nil)).
 		ColumnExpr("g.user_id AS user_id").
@@ -209,14 +217,78 @@ func (r *GuessRepository) GetLeaderboardByGameID(ctx context.Context, game_id in
 		OrderExpr("total DESC").
 		Scan(ctx, &rows)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get leaderboard for game %d: %w", game_id, err)
+		return nil, fmt.Errorf("failed to get results for game %d: %w", game_id, err)
 	}
-	results := make([][2]int64, 0, len(rows))
-    for _, row := range rows {
-        results = append(results, [2]int64{row.UserID, row.Total})
-    }
+	res := make([][2]int64, 0, len(rows))
+	for _, row := range rows {
+		res = append(res, [2]int64{row.UserID, row.Total})
+	}
 
-    return results, nil
+	return res, nil
+}
+
+// READ - using game ID (to get the leaderboard for all games: 100 first players based on position, usernames and total xp, and position, username and total xp of user who requested the leaderboard)
+func (r *GuessRepository) GetLeaderboard(ctx context.Context, userID int64) ([]LeaderboardEntry, error) {
+	type leaderboard struct {
+		Username string `bun:"username"`
+		Total    int64  `bun:"total"`
+		Position int64  `bun:"position"`
+	}
+
+	// Get all users ranked by total score (including users with 0 score)
+	var rows []leaderboard
+	err := r.db.NewSelect().
+		TableExpr("users AS u").
+		ColumnExpr("u.name AS username").
+		ColumnExpr("COALESCE(SUM(g.base_score), 0) AS total").
+		ColumnExpr("RANK() OVER (ORDER BY COALESCE(SUM(g.base_score), 0) DESC) AS position").
+		Join("LEFT JOIN guesses AS g ON g.user_id = u.id").
+		Group("u.id").
+		Group("u.name").
+		OrderExpr("total DESC").
+		Limit(100).
+		Scan(ctx, &rows)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get leaderboard: %w", err)
+	}
+
+	// Retrieve position, username and total xp for the requesting user (ensures they appear even with 0 score)
+	var userRow leaderboard
+	errUser := r.db.NewSelect().
+		TableExpr("users AS u").
+		ColumnExpr("u.name AS username").
+		ColumnExpr("COALESCE(SUM(g.base_score), 0) AS total").
+		ColumnExpr("RANK() OVER (ORDER BY COALESCE(SUM(g.base_score), 0) DESC) AS position").
+		Join("LEFT JOIN guesses AS g ON g.user_id = u.id").
+		Where("u.id = ?", userID).
+		Group("u.id").
+		Group("u.name").
+		Scan(ctx, &userRow)
+
+	// Check if user is already in rows (to avoid duplicates)
+	isUserInRows := false
+	for _, row := range rows {
+		if row.Username == userRow.Username {
+			isUserInRows = true
+			break
+		}
+	}
+
+	// Add user row if not already in top 100 and query was successful
+	if errUser == nil && !isUserInRows {
+		rows = append(rows, userRow)
+	}
+
+	res := make([]LeaderboardEntry, 0, len(rows))
+	for _, row := range rows {
+		res = append(res, LeaderboardEntry{
+			Position: row.Position,
+			Username: row.Username,
+			Total:    row.Total,
+		})
+	}
+
+	return res, nil
 }
 
 // READ - streak value for the last round - using game ID and user ID
@@ -245,9 +317,9 @@ func (r *GuessRepository) GetLastStreakByGameAndUserID(ctx context.Context, game
 func (r *GuessRepository) GetByRoundID(ctx context.Context, round_id int64) ([]*guesses.Guess, error) {
 	var guesses []*guesses.Guess
 	err := r.db.NewSelect().
-				Model(&guesses).
-				Where("round_id = ?", round_id).
-				Scan(ctx)
+		Model(&guesses).
+		Where("round_id = ?", round_id).
+		Scan(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get guesses by round ID: %w", err)
 	}
