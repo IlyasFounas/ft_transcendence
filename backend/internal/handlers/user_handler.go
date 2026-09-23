@@ -172,11 +172,10 @@ func (h *UserHandler) CreateUser() gin.HandlerFunc {
             c.JSON(http.StatusBadRequest,
                 gin.H{"message": "This username is unavailable. Please try another one."})
 			return
-		}
-
+		}		 
 		userObj := &users.User{Login: &login,
 			Password:    &hashpassword,
-			Username:    username,
+			Username:    strings.ToLower(username),
 			Email:       strings.ToLower(parsedEmail.Address),
 			Is_verified: false}
 		// check if the email is correct
@@ -307,8 +306,8 @@ func (h *UserHandler) resolveGoogleUser(c *gin.Context, info *users.GoogleUserIn
 	}
 	userObj := &users.User{Login: nil,
 			Password:    nil,
-			Username:    checkUsername,
-			Email:       info.Email,
+			Username:    strings.ToLower(checkUsername),
+			Email:       strings.ToLower(info.Email),
 			Is_verified: true,
 			GoogleId: 	 &info.Sub,}
 	user, err = h.userRepo.CreateUser(c.Request.Context(), userObj)

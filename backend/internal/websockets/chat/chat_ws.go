@@ -131,8 +131,7 @@ func (c *Chat) sendToClient(userId int64, friends []*friends.FriendResponse) {
 	}
 }
 
-func (c *Chat) sendClientLeft(userLeftId int64, user *users.User,
-	ctx context.Context) {
+func (c *Chat) sendClientState(user *users.User, ctx context.Context) {
 	friendLeft := &ChatFriend{
 		ID : user.ID,
 		UserID : user.ID,
@@ -151,12 +150,15 @@ func (c *Chat) sendClientLeft(userLeftId int64, user *users.User,
 	}
 	for _, clients := range c.Clients {
 		for client := range clients {
+			// if client.UserId == user.ID {
+			// 	continue
+			// }
 			friends, ok := c.ChatHandler.FriendList(ctx, client.UserId)
 			if !ok {
 				continue 
 			}
 			for _, friend := range friends {
-				if friend.ID == friendLeft.ID {
+				if friend.UserID == friendLeft.ID {
 					client.Connx.Send <- data
 				}		
 			}
@@ -228,7 +230,9 @@ func (c *Chat) unregisterClient(client *ClientChat) {
 
 func (c *Chat) handleAction(ctx context.Context, serializedData *DataInfos) {
 	switch serializedData.Action {
-	case "open_chat":
+	case "fetch_messages":
+		// when you fetch some messages, you are in a chat
+		// so you receive in live the messages from your friend
 		var payload ClientTarget
 		err := json.Unmarshal(serializedData.Payload, &payload)
 		if err != nil {
@@ -265,8 +269,6 @@ func (c *Chat) handleAction(ctx context.Context, serializedData *DataInfos) {
 		}
 		chats = append(chats, chat)
 		c.sendNewChats(chats, payload.TargetId, serializedData.Client.UserId)
-	case "receive_messages":
-		// TODO give the 20 more last messages
 	default:
 		log.Printf("unknown action : %s\n", serializedData.Action)
 	}
@@ -317,13 +319,18 @@ func (c *Chat) Run(ctx context.Context) {
 				continue 
 			}
 			c.sendToClient(client.UserId, friends)
+			user, ok := c.ChatHandler.GetUser(ctx, client.UserId)
+			if !ok {
+				continue 
+			}
+			c.sendClientState(user, ctx)
 		case client := <-c.Unregister:
 			c.unregisterClient(client)
 			user, ok := c.ChatHandler.GetUser(ctx, client.UserId)
 			if !ok {
 				continue 
 			}
-			c.sendClientLeft(client.UserId, user, ctx)
+			c.sendClientState(user, ctx)
 		case data := <-c.Action:
 			c.handleAction(ctx, data)
 		}
