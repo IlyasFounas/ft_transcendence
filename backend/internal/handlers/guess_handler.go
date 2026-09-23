@@ -518,6 +518,27 @@ func (h *GuessHandler) GetGameResults(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"results": results})
 }
 
+// GET /guesses/leaderboard //using user in the context + showing 100 first players and position and results of the user
+func (h *GuessHandler) GetLeaderboard(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	userID, ok := c.Get("userId")
+	if !ok {
+		c.JSON(http.StatusUnauthorized,
+			gin.H{"message": "The user ID is empty"})
+		return
+	}
+
+	leaderboard, err := h.guessRepo.GetLeaderboard(ctx, userID.(int64))
+	if err != nil {
+		log.Printf("Error getting leaderboard for user %d: %v", userID.(int64), err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get leaderboard"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"leaderboard": leaderboard})
+}
+
 // // GET /guesses/round/:round_id
 // func (h *GuessHandler) GetGuessesByRoundID(c *gin.Context) {
 // 	ctx := c.Request.Context()
@@ -560,25 +581,4 @@ func (h *GuessHandler) DeleteGuessByID(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "guess deleted successfully"}) // or no content ?
-}
-
-// GET /guesses/leaderboard //using user in the context + showing 100 first players and position and results of the user
-func (h *GuessHandler) GetLeaderboard(c *gin.Context) {
-	ctx := c.Request.Context()
-
-	userID, ok := c.Get("userId")
-	if !ok {
-		c.JSON(http.StatusUnauthorized,
-			gin.H{"message": "The user ID is empty"})
-		return
-	}
-
-	leaderboard, err := h.guessRepo.GetLeaderboard(ctx, userID.(int64))
-	if err != nil {
-		log.Printf("Error getting leaderboard for user %d: %v", userID.(int64), err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get leaderboard"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"leaderboard": leaderboard})
 }
