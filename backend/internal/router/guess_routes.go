@@ -32,7 +32,7 @@ func registerGuessRoutes(r *gin.Engine, h *handlers.GuessHandler) {
 	{
 		private.GET("/guesses/score/:round_id/:user_id", h.GetGuessScoreByRoundAndUser) //get score for a guess by round and user
 		private.GET("/guesses/total_score/:game_id/:user_id", h.GetTotalScoreByGameAndUser) //get total score for a user in a game
-		private.GET("leaderboard", h.GetLeaderboard) //get leaderboard for all games (map of map with user_id, xp total score)
+		private.GET("/leaderboard", h.GetLeaderboard) //get leaderboard for all games (map of map with user_id, xp total score)
 		private.GET("/user/xp/:user_id", h.GetUserXP) //get total of all games of a user = total XP of a user
 	}
 
