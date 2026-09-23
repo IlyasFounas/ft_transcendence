@@ -4,6 +4,9 @@ import { useState } from "react";
 import { apiFetch } from "../../api/apiFetch";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate, useLocation } from "react-router-dom";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { loginSchema } from "../../schemas/loginSchema";
+import { useForm } from "react-hook-form";
 
 interface AuthenticationLoginProps {
     onBackToOptions: () => void;
@@ -13,24 +16,26 @@ export default function AuthenticationLogin ({
     onBackToOptions,
 }: AuthenticationLoginProps) {
     const {login} = useAuth();
-    const [loginId, setLoginId] = useState("");
-    const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     const navigate = useNavigate();
     const location = useLocation();
 
-    const handleLogin = async () => {
-        if (!loginId || !password) {
-            setError("Login ID and password are required");
-            return;
-        }
+    const {
+        register,
+        handleSubmit,
+        formState: { errors },
+    } = useForm ({
+        resolver: zodResolver(loginSchema),
+    });
+
+    const handleLogin = async (data: any) => {
 
         setError("");
 
         const body = new URLSearchParams({
-            login: loginId,
-            password,
-        });
+            login: data.loginId,
+            password: data.password,
+        })
 
         const options: RequestInit = {
             method: "POST",
@@ -57,30 +62,50 @@ export default function AuthenticationLogin ({
 
             navigate(from, { replace: true });
         }
-        
     };
 
     return (
-        <div className="
-            flex
-            flex-col
-            w-full
-            items-center
-            gap-3
-            py-5
-            sm:px-6
-            "
+        <form
+            onSubmit={handleSubmit(handleLogin)}
+            className="
+                flex
+                flex-col
+                w-full
+                items-center
+                gap-3
+                py-5
+                sm:px-6
+                "
         >
-            <Input label="login id" type="login" value={loginId} onChange={setLoginId}/>
-            <Input label="password" type="password" value={password} onChange={setPassword}/>
+            <Input
+                label="login id"
+                type="text"
+                {...register("loginId")}
+            />
+            <Input
+                label="password"
+                type="password"
+                {...register("password")}
+            />
+            {errors.loginId && (
+                <p className="text-status-red text-body-primary">
+                    {errors.loginId.message}
+                </p>
+            )}
             
-            <div className="pt-2 text-status-red text-label-small sm:text-heading-small">
+            {errors.password && (
+                <p className="text-status-red text-body-primary">
+                    {errors.password.message}
+                </p>
+            )}
+
+            <div className="pt-2 text-status-red text-body-primary sm:text-heading-small">
                 {error && 
                     <p>{error}</p>
                 }
             </div>
 
-            <PrimaryButton size="small" onClick={handleLogin}>log in</PrimaryButton>
+            <PrimaryButton size="small" type="submit">log in</PrimaryButton>
             <button
                 type="button"
                 className="
@@ -101,6 +126,6 @@ export default function AuthenticationLogin ({
             >
                 Back to sign-in options
             </button>
-        </div>
+        </form>
     );
 }
