@@ -85,20 +85,16 @@ func (r *UserRepository) Name(ctx context.Context, userId int64) (*string, error
 	return &user.Username, nil
 }
 
-func (r *UserRepository) ExistingName(ctx context.Context, name string) (string, error) {
+// 
+func (r *UserRepository) ExistingName(ctx context.Context, name string) (bool, error) {
 	exists, err := r.db.NewSelect().
 		Model((*users.User)(nil)).
 		Where("name = ?", name).
 		Exists(ctx)
 	if err != nil {
-		return "", err
+		return false, err
 	}
-
-	if !exists {
-		return "", nil
-	}
-
-	return name, nil
+	return exists, nil
 }
 
 func (r *UserRepository) Login(ctx context.Context, userId int64) (*string, error) {
@@ -122,11 +118,9 @@ func (r *UserRepository) ExistingLogin(ctx context.Context, login string) (*stri
 	if err != nil {
 		return nil, err
 	}
-
 	if !exists {
 		return nil, nil
 	}
-
 	return &login, nil
 }
 
@@ -192,7 +186,6 @@ func (r *UserRepository) UserByGoogleId(ctx context.Context,
 }
 
 // Setters
-// todo: set a limit to change the name (maybe 1 change per month)
 func (r *UserRepository) SetName(ctx context.Context, userId int64, name string) (bool, error) {
 	if len(name) == 0 {
 		return false, nil
@@ -225,7 +218,6 @@ func (r *UserRepository) SetGoogleId(ctx context.Context, userId int64, googleId
 	return true, nil
 }
 
-// todo: set a limit to change the login (maybe 1 change per month)
 func (r *UserRepository) SetLogin(ctx context.Context, userId int64, login string) (bool, error) {
 	if len(login) == 0 {
 		return false, nil

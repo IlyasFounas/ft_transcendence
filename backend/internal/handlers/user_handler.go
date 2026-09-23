@@ -168,7 +168,7 @@ func (h *UserHandler) CreateUser() gin.HandlerFunc {
                 gin.H{"message": "Something went wrong. Please try again."})
 			return
 		}
-		if existingUsername != "" {
+		if existingUsername {
             c.JSON(http.StatusBadRequest,
                 gin.H{"message": "This username is unavailable. Please try another one."})
 			return
@@ -204,6 +204,7 @@ func (h *UserHandler) Login() gin.HandlerFunc {
 			if err := h.createActivationToken(c, expiresAt, userId); err != nil {
 				return
 			}
+			log.Printf("error : %s\n", err)
 			c.JSON(http.StatusUnauthorized,
                 gin.H{"message": "The activation link has been resent on your email"})
             return
@@ -294,7 +295,7 @@ func (h *UserHandler) resolveGoogleUser(c *gin.Context, info *users.GoogleUserIn
 			log.Printf("error : %s\n", err)
 			return nil, errors.New("failed")
 		}
-		if existingName == "" {
+		if existingName == false {
 			break 
 		}
 		code, err := code_generation.RandGenerate(4)
