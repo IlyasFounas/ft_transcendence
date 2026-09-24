@@ -29,7 +29,9 @@ type GuessGetter interface {
 	GetScoreByRoundAndUserID(ctx context.Context, round_id int64, user_id int64) (int64, error)
 	GetTotalScoreByGameAndUserID(ctx context.Context, game_id int64, user_id int64) (int64, error)
 	GetXPByUserID(ctx context.Context, user_id int64) (int64, error)
-	GetLeaderboardByGameID(ctx context.Context, game_id int64) ([][2]int64, error)
+	GetResultsByGameID(ctx context.Context, game_id int64) ([][2]int64, error)
+	GetUserLeaderboardInfos(ctx context.Context, user_id int64) ([]repositories.Leaderboard, error)
+	GetLeaderboard(ctx context.Context) ([]repositories.Leaderboard, error)
 	// GetUserIDByID(ctx context.Context, guess_id int64) (int64, error)
 	// GetRoundIDByID(ctx context.Context, guess_id int64) (int64, error)
 	GetByRoundID(ctx context.Context, round_id int64) ([]*guesses.Guess, error)
@@ -497,8 +499,8 @@ func (h *GuessHandler) GetUserXP(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"user_xp": userXP})
 }
 
-// GET /guesses/leaderboard/:game_id //by game
-func (h *GuessHandler) GetLeaderboardByGame(c *gin.Context) {
+// GET /guesses/results/:game_id //by game
+func (h *GuessHandler) GetGameResults(c *gin.Context) {
 	ctx := c.Request.Context()
 
 	game_id, err := strconv.ParseInt(c.Param("game_id"), 10, 64)
@@ -507,10 +509,45 @@ func (h *GuessHandler) GetLeaderboardByGame(c *gin.Context) {
 		return
 	}
 
-	leaderboard, err := h.guessRepo.GetLeaderboardByGameID(ctx, game_id)
+	results, err := h.guessRepo.GetResultsByGameID(ctx, game_id)
 	if err != nil {
-		log.Printf("Error getting leaderboard for game %d: %v", game_id, err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get leaderboard for this game"})
+		log.Printf("Error getting results for game %d: %v", game_id, err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get results for this game"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"results": results})
+}
+
+// GET /leaderboard/user //using user in the context + showing 100 first players and position and results of the user
+func (h *GuessHandler) GetUserLeaderboardInfos(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	userID, ok := c.Get("userId")
+	if !ok {
+		c.JSON(http.StatusUnauthorized,
+			gin.H{"message": "The user ID is empty"})
+		return
+	}
+
+	leaderboard, err := h.guessRepo.GetUserLeaderboardInfos(ctx, userID.(int64))
+	if err != nil {
+		log.Printf("Error getting leaderboard for user %d: %v", userID.(int64), err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get user leaderboard infos"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"leaderboard": leaderboard})
+}
+
+// GET /leaderboard //using user in the context + showing 100 first players and position and results of the user
+func (h *GuessHandler) GetLeaderboard(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	leaderboard, err := h.guessRepo.GetLeaderboard(ctx)
+	if err != nil {
+		log.Printf("Error getting leaderboard: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get leaderboard"})
 		return
 	}
 

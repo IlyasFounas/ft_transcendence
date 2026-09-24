@@ -5,6 +5,7 @@ interface PrimaryButtonProps extends BaseButtonProps {
 	subtitle?: string;
 	size?: "small" | "medium" | "large";
 	className?: string;
+	type?: "button" | "submit";
 }
 
 const sizeStyles = {
@@ -36,7 +37,7 @@ const buttonShapes = {
   small: SmallButtonSvg,
 };
 
-export default function PrimaryButton({ children, onClick, subtitle, disabled, size = "large", className = ""}: PrimaryButtonProps) {
+export default function PrimaryButton({ children, onClick, subtitle, disabled, size = "large", className = "", type = "button"}: PrimaryButtonProps) {
 	
 	const styles = sizeStyles[size];
 
@@ -46,6 +47,7 @@ export default function PrimaryButton({ children, onClick, subtitle, disabled, s
 
   	return (
 		<button
+		type={type}
 		disabled = {disabled}
 		onClick = {onClick}
 		className={`

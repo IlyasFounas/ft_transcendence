@@ -508,6 +508,7 @@ func (h *UserHandler) SetName() gin.HandlerFunc {
 		}
 	}
 }
+
 func (h *UserHandler) setGoogleId(c *gin.Context, userId int64, googleId *string) bool {
 	state, err := h.userRepo.SetGoogleId(c.Request.Context(), userId, googleId)
 	if err != nil {

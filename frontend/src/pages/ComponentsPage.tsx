@@ -1,4 +1,4 @@
-import {useState} from "react"
+// import {useState} from "react"
 import OperationHistory from '../components/cards/OperationHistory';
 import { operations } from "../data/operations";
 import UserProfile from '../components/user/UserProfile.tsx';
@@ -10,7 +10,6 @@ import UserStatus from '../components/user/UserStatus.tsx';
 import FriendListRow from '../components/rows/FriendListRow.tsx';
 import AuthenticationCard from '../components/cards/AuthenticationCard.tsx';
 import AuthenticationWelcome from '../components/authentication/AuthenticationWelcome.tsx';
-import Input from '../components/primitives/Input.tsx';
 import AuthenticationSignUp from '../components/authentication/AuthenticationSignUp.tsx';
 import AuthenticationLogin from '../components/authentication/AuthenticationLogin.tsx';
 import PrimaryButton from '../components/buttons/PrimaryButton.tsx';
@@ -23,8 +22,6 @@ import SummaryResultCard from '../components/cards/SummaryResultCard.tsx'
 import Podium from '../components/cards/podium/Podium.tsx';
 
 export default function ComponentPage() {
-
-	const [email, setEmail] = useState("");
 
   return (
       <div className="w-full min-h-screen bg-black p-8 text-white">
@@ -159,17 +156,6 @@ export default function ComponentPage() {
             avatar="/avatars/avatar1.png"
             status="offline"
             rank={33}
-          />
-        </section>
-  
-        <section className="mb-10">
-          <h2 className="mb-4 text-xl font-bold">Input</h2>
-          <Input
-            label="Email"
-            type="email"
-            placeholder="example@mail.com"
-			value={email}
-    		onChange={setEmail}
           />
         </section>
   
