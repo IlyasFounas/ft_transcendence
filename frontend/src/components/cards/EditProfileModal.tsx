@@ -258,7 +258,6 @@ export default function EditProfileModal({
                             text-body-primary
                             md:text-heading-medium
                             hover:drop-shadow-[0_0_8px_#35DFFF]
-                            hover:scale-[1.05]
                             transition
                         "
                     >
@@ -277,7 +276,6 @@ export default function EditProfileModal({
                             text-body-primary
                             md:text-heading-medium
                             hover:drop-shadow-[0_0_8px_#35DFFF]
-                            hover:scale-[1.05]
                             transition
                         "
                     >
