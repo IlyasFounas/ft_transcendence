@@ -66,7 +66,7 @@ export default function EditProfileModal({
                 "
             >
 
-                <div className="flex items-start justify-between mb-6">
+                <div className="flex items-start justify-between mb-3 md:mb-6">
                     
                     <div>
                         <h2 className="text-heading-medium lg:text-hero uppercase">
@@ -87,9 +87,9 @@ export default function EditProfileModal({
                     </button>
                 </div>
 
-                <section className="border border-border-default rounded-lg p-5 mb-5">
+                <section className="border border-border-default rounded-lg p-5 mb-2 md:mb-5">
 
-                    <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center justify-between mb-4 gap-3">
                         <h3 className="text-heading-small uppercase">
                             Avatar
                         </h3>
@@ -100,18 +100,26 @@ export default function EditProfileModal({
 
                     <div className="flex flex-col lg:flex-row gap-6">
                         <div className="flex flex-col items-center shrink-0">
-                            <Avatar
-                                avatar={selectedAvatar}
-                                size={140}
-                            />
+                            <div className="shrink-0 lg:hidden">
+                                <Avatar
+                                    avatar={selectedAvatar}
+                                    size={100}
+                                />
+                            </div>
+                            <div className="shrink-0 hidden lg:block">
+                                <Avatar
+                                    avatar={selectedAvatar}
+                                    size={140}
+                                />
+                            </div>
                             <span className="text-label-small text-text-secondary uppercase mt-2">
                                 Current Avatar
                             </span>
                         </div>
 
                         <div className="flex-1 min-w-0">
-                            <div className="max-h-40 overflow-y-auto custom-scrollbar pr-2">
-                                <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                            <div className="max-h-22 md:max-h-40 overflow-y-auto custom-scrollbar pr-2">
+                                <div className="grid grid-cols-3 md:grid-cols-5 lg:grid-cols-4 gap-3">
                                     {avatars.map((avatarOption) => (
                                         <button
                                             key={avatarOption}
@@ -124,7 +132,7 @@ export default function EditProfileModal({
                                                 items-center
                                                 justify-center
                                                 rounded-md
-                                                p-1
+                                                md:p-1
                                                 transition
                                                 ${
                                                     selectedAvatar === avatarOption
@@ -132,7 +140,7 @@ export default function EditProfileModal({
                                                         : "border border-border-default hover:border-primary"
                                                 }
                                             `}
-                                        >
+                                        >   
                                             <Avatar
                                                 avatar={avatarOption}
                                                 size={64}
@@ -163,18 +171,18 @@ export default function EditProfileModal({
                                     className="text-primary"
                                 />
                                 <div>
-                                    <p className="text-heading-small uppercase">
+                                    <p className="text-body-primary md:text-heading-small uppercase">
                                         Upload Avatar
                                     </p>
 
                                     <p className="text-label-small text-text-secondary">
-                                        PNG, JPG, WEBP
+                                        PNG, JPG
                                     </p>
                                 </div>
 
                                 <input
                                     type="file"
-                                    accept="image/png,image/jpeg,image/webp"
+                                    accept="image/png,image/jpeg"
                                     onChange={handleUpload}
                                     className="hidden"
                                 />
@@ -185,7 +193,7 @@ export default function EditProfileModal({
                 </section>
 
 
-                <section className="border border-border-default rounded-lg p-5">
+                <section className="border border-border-default rounded-lg p-4 md:p-5">
 
                     <div className="flex items-center justify-between mb-3">
                         <h3 className="text-heading-small uppercase">
@@ -200,8 +208,9 @@ export default function EditProfileModal({
                         border
                         border-primary
                         rounded-md
-                        px-4
-                        py-3
+                        p-3
+                        md:px-4
+                        md:py-3
                         "
                     >
                         <input
@@ -218,7 +227,8 @@ export default function EditProfileModal({
                                 bg-transparent
                                 outline-none
                                 text-text-primary
-                                text-heading-small
+                                text-body-primary
+                                md:text-heading-small
                                 uppercase
                             "
                         />
@@ -232,11 +242,28 @@ export default function EditProfileModal({
                     </p>
                 </section>
 
-                <div className="flex justify-end gap-4 mt-6">
-                   
-                    <SecondaryButton onClick={onClose}>
+                <div className="flex justify-center gap-4 mt-6">
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="
+                            px-6
+                            py-3
+                            bg-surface-elevated
+                            text-text-secondary
+                            border
+                            border-primary
+                            rounded-lg
+                            uppercase
+                            text-body-primary
+                            md:text-heading-medium
+                            hover:drop-shadow-[0_0_8px_#35DFFF]
+                            hover:scale-[1.05]
+                            transition
+                        "
+                    >
                         Cancel
-                    </SecondaryButton>
+                    </button>
                     <button
                         type="button"
                         onClick={handleSave}
@@ -245,9 +272,10 @@ export default function EditProfileModal({
                             py-3
                             bg-primary
                             text-surface-base
-                            rounded-md
+                            rounded-lg
                             uppercase
-                            text-heading-medium
+                            text-body-primary
+                            md:text-heading-medium
                             hover:drop-shadow-[0_0_8px_#35DFFF]
                             hover:scale-[1.05]
                             transition
