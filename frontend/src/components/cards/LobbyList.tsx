@@ -52,7 +52,6 @@ export default function LobbyList({listOfPlayers, onKick, isCurrentUserHost}: Lo
 				return player ? (
 					<LobbyRow
 						key={player.id}
-						index={index}
 						username={player.username}
 						avatar={player.avatar}
 						currentUsername={user?.Username ?? ""}

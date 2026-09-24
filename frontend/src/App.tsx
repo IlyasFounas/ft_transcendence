@@ -13,6 +13,7 @@ import ProtectedRoute from './components/routes/ProtectedRoute';
 import PublicRoute from './components/routes/PublicRoute';
 import GamePlayPage from './pages/game/GamePlayPage';
 import { GameSocketProvider } from './context/GameSocketContext';
+import SoloResultPage from './pages/results/SoloResultsPage';
 
 function App() {
     return (
@@ -27,17 +28,18 @@ function App() {
                     <Route element={<ChatLayout />}>
                         <Route path="/home" element={<HomePage />} />
                         <Route path="/multiplayer" element={<LobbyPage />} />
-						<Route path="/lobbyroom" element={<LobbyRoomPage />} />
                     </Route>
                     <Route element={<MainLayout />}>
                         <Route path="/leaderboard" element={<LeaderboardPage />} />
                         <Route path="/profile" element={<ProfilePage />} />
                     </Route>
-					<Route element={<GameSocketProvider> <Outlet /> </GameSocketProvider>}>
+					<Route element={<GameSocketProvider><Outlet /></GameSocketProvider>}>
+						<Route element={<ChatLayout />}>
+							<Route path="/lobbyroom" element={<LobbyRoomPage />} />
+						</Route>
 						<Route path="/game/:gameId" element={<GamePlayPage />} />
-						<Route path="/game" element={<GamePlayPage />} />
-                        <Route path="/lobbyroom" element={<LobbyRoomPage />} />
-                     </Route>
+						<Route path="/soloresults" element={<SoloResultPage />} />
+					</Route>
                 </Route>
             </Routes>
         </Router>

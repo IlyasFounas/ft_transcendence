@@ -19,11 +19,13 @@ export default function LobbyPage()
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 	const [code, setCode] = useState("");
 	
+
+
 	async function handleCreateOperation() {
 
 		const body = new URLSearchParams();
 		body.append("timer", timeLimit.toString());
-		body.append("round_nb", rounds.toString());
+		body.append("round_total", rounds.toString());
 
 		setIsChecking(true);
 		const result = await authFetch("/api/lobby/create", {
@@ -74,6 +76,8 @@ export default function LobbyPage()
 
 		triggerInvalidShake("Invalid code");
 		}
+
+		
 
 	return (
 		<div className="min-h-[calc(100vh-5rem)] w-full bg-[url(/backgrounds/earth_background.png)] py-24 lg:pr-[27rem] flex flex-col justify-center">

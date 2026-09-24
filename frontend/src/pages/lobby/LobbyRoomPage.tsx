@@ -6,7 +6,7 @@ import MissionSettingsCard from "../../components/cards/MissionSettingsCard";
 import WaitingDots from "../../components/lobby/WaitingDots";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useLobbySocket } from "../../hooks/useLobbySocket";
+import { useLobbySocket } from "../../context/GameSocketContext";
 
 export default function LobbyRoomPage() {
 
@@ -30,7 +30,7 @@ export default function LobbyRoomPage() {
 			</div>
 
 			<div className="order-2 lg:col-start-2 lg:row-start-2">
-			<MissionSettingsCard timeLimit={lobbyInfos?.timer ?? 0} rounds={lobbyInfos?.round_nb ?? 0} />
+			<MissionSettingsCard timeLimit={lobbyInfos?.timer ?? 0} rounds={lobbyInfos?.round_total ?? 0} />
 			</div>
 
 			<div className="order-3 lg:col-start-1 lg:row-span-3">

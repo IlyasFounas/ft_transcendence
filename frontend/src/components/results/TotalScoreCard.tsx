@@ -1,10 +1,14 @@
-interface TotalScoreCardProps{
+import { formatDistance } from "../../utils/formatDistance";
+
+interface TotalScoreCardProps {
 	points: number;
 	distance: number;
 }
 
 export default function TotalScoreCard({points, distance} : TotalScoreCardProps)
 {
+	const { value, unit } = formatDistance(distance);
+
 	return (
 		<div className="
 			uppercase
@@ -21,7 +25,7 @@ export default function TotalScoreCard({points, distance} : TotalScoreCardProps)
 			outline-cyan-400/60">
 			<h1 className="text-heading-medium">Total</h1>
 			<h1 className="text-heading-small">{points} pts</h1>
-			<h1 className="text-heading-small">{distance} km</h1>
+			<h1 className="text-heading-small">{value} {unit}</h1>
 		</div>
 	)
 }
