@@ -106,7 +106,7 @@ export default function AuthenticationLogin ({
             </div>
 
             <PrimaryButton size="small" type="submit">
-                {isSubmitting ? "Loging in..." : "Log in"}
+                {isSubmitting ? "Logging in..." : "Log in"}
             </PrimaryButton>
             <button
                 type="button"
