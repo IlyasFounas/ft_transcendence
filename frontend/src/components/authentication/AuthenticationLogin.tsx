@@ -23,7 +23,7 @@ export default function AuthenticationLogin ({
     const {
         register,
         handleSubmit,
-        formState: { errors },
+        formState: { isSubmitting, errors },
     } = useForm ({
         resolver: zodResolver(loginSchema),
     });
@@ -105,7 +105,9 @@ export default function AuthenticationLogin ({
                 }
             </div>
 
-            <PrimaryButton size="small" type="submit">log in</PrimaryButton>
+            <PrimaryButton size="small" type="submit">
+                {isSubmitting ? "Loging in..." : "Log in"}
+            </PrimaryButton>
             <button
                 type="button"
                 className="

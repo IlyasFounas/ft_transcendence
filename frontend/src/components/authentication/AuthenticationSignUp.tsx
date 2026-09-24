@@ -19,7 +19,7 @@ export default function AuthenticationSignUp ({
     const {
         register,
         handleSubmit,
-        formState: { errors },
+        formState: { isSubmitting, errors },
     } = useForm({
         resolver: zodResolver(signupSchema),
     });
@@ -80,6 +80,7 @@ export default function AuthenticationSignUp ({
                 <PrimaryButton
                     size="small"
                     onClick={onLogin}
+                    
                 >
                     go to login
                 </PrimaryButton>
@@ -174,7 +175,9 @@ export default function AuthenticationSignUp ({
                 >
                 Already have an account?
                 </button>
-                <PrimaryButton size="small" type="submit">sign up</PrimaryButton>
+                <PrimaryButton size="small" type="submit">
+                    {isSubmitting ? "Signing up..." : "Sign up"}
+                </PrimaryButton>
             </div>
         </form>
     );
