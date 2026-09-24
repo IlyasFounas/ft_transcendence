@@ -26,43 +26,48 @@ func NewLobbyWsHandler(lobbyRepo *repositories.LobbyRepository,
 		userRepo: userRepo}
 }
 
-// logAndFail logs err (using this file's shared "error : %s" format) and reports whether the
-// caller should abort. Replaces the "if err != nil { log.Printf(...); return false }" block that
-// used to be repeated, verbatim, after almost every repository call in this file.
-func logAndFail(err error) bool {
-	if err != nil {
-		log.Printf("error : %s\n", err)
-		return true
-	}
-	return false
-}
-
 func (h *LobbyWsHandler) LeaveLobby(ctx context.Context,
 	userId int64) bool {
-	lobby, err := h.lobbyRepo.ActualLobby(ctx, userId)
+	lobby, err := h.lobbyRepo.ActualLobby(ctx,
+		userId)
 	if err != nil || lobby == nil {
 		log.Printf("error : %s\n", err)
 		return false
 	}
-	if logAndFail(h.lobbyRepo.SetLeftAt(ctx, lobby.ID)) {
+	err = h.lobbyRepo.SetLeftAt(ctx, lobby.ID)
+	if err != nil {
+		log.Printf("error : %s\n", err)
 		return false
 	}
 	lobbies, err := h.lobbyRepo.AllPlayers(ctx, lobby.GameId)
-	if logAndFail(err) {
+	if err != nil {
+		log.Printf("error : %s\n", err)
 		return false
 	}
-	if logAndFail(h.lobbyRepo.SetJoinCode(ctx, lobby.ID, nil)) {
+	err = h.lobbyRepo.SetJoinCode(ctx,
+		lobby.ID, nil)
+	if err != nil {
+		log.Printf("error : %s\n", err)
 		return false
 	}
-	if logAndFail(h.lobbyRepo.SetIsCreator(ctx, lobby.ID, false)) {
+	err = h.lobbyRepo.SetIsCreator(ctx,
+		lobby.ID, false)
+	if err != nil {
+		log.Printf("error : %s\n", err)
 		return false
 	}
 	for _, newLobby := range lobbies {
 		if newLobby.UserId != userId {
-			if logAndFail(h.lobbyRepo.SetIsCreator(ctx, newLobby.ID, true)) {
+			err = h.lobbyRepo.SetIsCreator(ctx,
+				newLobby.ID, true)
+			if err != nil {
+				log.Printf("error : %s\n", err)
 				return false
 			}
-			if logAndFail(h.lobbyRepo.SetJoinCode(ctx, newLobby.ID, lobby.JoinCode)) {
+			err = h.lobbyRepo.SetJoinCode(ctx,
+				newLobby.ID, lobby.JoinCode)
+			if err != nil {
+				log.Printf("error : %s\n", err)
 				return false
 			}
 			break
@@ -78,47 +83,55 @@ func (h *LobbyWsHandler) RemovePlayer(ctx context.Context,
 		return false
 	}
 	user, err := h.userRepo.User(ctx, target_id)
-	if logAndFail(err) {
+	if err != nil {
+		log.Printf("error : %s\n", err)
 		return false
 	}
 	lobby, err := h.lobbyRepo.ActualLobby(ctx, user.ID)
-	if logAndFail(err) {
+	if err != nil {
+		log.Printf("error : %s\n", err)
 		return false
 	}
-	isCreator, err := h.lobbyRepo.IsCreator(ctx, request_id, lobby.GameId)
-	if logAndFail(err) {
+	isCreator, err := h.lobbyRepo.IsCreator(ctx,
+		request_id, lobby.GameId)
+	if err != nil {
+		log.Printf("error : %s\n", err)
 		return false
 	}
 	if !isCreator {
 		log.Println("error : you're not allowed to remove the player")
 		return false
 	}
-	if logAndFail(h.lobbyRepo.SetLeftAt(ctx, lobby.ID)) {
+	err = h.lobbyRepo.SetLeftAt(ctx, lobby.ID)
+	if err != nil {
+		log.Printf("error : %s\n", err)
 		return false
 	}
-	if logAndFail(h.lobbyRepo.SetIsCreator(ctx, lobby.ID, false)) {
+	err = h.lobbyRepo.SetIsCreator(ctx,
+		lobby.ID, false)
+	if err != nil {
+		log.Printf("error : %s\n", err)
 		return false
 	}
 	return true
 }
 
-// fetchInt64 is the shared body behind Timer and RoundTotal: call fn, log and report failure if
-// it errors, otherwise return its value. Timer and RoundTotal stay separate named methods (called
-// by name from SendInfos and elsewhere), but no longer duplicate the same four-line body twice.
-func (h *LobbyWsHandler) fetchInt64(ctx context.Context, fn func(context.Context, int64) (int64, error), gameId int64) (int64, bool) {
-	value, err := fn(ctx, gameId)
-	if logAndFail(err) {
+func (h *LobbyWsHandler) Timer(ctx context.Context, gameId int64) (int64, bool) {
+	timer, err := h.gameRepo.Timer(ctx, gameId)
+	if err != nil {
+		log.Printf("error : %s\n", err)
 		return 0, false
 	}
-	return value, true
-}
-
-func (h *LobbyWsHandler) Timer(ctx context.Context, gameId int64) (int64, bool) {
-	return h.fetchInt64(ctx, h.gameRepo.Timer, gameId)
+	return timer, true
 }
 
 func (h *LobbyWsHandler) RoundTotal(ctx context.Context, gameId int64) (int64, bool) {
-	return h.fetchInt64(ctx, h.gameRepo.RoundTotal, gameId)
+	roundTotal, err := h.gameRepo.RoundTotal(ctx, gameId)
+	if err != nil {
+		log.Printf("error : %s\n", err)
+		return 0, false
+	}
+	return roundTotal, true
 }
 
 func (h *LobbyWsHandler) SendInfos(ctx context.Context, gameId int64) (interface{}, bool) {
@@ -127,7 +140,8 @@ func (h *LobbyWsHandler) SendInfos(ctx context.Context, gameId int64) (interface
 		return nil, false
 	}
 	joinCode, err := h.lobbyRepo.JoinCode(ctx, gameId)
-	if logAndFail(err) {
+	if err != nil {
+		log.Printf("error : %s\n", err)
 		return nil, false
 	}
 	roundTotal, ok := h.RoundTotal(ctx, gameId)
@@ -142,12 +156,13 @@ func (h *LobbyWsHandler) SendInfos(ctx context.Context, gameId int64) (interface
 	return data, true
 }
 
-// UpdateStartAt records when the game actually started. Only ever called once, right after
-// RoundWsHandler.RequestGameStart successfully schedules round 1's pre-round pause.
-func (h *LobbyWsHandler) UpdateStartAt(ctx context.Context, LobbyId int64) error {
-	if err := h.lobbyRepo.SetStartAt(ctx, LobbyId); err != nil {
-		log.Printf("error : %s\n", err)
-		return err
+func (h *LobbyWsHandler) UpdateStartAt(ctx context.Context, LobbyId int64, RoundNb int64) error {
+	if RoundNb == 1 {
+		err := h.lobbyRepo.SetStartAt(ctx, LobbyId)
+		if err != nil {
+			log.Printf("error : %s\n", err)
+			return err
+		}
 	}
 	return nil
 }

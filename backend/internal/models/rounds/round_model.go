@@ -17,15 +17,6 @@ type Round struct {
 	Game		*games.Game				`bun:"rel:belongs-to,join:game_id=id"`
 	LocationId	int64					`bun:"loc_id,notnull"` // TODO join + unique ,unique:idx_loc_game
 	Location	*locations.Location		`bun:"rel:belongs-to,join:loc_id=location_id"`
-	// StartedAt is the instant this round's GUESS PHASE begins — i.e. once its fixed pre-round
-	// pause (see ws_handlers.prePlayPause) has elapsed, not the instant the row was written. The
-	// row is created as soon as the pause starts, with StartedAt already set to that future
-	// instant, so StartedAt alone (compared to time.Now(), and to Game.Timer for the round's
-	// duration) is enough to tell whether the round is still pending, currently playing, or
-	// already over — see RoundWsHandler.BeginRound / recoverRoundState.
-	//
-	// This round's duration is intentionally NOT a field here: it always comes from Game.Timer,
-	// read live, since Game is the single source of truth for how long every round of a game
-	// lasts.
 	StartedAt	time.Time				`bun:"started_at,notnull"`
+	// Timer		time.Timer				`bun:"timer,notnull"` //TODO a implementer directement quand on cree un round, se stoppe a la fin du timer, ou indique le temps auquel a guess chaque user et permet de calculer le temps restant dans le guess (entre la fin du timer et le moment du guess)
 }
