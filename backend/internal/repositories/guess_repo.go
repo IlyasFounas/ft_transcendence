@@ -14,7 +14,7 @@ import (
 
 var ErrGuessNotFound = errors.New("guess not found")
 
-type LeaderboardEntry struct {
+type Leaderboard struct {
 	Position int64  `json:"position"`
 	Username string `json:"username"`
 	Total    int64  `json:"total"`
@@ -227,16 +227,33 @@ func (r *GuessRepository) GetResultsByGameID(ctx context.Context, game_id int64)
 	return res, nil
 }
 
-// READ - using game ID (to get the leaderboard for all games: 100 first players based on position, usernames and total xp, and position, username and total xp of user who requested the leaderboard)
-func (r *GuessRepository) GetLeaderboard(ctx context.Context, userID int64) ([]LeaderboardEntry, error) {
-	type leaderboard struct {
-		Username string `bun:"username"`
-		Total    int64  `bun:"total"`
-		Position int64  `bun:"position"`
+//READ - using user ID
+func (r *GuessRepository) GetUserLeaderboardInfos(ctx context.Context, userID int64) ([]Leaderboard, error) {
+	// Retrieve position, username and total xp for the requesting user (ensures they appear even with 0 score)
+	var userRow []Leaderboard
+	err := r.db.NewSelect().
+		TableExpr("users AS u").
+		ColumnExpr("u.name AS username").
+		ColumnExpr("COALESCE(SUM(g.base_score), 0) AS total").
+		ColumnExpr("RANK() OVER (ORDER BY COALESCE(SUM(g.base_score), 0) DESC) AS position").
+		Join("LEFT JOIN guesses AS g ON g.user_id = u.id").
+		Where("u.id = ?", userID).
+		Group("u.id").
+		Group("u.name").
+		Scan(ctx, &userRow)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, errors.New("user not found")
+		}
+		return nil, fmt.Errorf("failed to get leaderboard info for user %d: %w", userID, err)
 	}
+	return userRow, nil
+}
 
+// READ - using game ID (to get the leaderboard for all games: 100 first players based on position, usernames and total xp, and position, username and total xp of user who requested the Leaderboard)
+func (r *GuessRepository) GetLeaderboard(ctx context.Context) ([]Leaderboard, error) {
 	// Get all users ranked by total score (including users with 0 score)
-	var rows []leaderboard
+	var rows []Leaderboard
 	err := r.db.NewSelect().
 		TableExpr("users AS u").
 		ColumnExpr("u.name AS username").
@@ -251,44 +268,7 @@ func (r *GuessRepository) GetLeaderboard(ctx context.Context, userID int64) ([]L
 	if err != nil {
 		return nil, fmt.Errorf("failed to get leaderboard: %w", err)
 	}
-
-	// Retrieve position, username and total xp for the requesting user (ensures they appear even with 0 score)
-	var userRow leaderboard
-	errUser := r.db.NewSelect().
-		TableExpr("users AS u").
-		ColumnExpr("u.name AS username").
-		ColumnExpr("COALESCE(SUM(g.base_score), 0) AS total").
-		ColumnExpr("RANK() OVER (ORDER BY COALESCE(SUM(g.base_score), 0) DESC) AS position").
-		Join("LEFT JOIN guesses AS g ON g.user_id = u.id").
-		Where("u.id = ?", userID).
-		Group("u.id").
-		Group("u.name").
-		Scan(ctx, &userRow)
-
-	// Check if user is already in rows (to avoid duplicates)
-	isUserInRows := false
-	for _, row := range rows {
-		if row.Username == userRow.Username {
-			isUserInRows = true
-			break
-		}
-	}
-
-	// Add user row if not already in top 100 and query was successful
-	if errUser == nil && !isUserInRows {
-		rows = append(rows, userRow)
-	}
-
-	res := make([]LeaderboardEntry, 0, len(rows))
-	for _, row := range rows {
-		res = append(res, LeaderboardEntry{
-			Position: row.Position,
-			Username: row.Username,
-			Total:    row.Total,
-		})
-	}
-
-	return res, nil
+	return rows, nil
 }
 
 // READ - streak value for the last round - using game ID and user ID
