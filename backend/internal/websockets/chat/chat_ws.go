@@ -150,9 +150,6 @@ func (c *Chat) sendClientState(user *users.User, ctx context.Context) {
 	}
 	for _, clients := range c.Clients {
 		for client := range clients {
-			// if client.UserId == user.ID {
-			// 	continue
-			// }
 			friends, ok := c.ChatHandler.FriendList(ctx, client.UserId)
 			if !ok {
 				continue 
