@@ -17,6 +17,8 @@ import (
 type LocationGetter interface {
 	GetByID(ctx context.Context, location_id int64) (*locations.Location, error)
 	GetByMapillaryID(ctx context.Context, mid int64) (*locations.Location, error)
+	GetCoordinatesByID(ctx context.Context, location_id int64) (float64, float64, error)
+	GetCountryCodeByID(ctx context.Context, location_id int64) (string, error)
 	GetRandom(ctx context.Context) (*locations.Location, error)
 	GetRandomByCountryCode(ctx context.Context, cc string) (*locations.Location, error)
 	PatchByID(ctx context.Context, location_id int64, patch *locations.Location) error
@@ -74,6 +76,54 @@ func (h *LocationHandler) GetLocationByID(c *gin.Context) {
 	c.JSON(http.StatusOK, loc)
 }
 
+// // GET /locations/:location_id/coordinates
+// func (h *LocationHandler) GetCoordinatesByID(c *gin.Context) {
+// 	ctx := c.Request.Context()
+
+// 	location_id, err := strconv.ParseInt(c.Param("location_id"), 10, 64)
+// 	if err != nil {
+// 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid location id"})
+// 		return
+// 	}
+
+// 	lat, long, err := h.repo.GetCoordinatesByID(ctx, location_id)
+// 	if err != nil {
+// 		if errors.Is(err, repositories.ErrLocationNotFound) {
+// 			c.JSON(http.StatusNotFound, gin.H{"error": "location not found"})
+// 			return
+// 		}
+// 		log.Printf("Error getting coordinates for location %d: %v", location_id, err)
+// 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get coordinates"})
+// 		return
+// 	}
+
+// 	c.JSON(http.StatusOK, gin.H{"latitude": lat, "longitude": long})
+// }
+
+// // GET /locations/:location_id/cc
+// func (h *LocationHandler) GetCountryCodeByID(c *gin.Context) {
+// 	ctx := c.Request.Context()
+
+// 	location_id, err := strconv.ParseInt(c.Param("location_id"), 10, 64)
+// 	if err != nil {
+// 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid location id"})
+// 		return
+// 	}
+
+// 	cc, err := h.repo.GetCountryCodeByID(ctx, location_id)
+// 	if err != nil {
+// 		if errors.Is(err, repositories.ErrLocationNotFound) {
+// 			c.JSON(http.StatusNotFound, gin.H{"error": "location not found"})
+// 			return
+// 		}
+// 		log.Printf("Error getting country code for location %d: %v", location_id, err)
+// 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get country code"})
+// 		return
+// 	}
+
+// 	c.JSON(http.StatusOK, gin.H{"country_code": cc})
+// }
+
 // GET /locations/mapillary/:mid
 func (h *LocationHandler) GetLocationByMID(c *gin.Context) {
 	ctx := c.Request.Context()
@@ -99,6 +149,7 @@ func (h *LocationHandler) GetLocationByMID(c *gin.Context) {
 }
 
 // GET /locations/random
+//TODO no need > game gets a list of random locations at creation
 func (h *LocationHandler) GetRandomLocation(c *gin.Context) {
 	ctx := c.Request.Context()
 
@@ -172,7 +223,7 @@ func (h *LocationHandler) UpdateLocationByID(c *gin.Context) {
 		return
 	}
 
-	c.Status(http.StatusNoContent)
+	c.Status(http.StatusOK)
 }
 
 // PATCH /locations/mapillary/:mid
@@ -207,7 +258,7 @@ func (h *LocationHandler) UpdateLocationByMID(c *gin.Context) {
 		return
 	}
 
-	c.Status(http.StatusNoContent)
+	c.Status(http.StatusOK)
 }
 
 // POST /locations

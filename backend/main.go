@@ -1,7 +1,6 @@
 package main
 
 import (
-	// EXTERNAL PACKAGE
 	"context"
 	"errors"
 	"log"
@@ -10,15 +9,15 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
-
-	// OUR PACKAGE
 	"backend/internal/database"
 	"backend/internal/handlers"
 	"backend/internal/repositories"
 	"backend/internal/router"
-	"github.com/gin-gonic/gin"
 	"backend/internal/websockets/lobby"
 	"backend/internal/websockets/handlers"
+	chat_ws "backend/internal/websockets/chat"
+	"github.com/gin-gonic/gin"
+	"github.com/sams96/rgeo"
 )
 
 /**
@@ -52,19 +51,26 @@ func main() {
 	}
 
 	// 3. Instanciation of handlers
-	h := handlers.NewHandlers(repo)
+	reverser, err := rgeo.New(rgeo.Countries110)
+	if err != nil {
+		log.Fatalf("Failed to initialize country reverser: %v", err)
+	}
+	h := handlers.NewHandlers(repo, reverser)
 
 	// 4. Instanciation of websockets handlers
-	wh := ws_handlers.NewWsHandlers(repo)
+	wh := ws_handlers.NewWsHandlers(repo, reverser)
 
-	// 4.bis Run the hub websocket
+	// 5. Run the hub websocket
 	appCtx, appCancel := context.WithCancel(context.Background())
 	defer appCancel()
 	hub := lobby_ws.NewHub(repo, wh)
 	go hub.Run(appCtx)
 
-	// 5. Router setup
-	r := router.NewRouter(h, hub)
+	chat := chat_ws.NewChat(repo, wh)
+	go chat.Run(appCtx)
+
+	// 6. Router setup
+	r := router.NewRouter(h, hub, chat)
 	srv := &http.Server{
 		Addr:         ":8080",
 		Handler:      r,
@@ -72,9 +78,8 @@ func main() {
 		WriteTimeout: 15 * time.Second,
 		IdleTimeout:  120 * time.Second,
 	}
-
 	
-	// 6. Run the server in a goroutine to allow graceful shutdown
+	// 7. Run the server in a goroutine to allow graceful shutdown
 	go func() {
 		log.Println("Starting server and listening on :8080...")
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
@@ -82,20 +87,20 @@ func main() {
 		}
 	}()
 
-	// 7. Graceful shutdown on SIGINT or SIGTERM
+	// 8. Graceful shutdown on SIGINT or SIGTERM
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 	log.Println("Shutdown signal received. Beginning graceful shutdown...")
 
-	// 8. Shutdown the server with a timeout context
+	// 9. Shutdown the server with a timeout context
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
 		log.Printf("Error during forced shutdown of HTTP server: %v", err)
 	}
 
-	// 9. Final cleanup of the asynchronous logs buffer
+	// 10. Final cleanup of the asynchronous logs buffer
 	log.Println("Closing location repository and flushing logs...")
 	repo.Location.Close()
 	log.Println("Application closed properly.")
