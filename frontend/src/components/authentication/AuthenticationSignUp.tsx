@@ -2,6 +2,9 @@ import { apiFetch } from "../../api/apiFetch";
 import PrimaryButton from "../buttons/PrimaryButton";
 import Input from "../primitives/Input";
 import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { signupSchema } from "../../schemas/signupSchema";
 
 interface AuthenticationSignUpProps {
     onLogin: () => void;
@@ -10,27 +13,27 @@ interface AuthenticationSignUpProps {
 export default function AuthenticationSignUp ({
     onLogin,
 }: AuthenticationSignUpProps) {
-    const [email, setEmail] = useState("");
-    const [loginId, setLoginId] = useState("");
-    const [username, setUsername] = useState("");
-    const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
 
-    const handleSignUp = async () => {
-        if (!loginId || !email || !username || !password) {
-            setError("All fields are required");
-            return;
-        }
+    const {
+        register,
+        handleSubmit,
+        formState: { isSubmitting, errors },
+    } = useForm({
+        resolver: zodResolver(signupSchema),
+    });
 
+    const handleSignUp = async (data: any) => {
+        
         setError("");
         setSuccess("");
         
         const body = new URLSearchParams({
-            login: loginId,
-            password,
-            username,
-            email,
+            login: data.loginId,
+            password: data.password,
+            username: data.username,
+            email: data.email,
         });
 
         const options: RequestInit = {
@@ -77,6 +80,7 @@ export default function AuthenticationSignUp ({
                 <PrimaryButton
                     size="small"
                     onClick={onLogin}
+                    
                 >
                     go to login
                 </PrimaryButton>
@@ -85,23 +89,66 @@ export default function AuthenticationSignUp ({
     }
 
     return (
-        
-        <div className="
-            flex
-            flex-col
-            w-full
-            items-center
-            gap-2
-            py-5
-            sm:px-6
-            "
+        <form
+            onSubmit={handleSubmit(handleSignUp)}
+            className="
+                flex
+                flex-col
+                w-full
+                items-center
+                gap-2
+                py-5
+                sm:px-6
+                "
         >
-            <Input label="email" type="email" value={email} onChange={setEmail}/>
-            <Input label="login id" type="text" value={loginId} onChange={setLoginId}/>
-            <Input label="username" type="text" value={username} onChange={setUsername}/>
-            <Input label="password" type="password" value={password} onChange={setPassword}/>
-            
-            <div className="pt-2 text-status-red text-label-small sm:text-heading-small">
+            <Input
+                label="email"
+                type="email"
+                {...register("email")}
+            />
+            {errors.email && (
+                <p className="text-status-red text-body-primary">
+                    {errors.email.message}
+                </p>
+            )}
+
+            <Input
+                label="login id"
+                type="text"
+                {...register("loginId")}
+            />
+
+            {errors.loginId && (
+                <p className="text-status-red text-body-primary">
+                    {errors.loginId.message}
+                </p>
+            )}
+
+            <Input
+                label="username"
+                type="text"
+                {...register("username")}
+            />
+
+            {errors.username && (
+                <p className="text-status-red text-body-primary">
+                    {errors.username.message}
+                </p>
+            )}
+
+            <Input
+                label="password"
+                type="password"
+                {...register("password")}
+            />
+
+            {errors.password && (
+                <p className="text-status-red text-body-primary">
+                    {errors.password.message}
+                </p>
+            )}
+
+            <div className="pt-2 text-status-red text-body-primary sm:text-heading-small">
                 {error && 
                     <p>{error}</p>
                 }
@@ -128,8 +175,10 @@ export default function AuthenticationSignUp ({
                 >
                 Already have an account?
                 </button>
-                <PrimaryButton size="small" onClick={handleSignUp}>sign up</PrimaryButton>
+                <PrimaryButton size="small" type="submit">
+                    {isSubmitting ? "Signing up..." : "Sign up"}
+                </PrimaryButton>
             </div>
-        </div>
+        </form>
     );
 }
