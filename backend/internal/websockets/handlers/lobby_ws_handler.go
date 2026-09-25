@@ -164,13 +164,12 @@ func (h *LobbyWsHandler) SendInfos(ctx context.Context, gameId int64) (interface
 	return data, true
 }
 
-func (h *LobbyWsHandler) UpdateStartAt(ctx context.Context, LobbyId int64, RoundNb int64) error {
-	if RoundNb == 1 {
-		err := h.lobbyRepo.SetStartAt(ctx, LobbyId)
-		if err != nil {
-			log.Printf("error : %s\n", err)
-			return err
-		}
+// Tells whether userId is the current host of the game gameId
+func (h *LobbyWsHandler) IsHost(ctx context.Context, userId int64, gameId int64) bool {
+	lobby, err := h.lobbyRepo.ActualLobby(ctx, userId)
+	if err != nil {
+		log.Printf("error : %s\n", err)
+		return false
 	}
-	return nil
+	return lobby != nil && lobby.GameId == gameId && lobby.IsCreator
 }

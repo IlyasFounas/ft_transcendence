@@ -307,18 +307,15 @@ func (h *GuessWsHandler) EnsureRound(ctx context.Context, gameID, roundNb int64)
 		return nil, err
 	}
 
-	// TODO only host can create the round
-	// TODO if multiplayer, only first round can be created by the host, the rest are created automatically
-	// else, host can create each round in order, but cannot create a round if the previous one is not finished yet (or if the game is finished)
+	// who may create a round, and when, is decided by the hub (start_game, solo start_round, multiplayer timer)
 
-	//get the locationID for the round, to create the round
-	locationID, err := h.roundRepo.GetLocationID(ctx, gameID, roundNb)
-	if err != nil {
+	// never create a round beyond game.round_total (CheckLastRound returns an error in that case)
+	if _, err := h.roundRepo.CheckLastRound(ctx, gameID, roundNb); err != nil {
 		return nil, err
 	}
 
-	// check if this is the last round of the game
-	isLastRound, err := h.roundRepo.CheckLastRound(ctx, gameID, roundNb)
+	//get the locationID for the round, to create the round
+	locationID, err := h.roundRepo.GetLocationID(ctx, gameID, roundNb)
 	if err != nil {
 		return nil, err
 	}
@@ -327,7 +324,6 @@ func (h *GuessWsHandler) EnsureRound(ctx context.Context, gameID, roundNb int64)
 		GameId:     gameID,
 		RoundNb:    roundNb,
 		LocationId: locationID,
-		LastRound:  isLastRound,
 		StartedAt:  time.Now(),
 	})
 }

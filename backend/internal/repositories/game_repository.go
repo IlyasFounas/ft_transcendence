@@ -194,34 +194,6 @@ func (r *GameRepository) SetDifficulty(ctx context.Context, gameId int64,
 	return nil
 }
 
-func (r *GameRepository) SetTimer(ctx context.Context, gameId int64, 
-	timer int64) error {
-	game := &games.Game{Timer: timer}
-	_, err := r.db.NewUpdate().
-		Model(game).
-		Column("timer").
-		Where("id = ?", gameId).
-		Exec(ctx)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (r *GameRepository) SetRoundTotal(ctx context.Context, gameId int64, 
-	round_total int64) error {
-	game := &games.Game{RoundTotal: round_total}
-	_, err := r.db.NewUpdate().
-		Model(game).
-		Column("round_total").
-		Where("id = ?", gameId).
-		Exec(ctx)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func (r *GameRepository) SetFinished(ctx context.Context,
 	gameId int64) error {
 	finished := time.Now()

@@ -22,7 +22,8 @@ func registerGuessRoutes(r *gin.Engine, h *handlers.GuessHandler) {
 
 		// public.PATCH("/guesses/:id", h.UpdateGuessByID) //update a guess  by id (latitude, longitude, round_id, user_id, game_id)
 
-		public.DELETE("/guesses/:id", h.DeleteGuessByID) //delete a guess by id
+		// TODO: to be enabled if we create admin group
+		// public.DELETE("/guesses/:id", h.DeleteGuessByID) //delete a guess by id
 		// public.DELETE("/guesses/round/:round_id", h.DeleteGuessesByRoundID) //delete all guesses for a round
 		// public.DELETE("/guesses/user/:user_id", h.DeleteGuessesByUserID) //delete all guesses for a user
 		// public.DELETE("/guesses/game/:game_id", h.DeleteGuessesByGameID) //delete all guesses of all users for a game

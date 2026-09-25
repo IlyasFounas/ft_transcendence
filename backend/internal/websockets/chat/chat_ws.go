@@ -33,7 +33,7 @@ type Chat struct {
 }
 
 type Response struct {
-	Type 		string `json:"title"`
+	Action 		string `json:"action"`
 	Payload 	any    `json:"payload"`
 }
 
@@ -118,7 +118,7 @@ func (c *Chat) sendToClient(userId int64, friends []*friends.FriendResponse) {
 		})
 	}
 	response := &Response{
-		Type: "friend_list",
+		Action: "friend_list",
 		Payload: friendsList,
 	}
 	data, err := json.Marshal(response)
@@ -140,7 +140,7 @@ func (c *Chat) sendClientState(user *users.User, ctx context.Context) {
 		Online : c.IsOnline(user.ID),
 	}
 	response := &Response{
-		Type: "friend_list",
+		Action: "friend_list",
 		Payload: friendLeft,
 	}
 	data, err := json.Marshal(response)
@@ -171,7 +171,7 @@ func (c *Chat) sendToClientMessages(chatsList []*chats.Chat,
 		TargetId: targetId,
 	}
 	response := &Response{
-		Type: "chats",
+		Action: "chats",
 		Payload: chatsMessage,
 	}
 	data, err := json.Marshal(response)
@@ -189,7 +189,7 @@ func (c *Chat) sendNewChats(chatsList []*chats.Chat,
 		TargetId: targetId,
 	}
 	response := &Response{
-		Type: "new_message",
+		Action: "new_message",
 		Payload: chatsMessage,
 	}
 	data, err := json.Marshal(response)

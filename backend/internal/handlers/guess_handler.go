@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"backend/internal/models/guesses"
+	"backend/internal/models/rounds"
 	"backend/internal/repositories"
 	"backend/internal/tools/haversine"
 	"context"
@@ -42,6 +43,20 @@ type GuessGetter interface {
 	DeleteByID(ctx context.Context, guess_id int64) error
 	// DeleteByRoundID(ctx context.Context, round_id int64) error
 	// DeleteByUserID(ctx context.Context, user_id int64) error
+}
+
+// RoundGetter — methods expected from the repository by the handler
+type RoundGetter interface {
+	Create(ctx context.Context, round *rounds.Round) (*rounds.Round, error)
+	GetGame(ctx context.Context, game_id int64) error
+	GetByID(ctx context.Context, round_id int64) (*rounds.Round, error)
+	GetNextRoundNb(ctx context.Context, game_id int64) (int64, error)
+	CheckLastRound(ctx context.Context, game_id int64, round_nb int64) (bool, error)
+	GetLocationID(ctx context.Context, game_id int64, round_nb int64) (int64, error)
+	GetCoordinatesByLocationID(ctx context.Context, location_id int64) (float64, float64, error)
+	GetCCByLocationID(ctx context.Context, location_id int64) (string, error)
+	GetIDByGameIDAndRoundNb(ctx context.Context, game_id int64, round_nb int64) (int64, error)
+	// DeleteByID(ctx context.Context, round_id int64) error
 }
 
 type GuessHandler struct {

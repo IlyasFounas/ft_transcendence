@@ -32,7 +32,6 @@ type Lobby struct {
 	JoinCode  	*string		`bun:"join_code,unique"`
 	IsCreator  	bool 		`bun:"is_creator"`
 	LeftAt  	*time.Time 	`bun:"left_at"`
-	StartAt  	*time.Time 	`bun:"start_at"`
 
 	Game 		*Game 	`bun:"rel:has-one,join:game_id=id"`
 }
