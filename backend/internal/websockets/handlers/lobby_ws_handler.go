@@ -39,38 +39,46 @@ func (h *LobbyWsHandler) LeaveLobby(ctx context.Context,
 		log.Printf("error : %s\n", err)
 		return false
 	}
-	lobbies, err := h.lobbyRepo.AllPlayers(ctx, lobby.GameId)
+	isCreator, err := h.lobbyRepo.IsCreator(ctx,
+		userId, lobby.GameId)
 	if err != nil {
 		log.Printf("error : %s\n", err)
 		return false
 	}
-	err = h.lobbyRepo.SetJoinCode(ctx,
-		lobby.ID, nil)
-	if err != nil {
-		log.Printf("error : %s\n", err)
-		return false
-	}
-	err = h.lobbyRepo.SetIsCreator(ctx,
-		lobby.ID, false)
-	if err != nil {
-		log.Printf("error : %s\n", err)
-		return false
-	}
-	for _, newLobby := range lobbies {
-		if newLobby.UserId != userId {
-			err = h.lobbyRepo.SetIsCreator(ctx,
-				newLobby.ID, true)
-			if err != nil {
-				log.Printf("error : %s\n", err)
-				return false
+	if isCreator {
+		lobbies, err := h.lobbyRepo.AllPlayers(ctx, lobby.GameId)
+		if err != nil {
+			log.Printf("error : %s\n", err)
+			return false
+		}
+		err = h.lobbyRepo.SetJoinCode(ctx,
+			lobby.ID, nil)
+		if err != nil {
+			log.Printf("error : %s\n", err)
+			return false
+		}
+		err = h.lobbyRepo.SetIsCreator(ctx,
+			lobby.ID, false)
+		if err != nil {
+			log.Printf("error : %s\n", err)
+			return false
+		}
+		for _, newLobby := range lobbies {
+			if newLobby.UserId != userId {
+				err = h.lobbyRepo.SetIsCreator(ctx,
+					newLobby.ID, true)
+				if err != nil {
+					log.Printf("error : %s\n", err)
+					return false
+				}
+				err = h.lobbyRepo.SetJoinCode(ctx,
+					newLobby.ID, lobby.JoinCode)
+				if err != nil {
+					log.Printf("error : %s\n", err)
+					return false
+				}
+				break
 			}
-			err = h.lobbyRepo.SetJoinCode(ctx,
-				newLobby.ID, lobby.JoinCode)
-			if err != nil {
-				log.Printf("error : %s\n", err)
-				return false
-			}
-			break
 		}
 	}
 	return true

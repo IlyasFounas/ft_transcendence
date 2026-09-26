@@ -3,6 +3,7 @@ package repositories
 import (
 	"backend/internal/models/chats"
 	"context"
+
 	"github.com/uptrace/bun"
 )
 
@@ -22,4 +23,25 @@ func (r *ChatRepository) Send(ctx context.Context, chat *chats.Chat) (*chats.Cha
 		return nil, err
 	}
 	return chat, nil
+}
+
+func (r *ChatRepository) Receive(ctx context.Context, userId int64,
+	friendId int64, actualMsgNb int64) ([]*chats.Chat, error) {
+	var chatsMessage []*chats.Chat
+	request := r.db.NewSelect().
+		Model(&chatsMessage).
+		Order("id DESC").
+		WhereGroup(" AND ", func(q *bun.SelectQuery) *bun.SelectQuery {
+			return q.WhereOr("src_user_id = ? AND dst_user_id = ?", userId, friendId).
+				WhereOr("src_user_id = ? AND dst_user_id = ?", friendId, userId)
+		}).
+		Limit(20)
+	if actualMsgNb > 0 {
+		request = request.Where("id < ?", actualMsgNb)
+	}
+	err := request.Scan(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return chatsMessage, nil
 }

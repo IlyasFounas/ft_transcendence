@@ -1,15 +1,17 @@
 package chat_ws
 
 import (
+	"backend/internal/models/chats"
 	"backend/internal/models/friends"
+	"backend/internal/models/users"
 	"backend/internal/repositories"
 	"backend/internal/websockets/client"
 	"backend/internal/websockets/handlers"
 	"context"
 	"encoding/json"
+	// "fmt"
 	"log"
 	"net/http"
-
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 )
@@ -30,6 +32,11 @@ type Chat struct {
 	UserRepo    *repositories.UserRepository
 }
 
+type Response struct {
+	Type 		string `json:"title"`
+	Payload 	any    `json:"payload"`
+}
+
 type ClientInfo struct {
 	Id   		int64
 	Username	string
@@ -38,9 +45,21 @@ type ClientInfo struct {
 }
 
 type ClientChat struct {
-	Connx    *client_ws.Connexion
-	UserId   int64
-	TargetId int64
+	Connx    	*client_ws.Connexion
+	UserId   	int64
+	TargetId 	int64
+}
+
+type ClientTarget struct {
+	TargetId 	int64  `json:"target_id"`
+	Message		string `json:"message"`
+	End			*int64 `json:"end"`
+}
+
+type Chats struct {
+	Chats 		[]*chats.Chat  `json:"chats"`
+	End			*int64 `json:"end,omitempty"`
+	TargetId	int64 `json:"target_id"`
 }
 
 type DataInfos struct {
@@ -98,13 +117,95 @@ func (c *Chat) sendToClient(userId int64, friends []*friends.FriendResponse) {
 			Online : c.IsOnline(friend.UserID),
 		})
 	}
-	data, err := json.Marshal(friendsList)
+	response := &Response{
+		Type: "friend_list",
+		Payload: friendsList,
+	}
+	data, err := json.Marshal(response)
 	if err != nil {
 		log.Printf("error : %s\n", err)
 		return
 	}
-    for client := range c.Clients[userId] {
+	for client := range c.Clients[userId] {
 		client.Connx.Send <- data
+	}
+}
+
+func (c *Chat) sendClientState(user *users.User, ctx context.Context) {
+	friendLeft := &ChatFriend{
+		ID : user.ID,
+		UserID : user.ID,
+		Name : user.Username,
+		Avatar : user.Avatar,
+		Online : c.IsOnline(user.ID),
+	}
+	response := &Response{
+		Type: "friend_list",
+		Payload: friendLeft,
+	}
+	data, err := json.Marshal(response)
+	if err != nil {
+		log.Printf("error : %s\n", err)
+		return
+	}
+	for _, clients := range c.Clients {
+		for client := range clients {
+			friends, ok := c.ChatHandler.FriendList(ctx, client.UserId)
+			if !ok {
+				continue 
+			}
+			for _, friend := range friends {
+				if friend.UserID == friendLeft.ID {
+					client.Connx.Send <- data
+				}		
+			}
+		}
+	}
+}
+
+func (c *Chat) sendToClientMessages(chatsList []*chats.Chat,
+	client *client_ws.Connexion, targetId int64) {
+	chatsMessage := &Chats{
+		Chats: chatsList,
+		End: chats.NewCursor(chatsList).End,
+		TargetId: targetId,
+	}
+	response := &Response{
+		Type: "chats",
+		Payload: chatsMessage,
+	}
+	data, err := json.Marshal(response)
+	if err != nil {
+		log.Printf("error : %s\n", err)
+		return
+	}
+	client.Send <- data
+}
+
+func (c *Chat) sendNewChats(chatsList []*chats.Chat,
+	targetId int64, userId int64) {
+	chatsMessage := &Chats{
+		Chats: chatsList,
+		TargetId: targetId,
+	}
+	response := &Response{
+		Type: "new_message",
+		Payload: chatsMessage,
+	}
+	data, err := json.Marshal(response)
+	if err != nil {
+		log.Printf("error : %s\n", err)
+		return
+	}
+	for client := range c.Clients[targetId] {
+		if client.UserId == targetId && client.TargetId == userId{
+			client.Connx.Send <- data
+		}
+	}
+	for client := range c.Clients[userId] {
+		if (client.UserId == userId && client.TargetId == targetId) {
+			client.Connx.Send <- data
+		}
 	}
 }
 
@@ -124,14 +225,47 @@ func (c *Chat) unregisterClient(client *ClientChat) {
 	}
 }
 
-func (c *Chat) handleAction(serializedData *DataInfos) {
+func (c *Chat) handleAction(ctx context.Context, serializedData *DataInfos) {
 	switch serializedData.Action {
-	case "open_chat":
-		// TODO open the chat and give the 20 last messages
+	case "fetch_messages":
+		// when you fetch some messages, you are in a chat
+		// so you receive in live the messages from your friend
+		var payload ClientTarget
+		err := json.Unmarshal(serializedData.Payload, &payload)
+		if err != nil {
+			log.Printf("error : %s\n", err)
+			return
+		}
+		var end int64
+		if payload.End != nil {
+			end = *payload.End
+		} else {
+			end = 0
+		}
+		chatsList, ok := c.ChatHandler.Receive(ctx, serializedData.Client.UserId,
+			payload.TargetId, end)
+		if !ok {
+			log.Println("error : no message found")
+			return 
+		}
+		serializedData.Client.TargetId = payload.TargetId
+		c.sendToClientMessages(chatsList, serializedData.Client.Connx, payload.TargetId)
 	case "send":
 		// TODO send the message to the friend
-	case "receive_messages":
-		// TODO give the 20 more last messages
+		var payload ClientTarget
+		err := json.Unmarshal(serializedData.Payload, &payload)
+		if err != nil {
+			log.Printf("error : %s\n", err)
+			return
+		}
+		var chats []*chats.Chat
+		chat , ok := c.ChatHandler.Send(ctx, serializedData.Client.UserId,
+			payload.TargetId, payload.Message)
+		if !ok || chat == nil {
+			return ;
+		}
+		chats = append(chats, chat)
+		c.sendNewChats(chats, payload.TargetId, serializedData.Client.UserId)
 	default:
 		log.Printf("unknown action : %s\n", serializedData.Action)
 	}
@@ -182,10 +316,20 @@ func (c *Chat) Run(ctx context.Context) {
 				continue 
 			}
 			c.sendToClient(client.UserId, friends)
+			user, ok := c.ChatHandler.GetUser(ctx, client.UserId)
+			if !ok {
+				continue 
+			}
+			c.sendClientState(user, ctx)
 		case client := <-c.Unregister:
 			c.unregisterClient(client)
+			user, ok := c.ChatHandler.GetUser(ctx, client.UserId)
+			if !ok {
+				continue 
+			}
+			c.sendClientState(user, ctx)
 		case data := <-c.Action:
-			c.handleAction(data)
+			c.handleAction(ctx, data)
 		}
 	}
 }

@@ -48,11 +48,13 @@ func initGameObj(c *gin.Context, locationRepo *repositories.LocationRepository) 
 	// check if there are enough unique locations available for the requested number of rounds
 	err = locationRepo.CheckEnoughLocations(c, round_total)
 	if err != nil {
+		log.Printf("error : %s\n", err)
 		return nil, err
 	}
 	// get location list based on total nb of rounds
 	locationIDs, err = locationRepo.GetRandomLocations(c.Request.Context(), round_total)
 	if err != nil {
+		log.Printf("error : %s\n", err)
 		return nil, err;
 	}
 
@@ -128,6 +130,7 @@ func (h *GameHandler) CreateLobby() gin.HandlerFunc {
 			if err == nil {
 				gameObj, err := initGameObj(c, h.locationRepo)
 				if err != nil {
+					log.Printf("error : %s\n", err)
 					h.lobbyRepo.RemoveLobby(c.Request.Context(), lobby)
 					c.JSON(http.StatusUnauthorized,
 						gin.H{"message": "the game initiation failed"})
@@ -151,7 +154,7 @@ func (h *GameHandler) CreateLobby() gin.HandlerFunc {
 					gin.H{"message": "success", "lobby_id": lobby.ID})
 				return
 			}
-			fmt.Println("The join code already exist, currently retrying...\n")				
+			fmt.Println("The join code already exist, currently retrying...")				
 		}
 		c.JSON(http.StatusUnauthorized,
 			gin.H{"message": "the creation of the lobby failed, try again"})
