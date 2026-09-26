@@ -1,14 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { Friend } from "../../types/user.types";
 import FriendsList from "./FriendList";
 import Conversation from "./Conversation";
 import { conversations } from "../../data/conversation";
 import type { Message } from "../../types/message.type";
 import useChatWebSocket from "../../hooks/useChatWebSocket";
-
-interface ChatPanelProps {
-  friends: Friend[];
-}
+import { useAuth } from "../../context/AuthContext";
 
 const getCurrentTime = () => {
     return new Date().toLocaleTimeString([], {
@@ -17,12 +14,49 @@ const getCurrentTime = () => {
     });
 };
 
-export default function ChatPanel({ friends }: ChatPanelProps) {
+export default function ChatPanel() {
+
+    const { authFetch } = useAuth();
+    const { chatFriends } = useChatWebSocket();
+    console.log("ChatPanel chatFriends:", chatFriends);
+    
     const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
     const [conversationData, setConversationData] = useState(conversations);
-    const [friendList, setFriendList] = useState(friends);
+    const [friendList, setFriendList] = useState<Friend[]>([]);
+    
+    useEffect(() => {
+        const getFriends = async () => {
+            const result = await authFetch("api/friend");
 
-    useChatWebSocket();
+            if (!result) {
+                return;
+            }
+
+            const formattedFriends: Friend[] = (result.data.friends ?? []).map(
+                (friend: any) => ({
+                    userId: friend.user_id,
+                    username: friend.name,
+                    avatar: friend.avatar || "/avatars/avatar1.png",
+                })
+            );
+
+            setFriendList(formattedFriends);
+        };
+
+        getFriends();
+    }, []);
+    const friendsWithOnlineStatus = friendList.map(friend => {
+        const chatFriend = chatFriends.find(
+            chatFriend => chatFriend.user_id === friend.userId
+        );
+        
+        return {
+            ...friend,
+            online: chatFriend?.online ?? false,
+        };
+    });
+
+    console.log("Friends with WebSocket status:", friendsWithOnlineStatus);
     
     const handleSendMessage = (message: string) => {
         if (!selectedFriend) return;
@@ -81,7 +115,7 @@ export default function ChatPanel({ friends }: ChatPanelProps) {
                 `}
             >
                 <FriendsList
-                    friends={friendList}
+                    friends={friendsWithOnlineStatus}
                     onOpenChat={setSelectedFriend}
                 />
             </div>

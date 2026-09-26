@@ -11,7 +11,7 @@ export default function FriendsList({
     onOpenChat,
 }: FriendsListProps) {
 
-    const onlineCount = friends.filter((friend) => friend.status === "online").length;
+    const onlineCount = friends.filter((friend) => friend.online).length;
 
     return (
         <div
@@ -50,7 +50,7 @@ export default function FriendsList({
                         <FriendChatRow
                             username={friend.username}
                             avatar={friend.avatar}
-                            status={friend.status}
+                            status={friend.online ? "online" : "offline"}
                             lastMessage={friend.lastMessage}
                             timestamp={friend.timestamp}
                             onOpenChat={() => onOpenChat(friend)}

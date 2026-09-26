@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Outlet } from "react-router-dom"
 import ChatPanel from "../components/chat/ChatPanel";
 import { Navbar } from "../components/navbar/Navbar";
-import { chatlists } from "../data/chatlists";
 
 export function ChatLayout () {
 
@@ -57,7 +56,7 @@ export function ChatLayout () {
                     lg:block
                     `}
                 >
-                    <ChatPanel friends={chatlists} />
+                    <ChatPanel />
                 </div>
             </div>
         </>
