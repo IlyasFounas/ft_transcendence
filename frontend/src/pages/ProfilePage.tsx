@@ -218,10 +218,6 @@ export default function ProfilePage() {
                         "/avatars/avatar18.png",
                     ]}
                     onClose={() => setShowEditProfile(false)}
-                    onSave={(username, avatar) => {
-                        console.log(username, avatar);
-                        setShowEditProfile(false);
-                    }}
                 />
             )}
       	</main>					    

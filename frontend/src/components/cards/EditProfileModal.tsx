@@ -1,14 +1,17 @@
 import { useState } from "react";
 import { X, Upload, Pencil } from "lucide-react";
 import Avatar from "../primitives/Avatar";
-import SecondaryButton from "../buttons/SecondaryButton";
+import { useAuth } from "../../context/AuthContext";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { editProfileSchema } from "../../schemas/editProfileSchema";
+import type { EditProfileFormData } from "../../schemas/editProfileSchema";
 
 interface EditProfileModalProps {
     username: string;
     avatar: string;
     avatars: string[];
     onClose: () => void;
-    onSave: (username: string, avatar: string) => void;
 }
 
 export default function EditProfileModal({
@@ -16,11 +19,24 @@ export default function EditProfileModal({
     avatar,
     avatars,
     onClose,
-    onSave,
 }: EditProfileModalProps) {
 
-    const [newUsername, setNewUsername] = useState(username);
+    const { authFetch, getUser} = useAuth();
+
     const [selectedAvatar, setSelectedAvatar] = useState(avatar);
+    const [avatarFile, setAvatarFile] = useState<File | null>(null);
+    const [uploadError, setUploadError] = useState("");
+
+    const {
+        register,
+        handleSubmit,
+        formState: { isSubmitting, errors },
+    } = useForm<EditProfileFormData>({
+        resolver: zodResolver(editProfileSchema),
+        defaultValues: {
+            username,
+        },
+    });
 
     const handleUpload = (
         event: React.ChangeEvent<HTMLInputElement>
@@ -31,12 +47,67 @@ export default function EditProfileModal({
             return;
         }
 
-        const imageUrl = URL.createObjectURL(file);
-        setSelectedAvatar(imageUrl);
+        const maxSize = 5 * 1024 * 1024;
+
+        if (file.size > maxSize) {
+            setUploadError("Image must be smaller than 5MB.");
+            return;
+        }
+
+        setUploadError("");
+        setAvatarFile(file);
+        setSelectedAvatar(URL.createObjectURL(file));
     };
 
-    const handleSave = () => {
-        onSave(newUsername, selectedAvatar);
+    const handleSave = async (data: EditProfileFormData) => {
+        const usernameBody = new URLSearchParams({
+            name: data.username,
+        });
+
+        const usernameResult = await authFetch("api/user/name", {
+            method: "PATCH",
+            body: usernameBody,
+        });
+
+        if (!usernameResult){
+            return;
+        }
+
+        if (avatarFile) {
+            const formData = new FormData();
+            formData.append("avatar", avatarFile);
+
+            const avatarResult = await authFetch("api/user/avatar/upload", {
+                method: "POST",
+                body: formData,
+            });
+
+            if (!avatarResult) {
+                return ;
+            }
+
+            if (avatarResult.status !== 200) {
+                setUploadError(
+                    avatarResult.data?.message || "Failed to upload avatar."
+                );
+                return;
+            }
+
+        } else {
+            const avatarBody = new URLSearchParams({
+                avatar: selectedAvatar,
+            });
+            
+            const avatarResult = await authFetch("api/user/avatar", {
+                method: "PATCH",
+                body: avatarBody,
+            });
+            if (!avatarResult) {
+                return ;
+            }
+        }
+        await getUser();
+        onClose();
     };
 
     return (
@@ -124,9 +195,11 @@ export default function EditProfileModal({
                                         <button
                                             key={avatarOption}
                                             type="button"
-                                            onClick={() =>
-                                                setSelectedAvatar(avatarOption)
-                                            }
+                                            onClick={() => {
+                                                setSelectedAvatar(avatarOption);
+                                                setAvatarFile(null);
+                                                setUploadError("");
+                                            }}
                                             className={`
                                                 flex
                                                 items-center
@@ -187,6 +260,11 @@ export default function EditProfileModal({
                                     className="hidden"
                                 />
                             </label>
+                            {uploadError && (
+                                <p className="text-red-400 text-body-primary text-center pt-2">
+                                    {uploadError}
+                                </p>
+                            )}
                         </div>
                     </div>
 
@@ -215,12 +293,7 @@ export default function EditProfileModal({
                     >
                         <input
                             type="text"
-                            value={newUsername}
-                            onChange={(event) =>
-                                setNewUsername(event.target.value)
-                            }
-                            minLength={3}
-                            maxLength={30}
+                            {...register("username")}
                             className="
                                 flex-1
                                 min-w-0
@@ -237,9 +310,11 @@ export default function EditProfileModal({
                             className="text-primary shrink-0"
                         />
                     </div>
-                    <p className="text-label-small lg:text-body-primary text-text-secondary mt-2">
-                        {newUsername.length} / 30 characters
-                    </p>
+                    {errors.username && (
+                        <p className="text-red-400 text-sm mt-2">
+                            {errors.username.message}
+                        </p>
+                    )}
                 </section>
 
                 <div className="flex justify-center gap-4 mt-6">
@@ -265,7 +340,8 @@ export default function EditProfileModal({
                     </button>
                     <button
                         type="button"
-                        onClick={handleSave}
+                        onClick={handleSubmit(handleSave)}
+                        disabled={isSubmitting}
                         className="
                             px-6
                             py-3
