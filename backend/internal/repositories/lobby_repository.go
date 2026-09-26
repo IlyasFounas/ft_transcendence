@@ -160,26 +160,23 @@ func (r *LobbyRepository) NbGames(ctx context.Context,
 	return count, nil
 }
 
-// TODO finish
 func (r *LobbyRepository) Historic(ctx context.Context,
-	userId int64) ([]*games.Game, error){
-	var games []*games.Game
+	userId int64) ([]*games.Lobby, error){
+	var lobbies []*games.Lobby
 	err := r.db.NewSelect().
-		Model(games).
-		Column("id", "round_nb").
+		Model(&lobbies).
 		Relation("Game", func(q *bun.SelectQuery) *bun.SelectQuery {
 			return q.Where("finished_at IS NOT NULL")
 		}).
-		Where("user_id = ?", userId).
-		Where("left_at >= game.finished_at").
+		Where("lo.left_at IS NOT NULL").
+		Where("lo.start_at IS NOT NULL").
+		Where("lo.left_at >= lo.start_at").
+		Where("lo.user_id = ?", userId).
 		Scan(ctx)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, errors.New("You don't have any games")
-		}
 		return nil, err
 	}
-	return games, nil
+	return lobbies, nil
 }
 
 func (r *LobbyRepository) JoinCode(ctx context.Context,

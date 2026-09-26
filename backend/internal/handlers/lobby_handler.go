@@ -229,7 +229,7 @@ func (h *LobbyHandler) AllPlayers() gin.HandlerFunc {
 
 func (h *LobbyHandler) NbGames() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		userId, err := strconv.ParseInt(c.Param("userId"), 10, 64)
+		userId, err := strconv.ParseInt(c.Param("userid"), 10, 64)
 		if err != nil {
 			log.Printf("error : %s\n", err)
 			c.JSON(http.StatusUnauthorized, 
@@ -250,7 +250,7 @@ func (h *LobbyHandler) NbGames() gin.HandlerFunc {
 
 func (h *LobbyHandler) Historic() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		userId, err := strconv.ParseInt(c.Param("userId"), 10, 64)
+		userId, err := strconv.ParseInt(c.Param("userid"), 10, 64)
 		if err != nil {
 			log.Printf("error : %s\n", err)
 			c.JSON(http.StatusUnauthorized, 
