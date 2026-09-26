@@ -4,6 +4,7 @@ import FriendsList from "./FriendList";
 import Conversation from "./Conversation";
 import { conversations } from "../../data/conversation";
 import type { Message } from "../../types/message.type";
+import useChatWebSocket from "../../hooks/useChatWebSocket";
 
 interface ChatPanelProps {
   friends: Friend[];
@@ -21,6 +22,8 @@ export default function ChatPanel({ friends }: ChatPanelProps) {
     const [conversationData, setConversationData] = useState(conversations);
     const [friendList, setFriendList] = useState(friends);
 
+    useChatWebSocket();
+    
     const handleSendMessage = (message: string) => {
         if (!selectedFriend) return;
 
