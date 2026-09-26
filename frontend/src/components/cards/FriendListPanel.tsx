@@ -40,7 +40,7 @@ export default function FriendListPanel() {
                 return;
             }
             console.log(result.data);
-            const formattedFriends: Friend[] = result.data.friends.map(
+            const formattedFriends: Friend[] = (result.data.friends ?? []).map(
                 (friend: FriendResponse) => ({
                     userId: friend.user_id,
                     username: friend.name,
@@ -58,7 +58,7 @@ export default function FriendListPanel() {
             return;
         }
         console.log(result.data);
-        const formattedRequests: Friend[] = result.data.friendRequests.map(
+        const formattedRequests: Friend[] = (result.data.friendRequests ?? []).map(
             (request: FriendResponse) => ({
                 userId: request.user_id,
                 username: request.name,
@@ -75,7 +75,7 @@ export default function FriendListPanel() {
             return;
         }
         console.log(result.data);
-        const formattedPending: Friend[] = result.data.friendPending.map(
+        const formattedPending: Friend[] = (result.data.friendPending ?? []).map(
             (pending: FriendResponse) => ({
                 userId: pending.user_id,
                 username: pending.name,
