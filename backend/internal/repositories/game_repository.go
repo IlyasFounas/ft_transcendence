@@ -105,14 +105,6 @@ func (r *GameRepository) RoundTotal(ctx context.Context, gameId int64) (int64, e
 	return game.RoundTotal, nil
 }
 
-func (r *GameRepository) Finished(ctx context.Context, gameId int64) (bool, error){
-	return r.db.NewSelect().
-		Model((*games.Game)(nil)).
-		Column("finished_at").
-		Where("id = ?", gameId).
-		Exists(ctx)
-}
-
 func (r *GameRepository) FinishedAt(ctx context.Context, gameId int64) (*time.Time, error){
 	game := new(games.Game)
 	err := r.db.NewSelect().
@@ -195,10 +187,7 @@ func (r *GameRepository) SetDifficulty(ctx context.Context, gameId int64,
 	return nil
 }
 
-// First call sets finished_at and, in the same transaction,
-// adds to each player the base_score he earned in this game (users.xp)
-// The next calls do nothing, so the xp of a game is never counted twice
-// (the hub, the HTTP route and a reconnection can all call it).
+// Marks the game as finished, only once
 func (r *GameRepository) SetFinished(ctx context.Context,
 	gameId int64) error {
 	return r.db.RunInTx(ctx, nil, func(ctx context.Context, tx bun.Tx) error {

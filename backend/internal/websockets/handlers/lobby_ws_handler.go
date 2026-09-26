@@ -202,3 +202,22 @@ func (h *LobbyWsHandler) CloseLobby(ctx context.Context, gameId int64, connected
 	}
 	return true
 }
+
+// Removes userId from the game gameId once it is finished
+// Nothing is handed over to another player (host, join code): the game is over, nobody needs them anymore
+func (h *LobbyWsHandler) LeaveFinishedGame(ctx context.Context, userId int64, gameId int64) bool {
+	lobby, err := h.lobbyRepo.ActualLobbyGameId(ctx, userId, gameId)
+	if err != nil {
+		log.Printf("error : %s\n", err)
+		return false
+	}
+	if lobby == nil {
+		// already out of the game (another tab left first, or removed at the end of the game)
+		return true
+	}
+	if err := h.lobbyRepo.SetLeftAt(ctx, lobby.ID); err != nil {
+		log.Printf("error : %s\n", err)
+		return false
+	}
+	return true
+}

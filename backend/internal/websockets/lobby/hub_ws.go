@@ -203,7 +203,7 @@ func (h *Hub) sendToClientByUserID(gameId int64, userId int64, payload interface
 	}
 }
 
-// sendError tells ONE client why its action was refused (the other players don't need to know)
+// Tells ONE client why its action was refused (the other players don't need to know)
 func (h *Hub) sendError(client *ClientHub, message string) {
 	h.sendToClient(client, WsMessage{Action: "error", Payload: gin.H{"message": message}})
 }
@@ -272,7 +272,13 @@ func (h *Hub) inProgress(gameId int64) bool {
 	return ok && !(state.Phase == phasePause && state.IsLastRound)
 }
 
-// nextRoundToStart decides, from the hub's state only (never from anything a client sent), which round the game is waiting to start:
+// Checks whether the last round of gameId has ended
+func (h *Hub) gameOver(gameId int64) bool {
+	state, ok := h.RoundState[gameId]
+	return ok && state.Phase == phasePause && state.IsLastRound
+}
+
+// It decides, from the hub's state only (never from anything a client sent), which round the game is waiting to start:
 //   - phaseStarting: start_game has been accepted, so it's round 1
 //   - phasePause: we're between two rounds, so it's the next one (none after the last round)
 //   - no state (the game hasn't started: use start_game) or phasePlaying (a round is already running): nothing to start
@@ -325,10 +331,6 @@ func (h *Hub) unregisterClient(client *ClientHub) {
 	}
 	if len(h.Clients[client.GameId]) == 0 {
 		delete(h.Clients, client.GameId)
-		// states' deletion (pause or playing) 
-		if state, ok := h.RoundState[client.GameId]; ok && state.IsLastRound {
-			delete(h.RoundState, client.GameId)
-		}
 	}
 	close(client.Connx.Send)
 }
@@ -347,7 +349,7 @@ func (h *Hub) handleAction(ctx context.Context, data *DataInfos) {
 			}
 			h.clientLobbyBroadcast(data.Client.GameId, ctx)
 		}
-		// close every connection of the player (that may be several tabs open)
+		// close every connection of the kicked player (he may have several tabs open)
 		for client := range h.Clients[data.Client.GameId] {
 			if client.UserId == data.Client.UserId {
 				client.Connx.Conn.Close()
@@ -364,6 +366,7 @@ func (h *Hub) handleAction(ctx context.Context, data *DataInfos) {
 			return
 		}
 		h.clientLobbyBroadcast(data.Client.GameId, ctx)
+		// close every connection of the kicked player (he may have several tabs open)
 		for client := range h.Clients[data.Client.GameId] {
 			if client.UserId == targetClient.TargetId {
 				client.Connx.Conn.Close()
@@ -406,20 +409,25 @@ func (h *Hub) handleAction(ctx context.Context, data *DataInfos) {
 		h.EndRound(ctx, evt.GameId, evt.RoundNb)
 
 	case "finished":
-		//check if the game is finished, if so, update the left_at timestamp in the database and leave the lobby
-		if data.Client != nil {
-			isFinished, err := h.GameRepo.Finished(ctx, data.Client.GameId)
-			if err != nil {
-				log.Printf("error : %s\n", err)
-				return
-			}
-			if isFinished {
-				log.Printf("game %d finished, client %d left the lobby\n", data.Client.GameId, data.Client.UserId)
-				data.Client.Connx.Conn.Close()
-				return
-			}
-			log.Printf("game %d is not finished\n", data.Client.GameId)
+		// each player leaves the finished game on his own
+		// (the others stay on the results as long as they want)
+		// and only once the last round has ended and its results have been sent
+		if data.Client == nil {
 			return
+		}
+		if !h.gameOver(data.Client.GameId) {
+			h.sendError(data.Client, "the game is not finished yet")
+			return
+		}
+		if !h.LobbyWsHandler.LeaveFinishedGame(ctx, data.Client.UserId, data.Client.GameId) {
+			h.sendError(data.Client, "could not leave the game, try again")
+			return
+		}
+		// close every connection of this player only (he may have several tabs open)
+		for client := range h.Clients[data.Client.GameId] {
+			if client.UserId == data.Client.UserId {
+				client.Connx.Conn.Close()
+			}
 		}
 	default:
 		log.Printf("unknown action : %s\n", data.Action)
@@ -682,6 +690,11 @@ func (h *Hub) EndRound(ctx context.Context, gameId, roundNb int64) {
 
 	h.broadcast(gameId, WsMessage{Action: "round_results", Payload: broadcastPayload})
 
+	if isLastRound && len(h.Clients[gameId]) == 0 {
+		// the game ended with nobody connected (everyone lost his connection): no disconnection will come
+		// to drop its state later (see Run), so it goes now
+		delete(h.RoundState, gameId)
+	}
 	if isLastRound || solo {
 		// solo: no timer, the next round will be started by the player's "start_round" (see handleStartRound)
 		return
@@ -737,6 +750,30 @@ func JoinLobby(hub *Hub) gin.HandlerFunc {
 	}
 }
 
+// handleDisconnection decides what a closed connection means for the player, depending on where the game is
+func (h *Hub) handleDisconnection(ctx context.Context, client *ClientHub) {
+	if h.connectedPlayers(client.GameId)[client.UserId] {
+		// the player still has another tab open on this game: he hasn't left
+		return
+	}
+	if h.inProgress(client.GameId) {
+		// connection lost during the game: the player stays in it and can reconnect
+		// He only leaves with a "leave" action, or at the end of the game if he hasn't come back
+		return
+	}
+	if h.gameOver(client.GameId) {
+		// after the last round the player just leaves: no host or join code to hand over
+		h.LobbyWsHandler.LeaveFinishedGame(ctx, client.UserId, client.GameId)
+		return
+	}
+	// still in the lobby: the player leaves it (the host and the join code go to another player if needed)
+	if !h.LobbyWsHandler.LeaveLobby(ctx, client.UserId) {
+		log.Println("error : the client can't leave the lobby in the database")
+		return
+	}
+	h.clientLobbyBroadcast(client.GameId, ctx)
+}
+
 func (h *Hub) Run(ctx context.Context) {
 	for {
 		select {
@@ -752,20 +789,12 @@ func (h *Hub) Run(ctx context.Context) {
 			h.resyncClient(ctx, client)
 		case client := <-h.Unregister:
 			h.unregisterClient(client)
-			if h.connectedPlayers(client.GameId)[client.UserId] {
-				// the player still has another tab open on this game: he hasn't left
-				continue
+			h.handleDisconnection(ctx, client)
+			// a finished game keeps its state while players are still on its results (gameOver reads it),
+			// and loses it when the last one is gone: nobody can come back to a finished game
+			if len(h.Clients[client.GameId]) == 0 && h.gameOver(client.GameId) {
+				delete(h.RoundState, client.GameId)
 			}
-			if h.inProgress(client.GameId) {
-				// connection lost during the game: the player stays in it and can reconnect
-				// He only leaves with a "leave" action, or at the end of the game if he hasn't come back
-				continue
-			}
-			if !h.LobbyWsHandler.LeaveLobby(ctx, client.UserId) {
-				log.Println("error : the client can't leave the lobby in the database")
-				continue
-			}
-			h.clientLobbyBroadcast(client.GameId, ctx)
 		case serializedData := <- h.Action:
 			h.handleAction(ctx, serializedData)
 		}
