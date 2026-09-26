@@ -51,7 +51,7 @@ func registerUserRoutes(r *gin.Engine, h *handlers.UserHandler, ht *handlers.Tok
 		private.PATCH("/user/avatar", h.SetAvatar())
 		private.POST("/auth/logout", h.Logout())
 		private.POST("/user/avatar/upload", h.UploadAvatar())
-		private.GET("/user/xp/:user_id", h.XP())
+		private.GET("/user/xp", h.XP())
 		private.GET("/leaderboard/user", h.UserLeaderboard()) // position, name and xp of the connected user
 	}
 	// TODO admin: to be enabled in the admin group (a user must not be able to set his own xp)
