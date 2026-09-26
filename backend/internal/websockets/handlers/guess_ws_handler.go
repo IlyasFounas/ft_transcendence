@@ -283,6 +283,25 @@ func (h *GuessWsHandler) BuildRoundResults(
 	return results, nil
 }
 
+// Tells whether userID has already sent his guess for the round roundNb of gameID
+// (used when a player reconnects during a round)
+func (h *GuessWsHandler) HasGuessed(ctx context.Context, gameID, roundNb, userID int64) (bool, error) {
+	roundID, err := h.roundRepo.GetIDByGameIDAndRoundNb(ctx, gameID, roundNb)
+	if err != nil {
+		return false, err
+	}
+	roundGuesses, err := h.guessRepo.GetByRoundID(ctx, roundID)
+	if err != nil {
+		return false, err
+	}
+	for _, g := range roundGuesses {
+		if g.UserID == userID {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
 // Retrieves the internal ID of a round from its round_nb: the front never needs to know round_id
 func (h *GuessWsHandler) ResolveRoundID(ctx context.Context, gameID, roundNb int64) (int64, error) {
 	return h.roundRepo.GetIDByGameIDAndRoundNb(ctx, gameID, roundNb)

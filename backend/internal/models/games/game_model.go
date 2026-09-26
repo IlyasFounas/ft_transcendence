@@ -32,6 +32,7 @@ type Lobby struct {
 	JoinCode  	*string		`bun:"join_code,unique"`
 	IsCreator  	bool 		`bun:"is_creator"`
 	LeftAt  	*time.Time 	`bun:"left_at"`
+	Kicked  	bool 		`bun:"kicked,notnull,default:false" json:"-"` // kicked out by the host: can't join this game again
 
 	Game 		*Game 	`bun:"rel:has-one,join:game_id=id"`
 }

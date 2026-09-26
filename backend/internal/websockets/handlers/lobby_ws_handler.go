@@ -3,6 +3,8 @@ package ws_handlers
 import (
 	"backend/internal/repositories"
 	"context"
+	"database/sql"
+	"errors"
 	"log"
 )
 
@@ -13,7 +15,7 @@ type LobbyWsHandler struct {
 }
 
 type lobbyInfos struct {
-	JoinCode   string `json:"join_code"`
+	JoinCode   *string `json:"join_code"`
 	RoundTotal int64  `json:"round_total"`
 	Timer      int64  `json:"timer"`
 }
@@ -110,7 +112,8 @@ func (h *LobbyWsHandler) RemovePlayer(ctx context.Context,
 		log.Println("error : you're not allowed to remove the player")
 		return false
 	}
-	err = h.lobbyRepo.SetLeftAt(ctx, lobby.ID)
+	// the kicked player won't be able to join this game again
+	err = h.lobbyRepo.Kick(ctx, lobby.ID)
 	if err != nil {
 		log.Printf("error : %s\n", err)
 		return false
@@ -147,8 +150,9 @@ func (h *LobbyWsHandler) SendInfos(ctx context.Context, gameId int64) (interface
 	if !ok {
 		return nil, false
 	}
+	// the join code is removed when the game starts: a player reconnecting to a started game still gets the other infos
 	joinCode, err := h.lobbyRepo.JoinCode(ctx, gameId)
-	if err != nil {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		log.Printf("error : %s\n", err)
 		return nil, false
 	}
@@ -157,7 +161,7 @@ func (h *LobbyWsHandler) SendInfos(ctx context.Context, gameId int64) (interface
 		return nil, false
 	}
 	data := lobbyInfos{
-		JoinCode:   *joinCode,
+		JoinCode:   joinCode,
 		RoundTotal: roundTotal,
 		Timer:      timer,
 	}
@@ -172,4 +176,29 @@ func (h *LobbyWsHandler) IsHost(ctx context.Context, userId int64, gameId int64)
 		return false
 	}
 	return lobby != nil && lobby.GameId == gameId && lobby.IsCreator
+}
+
+// When the game starts and when it ends: the join code is removed (nobody can join anymore)
+// and the players who are in the lobby without being connected to the WS (not in connected) are removed from it
+func (h *LobbyWsHandler) CloseLobby(ctx context.Context, gameId int64, connected map[int64]bool) bool {
+	players, err := h.lobbyRepo.AllPlayers(ctx, gameId)
+	if err != nil {
+		log.Printf("error : %s\n", err)
+		return false
+	}
+	for _, player := range players {
+		if player.JoinCode != nil {
+			if err := h.lobbyRepo.SetJoinCode(ctx, player.ID, nil); err != nil {
+				log.Printf("error : %s\n", err)
+				return false
+			}
+		}
+		if !connected[player.UserId] {
+			if err := h.lobbyRepo.SetLeftAt(ctx, player.ID); err != nil {
+				log.Printf("error : %s\n", err)
+				return false
+			}
+		}
+	}
+	return true
 }
