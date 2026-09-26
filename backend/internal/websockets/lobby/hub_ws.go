@@ -50,7 +50,8 @@ type internalRoundEvent struct {
 	RoundNb int64 `json:"round_nb"`
 }
 
-//Struct sent to all clients when the host starts the game, and resent to a client that reconnects during the countdown before round 1
+// Sent to all clients when the host starts the game, and resent to a client that (re)connects during the countdown before round 1.
+
 type GameStartedBroadcast struct {
 	RoundNb     int64      `json:"round_nb"`
 	NextRoundAt *time.Time `json:"next_round_at,omitempty"`
@@ -249,19 +250,10 @@ func (h *Hub) resyncClient(client *ClientHub) {
 		})
 	case phasePause:
 		payload := RoundResultBroadcast{RoundNb: state.RoundNb, Results: state.LastResults, IsLastRound: state.IsLastRound}
-		if !state.IsLastRound {
-			if !state.Solo {
-				// in solo there's no countdown: the player starts the next round himself (start_round)
-				nextRoundAt := state.NextRoundAt
-				payload.NextRoundAt = &nextRoundAt
-			}
-		} else {
-			//set finished_at in the database for the game, since the last round has ended
-			err := h.GameRepo.SetFinished(context.Background(), client.GameId)
-			if err != nil {
-				log.Printf("error : %s\n", err)
-				return
-			}
+		// countdown to the next round: multiplayer only 
+		if !state.IsLastRound && !state.Solo {
+			nextRoundAt := state.NextRoundAt
+			payload.NextRoundAt = &nextRoundAt
 		}
 		h.sendToClient(client, WsMessage{Action: "round_results", Payload: payload})
 	}
@@ -627,6 +619,12 @@ func (h *Hub) EndRound(ctx context.Context, gameId, roundNb int64) {
 	if err != nil {
 		log.Printf("error : %s\n", err)
 		return
+	}
+	if isLastRound {
+		// the game is over: finished_at is set and every player gets the base_score of this game in his xp (only once)
+		if err := h.GameRepo.SetFinished(ctx, gameId); err != nil {
+			log.Printf("error : %s\n", err)
+		}
 	}
 
 	broadcastPayload := RoundResultBroadcast{RoundNb: roundNb, Results: results, IsLastRound: isLastRound}

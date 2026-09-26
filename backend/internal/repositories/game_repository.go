@@ -9,11 +9,12 @@ import (
 )
 
 type GameRepository struct {
-	db *bun.DB
+	db       *bun.DB
+	userRepo *UserRepository // to add the xp of the players when the game is finished
 }
 
-func NewGameRepository(db *bun.DB) *GameRepository {
-	return &GameRepository{db: db}
+func NewGameRepository(db *bun.DB, userRepo *UserRepository) *GameRepository {
+	return &GameRepository{db: db, userRepo: userRepo}
 }
 
 func (r *GameRepository) CreateGame(ctx context.Context, game *games.Game) (*games.Game, error){
@@ -194,19 +195,32 @@ func (r *GameRepository) SetDifficulty(ctx context.Context, gameId int64,
 	return nil
 }
 
+// First call sets finished_at and, in the same transaction,
+// adds to each player the base_score he earned in this game (users.xp)
+// The next calls do nothing, so the xp of a game is never counted twice
+// (the hub, the HTTP route and a reconnection can all call it).
 func (r *GameRepository) SetFinished(ctx context.Context,
 	gameId int64) error {
-	finished := time.Now()
-	game := &games.Game{FinishedAt: &finished}
-	_, err := r.db.NewUpdate().
-		Model(game).
-		Column("finished_at").
-		Where("id = ?", gameId).
-		Exec(ctx)
-	if err != nil {
-		return err
-	}
-	return nil
+	return r.db.RunInTx(ctx, nil, func(ctx context.Context, tx bun.Tx) error {
+		res, err := tx.NewUpdate().
+			Model((*games.Game)(nil)).
+			Set("finished_at = ?", time.Now()).
+			Where("id = ?", gameId).
+			Where("finished_at IS NULL").
+			Exec(ctx)
+		if err != nil {
+			return err
+		}
+		affected, err := res.RowsAffected()
+		if err != nil {
+			return err
+		}
+		if affected == 0 {
+			// already finished: the xp of this game has already been added
+			return nil
+		}
+		return r.userRepo.AddGameXP(ctx, tx, gameId)
+	})
 }
 
 func (r *GameRepository) SetPlayerNb(ctx context.Context, game_id int64, 
