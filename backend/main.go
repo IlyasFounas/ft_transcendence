@@ -61,13 +61,14 @@ func main() {
 	wh := ws_handlers.NewWsHandlers(repo, reverser)
 
 	// 5. Run the hub websocket
-	appCtx, appCancel := context.WithCancel(context.Background())
-	defer appCancel()
+	signalCtx, stop := signal.NotifyContext(context.Background(),
+		os.Interrupt, syscall.SIGTERM) 
+	defer stop()
 	hub := lobby_ws.NewHub(repo, wh)
-	go hub.Run(appCtx)
+	go hub.Run(signalCtx)
 
 	chat := chat_ws.NewChat(repo, wh)
-	go chat.Run(appCtx)
+	go chat.Run(signalCtx)
 
 	// 6. Router setup
 	r := router.NewRouter(h, hub, chat)

@@ -9,7 +9,7 @@ import (
 	"backend/internal/websockets/handlers"
 	"context"
 	"encoding/json"
-	// "fmt"
+	"time"
 	"log"
 	"net/http"
 	"github.com/gin-gonic/gin"
@@ -306,6 +306,16 @@ func JoinChat(chat *Chat) gin.HandlerFunc {
 	}
 }
 
+func (c *Chat) closeConnexions(ctx context.Context, cancel context.CancelFunc) {
+	defer cancel()
+	for _, clients := range c.Clients {
+		for client := range clients {
+			c.Unregister <- client
+		}
+	}
+	log.Println("The program is finished")
+}
+
 func (c *Chat) Run(ctx context.Context) {
 	for {
 		select {
@@ -330,6 +340,10 @@ func (c *Chat) Run(ctx context.Context) {
 			c.sendClientState(user, ctx)
 		case data := <-c.Action:
 			c.handleAction(ctx, data)
+		case <- ctx.Done():
+			cleanupCtx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
+			c.closeConnexions(cleanupCtx, cancel)
+			return 
 		}
 	}
 }

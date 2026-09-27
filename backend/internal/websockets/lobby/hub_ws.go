@@ -573,6 +573,22 @@ func JoinLobby(hub *Hub) gin.HandlerFunc {
 	}
 }
 
+func (h *Hub) closeClients(ctx context.Context) {
+	var clientsCpy []*ClientHub
+	for _, clients := range h.Clients {
+		for client := range clients {
+			clientsCpy = append(clientsCpy, client)
+		}
+	}
+	for _, client := range clientsCpy {
+		h.unregisterClient(client)
+		if !h.LobbyWsHandler.LeaveLobby(ctx, client.UserId) {
+			log.Println("error : the client can't leave the lobby in the database")
+			continue
+		}
+	}
+}
+
 func (h *Hub) Run(ctx context.Context) {
 	for {
 		select {
@@ -596,6 +612,12 @@ func (h *Hub) Run(ctx context.Context) {
 			h.clientLobbyBroadcast(client.GameId, ctx)
 		case serializedData := <- h.Action:
 			h.handleAction(ctx, serializedData)
+		case <- ctx.Done():
+			cleanupCtx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
+			h.closeClients(cleanupCtx)
+			cancel()
+			log.Println("The program is finished")
+			return 
 		}
 	}
-}
+} 
