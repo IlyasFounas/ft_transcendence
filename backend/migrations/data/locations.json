@@ -166,5 +166,41 @@
     "latitude": 3.6048767889805,
     "longitude": 98.639006473013,
     "country_code": "ID"
+  },
+  {
+    "mapillary_id": 1284122860172883,
+    "latitude": 1.2839659,
+    "longitude": 103.8583267,
+    "country_code": "SG"
+  },
+  {
+    "mapillary_id": 861452678506618,
+    "latitude": 1.2968666670303,
+    "longitude": 103.77205451539,
+    "country_code": "SG"
+  },
+  {
+    "mapillary_id": 676509610866668,
+    "latitude": 1.2968669947072,
+    "longitude": 103.77240556824,
+    "country_code": "SG"
+  },
+  {
+    "mapillary_id": 1993801344357262,
+    "latitude": 1.42726029855,
+    "longitude": 103.83024382592,
+    "country_code": "SG"
+  },
+  {
+    "mapillary_id": 1706988476356865,
+    "latitude": 2.326686,
+    "longitude": 102.20924949997,
+    "country_code": "MY"
+  },
+  {
+    "mapillary_id": 326201862249457,
+    "latitude": 2.4201537,
+    "longitude": 103.83733759997,
+    "country_code": "MY"
   }
 ]
