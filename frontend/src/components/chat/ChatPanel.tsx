@@ -9,7 +9,7 @@ export default function ChatPanel() {
 
     const { authFetch } = useAuth();
     
-    const { chatFriends, fetchMessages, sendMessage, messages } = useChatWebSocket();
+    const { chatFriends, fetchMessages, sendMessage, messages, messageEnd, loadingOlderMessages } = useChatWebSocket();
     console.log("ChatPanel chatFriends:", chatFriends);
     
     const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
@@ -36,7 +36,7 @@ export default function ChatPanel() {
 
         getFriends();
     }, []);
-    
+
     const friendsWithOnlineStatus = friendList.map(friend => {
         const chatFriend = chatFriends.find(
             chatFriend => chatFriend.user_id === friend.userId
@@ -101,6 +101,9 @@ export default function ChatPanel() {
                 <Conversation
                     friend={selectedFriend}
                     conversation={messages}
+                    messageEnd={messageEnd}
+                    loadingOlderMessages={loadingOlderMessages}
+                    fetchMessages={fetchMessages}
                     onBack={() => setSelectedFriend(null)}
                     onSendMessage={handleSendMessage}
                 />

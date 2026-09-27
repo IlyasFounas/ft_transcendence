@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Outlet } from "react-router-dom"
 import { Navbar } from "../components/navbar/Navbar";
 import ChatPanel from "../components/chat/ChatPanel";
-import { chatlists } from "../data/chatlists";
 
 export function MainLayout () {
 
@@ -56,7 +55,7 @@ export function MainLayout () {
 
                 `}
             >
-                <ChatPanel friends={chatlists} />
+                <ChatPanel />
             </div>
         </div>
     </>

@@ -10,6 +10,9 @@ import { useAuth } from "../../context/AuthContext";
 interface ConversationProps {
     friend: Friend;
     conversation: Message[];
+    messageEnd: number;
+    loadingOlderMessages: boolean;
+    fetchMessages: (targetId: number, end?: number) => void;
     onBack: () => void;
     onSendMessage: (message: string) => void;
 }
@@ -17,6 +20,9 @@ interface ConversationProps {
 export default function Conversation({
     friend,
     conversation,
+    messageEnd,
+    loadingOlderMessages,
+    fetchMessages,
     onBack,
     onSendMessage,
 }: ConversationProps) {
@@ -121,6 +127,14 @@ export default function Conversation({
                     gap-4
                     custom-scrollbar
                 "
+                onScroll={(event) => {
+                    if (event.currentTarget.scrollTop === 0 && 
+                        messageEnd > 0 && !loadingOlderMessages
+                    ) {
+                        console.log("Loading older message");
+                        fetchMessages(friend.userId, messageEnd);
+                    }
+                }}
             >
                 {conversation.map((message) => (
                     <ChatBoxCard

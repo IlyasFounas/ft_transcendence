@@ -12,12 +12,15 @@ interface ChatFriend {
 export default function useChatWebSocket() {
     
     const socketRef = useRef<WebSocket | null>(null);
+    const loadingOlderRef = useRef(false);
 
     const [chatFriends, setChatFriends] = useState<ChatFriend[]>([]);
     const [messages, setMessages] = useState<Message[]>([]);
+    const [messageEnd, setMessageEnd] = useState(0);
+    const [loadingOlderMessages, setLoadingOlderMessages] = useState(false);
 
-    const fetchMessages = (targetId: number) => {
-        console.log("fetchMessages called with:", targetId);
+    const fetchMessages = (targetId: number, end = 0) => {
+        console.log("fetchMessages called with:", targetId, end);
 
         if (!socketRef.current) {
             console.log("WebSocket is not connected");
@@ -26,12 +29,22 @@ export default function useChatWebSocket() {
 
         console.log("Sending fetch_messages");
 
+        if (end > 0) {
+            
+            if (loadingOlderRef.current) {
+                return;
+            }
+
+            loadingOlderRef.current = true;
+            setLoadingOlderMessages(true);
+        }
+
         socketRef.current.send(
             JSON.stringify({
                 action: "fetch_messages",
                 payload: {
                     target_id: targetId,
-                    end: 0,
+                    end,
                 },
             })
         );
@@ -91,9 +104,22 @@ export default function useChatWebSocket() {
 
             if (data.title === "chats") {
                 console.log("This is a chat history:", data.payload);
+                
                 const chats = data.payload.chats ?? [];
+                const end = data.payload.end ?? 0;
 
-                setMessages([...chats].reverse());
+                setMessageEnd(end);
+
+                if (loadingOlderRef.current) {
+                    setMessages(currentMessages => [
+                        ...[...chats].reverse(),
+                        ...currentMessages,
+                    ]);
+                    loadingOlderRef.current = false;
+                    setLoadingOlderMessages(false);
+                } else {
+                    setMessages([...chats].reverse());
+                }
             }
 
             if (data.title === "new_message") {
@@ -120,5 +146,7 @@ export default function useChatWebSocket() {
         messages,
         fetchMessages,
         sendMessage,
+        messageEnd,
+        loadingOlderMessages,
     }
 }
