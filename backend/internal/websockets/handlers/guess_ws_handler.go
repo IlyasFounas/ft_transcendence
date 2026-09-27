@@ -87,6 +87,10 @@ func (h *GuessWsHandler) AddGuess(ctx context.Context, payload json.RawMessage, 
 		log.Println("error : latitude and longitude must be provided")
 		return nil, false
 	}
+	if *guess.Lat < -90 || *guess.Lat > 90 || *guess.Long < -180 || *guess.Long > 180 {
+		log.Printf("error : invalid coordinates (%f, %f)\n", *guess.Lat, *guess.Long)
+		return nil, false
+	}
 	if guess.RoundNb <= 0 {
 		log.Println("error : round_nb must be provided")
 		return nil, false
@@ -145,12 +149,12 @@ func (h *GuessWsHandler) AddGuess(ctx context.Context, payload json.RawMessage, 
 	}
 
 	loc, err := h.reverser.ReverseGeocode([]float64{*guess.Long, *guess.Lat})
-	if err != nil {
+	if err != nil && !errors.Is(err, rgeo.ErrLocationNotFound) {
 		log.Printf("error reverse geocoding guess coordinates (%f, %f): %s\n", *guess.Lat, *guess.Long, err)
 		return nil, false
 	}
 	guess.CC = loc.CountryCode2
-	guess.CountryFound = guess.CC == baseCC
+	guess.CountryFound = guess.CC != "" && guess.CC == baseCC
 
 	guess.Distance = handlers.CalculateDistance(
 		haversine.Coordinates{Lat: baseLat, Lon: baseLong},
