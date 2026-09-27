@@ -87,6 +87,10 @@ func (h *GuessWsHandler) AddGuess(ctx context.Context, payload json.RawMessage, 
 		log.Println("error : latitude and longitude must be provided")
 		return nil, false
 	}
+	if *guess.Lat < -90 || *guess.Lat > 90 || *guess.Long < -180 || *guess.Long > 180 {
+		log.Printf("error : invalid coordinates (%f, %f)\n", *guess.Lat, *guess.Long)
+		return nil, false
+	}
 	if guess.RoundNb <= 0 {
 		log.Println("error : round_nb must be provided")
 		return nil, false
@@ -145,12 +149,12 @@ func (h *GuessWsHandler) AddGuess(ctx context.Context, payload json.RawMessage, 
 	}
 
 	loc, err := h.reverser.ReverseGeocode([]float64{*guess.Long, *guess.Lat})
-	if err != nil {
+	if err != nil && !errors.Is(err, rgeo.ErrLocationNotFound) {
 		log.Printf("error reverse geocoding guess coordinates (%f, %f): %s\n", *guess.Lat, *guess.Long, err)
 		return nil, false
 	}
 	guess.CC = loc.CountryCode2
-	guess.CountryFound = guess.CC == baseCC
+	guess.CountryFound = guess.CC != "" && guess.CC == baseCC
 
 	guess.Distance = handlers.CalculateDistance(
 		haversine.Coordinates{Lat: baseLat, Lon: baseLong},
@@ -283,6 +287,25 @@ func (h *GuessWsHandler) BuildRoundResults(
 	return results, nil
 }
 
+// Tells whether userID has already sent his guess for the round roundNb of gameID
+// (used when a player reconnects during a round)
+func (h *GuessWsHandler) HasGuessed(ctx context.Context, gameID, roundNb, userID int64) (bool, error) {
+	roundID, err := h.roundRepo.GetIDByGameIDAndRoundNb(ctx, gameID, roundNb)
+	if err != nil {
+		return false, err
+	}
+	roundGuesses, err := h.guessRepo.GetByRoundID(ctx, roundID)
+	if err != nil {
+		return false, err
+	}
+	for _, g := range roundGuesses {
+		if g.UserID == userID {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
 // Retrieves the internal ID of a round from its round_nb: the front never needs to know round_id
 func (h *GuessWsHandler) ResolveRoundID(ctx context.Context, gameID, roundNb int64) (int64, error) {
 	return h.roundRepo.GetIDByGameIDAndRoundNb(ctx, gameID, roundNb)
@@ -307,18 +330,15 @@ func (h *GuessWsHandler) EnsureRound(ctx context.Context, gameID, roundNb int64)
 		return nil, err
 	}
 
-	// TODO only host can create the round
-	// TODO if multiplayer, only first round can be created by the host, the rest are created automatically
-	// else, host can create each round in order, but cannot create a round if the previous one is not finished yet (or if the game is finished)
+	// who may create a round, and when, is decided by the hub (start_game, solo start_round, multiplayer timer)
 
-	//get the locationID for the round, to create the round
-	locationID, err := h.roundRepo.GetLocationID(ctx, gameID, roundNb)
-	if err != nil {
+	// never create a round beyond game.round_total (CheckLastRound returns an error in that case)
+	if _, err := h.roundRepo.CheckLastRound(ctx, gameID, roundNb); err != nil {
 		return nil, err
 	}
 
-	// check if this is the last round of the game
-	isLastRound, err := h.roundRepo.CheckLastRound(ctx, gameID, roundNb)
+	//get the locationID for the round, to create the round
+	locationID, err := h.roundRepo.GetLocationID(ctx, gameID, roundNb)
 	if err != nil {
 		return nil, err
 	}
@@ -327,7 +347,6 @@ func (h *GuessWsHandler) EnsureRound(ctx context.Context, gameID, roundNb int64)
 		GameId:     gameID,
 		RoundNb:    roundNb,
 		LocationId: locationID,
-		LastRound:  isLastRound,
 		StartedAt:  time.Now(),
 	})
 }

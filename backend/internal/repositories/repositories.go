@@ -24,12 +24,14 @@ func NewRepositories(db *bun.DB) (*Repositories, error) {
 		return nil, err
 	}
 
+	userRepo := NewUserRepository(db)
+
 	return &Repositories{
 		Location:	locationRepo,
-		User:		NewUserRepository(db),
+		User:		userRepo,
 		AToken:		NewActivationTokenRepository(db),
 		RToken:		NewRefreshTokenRepository(db),
-		Game:		NewGameRepository(db),
+		Game:		NewGameRepository(db, userRepo),
 		Lobby:		NewLobbyRepository(db),
 		Round:		NewRoundRepository(db, locationRepo),
 		Guess:		NewGuessRepository(db),

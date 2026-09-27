@@ -227,19 +227,31 @@ func (r *LobbyRepository) SetLeftAt(ctx context.Context,
 	return nil
 }
 
-func (r *LobbyRepository) SetStartAt(ctx context.Context,
+// Kick removes a player from the lobby and remembers it: a kicked player can't join this game again (see WasKicked)
+func (r *LobbyRepository) Kick(ctx context.Context,
 	lobby_id int64) error {
 	actualTime := time.Now()
-	lobby := &games.Lobby{StartAt: &actualTime}
+	lobby := &games.Lobby{LeftAt: &actualTime, Kicked: true}
 	_, err := r.db.NewUpdate().
 		Model(lobby).
-		Column("start_at").
+		Column("left_at", "kicked").
 		Where("id = ?", lobby_id).
 		Exec(ctx)
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+// WasKicked tells whether userId has been kicked out of the game gameId
+func (r *LobbyRepository) WasKicked(ctx context.Context,
+	userId int64, gameId int64) (bool, error) {
+	return r.db.NewSelect().
+		Model((*games.Lobby)(nil)).
+		Where("user_id = ?", userId).
+		Where("game_id = ?", gameId).
+		Where("kicked = ?", true).
+		Exists(ctx)
 }
 
 func (r *LobbyRepository) SetIsCreator(ctx context.Context,

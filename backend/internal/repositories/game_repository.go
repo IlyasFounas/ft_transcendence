@@ -9,11 +9,12 @@ import (
 )
 
 type GameRepository struct {
-	db *bun.DB
+	db       *bun.DB
+	userRepo *UserRepository // to add the xp of the players when the game is finished
 }
 
-func NewGameRepository(db *bun.DB) *GameRepository {
-	return &GameRepository{db: db}
+func NewGameRepository(db *bun.DB, userRepo *UserRepository) *GameRepository {
+	return &GameRepository{db: db, userRepo: userRepo}
 }
 
 func (r *GameRepository) CreateGame(ctx context.Context, game *games.Game) (*games.Game, error){
@@ -104,14 +105,6 @@ func (r *GameRepository) RoundTotal(ctx context.Context, gameId int64) (int64, e
 	return game.RoundTotal, nil
 }
 
-func (r *GameRepository) Finished(ctx context.Context, gameId int64) (bool, error){
-	return r.db.NewSelect().
-		Model((*games.Game)(nil)).
-		Column("finished_at").
-		Where("id = ?", gameId).
-		Exists(ctx)
-}
-
 func (r *GameRepository) FinishedAt(ctx context.Context, gameId int64) (*time.Time, error){
 	game := new(games.Game)
 	err := r.db.NewSelect().
@@ -194,47 +187,29 @@ func (r *GameRepository) SetDifficulty(ctx context.Context, gameId int64,
 	return nil
 }
 
-func (r *GameRepository) SetTimer(ctx context.Context, gameId int64, 
-	timer int64) error {
-	game := &games.Game{Timer: timer}
-	_, err := r.db.NewUpdate().
-		Model(game).
-		Column("timer").
-		Where("id = ?", gameId).
-		Exec(ctx)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (r *GameRepository) SetRoundTotal(ctx context.Context, gameId int64, 
-	round_total int64) error {
-	game := &games.Game{RoundTotal: round_total}
-	_, err := r.db.NewUpdate().
-		Model(game).
-		Column("round_total").
-		Where("id = ?", gameId).
-		Exec(ctx)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
+// Marks the game as finished, only once
 func (r *GameRepository) SetFinished(ctx context.Context,
 	gameId int64) error {
-	finished := time.Now()
-	game := &games.Game{FinishedAt: &finished}
-	_, err := r.db.NewUpdate().
-		Model(game).
-		Column("finished_at").
-		Where("id = ?", gameId).
-		Exec(ctx)
-	if err != nil {
-		return err
-	}
-	return nil
+	return r.db.RunInTx(ctx, nil, func(ctx context.Context, tx bun.Tx) error {
+		res, err := tx.NewUpdate().
+			Model((*games.Game)(nil)).
+			Set("finished_at = ?", time.Now()).
+			Where("id = ?", gameId).
+			Where("finished_at IS NULL").
+			Exec(ctx)
+		if err != nil {
+			return err
+		}
+		affected, err := res.RowsAffected()
+		if err != nil {
+			return err
+		}
+		if affected == 0 {
+			// already finished: the xp of this game has already been added
+			return nil
+		}
+		return r.userRepo.AddGameXP(ctx, tx, gameId)
+	})
 }
 
 func (r *GameRepository) SetPlayerNb(ctx context.Context, game_id int64, 
