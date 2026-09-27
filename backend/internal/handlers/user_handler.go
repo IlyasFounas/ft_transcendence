@@ -624,22 +624,23 @@ func (h *UserHandler) UploadAvatar() gin.HandlerFunc {
 }
 
 // XP returns the xp of the connected user (sum of the base_score of all his finished games)
-func (h *UserHandler) XP() gin.HandlerFunc {
+func (h *UserHandler) XPByName() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		userId, ok := c.Get("userId")
+		_, ok := c.Get("userId")
 		if !ok {
 			c.JSON(http.StatusUnauthorized,
 				gin.H{"message": "The userId is empty"})
 			return
 		}
-		xp, err := h.userRepo.XP(c.Request.Context(), userId.(int64))
+		username := c.Param("username")
+		user, err := h.userRepo.UserByName(c.Request.Context(), username)
 		if err != nil {
 			log.Printf("error : %s\n", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "Something went wrong"})
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "failed"})
 			return
 		}
 		c.JSON(http.StatusOK,
-			gin.H{"message": "success", "user_xp": xp})
+			gin.H{"message": "success", "user_xp": user.XP})
 	}
 }
 
