@@ -93,17 +93,16 @@ type WsMessage struct {
 type roundPhase string
 
 const (
-	phaseStarting roundPhase = "starting" // start_game accepted, round 1 not started yet: in multiplayer look at NextRoundAt (countdown)
-	phasePlaying  roundPhase = "playing"  // a round is currently running: look at RoundEndsAt
-	phasePause    roundPhase = "pause"    // between two rounds (or after the last one): look at LastResults (+ NextRoundAt in multiplayer)
+	phasePlaying roundPhase = "playing" // a round is currently running: look at RoundEndsAt
+	phasePause   roundPhase = "pause"   // before a round: look at NextRoundAt (multiplayer), and at LastResults after round 1
 )
 
 // to be checked when a client reconnects mid-game - refresh, dropped wifi, joining a game already in progress
-// It exists from the moment the host's start_game is accepted: no state = the game hasn't started yet (still in the lobby).
+// It exists from the moment the host's start_game is accepted: no state = the game hasn't started yet or is finished
 type gameRoundState struct {
-	Phase       roundPhase
+	Phase       roundPhase                      // phasePlaying, phasePause, or ""
 	Solo        bool                            // decided once by start_game (only one player connected to the WS), carried over by every state change
-	RoundNb     int64                           // 0 while Phase == Starting (no round played yet)
+	RoundNb     int64                           // round running (Playing) or last round ended (Pause, game over); 0 in the pause before round 1
 	RoundEndsAt time.Time                       // valid when Phase == Playing
 	NextRoundAt time.Time                       // multiplayer only: valid when Phase == Starting, or Phase == Pause and !IsLastRound (zero otherwise)
 	IsLastRound bool
@@ -239,8 +238,6 @@ func (h *Hub) resyncClient(ctx context.Context, client *ClientHub) {
 		return
 	}
 	switch state.Phase {
-	case phaseStarting:
-		h.sendToClient(client, gameStartedMessage(state))
 	case phasePlaying:
 		hasGuessed, err := h.GuessWsHandler.HasGuessed(ctx, client.GameId, state.RoundNb, client.UserId)
 		if err != nil {
@@ -256,20 +253,30 @@ func (h *Hub) resyncClient(ctx context.Context, client *ClientHub) {
 			},
 		})
 	case phasePause:
-		payload := RoundResultBroadcast{RoundNb: state.RoundNb, Results: state.LastResults, IsLastRound: state.IsLastRound}
-		// countdown to the next round: multiplayer only 
-		if !state.IsLastRound && !state.Solo {
+		if state.RoundNb == 0 {
+			// pause before round 1: the countdown of the start of the game (multiplayer)
+			h.sendToClient(client, gameStartedMessage(state))
+			return
+		}
+		payload := RoundResultBroadcast{RoundNb: state.RoundNb, Results: state.LastResults}
+		// countdown to the next round: multiplayer only (in solo the player starts it himself with start_round)
+		if !state.Solo {
 			nextRoundAt := state.NextRoundAt
 			payload.NextRoundAt = &nextRoundAt
 		}
 		h.sendToClient(client, WsMessage{Action: "round_results", Payload: payload})
+	default:
+		h.sendToClient(client, WsMessage{
+			Action:  "round_results",
+			Payload: RoundResultBroadcast{RoundNb: state.RoundNb, Results: state.LastResults, IsLastRound: true},
+		})
 	}
 }
 
 // inProgress tells whether gameId has started and isn't over yet (its last round hasn't ended)
 func (h *Hub) inProgress(gameId int64) bool {
 	state, ok := h.RoundState[gameId]
-	return ok && !(state.Phase == phasePause && state.IsLastRound)
+	return ok && state.Phase != ""
 }
 
 // Checks whether the last round of gameId has ended
@@ -279,21 +286,14 @@ func (h *Hub) gameOver(gameId int64) bool {
 }
 
 // It decides, from the hub's state only (never from anything a client sent), which round the game is waiting to start:
-//   - phaseStarting: start_game has been accepted, so it's round 1
-//   - phasePause: we're between two rounds, so it's the next one (none after the last round)
-//   - no state (the game hasn't started: use start_game) or phasePlaying (a round is already running): nothing to start
+// -phasePause: it's the next one (round 1 in the pause before the first round)
+// -ELSE: during a round (phasePlaying) or once the game is over (no phase), there is nothing to start
 func (h *Hub) nextRoundToStart(gameId int64) (int64, bool) {
 	state, ok := h.RoundState[gameId]
-	if !ok {
+	if !ok || state.Phase != phasePause {
 		return 0, false
 	}
-	if state.Phase == phaseStarting {
-		return 1, true
-	}
-	if state.Phase == phasePause && !state.IsLastRound {
-		return state.RoundNb + 1, true
-	}
-	return 0, false
+	return state.RoundNb + 1, true
 }
 
 // Checks whether gameId is played in solo
@@ -499,7 +499,8 @@ func (h *Hub) handleStartGame(ctx context.Context, client *ClientHub) {
 	h.clientLobbyBroadcast(gameId, ctx)
 
 	// from here on the game counts as started (see isStarted): any other start_game will be refused
-	state := &gameRoundState{Phase: phaseStarting, Solo: len(connected) == 1}
+	// pause before round 1 (RoundNb 0): 10s of countdown in multiplayer, round 1 starts right away in solo
+	state := &gameRoundState{Phase: phasePause, Solo: len(connected) == 1}
 	if !state.Solo {
 		state.NextRoundAt = time.Now().Add(preRoundPause)
 	}
@@ -672,21 +673,19 @@ func (h *Hub) EndRound(ctx context.Context, gameId, roundNb int64) {
 	}
 
 	broadcastPayload := RoundResultBroadcast{RoundNb: roundNb, Results: results, IsLastRound: isLastRound}
-	var nextRoundAt time.Time
-	if !isLastRound && !solo {
-		// calculated once: this value is the reference. The timer armed below is based on the remaining time
-		// until this same instant (time.Until), so the next round starts exactly when all clients have seen their countdown reach zero.
-		nextRoundAt = time.Now().Add(preRoundPause)
-		broadcastPayload.NextRoundAt = &nextRoundAt
+	// after the last round the state has no phase anymore: the game is over
+	next := &gameRoundState{Solo: solo, RoundNb: roundNb, LastResults: results}
+	if !isLastRound {
+		next.Phase = phasePause
+		if !solo {
+			// calculated once: this value is the reference. The timer armed below is based on the remaining time
+			// until this same instant (time.Until), so the next round starts exactly when all clients have seen their countdown reach zero.
+			next.NextRoundAt = time.Now().Add(preRoundPause)
+			nextRoundAt := next.NextRoundAt
+			broadcastPayload.NextRoundAt = &nextRoundAt
+		}
 	}
-	h.RoundState[gameId] = &gameRoundState{
-		Phase:       phasePause,
-		Solo:        solo,
-		RoundNb:     roundNb,
-		NextRoundAt: nextRoundAt,
-		IsLastRound: isLastRound,
-		LastResults: results,
-	}
+	h.RoundState[gameId] = next
 
 	h.broadcast(gameId, WsMessage{Action: "round_results", Payload: broadcastPayload})
 
@@ -699,7 +698,7 @@ func (h *Hub) EndRound(ctx context.Context, gameId, roundNb int64) {
 		// solo: no timer, the next round will be started by the player's "start_round" (see handleStartRound)
 		return
 	}
-	h.armTimer(gameId, time.Until(nextRoundAt), "start_round", roundNb+1)
+	h.armTimer(gameId, time.Until(next.NextRoundAt), "start_round", roundNb+1)
 }
 
 func JoinLobby(hub *Hub) gin.HandlerFunc {
