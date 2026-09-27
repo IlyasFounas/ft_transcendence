@@ -102,6 +102,11 @@ func (h *LobbyWsHandler) RemovePlayer(ctx context.Context,
 		log.Printf("error : %s\n", err)
 		return false
 	}
+	if lobby == nil {
+		// the target is in no lobby (already kicked or gone)
+		log.Println("error : the player to kick is not in this lobby")
+		return false
+	}
 	isCreator, err := h.lobbyRepo.IsCreator(ctx,
 		request_id, lobby.GameId)
 	if err != nil {
