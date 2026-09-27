@@ -47,11 +47,37 @@ export default function Conversation({
     };
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const messagesContainerRef = useRef<HTMLDivElement>(null);
+
+    const prevMessageCountRef = useRef(0);
+    const prevScrollHeightRef = useRef(0);
+
     useLayoutEffect(() => {
-        messagesEndRef.current?.scrollIntoView({
-            behavior: "auto",
-            block: "end",
-        });
+        const container = messagesContainerRef.current;
+
+        if (!container) {
+            return;
+        }
+
+        const prevCount = prevMessageCountRef.current;
+
+        if (prevCount === 0 && conversation.length > 0) {
+            messagesEndRef.current?.scrollIntoView({
+                behavior: "auto",
+                block: "end",
+            });
+        }
+
+        if (conversation.length > prevCount) {
+            const heightDif = container.scrollHeight - prevScrollHeightRef.current;
+
+            if (prevScrollHeightRef.current > 0) {
+                container.scrollTop += heightDif;
+            }
+        }
+        
+        prevMessageCountRef.current = conversation.length;
+        prevScrollHeightRef.current = container.scrollHeight;
     }, [conversation]);
 
     return (
@@ -108,6 +134,7 @@ export default function Conversation({
             </div>
 
             <div
+                ref={messagesContainerRef}
                 className="
                     min-h-0
                     min-w-0
@@ -131,6 +158,8 @@ export default function Conversation({
                     if (event.currentTarget.scrollTop === 0 && 
                         messageEnd > 0 && !loadingOlderMessages
                     ) {
+                        prevScrollHeightRef.current = event.currentTarget.scrollHeight;
+
                         console.log("Loading older message");
                         fetchMessages(friend.userId, messageEnd);
                     }

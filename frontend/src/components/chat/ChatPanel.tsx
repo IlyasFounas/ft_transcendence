@@ -58,7 +58,9 @@ export default function ChatPanel() {
     };
 
     const handleOpenChat = (friend: Friend) => {
-
+        if (selectedFriend?.userId === friend.userId) {
+            return;
+        }
         setSelectedFriend(friend);
         fetchMessages(friend.userId);
     };
