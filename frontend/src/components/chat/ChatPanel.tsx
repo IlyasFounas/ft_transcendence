@@ -2,26 +2,17 @@ import { useState, useEffect } from "react";
 import type { Friend } from "../../types/user.types";
 import FriendsList from "./FriendList";
 import Conversation from "./Conversation";
-import { conversations } from "../../data/conversation";
-import type { Message } from "../../types/message.type";
 import useChatWebSocket from "../../hooks/useChatWebSocket";
 import { useAuth } from "../../context/AuthContext";
-
-const getCurrentTime = () => {
-    return new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-    });
-};
 
 export default function ChatPanel() {
 
     const { authFetch } = useAuth();
-    const { chatFriends } = useChatWebSocket();
+    
+    const { chatFriends, fetchMessages, sendMessage, messages } = useChatWebSocket();
     console.log("ChatPanel chatFriends:", chatFriends);
     
     const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
-    const [conversationData, setConversationData] = useState(conversations);
     const [friendList, setFriendList] = useState<Friend[]>([]);
     
     useEffect(() => {
@@ -45,6 +36,7 @@ export default function ChatPanel() {
 
         getFriends();
     }, []);
+    
     const friendsWithOnlineStatus = friendList.map(friend => {
         const chatFriend = chatFriends.find(
             chatFriend => chatFriend.user_id === friend.userId
@@ -57,50 +49,18 @@ export default function ChatPanel() {
     });
 
     console.log("Friends with WebSocket status:", friendsWithOnlineStatus);
-    
+
     const handleSendMessage = (message: string) => {
-        if (!selectedFriend) return;
+        if (!selectedFriend) {
+            return;
+        }
+        sendMessage(selectedFriend.userId, message);
+    };
 
-        const currentTime = getCurrentTime();
+    const handleOpenChat = (friend: Friend) => {
 
-        const newMessage: Message = {
-            id: Date.now(),
-            variant: "sent",
-            message,
-            time: currentTime,
-        };
-
-        setConversationData((currentConversations) => ({
-            ...currentConversations,
-            [selectedFriend.username]: [
-                ...(currentConversations[selectedFriend.username] ?? []),
-                newMessage,
-            ],
-        }));
-
-        setFriendList((currentFriends) => {
-        const updatedFriends = currentFriends.map((friend) =>
-            friend.username === selectedFriend.username
-            ? {
-                ...friend,
-                lastMessage: message,
-                timestamp: currentTime,
-                }
-            : friend
-        );
-
-        const updatedFriend = updatedFriends.find(
-            (friend) => friend.username === selectedFriend.username
-        );
-
-        const otherFriends = updatedFriends.filter(
-            (friend) => friend.username !== selectedFriend.username
-        );
-
-        return updatedFriend
-            ? [updatedFriend, ...otherFriends]
-            : updatedFriends;
-        });
+        setSelectedFriend(friend);
+        fetchMessages(friend.userId);
     };
 
     return (
@@ -116,7 +76,7 @@ export default function ChatPanel() {
             >
                 <FriendsList
                     friends={friendsWithOnlineStatus}
-                    onOpenChat={setSelectedFriend}
+                    onOpenChat={handleOpenChat}
                 />
             </div>
 
@@ -140,7 +100,7 @@ export default function ChatPanel() {
             ) : (
                 <Conversation
                     friend={selectedFriend}
-                    conversation={conversationData[selectedFriend.username] ?? []}
+                    conversation={messages}
                     onBack={() => setSelectedFriend(null)}
                     onSendMessage={handleSendMessage}
                 />

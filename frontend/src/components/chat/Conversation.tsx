@@ -5,6 +5,7 @@ import Avatar from "../primitives/Avatar";
 import { useState, useEffect, useRef, } from "react";
 import MessageInput from "./MessageInput";
 import type { Message } from "../../types/message.type";
+import { useAuth } from "../../context/AuthContext";
 
 interface ConversationProps {
     friend: Friend;
@@ -19,6 +20,8 @@ export default function Conversation({
     onBack,
     onSendMessage,
 }: ConversationProps) {
+
+    const { user } = useAuth();
 
     const statusClasses = {
         online: "bg-status-green",
@@ -81,7 +84,7 @@ export default function Conversation({
                                 h-2.5
                                 w-2.5
                                 rounded-full
-                                ${statusClasses[friend.status]}
+                                ${friend.online ? statusClasses.online : statusClasses.offline}
                             `}
                         />
                     </div>
@@ -121,9 +124,12 @@ export default function Conversation({
                 {conversation.map((message) => (
                     <ChatBoxCard
                         key={message.id}
-                        variant={message.variant}
+                        variant={message.user_id === user?.ID ? "sent" : "received"}
                         message={message.message}
-                        time={message.time}
+                        time={new Date(message.date).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                        })}
                     />
                 ))}
 
