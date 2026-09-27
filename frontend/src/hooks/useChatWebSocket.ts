@@ -91,7 +91,9 @@ export default function useChatWebSocket() {
 
             if (data.title === "chats") {
                 console.log("This is a chat history:", data.payload);
-                setMessages(data.payload.chats ?? []);
+                const chats = data.payload.chats ?? [];
+
+                setMessages([...chats].reverse());
             }
 
             if (data.title === "new_message") {
