@@ -2,7 +2,7 @@ import { ArrowLeft } from "lucide-react";
 import ChatBoxCard from "../cards/ChatBox";
 import type { Friend } from "../../types/user.types";
 import Avatar from "../primitives/Avatar";
-import { useState, useEffect, useRef, } from "react";
+import { useState, useLayoutEffect, useRef, } from "react";
 import MessageInput from "./MessageInput";
 import type { Message } from "../../types/message.type";
 import { useAuth } from "../../context/AuthContext";
@@ -41,9 +41,10 @@ export default function Conversation({
     };
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
-    useEffect(() => {
+    useLayoutEffect(() => {
         messagesEndRef.current?.scrollIntoView({
-            behavior: "smooth",
+            behavior: "auto",
+            block: "end",
         });
     }, [conversation]);
 
