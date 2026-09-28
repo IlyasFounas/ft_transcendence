@@ -23,6 +23,7 @@ export interface User {
     Email: string;
     Is_verified: boolean;
     Avatar: string | null;
+    XP: number;
     CreatedAt: string;
     Lobby: unknown[] | null;
 }
