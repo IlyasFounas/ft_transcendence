@@ -24,6 +24,7 @@ export interface User {
     Is_verified: boolean;
     Avatar: string | null;
     XP: number;
+    Rank: string;
     CreatedAt: string;
     Lobby: unknown[] | null;
 }
