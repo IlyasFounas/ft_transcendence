@@ -7,8 +7,10 @@ import (
 	"context"
 	"encoding/json"
 	"log"
-	"time"
 	"net/http"
+	"sync"
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 )
@@ -156,7 +158,11 @@ func (h *Hub) broadcast(gameId int64, payload interface{}) {
 		return
 	}
 	for client := range h.Clients[gameId] {
-		client.Connx.Send <- serializedData
+		select {
+		case client.Connx.Send <- serializedData:
+		default:
+			log.Printf("client_error : the client %d can't read\n", client.UserId)
+		}
 	}
 }
 
@@ -168,7 +174,11 @@ func (h *Hub) sendToClient(client *ClientHub, payload interface{}) {
 		log.Printf("error : %s\n", err)
 		return
 	}
-	client.Connx.Send <- serializedData
+	select {
+	case client.Connx.Send <- serializedData:
+	default:
+		log.Printf("client_error : the client %d can't read\n", client.UserId)
+	}
 }
 
 func (h *Hub) sendToClientByUserID(gameId int64, userId int64, payload interface{}) {
@@ -179,7 +189,11 @@ func (h *Hub) sendToClientByUserID(gameId int64, userId int64, payload interface
     }
 	for client := range h.Clients[gameId] {
 		if client.UserId == userId {
-			client.Connx.Send <- serializedData
+			select {
+			case client.Connx.Send <- serializedData:
+			default:
+				log.Printf("client_error : the client %d can't read\n", client.UserId)
+			}
 		}	
 	}
 }
@@ -583,13 +597,15 @@ func (h *Hub) closeClients(ctx context.Context) {
 	for _, client := range clientsCpy {
 		h.unregisterClient(client)
 		if !h.LobbyWsHandler.LeaveLobby(ctx, client.UserId) {
-			log.Println("error : the client can't leave the lobby in the database")
+			log.Printf("error : the client %d can't leave the lobby in the database\n", 
+				client.UserId)
 			continue
 		}
 	}
 }
 
-func (h *Hub) Run(ctx context.Context) {
+func (h *Hub) Run(ctx context.Context, wg *sync.WaitGroup) {
+	defer wg.Done()
 	for {
 		select {
 		case client := <- h.Register:
@@ -613,9 +629,9 @@ func (h *Hub) Run(ctx context.Context) {
 		case serializedData := <- h.Action:
 			h.handleAction(ctx, serializedData)
 		case <- ctx.Done():
-			cleanupCtx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
+			cleanupCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 2*time.Second)
+			defer cancel()
 			h.closeClients(cleanupCtx)
-			cancel()
 			log.Println("The program is finished")
 			return 
 		}

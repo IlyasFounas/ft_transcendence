@@ -2,6 +2,8 @@ package client_ws
 
 import (
 	"log"
+	"time"
+
 	"github.com/gorilla/websocket"
 )
 
@@ -22,6 +24,14 @@ func (c *Connexion) WritePump() {
         if err := c.Conn.WriteMessage(websocket.TextMessage, msg); err != nil {
             return
         }
+    }
+    deadline := time.Now().Add(5*time.Second)
+    err := c.Conn.WriteControl(websocket.CloseMessage,
+        websocket.FormatCloseMessage(websocket.CloseGoingAway, "server shutting down"),
+        deadline)
+    if err != nil {
+        log.Printf("error : %s\n", err)
+        return
     }
 }
 

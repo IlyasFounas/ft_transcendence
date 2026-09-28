@@ -9,7 +9,7 @@ import (
 	"backend/internal/websockets/handlers"
 	"context"
 	"encoding/json"
-	"time"
+	"sync"
 	"log"
 	"net/http"
 	"github.com/gin-gonic/gin"
@@ -127,7 +127,11 @@ func (c *Chat) sendToClient(userId int64, friends []*friends.FriendResponse) {
 		return
 	}
 	for client := range c.Clients[userId] {
-		client.Connx.Send <- data
+		select {
+		case client.Connx.Send <- data:
+		default:
+			log.Printf("client_error : the client %d can't read\n", client.UserId)
+		}
 	}
 }
 
@@ -156,7 +160,11 @@ func (c *Chat) sendClientState(user *users.User, ctx context.Context) {
 			}
 			for _, friend := range friends {
 				if friend.UserID == friendLeft.ID {
-					client.Connx.Send <- data
+					select {
+					case client.Connx.Send <- data:
+					default:
+						log.Printf("client_error : the client %d can't read\n", client.UserId)
+					}
 				}		
 			}
 		}
@@ -179,9 +187,14 @@ func (c *Chat) sendToClientMessages(chatsList []*chats.Chat,
 		log.Printf("error : %s\n", err)
 		return
 	}
-	client.Send <- data
+	select {
+	case client.Send <- data:
+	default:
+		log.Println("client_error : the client can't read")
+	}
 }
 
+// This function send the chats to the other friend in the chat
 func (c *Chat) sendNewChats(chatsList []*chats.Chat,
 	targetId int64, userId int64) {
 	chatsMessage := &Chats{
@@ -199,12 +212,20 @@ func (c *Chat) sendNewChats(chatsList []*chats.Chat,
 	}
 	for client := range c.Clients[targetId] {
 		if client.UserId == targetId && client.TargetId == userId{
-			client.Connx.Send <- data
+			select {
+			case client.Connx.Send <- data:
+			default:
+				log.Printf("client_error : the client %d can't read\n", client.UserId)
+			}
 		}
 	}
 	for client := range c.Clients[userId] {
 		if (client.UserId == userId && client.TargetId == targetId) {
-			client.Connx.Send <- data
+			select {
+			case client.Connx.Send <- data:
+			default:
+				log.Printf("client_error : the client %d can't read\n", client.UserId)
+			}
 		}
 	}
 }
@@ -223,6 +244,7 @@ func (c *Chat) unregisterClient(client *ClientChat) {
 	if len(c.Clients[client.UserId]) == 0 {
 		delete(c.Clients, client.UserId)
 	}
+	close(client.Connx.Send)
 }
 
 func (c *Chat) handleAction(ctx context.Context, serializedData *DataInfos) {
@@ -251,7 +273,6 @@ func (c *Chat) handleAction(ctx context.Context, serializedData *DataInfos) {
 		serializedData.Client.TargetId = payload.TargetId
 		c.sendToClientMessages(chatsList, serializedData.Client.Connx, payload.TargetId)
 	case "send":
-		// TODO send the message to the friend
 		var payload ClientTarget
 		err := json.Unmarshal(serializedData.Payload, &payload)
 		if err != nil {
@@ -306,17 +327,21 @@ func JoinChat(chat *Chat) gin.HandlerFunc {
 	}
 }
 
-func (c *Chat) closeConnexions(ctx context.Context, cancel context.CancelFunc) {
-	defer cancel()
+func (c *Chat) closeClients() {
+	var clientsCpy []*ClientChat
 	for _, clients := range c.Clients {
 		for client := range clients {
-			c.Unregister <- client
+			clientsCpy = append(clientsCpy, client)
 		}
+	}
+	for _, client := range clientsCpy {
+		c.unregisterClient(client)
 	}
 	log.Println("The program is finished")
 }
 
-func (c *Chat) Run(ctx context.Context) {
+func (c *Chat) Run(ctx context.Context, wg *sync.WaitGroup) {
+	defer wg.Done()
 	for {
 		select {
 		case client := <-c.Register:
@@ -341,8 +366,8 @@ func (c *Chat) Run(ctx context.Context) {
 		case data := <-c.Action:
 			c.handleAction(ctx, data)
 		case <- ctx.Done():
-			cleanupCtx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
-			c.closeConnexions(cleanupCtx, cancel)
+			c.closeClients()
+			log.Println("The program is finished")
 			return 
 		}
 	}
