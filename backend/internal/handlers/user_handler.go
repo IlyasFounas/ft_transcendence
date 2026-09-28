@@ -26,6 +26,7 @@ import (
 	"backend/internal/tools/mailing"
 	"backend/internal/tools/token_generation"
 	"backend/internal/models/users/tokens"
+	"backend/internal/tools/rank_calculation"
 )
 
 /**
@@ -702,5 +703,25 @@ func (h *UserHandler) UserLeaderboard() gin.HandlerFunc {
 		}
 		c.JSON(http.StatusOK,
 			gin.H{"message": "success", "leaderboard": leaderboard})
+	}
+}
+
+func (h *UserHandler) SetRank(xp int64) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userId, ok := c.Get("userId")
+		if !ok {
+			c.JSON(http.StatusUnauthorized,
+				gin.H{"message": "The user id is empty"})
+			return
+		}
+		rank := rank_calculation.CalculateRank(xp)
+
+		_, err := h.userRepo.SetRank(c.Request.Context(), userId.(int64), rank)
+		if err != nil {
+			log.Printf("error : %s\n", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "Something went wrong"})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"message": "success"})
 	}
 }

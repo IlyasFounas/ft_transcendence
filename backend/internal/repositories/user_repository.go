@@ -72,7 +72,7 @@ func (r *UserRepository) User(ctx context.Context, userId int64) (*users.User, e
 	user := new(users.User)
 	err := r.db.NewSelect().
 		Model(user).
-		Column("id", "name", "email", "is_verified", "avatar", "xp", "created_at").
+		Column("id", "name", "email", "is_verified", "avatar", "xp", "rank", "created_at").
 		Where("id = ?", userId).
 		Scan(ctx)
 	if err != nil {
@@ -151,7 +151,7 @@ func (r *UserRepository) UserByName(ctx context.Context,
 	user := new(users.User)
 	err := r.db.NewSelect().
 		Model(user).
-		Column("id", "name", "email", "is_verified", "avatar", "xp", "created_at").
+		Column("id", "name", "email", "is_verified", "avatar", "xp", "rank", "created_at").
 		Where("name = ?", username).
 		Scan(ctx)
 	if err != nil {
@@ -165,7 +165,7 @@ func (r *UserRepository) UserByEmail(ctx context.Context,
 	user := new(users.User)
 	err := r.db.NewSelect().
 	Model(user).
-	Column("id", "name", "email", "is_verified", "avatar", "xp", "created_at").
+	Column("id", "name", "email", "is_verified", "avatar", "xp", "rank", "created_at").
 	Where("email = ?", email).
 	Scan(ctx)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -182,7 +182,7 @@ func (r *UserRepository) UserByGoogleId(ctx context.Context,
 	user := new(users.User)
 	err := r.db.NewSelect().
 	Model(user).
-	Column("id", "name", "email", "is_verified", "avatar", "xp", "created_at").
+	Column("id", "name", "email", "is_verified", "avatar", "xp", "rank", "created_at").
 	Where("google_id = ?", googleId).
 	Scan(ctx)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -363,4 +363,17 @@ func (r *UserRepository) UserLeaderboard(ctx context.Context, userId int64) ([]L
 		return nil, fmt.Errorf("failed to get leaderboard info for user %d: %w", userId, err)
 	}
 	return rows, nil
+}
+
+func (r *UserRepository) SetRank(ctx context.Context, userId int64, rank string) (bool, error) {
+	user := &users.User{Rank: rank}
+	_, err := r.db.NewUpdate().
+		Model(user).
+		Column("rank").
+		Where("id = ?", userId).
+		Exec(ctx)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
 }
