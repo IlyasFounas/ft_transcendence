@@ -185,8 +185,8 @@ export default function ProfilePage() {
                     xl:grid-cols-2
                     gap-2
                     xl:gap-8
-                    xl:h-112.5
-                    shrink-0
+                    xl:h-[calc(100vh-700px)]
+                    xl:min-h-100
                 "
             >
 				<OperationHistory operations={operations} />
