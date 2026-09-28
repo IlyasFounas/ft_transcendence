@@ -202,5 +202,65 @@
     "latitude": 2.4201537,
     "longitude": 103.83733759997,
     "country_code": "MY"
+  },
+  {
+    "mapillary_id": 1864400833733635,
+    "latitude": 3.1463841111314,
+    "longitude": 101.69814988899,
+    "country_code": "MY"
+  },
+  {
+    "mapillary_id": 1348278815591408,
+    "latitude": 2.9507156000004,
+    "longitude": 101.75707069446,
+    "country_code": "MY"
+  },
+  {
+    "mapillary_id": 183954207050217,
+    "latitude": 3.0325775002117,
+    "longitude": 101.76661100023,
+    "country_code": "MY"
+  },
+  {
+    "mapillary_id": 1366773298225402,
+    "latitude": 7.0004383,
+    "longitude": 100.4652268,
+    "country_code": "TH"
+  },
+  {
+    "mapillary_id": 824813891722838,
+    "latitude": 4.3507101999722,
+    "longitude": 101.1127958,
+    "country_code": "MY"
+  },
+  {
+    "mapillary_id": 491703505477320,
+    "latitude": 9.470796,
+    "longitude": 100.040935,
+    "country_code": "TH"
+  },
+  {
+    "mapillary_id": 327160088865363,
+    "latitude": 13.752031940356,
+    "longitude": 100.50337317239,
+    "country_code": "TH"
+  },
+  {
+    "mapillary_id": 1966654497086330,
+    "latitude": 13.74236345994,
+    "longitude": 100.53025317424,
+    "country_code": "TH"
+  },
+  {
+    "mapillary_id": 1184935310493893,
+    "latitude": 16.7083449,
+    "longitude": 98.5692929,
+    "country_code": "TH"
+  },
+  {
+    "mapillary_id": 188228043780506,
+    "latitude": 12.681610799972,
+    "longitude": 101.279059,
+    "country_code": "TH"
   }
 ]
