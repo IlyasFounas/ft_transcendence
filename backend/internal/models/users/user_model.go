@@ -18,7 +18,8 @@ type User struct {
 	Email       string        	`bun:"email,unique,notnull"`
 	Is_verified bool          	`bun:"is_verified,notnull"`
 	Avatar      *string       	`bun:"avatar"`
-	XP          int64         	`bun:"xp,notnull,default:0"`
+	XP   		int64  			`bun:"xp,notnull,default:0"`
+    Rank 		string 			`bun:"rank,notnull,default:'Junior Agent'"`
 	CreatedAt   time.Time     	`bun:"created_at,default:current_timestamp"`
 
 	Lobby 		[]*games.Lobby	`bun:"rel:has-many,join:id=user_id"`
