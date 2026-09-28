@@ -118,7 +118,7 @@ export default function ProfilePage() {
 					</div>
 					<div className="xl:pt-5">
 						<SecondaryButton 
-                            className="scale-60 md:scale-70 xl:scale-100"
+                            className="text-heading-small md:text-heading-medium lg:text-heading-large scale-60! xs:hover:scale-60! md:scale-80 xl:scale-100 md:hover:scale-80 xl:hover:scale-100"
                             onClick={() => setShowEditProfile(true)}
                         >
 							<Pencil size={18} />
