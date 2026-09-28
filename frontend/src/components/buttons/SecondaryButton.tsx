@@ -11,13 +11,13 @@ export default function SecondaryButton({ children, onClick, icon, active, class
 	<button 
 		onClick={onClick}
 		className={`
-			inline-flex w-fit min-h-[60px] items-center justify-center
+			inline-flex w-fit min-h-15 items-center justify-center
 			
-			px-[24px] py-[16px] gap-3
+			px-6 py-4 gap-3
 			
 			rounded-lg
 			border border-primary
-			outline outline-1 outline-offset-[-1px] outline-primary
+			outline -outline-offset-1 outline-primary
 			
 			bg-surface-elevated
 			

@@ -32,9 +32,9 @@ export default function ProfileCard({
                 space-y-4
                 p-6
                 md:p-5
-                w-[300px]
-                md:w-[380px]
-                lg:w-[480px]
+                w-75
+                md:w-95
+                lg:w-120
             "
         >
             <div className="w-full flex flex-col lg:flex-row lg:text-left gap-2 lg:gap-6 items-center">
