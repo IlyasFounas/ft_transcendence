@@ -25,6 +25,7 @@ import (
 type Leaderboard struct {
 	Position int64  `json:"position"`
 	Username string `json:"username"`
+	Rank string 	`json:"rank"`
 	Total    int64  `json:"total"`
 }
 
@@ -334,6 +335,7 @@ func (r *UserRepository) Leaderboard(ctx context.Context) ([]Leaderboard, error)
 		Model((*users.User)(nil)).
 		ColumnExpr("RANK() OVER (ORDER BY u.xp DESC) AS position").
 		ColumnExpr("u.name AS username").
+		ColumnExpr("u.rank AS rank").
 		ColumnExpr("u.xp AS total").
 		OrderExpr("u.xp DESC, u.name ASC").
 		Limit(100).
@@ -352,11 +354,12 @@ func (r *UserRepository) UserLeaderboard(ctx context.Context, userId int64) ([]L
 		ColumnExpr("u.id").
 		ColumnExpr("RANK() OVER (ORDER BY u.xp DESC) AS position").
 		ColumnExpr("u.name AS username").
+		ColumnExpr("u.rank AS rank").
 		ColumnExpr("u.xp AS total")
 	var rows []Leaderboard
 	err := r.db.NewSelect().
 		TableExpr("(?) AS ranked", ranked).
-		ColumnExpr("ranked.position, ranked.username, ranked.total").
+		ColumnExpr("ranked.position, ranked.username, ranked.rank, ranked.total").
 		Where("ranked.id = ?", userId).
 		Scan(ctx, &rows)
 	if err != nil {
