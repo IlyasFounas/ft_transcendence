@@ -7,7 +7,7 @@ export default function HomePage() {
 	const handlePlaySolo = async () => {
 	const body = new URLSearchParams({
 			timer: "60",
-			round_total: "3", 
+			round_total: "5", 
 		});
 
 		const result = await authFetch("/api/lobby/create", {

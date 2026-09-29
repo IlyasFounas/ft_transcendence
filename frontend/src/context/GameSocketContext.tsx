@@ -73,6 +73,7 @@ interface GameSocketContextType {
 	kickPlayer: (targetId: number) => void;
 	sendGuess: (guess: { lat: number; lng: number }) => void;
 	startGame: () => void;
+	startNextRound: () => void;
 	round: RoundInfo | null;
 	roundHistory: RoundResult[];
 	lastRoundResult: {
@@ -92,6 +93,7 @@ const GameSocketContext = createContext<GameSocketContextType>({
 	kickPlayer: () => {},
 	sendGuess: () => {},
 	startGame: () => {},
+	startNextRound: () => {},
 	round: null,
 	roundHistory: [],
 	lastRoundResult: null,
@@ -174,6 +176,29 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
 					},
 				});
 			}
+			else {
+				const playerWithInfos = data.results.find(r => r.round_infos);
+				const actualLat = playerWithInfos ? playerWithInfos.round_infos.base.lat : 0;
+				const actualLng = playerWithInfos ? playerWithInfos.round_infos.base.long : 0;
+
+			setRoundHistory((prev) => [
+				...prev,
+				{
+					round: own.round_nb,
+					points: 0,
+					distance: 0,
+					guessLocation: { latitude: 0, longitude: 0 }, 
+				},
+			]);
+
+			setLastRoundResult({
+				isLastRound: data.is_last_round,
+				nextRoundAt: data.next_round_at,
+				actualLocation: {
+					latitude: actualLat,
+					longitude: actualLng,
+				},
+			});
 		}
 		};
 
@@ -189,6 +214,7 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
 		socket.close();
 		socketRef.current = null;
 		};
+		}
 	}, [user, isAuthLoading]);
 
 	function leaveLobby() {
@@ -222,9 +248,20 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
 		}));
 	}
 
+	function startNextRound() {
+
+	setRound(null);
+	setLastRoundResult(null);
+
+	socketRef.current?.send(JSON.stringify({
+		action: "start_round",
+		payload: "",
+	}));
+}
+
 	return (
 		<GameSocketContext.Provider
-		value={{ players, lobbyInfos, isConnected, isClosed, isCurrentUserHost, leaveLobby, kickPlayer, startGame, round, roundHistory, lastRoundResult, sendGuess }}
+		value={{ players, lobbyInfos, isConnected, isClosed, isCurrentUserHost, leaveLobby, kickPlayer, startGame, startNextRound, round, roundHistory, lastRoundResult, sendGuess }}
 		>
 		{children}
 		</GameSocketContext.Provider>
