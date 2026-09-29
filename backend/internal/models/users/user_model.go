@@ -17,12 +17,13 @@ type User struct {
 	Password 	*string 	  	`bun:"password"`
 	Email       string        	`bun:"email,unique,notnull"`
 	Is_verified bool          	`bun:"is_verified,notnull"`
-	Avatar      *string       	`bun:"avatar,default:'/avatars/avatar1.png'"`
-	XP   		int64  			`bun:"xp,notnull,default:0"`
-    Rank 		string 			`bun:"rank,notnull,default:'Junior Agent'"`
+	Avatar		*string			`bun:"avatar,default:'/avatars/avatar1.png'"`
+	XP   		int64			`bun:"xp,notnull,default:0"`
+    Rank		string			`bun:"rank,notnull,default:'Junior Agent'"`
 	CreatedAt   time.Time     	`bun:"created_at,default:current_timestamp"`
 
 	Lobby 		[]*games.Lobby	`bun:"rel:has-many,join:id=user_id"`
+	Statistics	*Statistics		`bun:"rel:has-one,join:id=user_id" json:"-"`
 }
 
 type GoogleUserInfo struct {
