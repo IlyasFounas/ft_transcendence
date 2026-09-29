@@ -5,8 +5,6 @@ import (
 	"database/sql"
 	"errors"
 
-	"backend/internal/models/games"
-	"backend/internal/models/guesses"
 	"backend/internal/models/users"
 	"backend/internal/tools/haversine"
 
@@ -125,85 +123,90 @@ func (r *StatisticsRepository) set(ctx context.Context, stats *users.Statistics,
 	return err
 }
 
-// gameStatistics is what one player did in one game
-type gameStatistics struct {
-	UserID   int64   `bun:"user_id"`
-	Score    int64   `bun:"score"`    // final score of the game: sum of the scores of his guesses (with multipliers)
-	Accuracy float64 `bun:"accuracy"` // sum of the accuracy of his guesses
-	Closest  *int64  `bun:"closest"`  // closest distance of his guesses, in meters
-}
-
-func (r *StatisticsRepository) GetRoundTotal(ctx context.Context, gameId int64) (int64, error) {
-	var roundTotal int64
-	err := r.db.NewSelect().
-		Model((*games.Game)(nil)).
-		Column("round_total").
-		Where("id = ?", gameId).
-		Scan(ctx, &roundTotal)
-	if err != nil {
-		return 0, err
+// Updatethe statistics of each user from all his FINISHED games
+//   - finished_games nb (a game without any guess of his counts too)
+//   - accuracy: average over these games of the accuracy of the game, which is the average over its rounds of the
+//     accuracy of his guess: a rule of three on the distance (0 m = 100 %, haversine.EarthDiameterMeters or more
+//     = 0 %), a round without guess counting 0 %
+//   - best_score: best final score of a game (sum of his scores with multipliers)
+//   - closest_guess: closest distance the player ever guessed, in meters (or km if more than 1000 m), nil if he never guessed
+func (r *StatisticsRepository) UpdateStats(ctx context.Context, userIds []int64) error {
+	if len(userIds) == 0 {
+		return nil
 	}
-	return roundTotal, nil
-}
 
-func (r *StatisticsRepository) GetPlayersInGame(ctx context.Context, gameId int64) ([]*games.Lobby, error) {
-	var players []*games.Lobby
-	err := r.db.NewSelect().
-		Model(&players).
-		Where("game_id = ?", gameId).
-		Where("left_at IS NULL").
-		Scan(ctx)
-	if err != nil {
-		return nil, err
+	// number of finished games of each user
+	var counts []struct {
+		UserID int64 `bun:"user_id"`
+		Games  int64 `bun:"games"`
 	}
-	return players, nil
-}
+	err := finishedGamesLobbies(r.db).
+		ColumnExpr("lo.user_id").
+		ColumnExpr("COUNT(DISTINCT lo.game_id) AS games").
+		Where("lo.user_id IN (?)", bun.In(userIds)).
+		Group("lo.user_id").
+		Scan(ctx, &counts)
+	if err != nil {
+		return err
+	}
 
-func (r *StatisticsRepository) SetGameStatisticsPerUser(ctx context.Context, gameId int64) (map[int64]gameStatistics, error) {
-		var rows []gameStatistics
-	err := r.db.NewSelect().
-		Model((*guesses.Guess)(nil)).
+	// what each user did in each of his finished games
+	var perGame []struct {
+		UserID   int64   `bun:"user_id"`
+		Score    int64   `bun:"score"`    // final score of the game
+		Accuracy float64 `bun:"accuracy"` // accuracy of the game (average over its rounds)
+		Closest  *int64  `bun:"closest"`  // closest guess of the game, in meters
+	}
+	err = finishedGamesGuesses(r.db).
 		ColumnExpr("g.user_id").
-		ColumnExpr("SUM(g.score) AS score"). // 
-		ColumnExpr("SUM(GREATEST(0, 100 - g.distance * 100.0 / ?)) AS accuracy", haversine.EarthDiameterMeters).
+		ColumnExpr("SUM(g.score) AS score").
+		ColumnExpr("SUM(GREATEST(0, 100 - g.distance * 100.0 / ?)) / MAX(ga.round_total) AS accuracy",
+			haversine.EarthDiameterMeters).
 		ColumnExpr("MIN(g.distance) AS closest").
-		Join("JOIN rounds AS r ON r.id = g.round_id").
-		Where("r.game_id = ?", gameId).
-		Group("g.user_id").
-		Scan(ctx, &rows)
+		Where("g.user_id IN (?)", bun.In(userIds)).
+		GroupExpr("g.user_id, r.game_id").
+		Scan(ctx, &perGame)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	byUser := make(map[int64]gameStatistics, len(rows))
-	for _, row := range rows {
-		byUser[row.UserID] = row
-	}
-	return byUser, nil
-}
 
-func (r *StatisticsRepository) UpdateStatistics(ctx context.Context, userGameStats map[int64]gameStatistics, players []*games.Lobby, roundTotal int64) error {
-	for _, player := range players {
-		game := userGameStats[player.UserId] // zero value if he didn't guess once in this game
-		stats := &users.Statistics{
-			UserID:        player.UserId,
-			FinishedGames: 1,
-			Accuracy:      game.Accuracy / float64(roundTotal),
-			BestScore:     game.Score,
-			ClosestGuess:  game.Closest,
+	// statistics of each user, from scratch
+	stats := make(map[int64]*users.Statistics, len(userIds))
+	for _, userId := range userIds {
+		stats[userId] = &users.Statistics{UserID: userId}
+	}
+	for _, count := range counts {
+		stats[count.UserID].FinishedGames = count.Games
+	}
+	for _, game := range perGame {
+		s := stats[game.UserID]
+		s.Accuracy += game.Accuracy // summed here, divided by the number of finished games below
+		if game.Score > s.BestScore {
+			s.BestScore = game.Score
 		}
-		// first finished game: the row is inserted with these values. Otherwise they are merged with his row
-		// (st = his current values, EXCLUDED = this game; LEAST ignores a NULL closest guess)
+		if game.Closest != nil && (s.ClosestGuess == nil || *game.Closest < *s.ClosestGuess) {
+			closest := *game.Closest
+			s.ClosestGuess = &closest
+		}
+	}
+
+	// every value is replaced (nothing is merged with the previous row). Every user is tried even if one fails.
+	var errs []error
+	for _, s := range stats {
+		if s.FinishedGames > 0 {
+			s.Accuracy /= float64(s.FinishedGames) // games without any guess count 0 %
+		}
 		_, err := r.db.NewInsert().
-			Model(stats).
+			Model(s).
 			On("CONFLICT (user_id) DO UPDATE").
-			Set("finished_games = st.finished_games + 1").
-			Set("accuracy = (st.accuracy * st.finished_games + EXCLUDED.accuracy) / (st.finished_games + 1)").
-			Set("best_score = GREATEST(st.best_score, EXCLUDED.best_score)").
-			Set("closest_guess = LEAST(st.closest_guess, EXCLUDED.closest_guess)").
+			Set("finished_games = EXCLUDED.finished_games").
+			Set("accuracy = EXCLUDED.accuracy").
+			Set("best_score = EXCLUDED.best_score").
+			Set("closest_guess = EXCLUDED.closest_guess").
 			Exec(ctx)
 		if err != nil {
-			return err
+			errs = append(errs, err)
 		}
 	}
-	return nil
+	return errors.Join(errs...)
 }

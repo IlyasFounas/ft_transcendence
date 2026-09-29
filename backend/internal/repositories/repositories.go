@@ -1,6 +1,10 @@
 package repositories
 
 import (
+	"context"
+	"errors"
+	"fmt"
+
 	"github.com/uptrace/bun"
 )
 
@@ -32,7 +36,7 @@ func NewRepositories(db *bun.DB) (*Repositories, error) {
 		User:		userRepo,
 		AToken:		NewActivationTokenRepository(db),
 		RToken:		NewRefreshTokenRepository(db),
-		Game:		NewGameRepository(db, userRepo),
+		Game:		NewGameRepository(db),
 		Lobby:		NewLobbyRepository(db),
 		Round:		NewRoundRepository(db, locationRepo),
 		Guess:		NewGuessRepository(db),
@@ -40,4 +44,28 @@ func NewRepositories(db *bun.DB) (*Repositories, error) {
 		Chat:		NewChatRepository(db),
 		Statistics:	NewStatisticsRepository(db),
 	}, nil
+}
+
+// Update for each user that stayed until the end of this game his xp, then his rank from this xp, then his statistics
+func (r *Repositories) UpdatePlayers(ctx context.Context, userIds []int64) error {
+	var errs []error
+	if err := r.User.UpdateXP(ctx, userIds); err != nil {
+		errs = append(errs, fmt.Errorf("xp: %w", err))
+	}
+	if err := r.User.UpdateRank(ctx, userIds); err != nil {
+		errs = append(errs, fmt.Errorf("rank: %w", err))
+	}
+	if err := r.Statistics.UpdateStats(ctx, userIds); err != nil {
+		errs = append(errs, fmt.Errorf("statistics: %w", err))
+	}
+	return errors.Join(errs...)
+}
+
+// Runs UpdatePlayers for every user
+func (r *Repositories) UpdateAllPlayers(ctx context.Context) error {
+	userIds, err := r.User.AllIds(ctx)
+	if err != nil {
+		return err
+	}
+	return r.UpdatePlayers(ctx, userIds)
 }

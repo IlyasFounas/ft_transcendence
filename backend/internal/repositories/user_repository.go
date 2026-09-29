@@ -3,8 +3,8 @@ package repositories
 import (
 	"database/sql"
 	"backend/internal/models/users"
-	"backend/internal/models/guesses"
 	"backend/internal/tools/encryption"
+	"backend/internal/tools/rank_calculation"
 	"context"
 	"errors"
 	"fmt"
@@ -287,8 +287,7 @@ func (r *UserRepository) XP(ctx context.Context, userId int64) (int64, error) {
 	return user.XP, nil
 }
 
-// Setter xp: replaces the xp of a user (admin use, a negative xp is refused).
-// At the end of a game, the xp is increased by AddGameXP instead.
+// Setter xp: replaces the xp of a user (a negative xp is refused)
 func (r *UserRepository) SetXP(ctx context.Context, userId int64, xp int64) (bool, error) {
 	if xp < 0 {
 		return false, nil
@@ -305,27 +304,62 @@ func (r *UserRepository) SetXP(ctx context.Context, userId int64, xp int64) (boo
 	return true, nil
 }
 
-// AddGameXP adds, to every player of the game gameId, the sum of the base_score he earned in it.
-// It must run only once per game: GameRepository.SetFinished calls it in the same transaction (db)
-// that sets finished_at, and only the first time the game is marked as finished.
- func (r *UserRepository) AddGameXP(ctx context.Context, db bun.IDB, gameId int64) error {
-    // xp earned by each player in this game: the sum of his base_score over its rounds
-    gameXP := db.NewSelect().
-        Model((*guesses.Guess)(nil)).
-        ColumnExpr("g.user_id").
-        ColumnExpr("SUM(g.base_score) AS total").
-        Join("JOIN rounds AS r ON r.id = g.round_id").
-        Where("r.game_id = ?", gameId).
-        Group("g.user_id")
-    // bulk update of bun: WITH game_xp AS (...) UPDATE users AS u SET ... FROM game_xp WHERE ...
-    _, err := db.NewUpdate().
-        With("game_xp", gameXP).
-        Model((*users.User)(nil)).
-        TableExpr("game_xp").
-        Set("xp = u.xp + game_xp.total").
-        Where("u.id = game_xp.user_id").
-        Exec(ctx)
-    return err
+// Returns the id of every user (to update every player when the server starts, see Repositories)
+func (r *UserRepository) AllIds(ctx context.Context) ([]int64, error) {
+	var ids []int64
+	err := r.db.NewSelect().
+		Model((*users.User)(nil)).
+		Column("id").
+		Scan(ctx, &ids)
+	return ids, err
+}
+
+// Update the xp of each user using the sum of the base_score of all his guesses in all his FINISHED games 
+func (r *UserRepository) UpdateXP(ctx context.Context, userIds []int64) error {
+	if len(userIds) == 0 {
+		return nil
+	}
+	var totals []struct {
+		UserID int64 `bun:"user_id"`
+		XP     int64 `bun:"xp"`
+	}
+	err := finishedGamesGuesses(r.db).
+		ColumnExpr("g.user_id").
+		ColumnExpr("SUM(g.base_score) AS xp").
+		Where("g.user_id IN (?)", bun.In(userIds)).
+		Group("g.user_id").
+		Scan(ctx, &totals)
+	if err != nil {
+		return err
+	}
+	xp := make(map[int64]int64, len(totals))
+	for _, total := range totals {
+		xp[total.UserID] = total.XP
+	}
+	var errs []error
+	for _, userId := range userIds {
+		// a user without any guess in a finished game gets 0
+		if _, err := r.SetXP(ctx, userId, xp[userId]); err != nil {
+			errs = append(errs, err)
+		}
+	}
+	return errors.Join(errs...)
+}
+
+// Update the rank of each user from his current xp and, every user is tried even if one fails.
+func (r *UserRepository) UpdateRank(ctx context.Context, userIds []int64) error {
+	var errs []error
+	for _, userId := range userIds {
+		xp, err := r.XP(ctx, userId)
+		if err != nil {
+			errs = append(errs, err)
+			continue
+		}
+		if _, err := r.SetRank(ctx, userId, rank_calculation.CalculateRank(xp)); err != nil {
+			errs = append(errs, err)
+		}
+	}
+	return errors.Join(errs...)
 }
 
 // Leaderboard returns the 100 first players ranked by xp

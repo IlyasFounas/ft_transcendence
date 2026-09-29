@@ -139,6 +139,7 @@ type Hub struct {
 	LobbyRepo		*repositories.LobbyRepository
 	GameRepo		*repositories.GameRepository
 	UserRepo		*repositories.UserRepository
+	StatsRepo		*repositories.StatisticsRepository
 	LobbyWsHandler	*ws_handlers.LobbyWsHandler
 	GuessWsHandler	*ws_handlers.GuessWsHandler
 }
@@ -157,6 +158,7 @@ func NewHub(
 		LobbyRepo:			repo.Lobby,
 		GameRepo:			repo.Game,
 		UserRepo:			repo.User,
+		StatsRepo:			repo.Statistics,
 		LobbyWsHandler:		wsHandlers.Lobby,
 		GuessWsHandler:		wsHandlers.Guess,
 	}
@@ -717,9 +719,7 @@ func (h *Hub) EndRound(ctx context.Context, gameId, roundNb int64) {
 
 	results, isLastRound, err := h.roundResults(ctx, gameId, roundNb)
 	if err == nil && isLastRound {
-		// the game is over: finished_at is set and every player gets the base_score of this game in his xp (only once,
-		// so trying again after a failure never counts the xp twice)
-		err = h.GameRepo.SetFinished(ctx, gameId)
+				err = h.GameRepo.SetFinished(ctx, gameId)
 	}
 	if err != nil {
 		if state.EndRetries < endRoundMaxRetries {
@@ -737,6 +737,8 @@ func (h *Hub) EndRound(ctx context.Context, gameId, roundNb int64) {
 		return
 	}
 	if isLastRound {
+		// update xp, rank and statistics of the players that finished the game
+		h.updatePlayers(ctx, h.connectedPlayers(gameId))
 		// the players who are still disconnected leave the game now, otherwise their lobby would stay open and they
 		// couldn't create or join another one (the connected players leave when they close the game, see Unregister)
 		h.LobbyWsHandler.CloseLobby(ctx, gameId, h.connectedPlayers(gameId))
@@ -769,6 +771,23 @@ func (h *Hub) EndRound(ctx context.Context, gameId, roundNb int64) {
 		return
 	}
 	h.armTimer(gameId, time.Until(next.NextRoundAt), "start_round", roundNb+1)
+}
+
+// Updates the xp, then the rank (from this new xp), then the statistics of the players that finished the game
+func (h *Hub) updatePlayers(ctx context.Context, connected map[int64]bool) {
+	userIds := make([]int64, 0, len(connected))
+	for userId := range connected {
+		userIds = append(userIds, userId)
+	}
+	if err := h.UserRepo.UpdateXP(ctx, userIds); err != nil {
+		log.Printf("error : could not update the xp of the players %v: %s\n", userIds, err)
+	}
+	if err := h.UserRepo.UpdateRank(ctx, userIds); err != nil {
+		log.Printf("error : could not update the rank of the players %v: %s\n", userIds, err)
+	}
+	if err := h.StatsRepo.UpdateStats(ctx, userIds); err != nil {
+		log.Printf("error : could not update the statistics of the players %v: %s\n", userIds, err)
+	}
 }
 
 func JoinLobby(hub *Hub) gin.HandlerFunc {
