@@ -262,5 +262,59 @@
     "latitude": 12.681610799972,
     "longitude": 101.279059,
     "country_code": "TH"
+  },
+  {
+    "mapillary_id": 735254922939869,
+    "latitude": 38.2650596,
+    "longitude": 76.45031089999998,
+    "country_code": "US"
+  },
+  {
+    "mapillary_id": 1662747627969375,
+    "latitude": 42.30708201273001,
+    "longitude": -71.30895516577101,
+    "country_code": "US"
+  },
+  {
+    "mapillary_id": 979272216648091,
+    "latitude": 41.95122529997201,
+    "longitude": -87.659707999972,
+    "country_code": "US"
+  },
+  {
+    "mapillary_id": 2006350429903847,
+    "latitude": 34.19207049999997,
+    "longitude": -118.13810460000002,
+    "country_code": "US"
+  },
+  {
+    "mapillary_id": 946180094248018,
+    "latitude": 33.85975789999999,
+    "longitude": -118.3994482,
+    "country_code": "US"
+  },
+  {
+    "mapillary_id": 1067633391806472,
+    "latitude": 41.032592100000016,
+    "longitude": -111.9123899,
+    "country_code": "US"
+  },
+  {
+    "mapillary_id": 1009196246709497,
+    "latitude": 40.81566537694701,
+    "longitude": -96.704011282691,
+    "country_code": "US"
+  },
+  {
+    "mapillary_id": 1299646814697640,
+    "latitude": 41.586859722718,
+    "longitude": -93.62495043568197,
+    "country_code": "US"
+  },
+  {
+    "mapillary_id": 1302285813952400,
+    "latitude": 28.54354529999999,
+    "longitude": -81.37803810000003,
+    "country_code": "US"
   }
 ]
