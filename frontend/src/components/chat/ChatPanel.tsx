@@ -48,6 +48,31 @@ export default function ChatPanel() {
         };
     });
 
+    useEffect(() => {
+        if (!selectedFriend) {
+            return;
+        }
+
+        const chatFriend = chatFriends.find(
+            friend => friend.user_id === selectedFriend.userId
+        );
+
+        if (!chatFriend) {
+            return;
+        }
+
+        setSelectedFriend(currentFriend => {
+            if (!currentFriend) {
+                return null;
+            }
+            
+            return {
+                ...currentFriend,
+                online: chatFriend.online,
+            };
+        });
+    }, [chatFriends]);
+
     console.log("Friends with WebSocket status:", friendsWithOnlineStatus);
 
     const handleSendMessage = (message: string) => {
