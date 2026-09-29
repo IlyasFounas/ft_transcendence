@@ -8,6 +8,7 @@ import (
 
 	"backend/internal/models/guesses"
 	"backend/internal/models/rounds"
+
 	"github.com/uptrace/bun"
 )
 
@@ -56,7 +57,7 @@ func (r *GuessRepository) GetCoordinatesByID(ctx context.Context, guess_id int64
 	return coordinates, nil
 }
 
-	// "backend/internal/models/locations"
+// "backend/internal/models/locations"
 func (r *GuessRepository) GetLocationIDByRoundID(ctx context.Context, round_id int64) (int64, error) {
 	var locID int64
 	err := r.db.NewSelect().Model((*rounds.Round)(nil)).Column("loc_id").Where("id = ?", round_id).Limit(1).Scan(ctx, &locID)
@@ -168,7 +169,7 @@ func (r *GuessRepository) GetTotalScoreByGameAndUserID(ctx context.Context, game
 	var total int64
 	err := r.db.NewSelect().
 		Model((*guesses.Guess)(nil)).
-		ColumnExpr("COALESCE(SUM(g.score), 0)"). // COALESCE(..., 0) évite un NULL si l'utilisateur n'a encore aucun guess pour cette game (au lieu de creer une erreur)
+		ColumnExpr("COALESCE(SUM(g.score), 0)"). // COALESCE(..., 0) Ã©vite un NULL si l'utilisateur n'a encore aucun guess pour cette game (au lieu de creer une erreur)
 		Join("JOIN rounds AS r ON r.id = g.round_id").
 		Where("r.game_id = ? AND g.user_id = ?", game_id, user_id).
 		Scan(ctx, &total)
@@ -178,27 +179,14 @@ func (r *GuessRepository) GetTotalScoreByGameAndUserID(ctx context.Context, game
 	return total, nil
 }
 
-// READ - using user ID (to get the XP for that user across all games)
-func (r *GuessRepository) GetXPByUserID(ctx context.Context, user_id int64) (int64, error) {
-	var total int64
-	err := r.db.NewSelect().
-		Model((*guesses.Guess)(nil)).
-		ColumnExpr("COALESCE(SUM(base_score), 0)").
-		Where("user_id = ?", user_id).
-		Scan(ctx, &total)
-	if err != nil {
-		return 0, fmt.Errorf("failed to get XP for user %d: %w", user_id, err)
+// READ - using game ID (to get the results for that game)
+func (r *GuessRepository) GetResultsByGameID(ctx context.Context, game_id int64) ([][2]int64, error) {
+	type results struct {
+		UserID int64 `bun:"user_id"`
+		Total  int64 `bun:"total"`
 	}
-	return total, nil
-}
 
-func (r *GuessRepository) GetLeaderboardByGameID(ctx context.Context, game_id int64) ([][2]int64, error) {
-	type leaderboard struct {
-        UserID int64 `bun:"user_id"`
-        Total  int64 `bun:"total"`
-    }
-
-	var rows []leaderboard
+	var rows []results
 	err := r.db.NewSelect().
 		Model((*guesses.Guess)(nil)).
 		ColumnExpr("g.user_id AS user_id").
@@ -209,14 +197,14 @@ func (r *GuessRepository) GetLeaderboardByGameID(ctx context.Context, game_id in
 		OrderExpr("total DESC").
 		Scan(ctx, &rows)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get leaderboard for game %d: %w", game_id, err)
+		return nil, fmt.Errorf("failed to get results for game %d: %w", game_id, err)
 	}
-	results := make([][2]int64, 0, len(rows))
-    for _, row := range rows {
-        results = append(results, [2]int64{row.UserID, row.Total})
-    }
+	res := make([][2]int64, 0, len(rows))
+	for _, row := range rows {
+		res = append(res, [2]int64{row.UserID, row.Total})
+	}
 
-    return results, nil
+	return res, nil
 }
 
 // READ - streak value for the last round - using game ID and user ID
@@ -245,9 +233,9 @@ func (r *GuessRepository) GetLastStreakByGameAndUserID(ctx context.Context, game
 func (r *GuessRepository) GetByRoundID(ctx context.Context, round_id int64) ([]*guesses.Guess, error) {
 	var guesses []*guesses.Guess
 	err := r.db.NewSelect().
-				Model(&guesses).
-				Where("round_id = ?", round_id).
-				Scan(ctx)
+		Model(&guesses).
+		Where("round_id = ?", round_id).
+		Scan(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get guesses by round ID: %w", err)
 	}

@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 	"errors"
 	"encoding/json"
@@ -168,15 +169,14 @@ func (h *UserHandler) CreateUser() gin.HandlerFunc {
                 gin.H{"message": "Something went wrong. Please try again."})
 			return
 		}
-		if existingUsername != "" {
+		if existingUsername {
             c.JSON(http.StatusBadRequest,
                 gin.H{"message": "This username is unavailable. Please try another one."})
 			return
-		}
-
+		}		 
 		userObj := &users.User{Login: &login,
 			Password:    &hashpassword,
-			Username:    username,
+			Username:    strings.ToLower(username),
 			Email:       strings.ToLower(parsedEmail.Address),
 			Is_verified: false}
 		// check if the email is correct
@@ -205,6 +205,7 @@ func (h *UserHandler) Login() gin.HandlerFunc {
 			if err := h.createActivationToken(c, expiresAt, userId); err != nil {
 				return
 			}
+			log.Printf("error : %s\n", err)
 			c.JSON(http.StatusUnauthorized,
                 gin.H{"message": "The activation link has been resent on your email"})
             return
@@ -295,7 +296,7 @@ func (h *UserHandler) resolveGoogleUser(c *gin.Context, info *users.GoogleUserIn
 			log.Printf("error : %s\n", err)
 			return nil, errors.New("failed")
 		}
-		if existingName == "" {
+		if existingName == false {
 			break 
 		}
 		code, err := code_generation.RandGenerate(4)
@@ -307,8 +308,8 @@ func (h *UserHandler) resolveGoogleUser(c *gin.Context, info *users.GoogleUserIn
 	}
 	userObj := &users.User{Login: nil,
 			Password:    nil,
-			Username:    checkUsername,
-			Email:       info.Email,
+			Username:    strings.ToLower(checkUsername),
+			Email:       strings.ToLower(info.Email),
 			Is_verified: true,
 			GoogleId: 	 &info.Sub,}
 	user, err = h.userRepo.CreateUser(c.Request.Context(), userObj)
@@ -508,6 +509,7 @@ func (h *UserHandler) SetName() gin.HandlerFunc {
 		}
 	}
 }
+
 func (h *UserHandler) setGoogleId(c *gin.Context, userId int64, googleId *string) bool {
 	state, err := h.userRepo.SetGoogleId(c.Request.Context(), userId, googleId)
 	if err != nil {
@@ -618,5 +620,87 @@ func (h *UserHandler) UploadAvatar() gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, gin.H{"message": "success", "avatar": avatarURL})
+	}
+}
+
+// XP returns the xp of the connected user (sum of the base_score of all his finished games)
+func (h *UserHandler) XPByName() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		_, ok := c.Get("userId")
+		if !ok {
+			c.JSON(http.StatusUnauthorized,
+				gin.H{"message": "The userId is empty"})
+			return
+		}
+		username := c.Param("username")
+		user, err := h.userRepo.UserByName(c.Request.Context(), username)
+		if err != nil {
+			log.Printf("error : %s\n", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "failed"})
+			return
+		}
+		c.JSON(http.StatusOK,
+			gin.H{"message": "success", "user_xp": user.XP})
+	}
+}
+
+// SetXP replaces the xp of a user (form field "xp").
+func (h *UserHandler) SetXP() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userId, err := strconv.ParseInt(c.Param("id"), 10, 64)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"message": "invalid user id"})
+			return
+		}
+		xp, err := strconv.ParseInt(c.PostForm("xp"), 10, 64)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"message": "invalid xp"})
+			return
+		}
+		updated, err := h.userRepo.SetXP(c.Request.Context(), userId, xp)
+		if err != nil {
+			log.Printf("error : %s\n", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "Something went wrong"})
+			return
+		}
+		if !updated {
+			c.JSON(http.StatusBadRequest, gin.H{"message": "The xp can't be negative"})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"message": "success"})
+	}
+}
+
+// Leaderboard returns the 100 first players ranked by xp
+func (h *UserHandler) Leaderboard() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		leaderboard, err := h.userRepo.Leaderboard(c.Request.Context())
+		if err != nil {
+			log.Printf("error : %s\n", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "Something went wrong"})
+			return
+		}
+		c.JSON(http.StatusOK,
+			gin.H{"message": "success", "leaderboard": leaderboard})
+	}
+}
+
+// UserLeaderboard returns the position, name and xp of the connected user
+func (h *UserHandler) UserLeaderboard() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userId, ok := c.Get("userId")
+		if !ok {
+			c.JSON(http.StatusUnauthorized,
+				gin.H{"message": "The userId is empty"})
+			return
+		}
+		leaderboard, err := h.userRepo.UserLeaderboard(c.Request.Context(), userId.(int64))
+		if err != nil {
+			log.Printf("error : %s\n", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "Something went wrong"})
+			return
+		}
+		c.JSON(http.StatusOK,
+			gin.H{"message": "success", "leaderboard": leaderboard})
 	}
 }
