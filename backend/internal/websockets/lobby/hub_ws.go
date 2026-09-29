@@ -556,7 +556,7 @@ func (h *Hub) closeClients(ctx context.Context) {
 	}
 }
 
-func JoinLobby(hub *Hub, wg *sync.WaitGroup) gin.HandlerFunc {
+func JoinLobby(ctx context.Context, hub *Hub, wg *sync.WaitGroup) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userId, ok := c.Get("userId")
 		if !ok {
@@ -599,7 +599,12 @@ func JoinLobby(hub *Hub, wg *sync.WaitGroup) gin.HandlerFunc {
 			hub.Action <- &dataInfos 
 		}
 		unregisterClient := func() {
-			hub.Unregister <- clientHub
+			select {
+			case hub.Unregister <- clientHub:
+			case <- ctx.Done():
+				log.Printf("client %d : the chanel is already closed\n", clientHub.UserId)
+				close(clientHub.Connx.Send)
+			}
 		}
 		wg.Add(1)
 		clientHub.Connx.ReadPump(actionClient, unregisterClient, wg)

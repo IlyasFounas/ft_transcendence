@@ -1,6 +1,7 @@
 package router
 
 import (
+	"context"
 	"sync"
 	"backend/internal/handlers"
 	"backend/internal/websockets/lobby"
@@ -8,14 +9,14 @@ import (
 	"backend/internal/middleware"
 )
 
-func registerLobbyRoutes(r *gin.Engine, h *handlers.GameHandler,
+func registerLobbyRoutes(ctx context.Context, r *gin.Engine, h *handlers.GameHandler,
 	hl *handlers.LobbyHandler, hub *lobby_ws.Hub, wg *sync.WaitGroup) {
 	private := r.Group("/")
 	private.Use(middleware.AuthMiddleWare())
 	{
 		private.POST("/lobby/create", h.CreateLobby())
 		private.POST("/lobby/join", hl.JoinLobby())
-		private.GET("/ws/lobby/join", lobby_ws.JoinLobby(hub, wg))
+		private.GET("/ws/lobby/join", lobby_ws.JoinLobby(ctx, hub, wg))
 		private.DELETE("/lobby/leave", hl.LeaveLobby())
 		private.DELETE("/lobby/remove/:username", hl.RemovePlayer())
 		private.GET("/game/historic/:userid", hl.Historic())

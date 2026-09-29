@@ -304,7 +304,7 @@ func (c *Chat) closeClients() {
 	}
 }
 
-func JoinChat(chat *Chat, wg *sync.WaitGroup) gin.HandlerFunc {
+func JoinChat(ctx context.Context, chat *Chat, wg *sync.WaitGroup) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userId, ok := c.Get("userId")
 		if !ok {
@@ -333,7 +333,11 @@ func JoinChat(chat *Chat, wg *sync.WaitGroup) gin.HandlerFunc {
 			chat.Action <- &dataInfos
 		}
 		unregisterClient := func() {
-			chat.Unregister <- clientChat
+			select {
+			case chat.Unregister <- clientChat:
+			case <- ctx.Done():
+				log.Printf("Chat : Client %d can't be unregistered\n", clientChat.UserId)
+			}
 		}
 		wg.Add(1)
 		clientChat.Connx.ReadPump(actionClient,

@@ -1,6 +1,7 @@
 package router
 
 import (
+	"context"
 	"sync"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -9,7 +10,7 @@ import (
 	"backend/internal/websockets/chat"
 )
 
-func NewRouter(h *handlers.Handlers, hub *lobby_ws.Hub, 
+func NewRouter(ctx context.Context, h *handlers.Handlers, hub *lobby_ws.Hub, 
 	chat *chat_ws.Chat, wg *sync.WaitGroup) *gin.Engine {
 	r := gin.Default()    //when you first create a var :=
 	r.Use(cors.Default()) // TODO: global middleware now but accept only localhost:3000 request
@@ -18,10 +19,10 @@ func NewRouter(h *handlers.Handlers, hub *lobby_ws.Hub,
 	registerUserRoutes(r, h.User, h.Token)
 	registerLocationRoutes(r, h.Location)
 	registerGameRoutes(r, h.Game)
-	registerLobbyRoutes(r, h.Game, h.Lobby, hub, wg)
+	registerLobbyRoutes(ctx, r, h.Game, h.Lobby, hub, wg)
 	registerRoundRoutes(r, h.Round)
 	registerGuessRoutes(r, h.Guess)
 	registerFriendRoutes(r, h.Friend)
-	registerChatRoutes(r, chat, wg)
+	registerChatRoutes(ctx, r, chat, wg)
 	return r
 }
