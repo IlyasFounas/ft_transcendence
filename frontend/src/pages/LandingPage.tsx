@@ -1,8 +1,17 @@
 import { useNavigate } from "react-router-dom";
 import PrimaryButton from "../components/buttons/PrimaryButton";
+import { useState } from "react";
+import TutorialCarousel from "../components/carousels/TutorialCarousel";
 
 export default function LandingPage() {
     const navigate = useNavigate();
+
+    const [showTutorial, setShowTutorial] = useState(false);
+
+    const tutorialImages = [
+        "/tutorials/tutorial-1.png",
+        "/tutorials/tutorial-2.png",
+    ]
 
     return (
         <main
@@ -85,6 +94,7 @@ export default function LandingPage() {
 
                 <button
                     type="button"
+                    onClick={() => (setShowTutorial(true))}
                     className="
                         mt-7
                         md:mt-7
@@ -100,6 +110,21 @@ export default function LandingPage() {
                 >
                     How to play <span>▶</span>
                 </button>
+
+                {showTutorial && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
+                        <div className="relative w-full max-w-3xl mx-4">
+                            <TutorialCarousel images={tutorialImages} />
+                            <button
+                                type="button"
+                                onClick={() => (setShowTutorial(false))}
+                                className="absolute top-2 right-2 z-10 bg-black text-white px-4 py-2"
+                            >
+                                x
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
         </main>
     );
