@@ -51,6 +51,7 @@ export default function GamePlayPage() {
 
 	const handleSubmit = () => {
 		if (!guess || !round) return;
+		console.log(round);
 		sendGuess(guess);
 	};
 

@@ -127,53 +127,53 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
 		socket.onmessage = (event) => {
 		const message = JSON.parse(event.data);
 
-		if (message.type === "lobby_players") {
-			const mappedPlayers: Player[] = message.data.map((p: RawPlayer) => ({
-			id: p.id,
-			username: p.username,
-			avatar: p.avatar ?? DEFAULT_AVATAR,
-			isHost: p.host,
+		if (message.action === "lobby_players") {
+			const mappedPlayers: Player[] = message.payload.map((p: RawPlayer) => ({
+				id: p.id,
+				username: p.username,
+				avatar: p.avatar ?? DEFAULT_AVATAR,
+				isHost: p.host,
 			}));
 			setPlayers(mappedPlayers);
 		}
-		else if (message.type === "round_started") {
-			const data = message.data as { round_nb: number; mid: number; round_ends_at: string };
+		else if (message.action === "lobby_infos") {
+			setLobbyInfos(message.payload);
+		}
+		else if (message.action === "round_started") {
+			const data = message.payload as { round_nb: number; mid: number; round_ends_at: string };
 			setRound({
-			round_nb: data.round_nb,
-			mid: data.mid,
-			round_ends_at: data.round_ends_at,
+				round_nb: data.round_nb,
+				mid: data.mid,
+				round_ends_at: data.round_ends_at,
 			});
 		}
-		else if (message.type === "round_results") {
-			const data = message.data as RoundResultBroadcast;
+		else if (message.action === "round_results") {
+			const data = message.payload as RoundResultBroadcast;
 			const own = data.results.find((r) => r.user_id === user.ID);
 			
 			if (own && own.round_infos) {
-			setRoundHistory((prev) => [
-				...prev,
-				{
-				round: own.round_nb,
-				points: own.round_infos!.score,
-				distance: own.round_infos!.distance,
-				guessLocation: {
-					latitude: own.round_infos!.guess.lat,
-					longitude: own.round_infos!.guess.long,
-				},
-				},
-			]);
+				setRoundHistory((prev) => [
+					...prev,
+					{
+						round: own.round_nb,
+						points: own.round_infos!.score,
+						distance: own.round_infos!.distance,
+						guessLocation: {
+							latitude: own.round_infos!.guess.lat,
+							longitude: own.round_infos!.guess.long,
+						},
+					},
+				]);
 
-			setLastRoundResult({
-				isLastRound: data.is_last_round,
-				nextRoundAt: data.next_round_at,
-				actualLocation: {
-				latitude: own.round_infos.base.lat,
-				longitude: own.round_infos.base.long,
-				},
-			});
+				setLastRoundResult({
+					isLastRound: data.is_last_round,
+					nextRoundAt: data.next_round_at,
+					actualLocation: {
+						latitude: own.round_infos.base.lat,
+						longitude: own.round_infos.base.long,
+					},
+				});
 			}
-		}
-		else if (message.join_code) {
-			setLobbyInfos(message);
 		}
 		};
 
@@ -192,32 +192,33 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
 	}, [user, isAuthLoading]);
 
 	function leaveLobby() {
-		socketRef.current?.send(JSON.stringify({ Action: "leave", Payload: "" }));
+		socketRef.current?.send(JSON.stringify({ action: "leave", payload: "" }));
 	}
 
 	function sendGuess(guess: { lat: number; lng: number }) {
 		if (!round) return;
+		
 		socketRef.current?.send(JSON.stringify({
-		Action: "guess",
-		Payload: {
-			latitude: guess.lat,
-			longitude: guess.lng,
-			round_nb: round.round_nb,
-		},
+			action: "guess",
+			payload: {
+				latitude: guess.lat,
+				longitude: guess.lng,
+				round_nb: round.round_nb,
+			},
 		}));
 	}
 
 	function kickPlayer(targetId: number) {
 		socketRef.current?.send(JSON.stringify({
-		Action: "kick_player",
-		Payload: { target_id: targetId },
+			action: "kick_player",
+			payload: { target_id: targetId },
 		}));
 	}
 
 	function startGame() {
 		socketRef.current?.send(JSON.stringify({
-		Action: "start_round",
-		Payload: "",
+			action: "start_game",
+			payload: "",
 		}));
 	}
 
