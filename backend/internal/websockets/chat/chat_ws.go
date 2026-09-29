@@ -292,7 +292,19 @@ func (c *Chat) handleAction(ctx context.Context, serializedData *DataInfos) {
 	}
 }
 
-func JoinChat(chat *Chat) gin.HandlerFunc {
+func (c *Chat) closeClients() {
+	var clientsCpy []*ClientChat
+	for _, clients := range c.Clients {
+		for client := range clients {
+			clientsCpy = append(clientsCpy, client)
+		}
+	}
+	for _, client := range clientsCpy {
+		c.unregisterClient(client)
+	}
+}
+
+func JoinChat(chat *Chat, wg *sync.WaitGroup) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userId, ok := c.Get("userId")
 		if !ok {
@@ -308,7 +320,8 @@ func JoinChat(chat *Chat) gin.HandlerFunc {
 		connx := client_ws.NewConnexion(conn)
 		clientChat := NewClientChat(connx, userId.(int64))
 		chat.Register <- clientChat
-		go clientChat.Connx.WritePump()
+		wg.Add(1)
+		go clientChat.Connx.WritePump(wg)
 		actionClient := func(data []byte) {
 			var dataInfos DataInfos
 			err := json.Unmarshal(data, &dataInfos)
@@ -322,22 +335,10 @@ func JoinChat(chat *Chat) gin.HandlerFunc {
 		unregisterClient := func() {
 			chat.Unregister <- clientChat
 		}
+		wg.Add(1)
 		clientChat.Connx.ReadPump(actionClient,
-			unregisterClient)
+			unregisterClient, wg)
 	}
-}
-
-func (c *Chat) closeClients() {
-	var clientsCpy []*ClientChat
-	for _, clients := range c.Clients {
-		for client := range clients {
-			clientsCpy = append(clientsCpy, client)
-		}
-	}
-	for _, client := range clientsCpy {
-		c.unregisterClient(client)
-	}
-	log.Println("The program is finished")
 }
 
 func (c *Chat) Run(ctx context.Context, wg *sync.WaitGroup) {

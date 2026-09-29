@@ -1,16 +1,16 @@
 package router
 
 import (
-	// "backend/internal/websockets/client"
+	"sync"
 	"backend/internal/websockets/chat"
 	"github.com/gin-gonic/gin"
 	"backend/internal/middleware"
 )
 
-func registerChatRoutes(r *gin.Engine, wsChat *chat_ws.Chat) {
+func registerChatRoutes(r *gin.Engine, chat *chat_ws.Chat, wg *sync.WaitGroup) {
 	private := r.Group("/")
 	private.Use(middleware.AuthMiddleWare())
 	{
-		private.GET("/ws/chat", chat_ws.JoinChat(wsChat))
+		private.GET("/ws/chat", chat_ws.JoinChat(chat, wg))
 	}
 }

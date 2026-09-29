@@ -539,7 +539,24 @@ func (h *Hub) EndRound(ctx context.Context, gameId, roundNb int64) {
 	})
 }
 
-func JoinLobby(hub *Hub) gin.HandlerFunc {
+func (h *Hub) closeClients(ctx context.Context) {
+	var clientsCpy []*ClientHub
+	for _, clients := range h.Clients {
+		for client := range clients {
+			clientsCpy = append(clientsCpy, client)
+		}
+	}
+	for _, client := range clientsCpy {
+		h.unregisterClient(client)
+		if !h.LobbyWsHandler.LeaveLobby(ctx, client.UserId) {
+			log.Printf("error : the client %d can't leave the lobby in the database\n", 
+				client.UserId)
+			continue
+		}
+	}
+}
+
+func JoinLobby(hub *Hub, wg *sync.WaitGroup) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userId, ok := c.Get("userId")
 		if !ok {
@@ -569,7 +586,8 @@ func JoinLobby(hub *Hub) gin.HandlerFunc {
 		clientHub := NewClientHub(connx, userId.(int64),
 			lobby.ID, lobby.GameId)
 		hub.Register <- clientHub
-		go clientHub.Connx.WritePump()
+		wg.Add(1)
+		go clientHub.Connx.WritePump(wg)
 		actionClient := func(data []byte) {
 			var dataInfos DataInfos
 			err := json.Unmarshal(data, &dataInfos)
@@ -583,24 +601,8 @@ func JoinLobby(hub *Hub) gin.HandlerFunc {
 		unregisterClient := func() {
 			hub.Unregister <- clientHub
 		}
-		clientHub.Connx.ReadPump(actionClient, unregisterClient)
-	}
-}
-
-func (h *Hub) closeClients(ctx context.Context) {
-	var clientsCpy []*ClientHub
-	for _, clients := range h.Clients {
-		for client := range clients {
-			clientsCpy = append(clientsCpy, client)
-		}
-	}
-	for _, client := range clientsCpy {
-		h.unregisterClient(client)
-		if !h.LobbyWsHandler.LeaveLobby(ctx, client.UserId) {
-			log.Printf("error : the client %d can't leave the lobby in the database\n", 
-				client.UserId)
-			continue
-		}
+		wg.Add(1)
+		clientHub.Connx.ReadPump(actionClient, unregisterClient, wg)
 	}
 }
 

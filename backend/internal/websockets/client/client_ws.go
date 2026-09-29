@@ -3,7 +3,7 @@ package client_ws
 import (
 	"log"
 	"time"
-
+    "sync"
 	"github.com/gorilla/websocket"
 )
 
@@ -18,7 +18,8 @@ func NewConnexion(conn *websocket.Conn) *Connexion {
     }
 }
 
-func (c *Connexion) WritePump() {
+func (c *Connexion) WritePump(wg *sync.WaitGroup) {
+	defer wg.Done()
     defer c.Conn.Close()
     for msg := range c.Send {
         if err := c.Conn.WriteMessage(websocket.TextMessage, msg); err != nil {
@@ -27,7 +28,7 @@ func (c *Connexion) WritePump() {
     }
     deadline := time.Now().Add(5*time.Second)
     err := c.Conn.WriteControl(websocket.CloseMessage,
-        websocket.FormatCloseMessage(websocket.CloseGoingAway, "server shutting down"),
+        websocket.FormatCloseMessage(websocket.CloseGoingAway, "the connexion is shutting down"),
         deadline)
     if err != nil {
         log.Printf("error : %s\n", err)
@@ -35,7 +36,8 @@ func (c *Connexion) WritePump() {
     }
 }
 
-func (c *Connexion) ReadPump(action func([]byte), unregister func()) {
+func (c *Connexion) ReadPump(action func([]byte), unregister func(), wg *sync.WaitGroup) {
+	defer wg.Done()
     defer unregister()
     defer c.Conn.Close()
     for {
