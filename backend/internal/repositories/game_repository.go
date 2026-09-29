@@ -9,7 +9,7 @@ import (
 )
 
 type GameRepository struct {
-	db	*bun.DB
+	db *bun.DB
 }
 
 func NewGameRepository(db *bun.DB) *GameRepository {
@@ -186,7 +186,8 @@ func (r *GameRepository) SetDifficulty(ctx context.Context, gameId int64,
 	return nil
 }
 
-// Marks the game as finished 
+// Marks the game as finished (finished_at), only once: calling it again changes nothing, so the hub can retry it
+// safely. It does nothing else: the xp, rank and statistics of the players are updated separately (see the hub).
 func (r *GameRepository) SetFinished(ctx context.Context,
 	gameId int64) error {
 	_, err := r.db.NewUpdate().

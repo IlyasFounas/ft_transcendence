@@ -719,7 +719,9 @@ func (h *Hub) EndRound(ctx context.Context, gameId, roundNb int64) {
 
 	results, isLastRound, err := h.roundResults(ctx, gameId, roundNb)
 	if err == nil && isLastRound {
-				err = h.GameRepo.SetFinished(ctx, gameId)
+		// the game is over: finished_at is set (retried below with the rest for about a minute if it fails;
+		// calling it again changes nothing). The players are updated separately, after this loop.
+		err = h.GameRepo.SetFinished(ctx, gameId)
 	}
 	if err != nil {
 		if state.EndRetries < endRoundMaxRetries {
@@ -737,7 +739,8 @@ func (h *Hub) EndRound(ctx context.Context, gameId, roundNb int64) {
 		return
 	}
 	if isLastRound {
-		// update xp, rank and statistics of the players that finished the game
+		// xp, rank and statistics of the players still connected at the end: recomputed from all their finished
+		// games, once, without retry (if it fails now, their next game or the next start of the server corrects it)
 		h.updatePlayers(ctx, h.connectedPlayers(gameId))
 		// the players who are still disconnected leave the game now, otherwise their lobby would stay open and they
 		// couldn't create or join another one (the connected players leave when they close the game, see Unregister)
@@ -773,7 +776,9 @@ func (h *Hub) EndRound(ctx context.Context, gameId, roundNb int64) {
 	h.armTimer(gameId, time.Until(next.NextRoundAt), "start_round", roundNb+1)
 }
 
-// Updates the xp, then the rank (from this new xp), then the statistics of the players that finished the game
+// updatePlayers recomputes the xp, then the rank (from this new xp), then the statistics of the players in connected
+// (the players still connected at the end of the game). Nothing is added: everything is recomputed from all their
+// finished games, so each step is tried once, even if the previous one failed, and the errors are only logged.
 func (h *Hub) updatePlayers(ctx context.Context, connected map[int64]bool) {
 	userIds := make([]int64, 0, len(connected))
 	for userId := range connected {

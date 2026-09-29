@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"errors"
 
+	"backend/internal/models/games"
+	"backend/internal/models/guesses"
 	"backend/internal/models/users"
 	"backend/internal/tools/haversine"
 
@@ -123,13 +125,16 @@ func (r *StatisticsRepository) set(ctx context.Context, stats *users.Statistics,
 	return err
 }
 
-// Updatethe statistics of each user from all his FINISHED games
-//   - finished_games nb (a game without any guess of his counts too)
+// UpdateStats recomputes from scratch the statistics of each user of userIds, from all his FINISHED games: the games
+// that are over (finished_at set) and that he was still in when they ended (not left, or left after finished_at).
+// A game he left or was kicked out of before its end doesn't count for him. Nothing is added to the previous values: every value is replaced, so running it again always
+// gives the exact statistics, and an update that failed is corrected by the next one.
+//   - finished_games: his finished games (a game without any guess of his counts too)
 //   - accuracy: average over these games of the accuracy of the game, which is the average over its rounds of the
 //     accuracy of his guess: a rule of three on the distance (0 m = 100 %, haversine.EarthDiameterMeters or more
 //     = 0 %), a round without guess counting 0 %
 //   - best_score: best final score of a game (sum of his scores with multipliers)
-//   - closest_guess: closest distance the player ever guessed, in meters (or km if more than 1000 m), nil if he never guessed
+//   - closest_guess: closest distance he ever guessed, in meters
 func (r *StatisticsRepository) UpdateStats(ctx context.Context, userIds []int64) error {
 	if len(userIds) == 0 {
 		return nil
@@ -140,9 +145,16 @@ func (r *StatisticsRepository) UpdateStats(ctx context.Context, userIds []int64)
 		UserID int64 `bun:"user_id"`
 		Games  int64 `bun:"games"`
 	}
-	err := finishedGamesLobbies(r.db).
+	err := r.db.NewSelect().
+		Model((*games.Lobby)(nil)).
 		ColumnExpr("lo.user_id").
 		ColumnExpr("COUNT(DISTINCT lo.game_id) AS games").
+		Join("JOIN game AS ga ON ga.id = lo.game_id").
+		Where("ga.finished_at IS NOT NULL").
+		WhereGroup(" AND ", func(q *bun.SelectQuery) *bun.SelectQuery {
+			// still in the game when it ended (not left, or left after finished_at)
+			return q.Where("lo.left_at IS NULL").WhereOr("lo.left_at >= ga.finished_at")
+		}).
 		Where("lo.user_id IN (?)", bun.In(userIds)).
 		Group("lo.user_id").
 		Scan(ctx, &counts)
@@ -150,6 +162,15 @@ func (r *StatisticsRepository) UpdateStats(ctx context.Context, userIds []int64)
 		return err
 	}
 
+	// the player of the guess was still in its game when it ended (not left, or left after finished_at)
+	inTheGameAtTheEnd := r.db.NewSelect().
+		Model((*games.Lobby)(nil)).
+		ColumnExpr("1").
+		Where("lo.game_id = ga.id").
+		Where("lo.user_id = g.user_id").
+		WhereGroup(" AND ", func(q *bun.SelectQuery) *bun.SelectQuery {
+			return q.Where("lo.left_at IS NULL").WhereOr("lo.left_at >= ga.finished_at")
+		})
 	// what each user did in each of his finished games
 	var perGame []struct {
 		UserID   int64   `bun:"user_id"`
@@ -157,12 +178,17 @@ func (r *StatisticsRepository) UpdateStats(ctx context.Context, userIds []int64)
 		Accuracy float64 `bun:"accuracy"` // accuracy of the game (average over its rounds)
 		Closest  *int64  `bun:"closest"`  // closest guess of the game, in meters
 	}
-	err = finishedGamesGuesses(r.db).
+	err = r.db.NewSelect().
+		Model((*guesses.Guess)(nil)).
 		ColumnExpr("g.user_id").
 		ColumnExpr("SUM(g.score) AS score").
 		ColumnExpr("SUM(GREATEST(0, 100 - g.distance * 100.0 / ?)) / MAX(ga.round_total) AS accuracy",
 			haversine.EarthDiameterMeters).
 		ColumnExpr("MIN(g.distance) AS closest").
+		Join("JOIN rounds AS r ON r.id = g.round_id").
+		Join("JOIN game AS ga ON ga.id = r.game_id").
+		Where("ga.finished_at IS NOT NULL").
+		Where("EXISTS (?)", inTheGameAtTheEnd).
 		Where("g.user_id IN (?)", bun.In(userIds)).
 		GroupExpr("g.user_id, r.game_id").
 		Scan(ctx, &perGame)

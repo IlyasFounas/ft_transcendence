@@ -2,6 +2,8 @@ package repositories
 
 import (
 	"database/sql"
+	"backend/internal/models/games"
+	"backend/internal/models/guesses"
 	"backend/internal/models/users"
 	"backend/internal/tools/encryption"
 	"backend/internal/tools/rank_calculation"
@@ -287,7 +289,8 @@ func (r *UserRepository) XP(ctx context.Context, userId int64) (int64, error) {
 	return user.XP, nil
 }
 
-// Setter xp: replaces the xp of a user (a negative xp is refused)
+// Setter xp: replaces the xp of a user (a negative xp is refused). Used by UpdateXP, and by the admin: a value set
+// by hand only lasts until the next update of the player (end of his next game, or next start of the server).
 func (r *UserRepository) SetXP(ctx context.Context, userId int64, xp int64) (bool, error) {
 	if xp < 0 {
 		return false, nil
@@ -304,7 +307,7 @@ func (r *UserRepository) SetXP(ctx context.Context, userId int64, xp int64) (boo
 	return true, nil
 }
 
-// Returns the id of every user (to update every player when the server starts, see Repositories)
+// AllIds returns the id of every user (to update every player when the server starts, see UpdateAllPlayers)
 func (r *UserRepository) AllIds(ctx context.Context) ([]int64, error) {
 	var ids []int64
 	err := r.db.NewSelect().
@@ -314,18 +317,38 @@ func (r *UserRepository) AllIds(ctx context.Context) ([]int64, error) {
 	return ids, err
 }
 
-// Update the xp of each user using the sum of the base_score of all his guesses in all his FINISHED games 
+// UpdateXP recomputes from scratch the xp of each user of userIds: the sum of the base_score of all his guesses in
+// all his FINISHED games, written with SetXP. A finished game of a user is a game that is over (finished_at set)
+// and that he was still in when it ended (not left, or left after finished_at): a game he left or was kicked out
+// of before its end doesn't count for him. Nothing is added to the previous value, so
+// running it again always gives the exact xp: an update that failed is corrected by the next one.
+// Every user is tried even if one fails.
 func (r *UserRepository) UpdateXP(ctx context.Context, userIds []int64) error {
 	if len(userIds) == 0 {
 		return nil
 	}
+	// the player of the guess was still in its game when it ended (not left, or left after finished_at)
+	inTheGameAtTheEnd := r.db.NewSelect().
+		Model((*games.Lobby)(nil)).
+		ColumnExpr("1").
+		Where("lo.game_id = ga.id").
+		Where("lo.user_id = g.user_id").
+		WhereGroup(" AND ", func(q *bun.SelectQuery) *bun.SelectQuery {
+			return q.Where("lo.left_at IS NULL").WhereOr("lo.left_at >= ga.finished_at")
+		})
 	var totals []struct {
 		UserID int64 `bun:"user_id"`
 		XP     int64 `bun:"xp"`
 	}
-	err := finishedGamesGuesses(r.db).
+	// sum of the base_score of the guesses of each user in his finished games
+	err := r.db.NewSelect().
+		Model((*guesses.Guess)(nil)).
 		ColumnExpr("g.user_id").
 		ColumnExpr("SUM(g.base_score) AS xp").
+		Join("JOIN rounds AS r ON r.id = g.round_id").
+		Join("JOIN game AS ga ON ga.id = r.game_id").
+		Where("ga.finished_at IS NOT NULL").
+		Where("EXISTS (?)", inTheGameAtTheEnd).
 		Where("g.user_id IN (?)", bun.In(userIds)).
 		Group("g.user_id").
 		Scan(ctx, &totals)
@@ -346,7 +369,8 @@ func (r *UserRepository) UpdateXP(ctx context.Context, userIds []int64) error {
 	return errors.Join(errs...)
 }
 
-// Update the rank of each user from his current xp and, every user is tried even if one fails.
+// UpdateRank recomputes the rank of each user of userIds from his current xp (rank_calculation.CalculateRank),
+// written with SetRank. Run it after UpdateXP, so the rank follows the new xp. Every user is tried even if one fails.
 func (r *UserRepository) UpdateRank(ctx context.Context, userIds []int64) error {
 	var errs []error
 	for _, userId := range userIds {
@@ -358,6 +382,27 @@ func (r *UserRepository) UpdateRank(ctx context.Context, userIds []int64) error 
 		if _, err := r.SetRank(ctx, userId, rank_calculation.CalculateRank(xp)); err != nil {
 			errs = append(errs, err)
 		}
+	}
+	return errors.Join(errs...)
+}
+
+// UpdateAllPlayers recomputes the xp, then the rank, then the statistics (statsRepo) of every user, from all their
+// finished games. Called by main.go at each start of the server, so whatever failed at the end of a game (or
+// happened while the server was down) is corrected. Each step is tried even if the previous one failed.
+func (r *UserRepository) UpdateAllPlayers(ctx context.Context, statsRepo *StatisticsRepository) error {
+	userIds, err := r.AllIds(ctx)
+	if err != nil {
+		return err
+	}
+	var errs []error
+	if err := r.UpdateXP(ctx, userIds); err != nil {
+		errs = append(errs, fmt.Errorf("xp: %w", err))
+	}
+	if err := r.UpdateRank(ctx, userIds); err != nil {
+		errs = append(errs, fmt.Errorf("rank: %w", err))
+	}
+	if err := statsRepo.UpdateStats(ctx, userIds); err != nil {
+		errs = append(errs, fmt.Errorf("statistics: %w", err))
 	}
 	return errors.Join(errs...)
 }
