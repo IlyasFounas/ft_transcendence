@@ -10,9 +10,10 @@ import (
 	"net/http"
 	"sync"
 	"time"
-
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+	securesend "backend/internal/tools/secure_send"
 )
 
 var upgrader = websocket.Upgrader {
@@ -326,7 +327,7 @@ func (h *Hub) handleAction(ctx context.Context, data *DataInfos) {
 			
 			// client != nil > real client request
 			roundNb := h.resolveRoundToStart(data.Client.GameId)
-			h.StartRound(ctx, data.Client.GameId, roundNb)
+			h.StartRound(ctx, data.Client.UserId, data.Client.GameId, roundNb)
 			err := h.LobbyWsHandler.UpdateStartAt(ctx, data.Client.LobbyId, roundNb)
 			if err != nil {
 				return
@@ -339,7 +340,7 @@ func (h *Hub) handleAction(ctx context.Context, data *DataInfos) {
 			log.Printf("error : %s\n", err)
 			return
 		}
-		h.StartRound(ctx, evt.GameId, evt.RoundNb)
+		h.StartRound(ctx, data.Client.UserId, evt.GameId, evt.RoundNb)
 
 	case "round_timeout":
 		if data.Client != nil {
@@ -352,7 +353,7 @@ func (h *Hub) handleAction(ctx context.Context, data *DataInfos) {
 			log.Printf("error : %s\n", err)
 			return
 		}
-		h.EndRound(ctx, evt.GameId, evt.RoundNb)
+		h.EndRound(ctx, data.Client.UserId, evt.GameId, evt.RoundNb)
 
 	case "finished":
 		//check if the game is finished, if so, update the left_at timestamp in the database and leave the lobby
@@ -396,7 +397,7 @@ func (h *Hub) handleGuess(ctx context.Context, data *DataInfos) {
 	}
 
 	if len(roundGuesses) >= len(activePlayers) {
-		h.EndRound(ctx, data.Client.GameId, createdGuess.RoundNb)
+		h.EndRound(ctx, data.Client.UserId, data.Client.GameId, createdGuess.RoundNb)
 	}
 }
 
@@ -405,7 +406,7 @@ func (h *Hub) handleGuess(ctx context.Context, data *DataInfos) {
 // If the round has already expired (remaining <= 0), it immediately ends the round instead of arming a negative timer.
 // This ensures that clients who reconnect late or experience double triggers do not get more time than expected, and keeps all clients
 // synchronized with the actual round start time.
-func (h *Hub) StartRound(ctx context.Context, gameId, roundNb int64) {
+func (h *Hub) StartRound(ctx context.Context, userId, gameId, roundNb int64) {
 	// TODO check if the player is authorized to start a round
 	round, err := h.GuessWsHandler.EnsureRound(ctx, gameId, roundNb)
 	if err != nil {
@@ -423,7 +424,7 @@ func (h *Hub) StartRound(ctx context.Context, gameId, roundNb int64) {
 	remaining := time.Until(roundEndsAt)
 	if remaining <= 0 {
 		// round has expired (ex: late reconnection): end it immediately
-		h.EndRound(ctx, gameId, roundNb)
+		h.EndRound(ctx, userId, gameId, roundNb)
 		return
 	}
 
@@ -440,7 +441,7 @@ func (h *Hub) StartRound(ctx context.Context, gameId, roundNb int64) {
 		MID:         MID, //TODO should be kept server side if we fetch through the proxy, not sent to clients
 	}
 
-	h.armRoundTimer(gameId, roundNb, remaining)
+	h.armRoundTimer(ctx, userId, gameId, roundNb, remaining)
 
 	h.broadcast(gameId, WsMessage{
 		Type: "round_started",
@@ -454,7 +455,8 @@ func (h *Hub) StartRound(ctx context.Context, gameId, roundNb int64) {
 
 // this starts the countdown for the round's guess phase: when the timer expires,
 // the round is ended even if not all players have guessed
-func (h *Hub) armRoundTimer(gameId, roundNb int64, duration time.Duration) {
+func (h *Hub) armRoundTimer(ctx context.Context, 
+	userId, gameId, roundNb int64, duration time.Duration) {
 	if existing, ok := h.RoundTimers[gameId]; ok {
 		existing.Stop()
 	}
@@ -464,13 +466,14 @@ func (h *Hub) armRoundTimer(gameId, roundNb int64, duration time.Duration) {
 			log.Printf("error : %s\n", err)
 			return
 		}
-		h.Action <- &DataInfos{Action: "round_timeout", Payload: payload}
+		securesend.SecureSend(ctx, h.Action, &DataInfos{Action: "round_timeout", Payload: payload},
+			fmt.Sprintf("Chat : Client %d can't do this action", userId))
 	})
 }
 
 // Finalises the round roundNb: broadcasts the results of ALL active players (whether they guessed or not),
 // then schedules a 10s pause before the next round — unless it was the last round.
-func (h *Hub) EndRound(ctx context.Context, gameId, roundNb int64) {
+func (h *Hub) EndRound(ctx context.Context, userId, gameId, roundNb int64) {
 	if state, ok := h.RoundState[gameId]; ok && state.Phase == phasePause && state.RoundNb == roundNb {
 		// happens when the last guess of a round is processed at almost the same instant the round's timer fires
 		return
@@ -535,7 +538,8 @@ func (h *Hub) EndRound(ctx context.Context, gameId, roundNb int64) {
 			log.Printf("error : %s\n", err)
 			return
 		}
-		h.Action <- &DataInfos{Action: "start_round", Payload: payload}
+		securesend.SecureSend(ctx, h.Action, &DataInfos{Action: "start_round", Payload: payload},
+			fmt.Sprintf("Chat : Client %d can't do this action", userId))
 	})
 }
 
@@ -585,7 +589,8 @@ func JoinLobby(ctx context.Context, hub *Hub, wg *sync.WaitGroup) gin.HandlerFun
 		connx := client_ws.NewConnexion(conn)
 		clientHub := NewClientHub(connx, userId.(int64),
 			lobby.ID, lobby.GameId)
-		hub.Register <- clientHub
+		securesend.SecureSend(ctx, hub.Register, clientHub,
+			fmt.Sprintf("Chat : Client %d can't be registered", clientHub.UserId))
 		wg.Add(1)
 		go clientHub.Connx.WritePump(wg)
 		actionClient := func(data []byte) {
@@ -596,15 +601,12 @@ func JoinLobby(ctx context.Context, hub *Hub, wg *sync.WaitGroup) gin.HandlerFun
 				return
 			}
 			dataInfos.Client = clientHub
-			hub.Action <- &dataInfos 
+			securesend.SecureSend(ctx, hub.Action, &dataInfos,
+				fmt.Sprintf("Chat : Client %d can't do this action", clientHub.UserId))
 		}
 		unregisterClient := func() {
-			select {
-			case hub.Unregister <- clientHub:
-			case <- ctx.Done():
-				log.Printf("client %d : the chanel is already closed\n", clientHub.UserId)
-				close(clientHub.Connx.Send)
-			}
+			securesend.SecureSend(ctx, hub.Unregister, clientHub,
+				fmt.Sprintf("Chat : Client %d can't be unregistered", clientHub.UserId))
 		}
 		wg.Add(1)
 		clientHub.Connx.ReadPump(actionClient, unregisterClient, wg)
