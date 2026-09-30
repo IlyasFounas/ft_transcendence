@@ -14,6 +14,7 @@ import PublicRoute from './components/routes/PublicRoute';
 import GamePlayPage from './pages/game/GamePlayPage';
 import { GameSocketProvider } from './context/GameSocketContext';
 import SoloResultPage from './pages/results/SoloResultsPage';
+import MultiplayerResultsPage from './pages/results/MultiplayerResultsPage';
 
 function App() {
     return (
@@ -39,6 +40,7 @@ function App() {
 						</Route>
 						<Route path="/game/:gameId" element={<GamePlayPage />} />
 						<Route path="/soloresults" element={<SoloResultPage />} />
+						<Route path="/multiresults" element={<MultiplayerResultsPage />} />
 					</Route>
                 </Route>
             </Routes>

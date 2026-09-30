@@ -26,15 +26,7 @@ export default function GameBar({countdown, totalTime, gameId, round, totalRound
 			gap-8 md:gap-4
 		">
 			<div className="flex justify-start items-center gap-4">
-				<div className="
-					cursor-pointer
-					transition-transform
-					duration-200
-					ease-out
-					hover:scale-[1.2]
-						
-					active:scale-[0.9]
-					">
+				<div>
 						<LogoHorizontal className="hidden xl:flex min-w-[100px] h-[100px] md:w-[50px]"></LogoHorizontal>
 						<LogoIcon className="flex xl:hidden w-[75px] h-[75px]"></LogoIcon>
 				</div>

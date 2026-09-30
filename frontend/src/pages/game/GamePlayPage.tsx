@@ -12,60 +12,81 @@ import { useLobbySocket } from "../../context/GameSocketContext";
 export default function GamePlayPage() {
 	const [countdown, setCountDown] = useState(0);
 	const [isMapMain, setIsMapMain] = useState(false);
-	const { round, roundHistory, lastRoundResult, sendGuess, startGame, lobbyInfos } = useLobbySocket();
+	const { round, roundHistory, lastRoundResult, sendGuess, startGame, lobbyInfos, players } = useLobbySocket();
 	const [guess, setGuess] = useState<{ lat: number; lng: number } | null>(null);
 	const navigate = useNavigate();
+	const [hasGuessed, setHasGuessed] = useState(false);
 
 	useEffect(() => {
-    if (!round) return;
+		setHasGuessed(false);
+		setGuess(null);
+	}, [round?.round_nb]);
 
-    const endsAt = new Date(round.round_ends_at).getTime();
+	useEffect(() => {
+		if (!round) return;
 
-    const updateCountdown = () => {
-        const remaining = Math.max(0, Math.round((endsAt - Date.now()) / 1000));
-        setCountDown(remaining);
-    };
+		const endsAt = new Date(round.round_ends_at).getTime();
 
-    updateCountdown();
-    const timer = setInterval(updateCountdown, 1000);
+		const updateCountdown = () => {
+			const remaining = Math.max(0, Math.round((endsAt - Date.now()) / 1000));
+			setCountDown(remaining);
+		};
 
-    return () => clearInterval(timer);
+		updateCountdown();
+		const timer = setInterval(updateCountdown, 1000);
+
+		return () => clearInterval(timer);
 	}, [round]);
 
 	useEffect(() => {
-		if (!lastRoundResult || !lobbyInfos || !round) return;
+		if (!lastRoundResult || !round) return;
 		
-		navigate("/soloresults", {
-			state: {
-				currentRound: round.round_nb,
-				totalRounds: lobbyInfos.round_total,
-				rounds: roundHistory,
-				actualLocation: lastRoundResult.actualLocation
-			}
-		});
-	}, [lastRoundResult, lobbyInfos, round, roundHistory, navigate]);
+		const isMultiplayer = players.length > 1;
+
+		if (isMultiplayer) {
+			navigate("/multiresults", {
+				state: {
+					currentRound: round.round_nb,
+					totalRounds: lobbyInfos?.round_total ?? 5,
+					allResults: lastRoundResult.allResults,
+					actualLocation: lastRoundResult.actualLocation,
+					nextRoundAt: lastRoundResult.nextRoundAt,
+					isLastRound: lastRoundResult.isLastRound
+				}
+			});
+		} else {
+			navigate("/soloresults", {
+				state: {
+					currentRound: round.round_nb,
+					totalRounds: lobbyInfos?.round_total ?? 5,
+					rounds: roundHistory,
+					actualLocation: lastRoundResult.actualLocation
+				}
+			});
+		}
+	}, [lastRoundResult, round, roundHistory, navigate, players.length, lobbyInfos?.round_total]);
 
 	useEffect(() => {
 		if (lobbyInfos && !round) startGame();
-	}, [lobbyInfos, round]);
-
+	}, [lobbyInfos, round, startGame]);
+	
 	const handleSubmit = () => {
 		if (!guess || !round) return;
-		console.log(round);
 		sendGuess(guess);
+		setHasGuessed(true);
 	};
 
-	if (!lobbyInfos && !round) return <div className="text-white p-10">Chargement de la partie et du round...</div>;
-	if (!lobbyInfos) return <div className="text-white p-10">Attente des données de la partie (WebSocket)...</div>;
-	if (!round) return <div className="text-white p-10">Attente du signal de round (WebSocket)...</div>;
+	if (!round) {
+		return <div className="h-screen w-full flex items-center justify-center text-white">Loading mission...</div>;
+	}
 
 	return (
 		<div className="flex flex-col h-screen">
 			<div className="hidden lg:flex">
 				<GameBar
-					gameId={0}
-					totalRounds={lobbyInfos.round_total}
-					totalTime={lobbyInfos.timer}
+					gameId={42}
+					totalRounds={lobbyInfos?.round_total ?? 5}
+					totalTime={lobbyInfos?.timer ?? 120}
 					round={round.round_nb}
 					countdown={countdown}
 				/>
@@ -73,14 +94,23 @@ export default function GamePlayPage() {
 
 			<div className="relative flex flex-1 lg:px-4 lg:pb-4">
 				{isMapMain && (
-					<div className="
+					<div className={`
 						flex
 						w-full h-full
 						rounded-lg
 						outline outline-1 outline-sky-950
 						overflow-hidden
-					">
-						<Load2DMap {...mockGame.location} onGuess={(lat, lng) => setGuess({ lat, lng })} initialGuess={guess} />
+						${hasGuessed ? "pointer-events-none opacity-80" : ""}
+					`}>
+						<Load2DMap 
+							{...mockGame.location} 
+							onGuess={(lat, lng) => {
+								if (!hasGuessed) {
+									setGuess({ lat, lng });
+								}
+							}} 
+							initialGuess={guess} 
+						/>
 					</div>
 				)}
 				<div className={
@@ -133,8 +163,12 @@ export default function GamePlayPage() {
 						)}
 					</div>
 					{isMapMain && (
-						<PrimaryButton size="small" disabled={!guess} onClick={handleSubmit}>
-							Submit
+						<PrimaryButton 
+							size="small" 
+							disabled={!guess || hasGuessed} 
+							onClick={handleSubmit}
+						>
+							{hasGuessed ? "Waiting for agents..." : "Submit"}
 						</PrimaryButton>
 					)}
 				</div>

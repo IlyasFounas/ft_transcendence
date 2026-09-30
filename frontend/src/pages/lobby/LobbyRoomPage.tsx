@@ -7,19 +7,26 @@ import WaitingDots from "../../components/lobby/WaitingDots";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLobbySocket } from "../../context/GameSocketContext";
+import NextRoundTimer from "../../components/results/NextRoundTimer";
 
 export default function LobbyRoomPage() {
 
-	const { players, leaveLobby, lobbyInfos, kickPlayer, isCurrentUserHost, isClosed } = useLobbySocket();
+	const { players, leaveLobby, lobbyInfos, kickPlayer, isCurrentUserHost, isClosed, startGame, round, gameStartAt } = useLobbySocket();
 	const navigate = useNavigate();
 
 	useEffect(() => {
   		if (isClosed) navigate("/home");
 	}, [isClosed, navigate]);
 
+	useEffect(() => {
+		if (round) {
+			navigate("/game/multi"); 
+		}
+	}, [round, navigate]);
+
 	function handleLeave() {
    		leaveLobby();
-    	navigate("/home");
+		navigate("/home");
   	}
 
 	return (
@@ -34,19 +41,34 @@ export default function LobbyRoomPage() {
 			</div>
 
 			<div className="order-3 lg:col-start-1 lg:row-span-3">
-			<LobbyList numberOfPlayers={players.length} listOfPlayers={players} onKick={kickPlayer} isCurrentUserHost={isCurrentUserHost}/>
+			<LobbyList numberOfPlayers={players.length} listOfPlayers={players} onKick={kickPlayer} isCurrentUserHost={isCurrentUserHost && !gameStartAt}/>
 			</div>
 
 			<div className="order-4 flex w-full flex-col items-center gap-4 lg:col-start-2 lg:row-start-3 lg:max-w-none">
-			<SecondaryButton variant="danger" className="w-full" onClick={handleLeave}>Leave Room</SecondaryButton>
-			{isCurrentUserHost ? (
-				<PrimaryButton size="medium">Start Mission</PrimaryButton>
-				) : (
+			<SecondaryButton 
+				variant="danger" 
+				className={`w-full ${gameStartAt ? "opacity-50 pointer-events-none" : ""}`}
+				onClick={handleLeave}>
+				Leave Room
+			</SecondaryButton>
+			
+			{gameStartAt ? (
+				<div className="w-full bg-sky-950/40 rounded-[10px] outline outline-1 outline-sky-950 overflow-hidden">
+					<NextRoundTimer targetTime={gameStartAt}>Mission starts in</NextRoundTimer>
+				</div>
+			) : isCurrentUserHost ? (
+				<PrimaryButton size="medium" onClick={startGame} disabled={players.length < 2}>
+					Start Mission
+				</PrimaryButton>
+			) : (
 				<PrimaryButton 
 					size="medium" 
 					disabled 
 					className="disabled:opacity-100!"
-					subtitle="Waiting for the host to start"><WaitingDots /></PrimaryButton>
+					subtitle="Waiting for the host to start"
+				>
+					<WaitingDots />
+				</PrimaryButton>
 			)}
 			</div>
 		</div>

@@ -14,7 +14,7 @@ export default function SoloResultPage() {
 	const location = useLocation();
 	const navigate = useNavigate();
 	const { user } = useAuth();
-	const { startNextRound } = useLobbySocket();
+	const { startNextRound, leaveLobby } = useLobbySocket();
 
 	const { currentRound, totalRounds, rounds, actualLocation } = location.state as {
 		currentRound: number;
@@ -58,6 +58,7 @@ export default function SoloResultPage() {
 
 	const handleNext = () => {
 		if (isLastRound) {
+			leaveLobby();
 			navigate("/home"); 
 		} else {
 			startNextRound();
@@ -129,7 +130,7 @@ export default function SoloResultPage() {
 				<TotalScoreCard points={totalScore} distance={gameResult.distance} />
 				
 				<PrimaryButton size="medium" onClick={handleNext}>
-					{isLastRound ? "Finish Game" : "Next Round"}
+					{isLastRound ? "Finish Mission" : "Next Round"}
 				</PrimaryButton>
 			</div>
 

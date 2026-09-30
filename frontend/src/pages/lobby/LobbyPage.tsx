@@ -1,4 +1,4 @@
-import { useState} from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import SecondaryButton from "../../components/buttons/SecondaryButton";
 import PrimaryButton from "../../components/buttons/PrimaryButton";
@@ -6,6 +6,7 @@ import CreateOperationCard from "../../components/lobby/CreateOperationCard";
 import JoinOperationCard from "../../components/lobby/JoinOperationCard";
 import { useAuth } from "../../context/AuthContext";
 import { checkRoomCode } from "../../services/lobby";
+import { useLobbySocket } from "../../context/GameSocketContext";
 
 export default function LobbyPage()
 {
@@ -18,9 +19,8 @@ export default function LobbyPage()
 	const [isShaking, setIsShaking] = useState(false);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 	const [code, setCode] = useState("");
+	const { lobbyInfos, round } = useLobbySocket();
 	
-
-
 	async function handleCreateOperation() {
 
 		const body = new URLSearchParams();
@@ -77,7 +77,11 @@ export default function LobbyPage()
 		triggerInvalidShake("Invalid code");
 		}
 
-		
+	useEffect(() => {
+		if (lobbyInfos && !round) {
+			navigate("/lobbyroom");
+		}
+	}, [lobbyInfos, round, navigate]);
 
 	return (
 		<div className="min-h-[calc(100vh-5rem)] w-full bg-[url(/backgrounds/earth_background.png)] py-24 lg:pr-[27rem] flex flex-col justify-center">

@@ -6,7 +6,7 @@ export default function HomePage() {
     const {isAuthenticated, authFetch} = useAuth();
 	const handlePlaySolo = async () => {
 	const body = new URLSearchParams({
-			timer: "60",
+			timer: "120",
 			round_total: "5", 
 		});
 

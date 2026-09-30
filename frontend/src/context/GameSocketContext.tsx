@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, useRef} from "react"
 import type { ReactNode } from "react"
 import { useAuth } from "./AuthContext"
-import type { RoundResult } from "../types/game";
+import type { RoundResult, PlayerRoundResult } from "../types/game";
 
 const DEFAULT_AVATAR = "avatars/avatar1.png";
 
@@ -31,32 +31,6 @@ interface RoundInfo {
 	round_ends_at: string;
 }
 
-interface LocationInfo {
-	lat: number;
-	long: number;
-	country_code: string;
-}
-
-interface RoundInfos {
-	distance: number;
-	score: number;
-	base_score: number;
-	country_found: boolean;
-	base: LocationInfo;
-	guess: LocationInfo;
-	streak: number;
-	time_left_seconds: number;
-}
-
-interface PlayerRoundResult {
-	user_id: number;
-	username: string;
-	round_nb: number;
-	has_guessed: boolean;
-	round_infos: RoundInfos | null;
-	total_score: number;
-}
-
 interface RoundResultBroadcast {
 	results: PlayerRoundResult[];
 	is_last_round: boolean;
@@ -80,7 +54,9 @@ interface GameSocketContextType {
 		isLastRound: boolean;
 		nextRoundAt: string | null;
 		actualLocation: { latitude: number; longitude: number };
+		allResults: PlayerRoundResult[];
 	} | null;
+	gameStartAt: string | null;
 }
 
 const GameSocketContext = createContext<GameSocketContextType>({
@@ -97,6 +73,7 @@ const GameSocketContext = createContext<GameSocketContextType>({
 	round: null,
 	roundHistory: [],
 	lastRoundResult: null,
+	gameStartAt: null,
 });
 
 export function GameSocketProvider({ children }: { children: ReactNode }) {
@@ -112,7 +89,9 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
 		isLastRound: boolean;
 		nextRoundAt: string | null;
 		actualLocation: { latitude: number; longitude: number };
+		allResults: PlayerRoundResult[];
 	} | null>(null);
+	const [gameStartAt, setGameStartAt] = useState<string | null>(null);
 
 	const isCurrentUserHost = players.find((p) => p.id == user?.ID)?.isHost ?? false;
 
@@ -141,6 +120,9 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
 		else if (message.action === "lobby_infos") {
 			setLobbyInfos(message.payload);
 		}
+		else if (message.action === "game_started") {
+			setGameStartAt(message.payload.next_round_at);
+		}
 		else if (message.action === "round_started") {
 			const data = message.payload as { round_nb: number; mid: number; round_ends_at: string };
 			setRound({
@@ -148,6 +130,8 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
 				mid: data.mid,
 				round_ends_at: data.round_ends_at,
 			});
+			setLastRoundResult(null);
+			setGameStartAt(null);
 		}
 		else if (message.action === "round_results") {
 			const data = message.payload as RoundResultBroadcast;
@@ -174,6 +158,7 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
 						latitude: own.round_infos.base.lat,
 						longitude: own.round_infos.base.long,
 					},
+					allResults: data.results,
 				});
 			}
 			else {
@@ -198,6 +183,7 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
 					latitude: actualLat,
 					longitude: actualLng,
 				},
+				allResults: data.results,
 			});
 		}
 		};
@@ -261,7 +247,7 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
 
 	return (
 		<GameSocketContext.Provider
-		value={{ players, lobbyInfos, isConnected, isClosed, isCurrentUserHost, leaveLobby, kickPlayer, startGame, startNextRound, round, roundHistory, lastRoundResult, sendGuess }}
+		value={{ players, lobbyInfos, isConnected, isClosed, isCurrentUserHost, leaveLobby, kickPlayer, startGame, startNextRound, round, roundHistory, lastRoundResult, sendGuess, gameStartAt}}
 		>
 		{children}
 		</GameSocketContext.Provider>
