@@ -13,10 +13,9 @@ interface Friend {
     id?: number;
     username: string;
     avatar: string;
-    role?: string;
+    rank?: string;
     userId: number;
     status?: UserStatusType;
-    rank?: number;
     friendStatus?: string;
 }
 
@@ -44,7 +43,8 @@ export default function FriendListPanel() {
                 (friend: FriendResponse) => ({
                     userId: friend.user_id,
                     username: friend.name,
-                    avatar: friend.avatar || "/avatars/avatar1.png"
+                    avatar: friend.avatar || "/avatars/avatar1.png",
+                    rank: friend.rank,
                 })
             );
 
@@ -62,7 +62,8 @@ export default function FriendListPanel() {
             (request: FriendResponse) => ({
                 userId: request.user_id,
                 username: request.name,
-                avatar: request.avatar || "/avatars/avatar1.png"
+                avatar: request.avatar || "/avatars/avatar1.png",
+                rank: request.rank,
             })
         );
 
@@ -79,7 +80,8 @@ export default function FriendListPanel() {
             (pending: FriendResponse) => ({
                 userId: pending.user_id,
                 username: pending.name,
-                avatar: pending.avatar || "/avatars/avatar1.png"
+                avatar: pending.avatar || "/avatars/avatar1.png",
+                rank: pending.rank,
             })
         );
 
@@ -116,11 +118,12 @@ export default function FriendListPanel() {
             setSearchNotFound(true);
             return;
         }
-
+        console.log("f status: ", result.data.friendStatus);
         setSearchResult({
             userId: searchedUser.user_id,
             username: searchedUser.name,
             avatar: searchedUser.avatar || "/avatars/avatar1.png",
+            rank: searchedUser.rank,
             friendStatus: searchedUser.status,
         });
 
@@ -382,7 +385,7 @@ export default function FriendListPanel() {
                     friends.map((friend) => (
                     <FriendListRow
                         key={friend.userId}
-                        role={friend.role || "Agent"}
+                        role={friend.rank || ""}
                         {...friend}
                         onRemove={() => handleRemoveFriend(friend.userId)}
                     />
@@ -392,7 +395,7 @@ export default function FriendListPanel() {
                     requests.map((request) => (
                     <FriendRequestRow
                         key={request.username}
-                        role={request.role || "Agent"}
+                        role={request.rank || ""}
                         {...request}
                         onAccept={() => handleAcceptFriend(request.userId)}
                         onReject={() => handleRejectRequest(request.userId)}
@@ -403,7 +406,7 @@ export default function FriendListPanel() {
                     pending.map((pending) => (
                         <PendingFriendRow
                             key={pending.userId}
-                            role={pending.role || ""}
+                            role={pending.rank || ""}
                             {...pending}
                             onCancel={() => handleCancelRequest(pending.userId)}
                         />
@@ -424,7 +427,7 @@ export default function FriendListPanel() {
                     searchResult?.friendStatus === "none" && (
                         <AddFriendRow
                             {...searchResult}
-                            role={searchResult.role || ""}
+                            role={searchResult.rank || ""}
                             onAdd={() => handleAddFriend(searchResult)}
                         />
                     )
@@ -435,7 +438,7 @@ export default function FriendListPanel() {
                     searchResult?.friendStatus === "friends" && (
                         <FriendRow
                             {...searchResult}
-                            role={searchResult.role || ""}
+                            role={searchResult.rank || ""}
                         />
                     )
                 }
@@ -446,7 +449,7 @@ export default function FriendListPanel() {
                         pending.map((searchResult) => (
                         <PendingFriendRow
                             key={searchResult.userId}
-                            role={searchResult.role || ""}
+                            role={searchResult.rank || ""}
                             {...searchResult}
                             onCancel={() => handleCancelRequest(searchResult.userId)}
                         />
@@ -459,7 +462,7 @@ export default function FriendListPanel() {
                         requests.map((searchResult) => (
                         <FriendRequestRow
                             key={searchResult.username}
-                            role={searchResult.role || "Agent"}
+                            role={searchResult.rank || ""}
                             {...searchResult}
                             onAccept={() => handleAcceptFriend(searchResult.userId)}
                             onReject={() => handleRejectRequest(searchResult.userId)}

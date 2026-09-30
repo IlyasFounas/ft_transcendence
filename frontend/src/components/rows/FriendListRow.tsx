@@ -1,11 +1,8 @@
 import UserProfile from "../user/UserProfile";
 import SmallButton from "../buttons/SmallButton";
-import UserStatus from "../user/UserStatus";
-import type { UserProps, UserStatusType } from "../../types/user.types";
+import type { UserProps } from "../../types/user.types";
 
 interface FriendListRowProps extends UserProps {
-    status?: UserStatusType;
-    rank?: number;
     onRemove?: () => void;
 }
 
@@ -13,8 +10,6 @@ export default function FriendListRow({
     username,
     role,
     avatar,
-    status,
-    rank,
     onRemove,
 }: FriendListRowProps) {
     return (
@@ -48,7 +43,7 @@ export default function FriendListRow({
                 avatar={avatar}
             />
             {/* optional before link with websocket */}
-            {status && <UserStatus status={status} />}
+            {/* {status && <UserStatus status={status} />}
             {rank !== undefined && (
                 <div className="text-center">
                     <div className="text-heading-small text-text-primary">
@@ -59,7 +54,7 @@ export default function FriendListRow({
                     Global Rank
                     </div>
                 </div>
-            )}
+            )} */}
             <SmallButton variant="danger" onClick={onRemove}>
                 Remove
             </SmallButton>
