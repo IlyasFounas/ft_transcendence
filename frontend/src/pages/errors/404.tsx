@@ -21,34 +21,70 @@ export default function NotFoundPage() {
                 py-10
             "
         >
-            <div className="flex flex-col">
-                <p className="text-[180px] font-semibold">
-                    404
+            <div className="flex w-full max-w-2xl flex-col items-center text-center">
+                <img
+                    src="/logos/atlas-logo-landing.png"
+                    alt="ATLAS"
+                    className="
+                        w-32
+                        md:w-48
+                        lg:w-72
+                        mb-8
+                    "
+                />
+
+                <img
+                    src="/images/404.png"
+                    alt="404"
+                    className="
+                        w-96
+                        md:w-120
+                        lg:w-240
+                        h-auto
+                    "
+                />
+                <p className="mt-4 text-heading-large md:text-hero text-text-primary uppercase">
+                    Signal Lost
                 </p>
-                <p className="text-heading-large">
-                    Page Not Found
+                <p className="mt-4  max-w-md text-body-primary md:text-heading-medium text-text-secondary uppercase">
+                    The page you're looking for could not be found.
                 </p>
-            </div>
-            
-            <div
-                className="
+                <div className="
                     flex
                     w-full
                     flex-col
                     items-center
-                    mt-2
+                    mt-6
+                    max-w-xs
+                    lg:hidden
+                    "
+                >
+                    <PrimaryButton
+                        size="small"
+                        onClick={() => navigate("/")}
+                    >
+                        Return to Home
+                    </PrimaryButton>
+                </div>
+                <div className="
+                    hidden
+                    lg:block
+                    w-full
+                    flex-col
+                    items-center
+                    mt-6
                     max-w-xs
                     lg:max-w-md
-                "
-            >
-                <PrimaryButton
-                    size="medium"
-                    onClick={() => navigate("/")}
+                    "
                 >
-                    Go to landing page
-                </PrimaryButton>
+                    <PrimaryButton
+                        size="medium"
+                        onClick={() => navigate("/")}
+                    >
+                        Return to Home
+                    </PrimaryButton>
+                </div>
             </div>
-
         </main>
     );
 }
