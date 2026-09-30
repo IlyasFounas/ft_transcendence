@@ -963,7 +963,7 @@ func (h *Hub) Run(ctx context.Context, wg *sync.WaitGroup) {
 					delete(h.RoundState, client.GameId)
 				}
 			})
-		case serializedData := <- h.Action:			
+		case serializedData := <- h.Action:
 			h.safely("action "+serializedData.Action, func() {
 				h.handleAction(ctx, serializedData)
 			})
