@@ -125,16 +125,14 @@ func (r *StatisticsRepository) set(ctx context.Context, stats *users.Statistics,
 	return err
 }
 
-// UpdateStats recomputes from scratch the statistics of each user of userIds, from all his FINISHED games: the games
-// that are over (finished_at set) and that he was still in when they ended (not left, or left after finished_at).
-// A game he left or was kicked out of before its end doesn't count for him. Nothing is added to the previous values: every value is replaced, so running it again always
-// gives the exact statistics, and an update that failed is corrected by the next one.
+// Updates the statistics of each user from all his FINISHED games: 
 //   - finished_games: his finished games (a game without any guess of his counts too)
 //   - accuracy: average over these games of the accuracy of the game, which is the average over its rounds of the
 //     accuracy of his guess: a rule of three on the distance (0 m = 100 %, haversine.EarthDiameterMeters or more
 //     = 0 %), a round without guess counting 0 %
 //   - best_score: best final score of a game (sum of his scores with multipliers)
 //   - closest_guess: closest distance he ever guessed, in meters
+// If the user left or was kicked out of before its end, then nothing is updated.
 func (r *StatisticsRepository) UpdateStats(ctx context.Context, userIds []int64) error {
 	if len(userIds) == 0 {
 		return nil
