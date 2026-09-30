@@ -317,12 +317,8 @@ func (r *UserRepository) AllIds(ctx context.Context) ([]int64, error) {
 	return ids, err
 }
 
-// UpdateXP recomputes from scratch the xp of each user of userIds: the sum of the base_score of all his guesses in
-// all his FINISHED games, written with SetXP. A finished game of a user is a game that is over (finished_at set)
-// and that he was still in when it ended (not left, or left after finished_at): a game he left or was kicked out
-// of before its end doesn't count for him. Nothing is added to the previous value, so
-// running it again always gives the exact xp: an update that failed is corrected by the next one.
-// Every user is tried even if one fails.
+// Updates the xp of each user: the sum of the base_score of all his guesses in all his FINISHED games
+// Every user is tried even if one fails
 func (r *UserRepository) UpdateXP(ctx context.Context, userIds []int64) error {
 	if len(userIds) == 0 {
 		return nil
@@ -369,8 +365,8 @@ func (r *UserRepository) UpdateXP(ctx context.Context, userIds []int64) error {
 	return errors.Join(errs...)
 }
 
-// UpdateRank recomputes the rank of each user of userIds from his current xp (rank_calculation.CalculateRank),
-// written with SetRank. Run it after UpdateXP, so the rank follows the new xp. Every user is tried even if one fails.
+// Update the rank of each user from his current xp
+// Every user is tried even if one fails
 func (r *UserRepository) UpdateRank(ctx context.Context, userIds []int64) error {
 	var errs []error
 	for _, userId := range userIds {
@@ -386,9 +382,7 @@ func (r *UserRepository) UpdateRank(ctx context.Context, userIds []int64) error 
 	return errors.Join(errs...)
 }
 
-// UpdateAllPlayers recomputes the xp, then the rank, then the statistics (statsRepo) of every user, from all their
-// finished games. Called by main.go at each start of the server, so whatever failed at the end of a game (or
-// happened while the server was down) is corrected. Each step is tried even if the previous one failed.
+// Updates the xp, then the rank, then the statistics of every user, from all their finished games
 func (r *UserRepository) UpdateAllPlayers(ctx context.Context, statsRepo *StatisticsRepository) error {
 	userIds, err := r.AllIds(ctx)
 	if err != nil {
