@@ -6,8 +6,11 @@ import (
     "sync"
 	"github.com/gorilla/websocket"
 )
-
-const writeWait = 10 * time.Second
+const (
+    writeWait = 10 * time.Second
+    readWait = 60 * time.Second
+    pingPeriod = 54 * time.Second
+)
 
 type Connexion struct {
     Conn        *websocket.Conn
@@ -21,24 +24,40 @@ func NewConnexion(conn *websocket.Conn) *Connexion {
 }
 
 func (c *Connexion) WritePump(wg *sync.WaitGroup) {
-	defer wg.Done()
+	ticker := time.NewTicker(pingPeriod)
+    defer wg.Done()
     defer c.Conn.Close()
-    for msg := range c.Send {
-        if err := c.Conn.SetWriteDeadline(time.Now().Add(writeWait)); err != nil {
-            log.Printf("error : %s\n", err)
-            return
+    defer ticker.Stop()
+    for {
+        select {
+        case <-ticker.C:
+            if err := c.Conn.SetWriteDeadline(time.Now().Add(writeWait)); err != nil {
+                log.Printf("error : %s\n", err)
+                return
+            }
+            if err := c.Conn.WriteMessage(websocket.PingMessage, nil); err != nil {
+				return
+			}
+        case msg, ok := <- c.Send:
+            if !ok {    
+                deadline := time.Now().Add(2*time.Second)
+                err := c.Conn.WriteControl(websocket.CloseMessage,
+                    websocket.FormatCloseMessage(websocket.CloseGoingAway,
+                        "the connexion is shutting down"), deadline)
+                if err != nil {
+                    log.Printf("error : %s\n", err)
+                }
+                return
+            }
+            if err := c.Conn.SetWriteDeadline(time.Now().Add(writeWait)); err != nil {
+                log.Printf("error : %s\n", err)
+                return
+            }
+            if err := c.Conn.WriteMessage(websocket.TextMessage, msg); err != nil {
+                log.Printf("error : %s\n", err)
+                return
+            }
         }
-        if err := c.Conn.WriteMessage(websocket.TextMessage, msg); err != nil {
-            log.Printf("error : %s\n", err)
-            return
-        }
-    }
-    deadline := time.Now().Add(2*time.Second)
-    err := c.Conn.WriteControl(websocket.CloseMessage,
-        websocket.FormatCloseMessage(websocket.CloseGoingAway, "the connexion is shutting down"),
-        deadline)
-    if err != nil {
-        log.Printf("error : %s\n", err)
     }
 }
 
@@ -46,10 +65,20 @@ func (c *Connexion) ReadPump(action func([]byte), unregister func(), wg *sync.Wa
 	defer wg.Done()
     defer unregister()
     defer c.Conn.Close()
+    c.Conn.SetReadLimit(4096)
+    if err := c.Conn.SetReadDeadline(time.Now().Add(readWait)); err != nil {
+        log.Printf("error : %s\n", err)
+        return
+    }
+    c.Conn.SetPongHandler(func(string) error {
+        c.Conn.SetReadDeadline(time.Now().Add(readWait)); return nil })
     for {
         msgType, data, err := c.Conn.ReadMessage()
         if err != nil {
-            log.Printf("error : %s\n", err)
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway,
+                websocket.CloseAbnormalClosure) {
+				log.Printf("error: %v", err)
+			}
             break // the connection ended up
         }
         if msgType == websocket.TextMessage {
