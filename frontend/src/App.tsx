@@ -18,7 +18,7 @@ function App() {
             <Routes>
                 <Route element={<PublicRoute />}>
                     <Route path="/" element={<LandingPage/>} />
-                    <Route path="/404" element={<NotFoundPage/>} />
+                    <Route path="*" element={<NotFoundPage />} />
                     <Route path="/login" element={<AuthenticationPage/>} />
                     <Route path="/components" element={<ComponentsPage/>} />
                 </Route>
