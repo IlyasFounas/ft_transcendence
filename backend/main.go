@@ -43,7 +43,7 @@ func main() {
 	if err := db.PingContext(context.Background()); err != nil {
 		log.Fatalf("Unable to reach the database: %v", err)
 	}
-
+	
 	// 2. Instanciation of repositories
 	repo, err := repositories.NewRepositories(db)
 	if err != nil {

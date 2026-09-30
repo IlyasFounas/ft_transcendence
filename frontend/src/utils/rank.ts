@@ -26,7 +26,6 @@ export default function CalculateRank( totalScore: number ) {
 
     if (!nextRank) {
         return ({
-            currentRank: currentRank.role,
             nextRank: null,
             xpRemaining: 0,
             progress: 100  
@@ -37,7 +36,6 @@ export default function CalculateRank( totalScore: number ) {
     const xpToNextRank = nextRank.minScore - currentRank.minScore;
 
     return ({
-        currentRank: currentRank.role,
         nextRank: nextRank.role,
         xpRemaining: nextRank.minScore - totalScore,
         progress: (xpIntoRank / xpToNextRank) * 100  

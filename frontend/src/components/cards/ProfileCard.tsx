@@ -91,17 +91,24 @@ export default function ProfileCard({
             <div className="flex flex-col uppercase space-y-1 lg:space-y-2">
                 <p className="text-label-small md:text-body-primary text-text-secondary">Next Rank</p>
                 <p className="text-body-primary text-text-primary">{nextRank}</p>
-                <div className="space-y-1">
-                    <div className="h-1 bg-white rounded-2xl">
-                        <div
-                            className="h-1 bg-primary rounded-2xl"
-                            style={{ width: `${progress}%` }}
-                        ></div>
+                {nextRank ? (
+                    <div className="space-y-1">
+                        <div className="h-1 bg-white rounded-2xl">
+                            <div
+                                className="h-1 bg-primary rounded-2xl"
+                                style={{ width: `${progress}%` }}
+                            ></div>
+                        </div>
+
+                        <span className="text-label-small text-text-secondary uppercase">
+                            {xpToNextRank} XP to Next Rank
+                        </span>
                     </div>
-                    <span className="text-label-small text-text-secondary uppercase">
-                        {xpToNextRank} XP to Next Rank
+                ) : (
+                    <span className="text-body-primary text-primary uppercase">
+                        You have reached the highest rank
                     </span>
-                </div>
+                )}
             </div>
 
         </div>

@@ -15,10 +15,10 @@ func NewRouter(h *handlers.Handlers, hub *lobby_ws.Hub,
 
 	// Splitting routes
 	registerUserRoutes(r, h.User, h.Token)
+	registerStatisticsRoutes(r, h.Statistics)
 	registerLocationRoutes(r, h.Location)
 	registerGameRoutes(r, h.Game)
 	registerLobbyRoutes(r, h.Game, h.Lobby, hub)
-	registerRoundRoutes(r, h.Round)
 	registerGuessRoutes(r, h.Guess)
 	registerFriendRoutes(r, h.Friend)
 	registerChatRoutes(r, chat)

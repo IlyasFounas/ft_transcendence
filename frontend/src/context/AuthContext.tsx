@@ -92,6 +92,7 @@ function AuthProvider({children}: {children: ReactNode}) {
         if (result.status === 200)
         {
             setUser(result.data.user);
+            console.log(result.data.user);
             return true;
         }
     

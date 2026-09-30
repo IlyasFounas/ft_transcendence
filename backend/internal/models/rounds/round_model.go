@@ -12,11 +12,9 @@ type Round struct {
 
 	ID			int64					`bun:"id,pk,autoincrement" json:"id"`
 	RoundNb		int64					`bun:"round_nb,notnull" json:"round_nb"`
-	LastRound	bool					`bun:"last_round,notnull,default:false"`
 	GameId		int64					`bun:"game_id,notnull" json:"game_id"`
 	Game		*games.Game				`bun:"rel:belongs-to,join:game_id=id"`
 	LocationId	int64					`bun:"loc_id,notnull"` // TODO join + unique ,unique:idx_loc_game
 	Location	*locations.Location		`bun:"rel:belongs-to,join:loc_id=location_id"`
 	StartedAt	time.Time				`bun:"started_at,notnull"`
-	// Timer		time.Timer				`bun:"timer,notnull"` //TODO a implementer directement quand on cree un round, se stoppe a la fin du timer, ou indique le temps auquel a guess chaque user et permet de calculer le temps restant dans le guess (entre la fin du timer et le moment du guess)
 }

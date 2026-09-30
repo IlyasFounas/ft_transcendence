@@ -18,11 +18,11 @@ func registerGuessRoutes(r *gin.Engine, h *handlers.GuessHandler) {
 		public.GET("/guesses/:id/distance", h.GetGuessDistance) //get distance for a guess
 		public.GET("/guesses/:id/score", h.GetGuessScore) //get score for a guess
 		public.GET("/guesses/results/:game_id", h.GetGameResults) //get results for a game (map of map with user_id, total_score)
-		public.GET("/leaderboard", h.GetLeaderboard) //get leaderboard for all games (map of map with user_id, xp total score)
 
 		// public.PATCH("/guesses/:id", h.UpdateGuessByID) //update a guess  by id (latitude, longitude, round_id, user_id, game_id)
 
-		public.DELETE("/guesses/:id", h.DeleteGuessByID) //delete a guess by id
+		// TODO: to be enabled if we create admin group
+		// public.DELETE("/guesses/:id", h.DeleteGuessByID) //delete a guess by id
 		// public.DELETE("/guesses/round/:round_id", h.DeleteGuessesByRoundID) //delete all guesses for a round
 		// public.DELETE("/guesses/user/:user_id", h.DeleteGuessesByUserID) //delete all guesses for a user
 		// public.DELETE("/guesses/game/:game_id", h.DeleteGuessesByGameID) //delete all guesses of all users for a game
@@ -33,8 +33,6 @@ func registerGuessRoutes(r *gin.Engine, h *handlers.GuessHandler) {
 	{
 		private.GET("/guesses/score/:round_id/:user_id", h.GetGuessScoreByRoundAndUser) //get score for a guess by round and user
 		private.GET("/guesses/total_score/:game_id/:user_id", h.GetTotalScoreByGameAndUser) //get total score for a user in a game
-		private.GET("/user/xp/:user_id", h.GetUserXP) //get total of all games of a user = total XP of a user
-		private.GET("/leaderboard/user", h.GetUserLeaderboardInfos) //get leaderboard for a user (map of map with user_id, xp total score)
 	}
 
 	// 	// Admin user
