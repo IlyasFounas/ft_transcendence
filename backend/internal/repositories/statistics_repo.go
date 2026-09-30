@@ -153,7 +153,7 @@ func (r *StatisticsRepository) UpdateStats(ctx context.Context, userIds []int64)
 			// still in the game when it ended (not left, or left after finished_at)
 			return q.Where("lo.left_at IS NULL").WhereOr("lo.left_at >= ga.finished_at")
 		}).
-		Where("lo.user_id IN (?)", bun.In(userIds)).
+		Where("lo.user_id IN (?)", bun.Tuple(userIds)).
 		Group("lo.user_id").
 		Scan(ctx, &counts)
 	if err != nil {
