@@ -430,5 +430,23 @@
     "latitude": 43.597202380951984,
     "longitude": 1.445504127590084,
     "country_code": "FR"
+  },
+  {
+    "mapillary_id": 1607646386588997,
+    "latitude": 35.88086431026501,
+    "longitude": 139.64134665053996,
+    "country_code": "JP"
+  },
+  {
+    "mapillary_id": 2453421405051215,
+    "latitude": 37.401385852133004,
+    "longitude": 136.94398020660003,
+    "country_code": "JP"
+  },
+  {
+    "mapillary_id": 1065402672120022,
+    "latitude": 34.7027947,
+    "longitude": 135.49036769999998,
+    "country_code": "JP"
   }
 ]
