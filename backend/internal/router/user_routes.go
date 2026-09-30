@@ -24,6 +24,7 @@ import (
  * PATCH = modify a unique field
  */
 func registerUserRoutes(r *gin.Engine, h *handlers.UserHandler, ht *handlers.TokenHandler) {
+	r.Static("/uploads", "./uploads")
 	public := r.Group("/")
 	{
 		public.POST("/user/create", h.CreateUser())
@@ -34,6 +35,7 @@ func registerUserRoutes(r *gin.Engine, h *handlers.UserHandler, ht *handlers.Tok
 		// des méthodes qui n'existent pas sur UserHandler — elles vivent sur TokenHandler.
 		public.GET("/user/activation", ht.ActivationToken())
 		public.GET("/auth/refresh", ht.RefreshToken())
+		public.GET("/leaderboard", h.Leaderboard()) // 100 first players ranked by xp
 	}
 	// it's private because only a registred user can access it
 	private := r.Group("/")
@@ -48,5 +50,10 @@ func registerUserRoutes(r *gin.Engine, h *handlers.UserHandler, ht *handlers.Tok
 		private.PATCH("/user/login", h.SetLogin())
 		private.PATCH("/user/avatar", h.SetAvatar())
 		private.POST("/auth/logout", h.Logout())
+		private.POST("/user/avatar/upload", h.UploadAvatar())
+		private.GET("/user/xp/:username", h.XPByName())
+		private.GET("/leaderboard/user", h.UserLeaderboard()) // position, name and xp of the connected user
 	}
+	// TODO admin: to be enabled in the admin group (a user must not be able to set his own xp)
+	// admin.PATCH("/admin/user/:id/xp", h.SetXP())
 }

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect, useRef } from "react";
 import { apiFetch } from "../api/apiFetch";
 import type { ReactNode } from "react";
 import type { User } from "../types/user.types";
@@ -30,19 +30,70 @@ function AuthProvider({children}: {children: ReactNode}) {
     
     const [user, setUser] = useState<User | null>(null);
     const [isAuthLoading, setIsAuthLoading] = useState(true);
+    const refreshPromiseRef = useRef<Promise<boolean> | null>(null);
     const isAuthenticated = user !== null;
     
+    const refreshAccessToken = async () => {
+        
+        if (refreshPromiseRef.current) {
+            return refreshPromiseRef.current;
+        }
+
+        const refreshPromise = (async () => {
+            const result = await apiFetch("/api/auth/refresh");
+
+            if (result === null) {
+                return false;
+            }
+
+            return result.status === 200;
+        })();
+
+        refreshPromiseRef.current = refreshPromise;
+
+        try {
+            return await refreshPromise;
+        } finally {
+            refreshPromiseRef.current = null;
+        }
+    };
+    
+    const authFetch = async (
+        url: string,
+        options: RequestInit = {}
+    ) => {
+
+        const result = await apiFetch(url, options);
+        if (result === null) {
+            return null;
+        }
+        
+        if (result.status !== 401) {
+            return result;
+        }
+
+        const refreshed = await refreshAccessToken();
+        if (!refreshed) {
+            return null;
+        }
+
+        return await apiFetch(url, options);
+    }
+
     const getUser = async () => {
-        const result = await apiFetch("/api/user");
+        const result = await authFetch("/api/user");
         
         if (result === null) {
             return false;
         }
+
         if (result.status === 200)
         {
             setUser(result.data.user);
+            console.log(result.data.user);
             return true;
         }
+    
         setUser(null);
         return false;
         
@@ -65,45 +116,6 @@ function AuthProvider({children}: {children: ReactNode}) {
             setUser(null);
         }
     };
-
-     const refreshAccessToken = async () => {
-
-        const result = await apiFetch("/api/auth/refresh");
-
-        if (result === null) {
-            return false;
-        }
-
-        if (result.status === 200)
-        {
-            await getUser();
-            return true;
-        }
-
-        return false;
-    }
-    
-    const authFetch = async (
-        url: string,
-        options: RequestInit = {}
-        ) => {
-
-        const result = await apiFetch(url, options);
-        if (result === null) {
-            return null;
-        }
-        
-        if (result.status !== 401) {
-            return result;
-        }
-
-        const refreshed = await refreshAccessToken();
-        if (!refreshed) {
-            return null;
-        }
-
-        return await apiFetch(url, options);
-    }
 
     useEffect(() => {
         const checkAuth = async () => {

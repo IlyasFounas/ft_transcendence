@@ -67,9 +67,6 @@ func (r *LobbyRepository) ActualLobby(ctx context.Context,
 	lobby := new(games.Lobby)
 	err := r.db.NewSelect().
 		Model(lobby).
-		// Relation("Game", func(q *bun.SelectQuery) *bun.SelectQuery {
-		// 	return q.Where("finished = false")
-		// }).
 		Where("lo.user_id = ?", userId).
 		Where("lo.left_at IS NULL").
 		Scan(ctx)
@@ -124,19 +121,13 @@ func (r *LobbyRepository) LobbyPlayerNb(ctx context.Context,
 	return count, nil
 }
 
-func (r *LobbyRepository) IsCreator(ctx context.Context,
-	userId int64, gameId int64) (bool, error) {
-	lobby := new(games.Lobby)
-	err := r.db.NewSelect().
-		Model(lobby).
-		Column("is_creator").
+func (r *LobbyRepository) IsCreator(ctx context.Context, userId int64, gameId int64) (bool, error) {
+	return r.db.NewSelect().
+		Model((*games.Lobby)(nil)).
 		Where("user_id = ?", userId).
 		Where("game_id = ?", gameId).
-		Scan(ctx)
-	if err != nil {
-		return false, err
-	}
-	return lobby.IsCreator, nil
+		Where("is_creator = ?", true).
+		Exists(ctx)
 }
 
 func (r *LobbyRepository) AllPlayers(ctx context.Context,
@@ -151,6 +142,59 @@ func (r *LobbyRepository) AllPlayers(ctx context.Context,
 		return nil, err
 	}
 	return lobbies, nil
+}
+
+func (r *LobbyRepository) NbGames(ctx context.Context,
+	userId int64) (int, error){
+	count, err := r.db.NewSelect().
+		Model((*games.Lobby)(nil)).
+		Relation("Game", func(q *bun.SelectQuery) *bun.SelectQuery {
+			return q.Where("finished_at IS NOT NULL")
+		}).
+		Where("user_id = ?", userId).
+		Where("left_at >= game.finished_at").
+		Count(ctx)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+// TODO finish
+func (r *LobbyRepository) Historic(ctx context.Context,
+	userId int64) ([]*games.Game, error){
+	var games []*games.Game
+	err := r.db.NewSelect().
+		Model(games).
+		Column("id", "round_nb").
+		Relation("Game", func(q *bun.SelectQuery) *bun.SelectQuery {
+			return q.Where("finished_at IS NOT NULL")
+		}).
+		Where("user_id = ?", userId).
+		Where("left_at >= game.finished_at").
+		Scan(ctx)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, errors.New("You don't have any games")
+		}
+		return nil, err
+	}
+	return games, nil
+}
+
+func (r *LobbyRepository) JoinCode(ctx context.Context,
+	gameId int64) (*string, error) {
+	lobby := new(games.Lobby)
+	err := r.db.NewSelect().
+		Model(lobby).
+		Column("join_code").
+		Where("game_id = ?", gameId).
+		Where("join_code IS NOT NULL").
+		Scan(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return lobby.JoinCode, nil
 }
 
 // Setters
@@ -181,6 +225,33 @@ func (r *LobbyRepository) SetLeftAt(ctx context.Context,
 		return err
 	}
 	return nil
+}
+
+// Kick removes a player from the lobby and remembers it: a kicked player can't join this game again (see WasKicked)
+func (r *LobbyRepository) Kick(ctx context.Context,
+	lobby_id int64) error {
+	actualTime := time.Now()
+	lobby := &games.Lobby{LeftAt: &actualTime, Kicked: true}
+	_, err := r.db.NewUpdate().
+		Model(lobby).
+		Column("left_at", "kicked").
+		Where("id = ?", lobby_id).
+		Exec(ctx)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// WasKicked tells whether userId has been kicked out of the game gameId
+func (r *LobbyRepository) WasKicked(ctx context.Context,
+	userId int64, gameId int64) (bool, error) {
+	return r.db.NewSelect().
+		Model((*games.Lobby)(nil)).
+		Where("user_id = ?", userId).
+		Where("game_id = ?", gameId).
+		Where("kicked = ?", true).
+		Exists(ctx)
 }
 
 func (r *LobbyRepository) SetIsCreator(ctx context.Context,

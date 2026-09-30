@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"os"
 	"time"
-
+	"log"
 	"context"
 
 	"github.com/gin-gonic/gin"
@@ -39,6 +39,7 @@ func (h *TokenHandler) ActivationToken() gin.HandlerFunc {
 		tokenString := c.Query("token")
 		aToken, err := h.aTokenRepo.ActivationToken(c.Request.Context(), tokenString)
 		if err != nil {
+			log.Printf("error : %s\n", err)
 			c.JSON(http.StatusUnauthorized,
 				gin.H{"message": "account activation went wrong"})
 			return
