@@ -3,9 +3,11 @@ package repositories
 import (
 	"database/sql"
 	"backend/internal/models/users"
+	"backend/internal/models/guesses"
 	"backend/internal/tools/encryption"
 	"context"
 	"errors"
+	"fmt"
 	"github.com/uptrace/bun"
 )
 
@@ -18,6 +20,13 @@ import (
  * refer to the official documentation:
  * https://bun.uptrace.dev/guide/golang-orm.html#crud-operations
  */
+
+// Leaderboard is a line of the leaderboard: the position of a player, his name and his xp
+type Leaderboard struct {
+	Position int64  `json:"position"`
+	Username string `json:"username"`
+	Total    int64  `json:"total"`
+}
 
 type UserRepository struct {
 	db *bun.DB
@@ -63,7 +72,7 @@ func (r *UserRepository) User(ctx context.Context, userId int64) (*users.User, e
 	user := new(users.User)
 	err := r.db.NewSelect().
 		Model(user).
-		Column("id", "name", "email", "is_verified", "avatar", "created_at").
+		Column("id", "name", "email", "is_verified", "avatar", "xp", "created_at").
 		Where("id = ?", userId).
 		Scan(ctx)
 	if err != nil {
@@ -142,7 +151,7 @@ func (r *UserRepository) UserByName(ctx context.Context,
 	user := new(users.User)
 	err := r.db.NewSelect().
 		Model(user).
-		Column("id", "name", "email", "is_verified", "avatar", "created_at").
+		Column("id", "name", "email", "is_verified", "avatar", "xp", "created_at").
 		Where("name = ?", username).
 		Scan(ctx)
 	if err != nil {
@@ -156,7 +165,7 @@ func (r *UserRepository) UserByEmail(ctx context.Context,
 	user := new(users.User)
 	err := r.db.NewSelect().
 	Model(user).
-	Column("id", "name", "email", "is_verified", "avatar", "created_at").
+	Column("id", "name", "email", "is_verified", "avatar", "xp", "created_at").
 	Where("email = ?", email).
 	Scan(ctx)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -173,7 +182,7 @@ func (r *UserRepository) UserByGoogleId(ctx context.Context,
 	user := new(users.User)
 	err := r.db.NewSelect().
 	Model(user).
-	Column("id", "name", "email", "is_verified", "avatar", "created_at").
+	Column("id", "name", "email", "is_verified", "avatar", "xp", "created_at").
 	Where("google_id = ?", googleId).
 	Scan(ctx)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -261,4 +270,97 @@ func (r *UserRepository) SetIsVerified(ctx context.Context, userId int64) error 
 		return err
 	}
 	return nil
+}
+
+// Getter xp
+func (r *UserRepository) XP(ctx context.Context, userId int64) (int64, error) {
+	user := new(users.User)
+	err := r.db.NewSelect().
+		Model(user).
+		Column("xp").
+		Where("id = ?", userId).
+		Scan(ctx)
+	if err != nil {
+		return 0, err
+	}
+	return user.XP, nil
+}
+
+// Setter xp: replaces the xp of a user (admin use, a negative xp is refused).
+// At the end of a game, the xp is increased by AddGameXP instead.
+func (r *UserRepository) SetXP(ctx context.Context, userId int64, xp int64) (bool, error) {
+	if xp < 0 {
+		return false, nil
+	}
+	user := &users.User{XP: xp}
+	_, err := r.db.NewUpdate().
+		Model(user).
+		Column("xp").
+		Where("id = ?", userId).
+		Exec(ctx)
+	if err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+// AddGameXP adds, to every player of the game gameId, the sum of the base_score he earned in it.
+// It must run only once per game: GameRepository.SetFinished calls it in the same transaction (db)
+// that sets finished_at, and only the first time the game is marked as finished.
+ func (r *UserRepository) AddGameXP(ctx context.Context, db bun.IDB, gameId int64) error {
+    // xp earned by each player in this game: the sum of his base_score over its rounds
+    gameXP := db.NewSelect().
+        Model((*guesses.Guess)(nil)).
+        ColumnExpr("g.user_id").
+        ColumnExpr("SUM(g.base_score) AS total").
+        Join("JOIN rounds AS r ON r.id = g.round_id").
+        Where("r.game_id = ?", gameId).
+        Group("g.user_id")
+    // bulk update of bun: WITH game_xp AS (...) UPDATE users AS u SET ... FROM game_xp WHERE ...
+    _, err := db.NewUpdate().
+        With("game_xp", gameXP).
+        Model((*users.User)(nil)).
+        TableExpr("game_xp").
+        Set("xp = u.xp + game_xp.total").
+        Where("u.id = game_xp.user_id").
+        Exec(ctx)
+    return err
+}
+
+// Leaderboard returns the 100 first players ranked by xp
+func (r *UserRepository) Leaderboard(ctx context.Context) ([]Leaderboard, error) {
+	var rows []Leaderboard
+	err := r.db.NewSelect().
+		Model((*users.User)(nil)).
+		ColumnExpr("RANK() OVER (ORDER BY u.xp DESC) AS position").
+		ColumnExpr("u.name AS username").
+		ColumnExpr("u.xp AS total").
+		OrderExpr("u.xp DESC, u.name ASC").
+		Limit(100).
+		Scan(ctx, &rows)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get leaderboard: %w", err)
+	}
+	return rows, nil
+}
+
+// UserLeaderboard returns the position, name and xp of the user userId.
+// The rank is computed over ALL the users first, then filtered (filtering first would always rank him 1st)
+func (r *UserRepository) UserLeaderboard(ctx context.Context, userId int64) ([]Leaderboard, error) {
+	ranked := r.db.NewSelect().
+		Model((*users.User)(nil)).
+		ColumnExpr("u.id").
+		ColumnExpr("RANK() OVER (ORDER BY u.xp DESC) AS position").
+		ColumnExpr("u.name AS username").
+		ColumnExpr("u.xp AS total")
+	var rows []Leaderboard
+	err := r.db.NewSelect().
+		TableExpr("(?) AS ranked", ranked).
+		ColumnExpr("ranked.position, ranked.username, ranked.total").
+		Where("ranked.id = ?", userId).
+		Scan(ctx, &rows)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get leaderboard info for user %d: %w", userId, err)
+	}
+	return rows, nil
 }

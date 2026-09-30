@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"backend/internal/models/guesses"
+	"backend/internal/models/rounds"
 	"backend/internal/repositories"
 	"backend/internal/tools/haversine"
 	"context"
@@ -28,10 +29,7 @@ type GuessGetter interface {
 	GetScoreByID(ctx context.Context, guess_id int64) (int64, error)
 	GetScoreByRoundAndUserID(ctx context.Context, round_id int64, user_id int64) (int64, error)
 	GetTotalScoreByGameAndUserID(ctx context.Context, game_id int64, user_id int64) (int64, error)
-	GetXPByUserID(ctx context.Context, user_id int64) (int64, error)
 	GetResultsByGameID(ctx context.Context, game_id int64) ([][2]int64, error)
-	GetUserLeaderboardInfos(ctx context.Context, user_id int64) ([]repositories.Leaderboard, error)
-	GetLeaderboard(ctx context.Context) ([]repositories.Leaderboard, error)
 	// GetUserIDByID(ctx context.Context, guess_id int64) (int64, error)
 	// GetRoundIDByID(ctx context.Context, guess_id int64) (int64, error)
 	GetByRoundID(ctx context.Context, round_id int64) ([]*guesses.Guess, error)
@@ -42,6 +40,20 @@ type GuessGetter interface {
 	DeleteByID(ctx context.Context, guess_id int64) error
 	// DeleteByRoundID(ctx context.Context, round_id int64) error
 	// DeleteByUserID(ctx context.Context, user_id int64) error
+}
+
+// RoundGetter — methods expected from the repository by the handler
+type RoundGetter interface {
+	Create(ctx context.Context, round *rounds.Round) (*rounds.Round, error)
+	GetGame(ctx context.Context, game_id int64) error
+	GetByID(ctx context.Context, round_id int64) (*rounds.Round, error)
+	GetNextRoundNb(ctx context.Context, game_id int64) (int64, error)
+	CheckLastRound(ctx context.Context, game_id int64, round_nb int64) (bool, error)
+	GetLocationID(ctx context.Context, game_id int64, round_nb int64) (int64, error)
+	GetCoordinatesByLocationID(ctx context.Context, location_id int64) (float64, float64, error)
+	GetCCByLocationID(ctx context.Context, location_id int64) (string, error)
+	GetIDByGameIDAndRoundNb(ctx context.Context, game_id int64, round_nb int64) (int64, error)
+	// DeleteByID(ctx context.Context, round_id int64) error
 }
 
 type GuessHandler struct {
@@ -478,27 +490,6 @@ func (h *GuessHandler) GetTotalScoreByGameAndUser(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"total_score": totalScore})
 }
 
-// GET /guesses/xp/:user_id //by user
-func (h *GuessHandler) GetUserXP(c *gin.Context) {
-	userID, ok := c.Get("userId")
-	if !ok {
-		c.JSON(http.StatusUnauthorized,
-			gin.H{"message": "The userId is empty"})
-		return
-	}
-
-	ctx := c.Request.Context()
-
-	userXP, err := h.guessRepo.GetXPByUserID(ctx, userID.(int64))
-	if err != nil {
-		log.Printf("Error getting total score for user %d: %v", userID.(int64), err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get total score for this user"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"user_xp": userXP})
-}
-
 // GET /guesses/results/:game_id //by game
 func (h *GuessHandler) GetGameResults(c *gin.Context) {
 	ctx := c.Request.Context()
@@ -517,41 +508,6 @@ func (h *GuessHandler) GetGameResults(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"results": results})
-}
-
-// GET /leaderboard/user //using user in the context + showing 100 first players and position and results of the user
-func (h *GuessHandler) GetUserLeaderboardInfos(c *gin.Context) {
-	ctx := c.Request.Context()
-
-	userID, ok := c.Get("userId")
-	if !ok {
-		c.JSON(http.StatusUnauthorized,
-			gin.H{"message": "The user ID is empty"})
-		return
-	}
-
-	leaderboard, err := h.guessRepo.GetUserLeaderboardInfos(ctx, userID.(int64))
-	if err != nil {
-		log.Printf("Error getting leaderboard for user %d: %v", userID.(int64), err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get user leaderboard infos"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"leaderboard": leaderboard})
-}
-
-// GET /leaderboard //using user in the context + showing 100 first players and position and results of the user
-func (h *GuessHandler) GetLeaderboard(c *gin.Context) {
-	ctx := c.Request.Context()
-
-	leaderboard, err := h.guessRepo.GetLeaderboard(ctx)
-	if err != nil {
-		log.Printf("Error getting leaderboard: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get leaderboard"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"leaderboard": leaderboard})
 }
 
 // // GET /guesses/round/:round_id

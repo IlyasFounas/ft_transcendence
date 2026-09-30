@@ -40,7 +40,7 @@ func initGameObj(c *gin.Context, locationRepo *repositories.LocationRepository) 
 	if round_total > 5 {
 		round_total = 5
 	}
-	if round_total < 0 {
+	if round_total < 1 {
 		round_total = 1
 	}
 
@@ -410,109 +410,48 @@ func (h *GameHandler) SetDifficulty() gin.HandlerFunc {
 	}
 }
 
-func (h *GameHandler) SetTimer() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		id, err := strconv.ParseInt(c.Param("id"), 10, 64)
-		if err != nil {
-			c.JSON(http.StatusUnauthorized,
-				gin.H{"message": "failed"})
-			return ;
-		}
-		timer, err := strconv.ParseInt(c.PostForm("timer"), 10, 64)
-		if err != nil {
-			c.JSON(http.StatusUnauthorized,
-				gin.H{"message": "failed"})
-			return ;
-		}
-		if timer > 120 {
-			timer = 120
-		} else if (timer < 10) {
-			timer = 10
-		}
-		err = h.gameRepo.SetTimer(c.Request.Context(), id, timer)
-		if err != nil {
-			c.JSON(http.StatusUnauthorized,
-				gin.H{"message": "failed"})
-			return ;
-		}
-		c.JSON(http.StatusOK,
-			gin.H{"message": "success"})
-	}
-}
-
-func (h *GameHandler) SetRoundTotal() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		id, err := strconv.ParseInt(c.Param("id"), 10, 64)
-		if err != nil {
-			c.JSON(http.StatusUnauthorized,
-				gin.H{"message": "failed"})
-			return ;
-		}
-		round_total, err := strconv.ParseInt(c.PostForm("round_total"), 10, 64)
-		if err != nil {
-			c.JSON(http.StatusUnauthorized,
-				gin.H{"message": "failed"})
-			return ;
-		}
-
-		if round_total > 5 {
-			round_total = 5
-		} else if (round_total < 1) {
-			round_total = 1
-		}
-		err = h.gameRepo.SetRoundTotal(c.Request.Context(), id, round_total)
-		if err != nil {
-			c.JSON(http.StatusUnauthorized,
-				gin.H{"message": "failed"})
-			return ;
-		}
-		c.JSON(http.StatusOK,
-			gin.H{"message": "success"})
-	}
-}
-
-func (h *GameHandler) SetFinished() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		id, err := strconv.ParseInt(c.Param("id"), 10, 64)
-		if err != nil {
-			c.JSON(http.StatusUnauthorized,
-				gin.H{"success": false})
-			return ;
-		}
-		err = h.gameRepo.SetFinished(c.Request.Context(), id)
-		if err != nil {
-			c.JSON(http.StatusUnauthorized,
-				gin.H{"success": false})
-			return ;
-		}
-		lobbies, err := h.lobbyRepo.AllPlayers(c.Request.Context(), id)
-		if err != nil {
-			c.JSON(http.StatusUnauthorized,
-				gin.H{"success": false})
-			return ;
-		}
-		for _, lobby := range lobbies {
-			if lobby.JoinCode != nil {
-				err = h.lobbyRepo.SetJoinCode(c.Request.Context(), lobby.ID, nil)
-				if err != nil {
-					c.JSON(http.StatusUnauthorized, 
-						gin.H{"success": false})
-					return
-				}
-			}
-			if lobby.LeftAt == nil {
-				err = h.lobbyRepo.SetLeftAt(c.Request.Context(), lobby.ID)
-				if err != nil {
-					c.JSON(http.StatusUnauthorized, 
-						gin.H{"success": false})
-					return
-				}
-			}
-		}
-		c.JSON(http.StatusOK,
-			gin.H{"success": true})
-	}
-}
+// func (h *GameHandler) SetFinished() gin.HandlerFunc {
+// 	return func(c *gin.Context) {
+// 		id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+// 		if err != nil {
+// 			c.JSON(http.StatusUnauthorized,
+// 				gin.H{"success": false})
+// 			return ;
+// 		}
+// 		err = h.gameRepo.SetFinished(c.Request.Context(), id)
+// 		if err != nil {
+// 			c.JSON(http.StatusUnauthorized,
+// 				gin.H{"success": false})
+// 			return ;
+// 		}
+// 		lobbies, err := h.lobbyRepo.AllPlayers(c.Request.Context(), id)
+// 		if err != nil {
+// 			c.JSON(http.StatusUnauthorized,
+// 				gin.H{"success": false})
+// 			return ;
+// 		}
+// 		for _, lobby := range lobbies {
+// 			if lobby.JoinCode != nil {
+// 				err = h.lobbyRepo.SetJoinCode(c.Request.Context(), lobby.ID, nil)
+// 				if err != nil {
+// 					c.JSON(http.StatusUnauthorized, 
+// 						gin.H{"success": false})
+// 					return
+// 				}
+// 			}
+// 			if lobby.LeftAt == nil {
+// 				err = h.lobbyRepo.SetLeftAt(c.Request.Context(), lobby.ID)
+// 				if err != nil {
+// 					c.JSON(http.StatusUnauthorized, 
+// 						gin.H{"success": false})
+// 					return
+// 				}
+// 			}
+// 		}
+// 		c.JSON(http.StatusOK,
+// 			gin.H{"success": true})
+// 	}
+// }
 
 func (h *GameHandler) SetPlayerNb() gin.HandlerFunc {
 	return func(c *gin.Context) {

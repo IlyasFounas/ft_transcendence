@@ -20,7 +20,6 @@ func NewRouter(ctx context.Context, h *handlers.Handlers, hub *lobby_ws.Hub,
 	registerLocationRoutes(r, h.Location)
 	registerGameRoutes(r, h.Game)
 	registerLobbyRoutes(ctx, r, h.Game, h.Lobby, hub, wg)
-	registerRoundRoutes(r, h.Round)
 	registerGuessRoutes(r, h.Guess)
 	registerFriendRoutes(r, h.Friend)
 	registerChatRoutes(ctx, r, chat, wg)
