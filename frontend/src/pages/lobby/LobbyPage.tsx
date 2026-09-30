@@ -19,7 +19,7 @@ export default function LobbyPage()
 	const [isShaking, setIsShaking] = useState(false);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
 	const [code, setCode] = useState("");
-	const { lobbyInfos, round } = useLobbySocket();
+	const { lobbyInfos, round, connect } = useLobbySocket();
 	
 	async function handleCreateOperation() {
 
@@ -45,6 +45,7 @@ export default function LobbyPage()
 			return;
 		}
 
+		connect();
 		navigate("/lobbyroom");
 	}
 
@@ -65,6 +66,7 @@ export default function LobbyPage()
 		setIsChecking(false);
 
 		if (result.status === "ok") {
+			connect();
 			navigate("/lobbyroom");
 			return;
 		}

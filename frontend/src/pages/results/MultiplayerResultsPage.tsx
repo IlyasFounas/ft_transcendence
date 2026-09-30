@@ -16,7 +16,7 @@ export default function MultiplayerResultsPage() {
     const location = useLocation();
     const navigate = useNavigate();
     const { user } = useAuth();
-    const { round, players, leaveLobby } = useLobbySocket();
+    const { round, players, leaveLobby, resetGame } = useLobbySocket();
     const [hoveredPlayerId, setHoveredPlayerId] = useState<string | null>(null);
 
     const { 
@@ -43,6 +43,7 @@ export default function MultiplayerResultsPage() {
 
 	const finishGame = () => {
 		leaveLobby();
+		resetGame();
 		navigate("/home");
 	}
 	

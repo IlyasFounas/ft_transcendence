@@ -48,6 +48,8 @@ interface GameSocketContextType {
 	sendGuess: (guess: { lat: number; lng: number }) => void;
 	startGame: () => void;
 	startNextRound: () => void;
+	connect: () => void;
+	resetGame: () => void;
 	round: RoundInfo | null;
 	roundHistory: RoundResult[];
 	lastRoundResult: {
@@ -70,6 +72,8 @@ const GameSocketContext = createContext<GameSocketContextType>({
 	sendGuess: () => {},
 	startGame: () => {},
 	startNextRound: () => {},
+	connect: () => {},
+	resetGame: () => {},
 	round: null,
 	roundHistory: [],
 	lastRoundResult: null,
@@ -95,59 +99,86 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
 
 	const isCurrentUserHost = players.find((p) => p.id == user?.ID)?.isHost ?? false;
 
-	useEffect(() => {
+	function connect(){
 		if (isAuthLoading || !user) return;
+		if (socketRef.current) return;
 
 		const socket = new WebSocket(
-		`ws://localhost:5130/api/ws/lobby/join?user_id=${user.ID}`
+			`ws://localhost:5130/api/ws/lobby/join?user_id=${user.ID}`
 		);
 		socketRef.current = socket;
+		setIsClosed(false);
 
 		socket.onopen = () => setIsConnected(true);
 
 		socket.onmessage = (event) => {
-		const message = JSON.parse(event.data);
+			const message = JSON.parse(event.data);
+			console.log(message);
+			if (message.action === "lobby_players") {
+				const mappedPlayers: Player[] = message.payload.map((p: RawPlayer) => ({
+					id: p.id,
+					username: p.username,
+					avatar: p.avatar ?? DEFAULT_AVATAR,
+					isHost: p.host,
+				}));
+				setPlayers(mappedPlayers);
+			}
+			else if (message.action === "lobby_infos") {
+				setLobbyInfos(message.payload);
+			}
+			else if (message.action === "game_started") {
+				setGameStartAt(message.payload.next_round_at);
+			}
+			else if (message.action === "round_started") {
+				const data = message.payload as { round_nb: number; mid: number; round_ends_at: string };
+				setRound({
+					round_nb: data.round_nb,
+					mid: data.mid,
+					round_ends_at: data.round_ends_at,
+				});
+				setLastRoundResult(null);
+				setGameStartAt(null);
+			}
+			else if (message.action === "round_results") {
+				const data = message.payload as RoundResultBroadcast;
+				const own = data.results.find((r) => r.user_id === user.ID);
+				
+				if (own && own.round_infos) {
+					setRoundHistory((prev) => [
+						...prev,
+						{
+							round: own.round_nb,
+							points: own.round_infos!.score,
+							distance: own.round_infos!.distance,
+							guessLocation: {
+								latitude: own.round_infos!.guess.lat,
+								longitude: own.round_infos!.guess.long,
+							},
+						},
+					]);
 
-		if (message.action === "lobby_players") {
-			const mappedPlayers: Player[] = message.payload.map((p: RawPlayer) => ({
-				id: p.id,
-				username: p.username,
-				avatar: p.avatar ?? DEFAULT_AVATAR,
-				isHost: p.host,
-			}));
-			setPlayers(mappedPlayers);
-		}
-		else if (message.action === "lobby_infos") {
-			setLobbyInfos(message.payload);
-		}
-		else if (message.action === "game_started") {
-			setGameStartAt(message.payload.next_round_at);
-		}
-		else if (message.action === "round_started") {
-			const data = message.payload as { round_nb: number; mid: number; round_ends_at: string };
-			setRound({
-				round_nb: data.round_nb,
-				mid: data.mid,
-				round_ends_at: data.round_ends_at,
-			});
-			setLastRoundResult(null);
-			setGameStartAt(null);
-		}
-		else if (message.action === "round_results") {
-			const data = message.payload as RoundResultBroadcast;
-			const own = data.results.find((r) => r.user_id === user.ID);
-			
-			if (own && own.round_infos) {
+					setLastRoundResult({
+						isLastRound: data.is_last_round,
+						nextRoundAt: data.next_round_at,
+						actualLocation: {
+							latitude: own.round_infos.base.lat,
+							longitude: own.round_infos.base.long,
+						},
+						allResults: data.results,
+					});
+				}
+				else {
+					const playerWithInfos = data.results.find(r => r.round_infos);
+					const actualLat = playerWithInfos ? playerWithInfos.round_infos.base.lat : 0;
+					const actualLng = playerWithInfos ? playerWithInfos.round_infos.base.long : 0;
+
 				setRoundHistory((prev) => [
 					...prev,
 					{
 						round: own.round_nb,
-						points: own.round_infos!.score,
-						distance: own.round_infos!.distance,
-						guessLocation: {
-							latitude: own.round_infos!.guess.lat,
-							longitude: own.round_infos!.guess.long,
-						},
+						points: 0,
+						distance: 0,
+						guessLocation: { latitude: 0, longitude: 0 }, 
 					},
 				]);
 
@@ -155,53 +186,33 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
 					isLastRound: data.is_last_round,
 					nextRoundAt: data.next_round_at,
 					actualLocation: {
-						latitude: own.round_infos.base.lat,
-						longitude: own.round_infos.base.long,
+						latitude: actualLat,
+						longitude: actualLng,
 					},
 					allResults: data.results,
 				});
 			}
-			else {
-				const playerWithInfos = data.results.find(r => r.round_infos);
-				const actualLat = playerWithInfos ? playerWithInfos.round_infos.base.lat : 0;
-				const actualLng = playerWithInfos ? playerWithInfos.round_infos.base.long : 0;
-
-			setRoundHistory((prev) => [
-				...prev,
-				{
-					round: own.round_nb,
-					points: 0,
-					distance: 0,
-					guessLocation: { latitude: 0, longitude: 0 }, 
-				},
-			]);
-
-			setLastRoundResult({
-				isLastRound: data.is_last_round,
-				nextRoundAt: data.next_round_at,
-				actualLocation: {
-					latitude: actualLat,
-					longitude: actualLng,
-				},
-				allResults: data.results,
-			});
-		}
 		};
 
 		socket.onerror = (err) => console.log("WS error:", err);
 
 		socket.onclose = () => {
-		setIsConnected(false);
-		setIsClosed(true);
-		};
-
-		return () => {
-		socket.onclose = null;
-		socket.close();
-		socketRef.current = null;
+			setIsConnected(false);
+			setIsClosed(true);
+			socketRef.current = null;
 		};
 		}
-	}, [user, isAuthLoading]);
+	}
+
+	useEffect(() => {
+		return () => {
+			if (socketRef.current) {
+				socketRef.current.onclose = null;
+				socketRef.current.close();
+				socketRef.current = null;
+			}
+		};
+	}, [user]);
 
 	function leaveLobby() {
 		socketRef.current?.send(JSON.stringify({ action: "leave", payload: "" }));
@@ -235,19 +246,34 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
 	}
 
 	function startNextRound() {
+		setRound(null);
+		setLastRoundResult(null);
 
-	setRound(null);
-	setLastRoundResult(null);
+		socketRef.current?.send(JSON.stringify({
+			action: "start_round",
+			payload: "",
+		}));
+	}
 
-	socketRef.current?.send(JSON.stringify({
-		action: "start_round",
-		payload: "",
-	}));
-}
+	function resetGame() {
+		if (socketRef.current) {
+			socketRef.current.onclose = null;
+			socketRef.current.close();
+			socketRef.current = null;
+		}
+		setIsConnected(false);
+		setIsClosed(false);
+		setPlayers([]);
+		setLobbyInfos(null);
+		setRound(null);
+		setRoundHistory([]);
+		setLastRoundResult(null);
+		setGameStartAt(null);
+	}
 
 	return (
 		<GameSocketContext.Provider
-		value={{ players, lobbyInfos, isConnected, isClosed, isCurrentUserHost, leaveLobby, kickPlayer, startGame, startNextRound, round, roundHistory, lastRoundResult, sendGuess, gameStartAt}}
+		value={{ players, lobbyInfos, isConnected, isClosed, isCurrentUserHost, leaveLobby, kickPlayer, startGame, startNextRound, round, roundHistory, lastRoundResult, sendGuess, connect, resetGame, gameStartAt}}
 		>
 		{children}
 		</GameSocketContext.Provider>

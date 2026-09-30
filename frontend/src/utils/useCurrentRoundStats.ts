@@ -22,6 +22,8 @@ export function useCurrentRoundStats(gameResult: GameResult) {
 	const { value: distanceValue, unit: distanceUnit } = formatDistance(currentRoundDistance);
 	const { displayValue: animatedDistance, justFinished: distanceJustFinished } = useCountUp(distanceValue);
 
+	const totalDistance = currentPlayerResult?.rounds.reduce((sum, r) => sum + r.distance, 0) ?? 0;
+
 	return {
 		totalScore,
 		currentPlayerResult,
@@ -32,5 +34,6 @@ export function useCurrentRoundStats(gameResult: GameResult) {
 		animatedDistance,
 		distanceUnit,
 		distanceJustFinished,
+		totalDistance
 	};
 }

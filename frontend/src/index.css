@@ -194,3 +194,7 @@ input:-webkit-autofill:active {
   filter: drop-shadow(0 0 8px currentColor);
   transition: transform 0.15s ease;
 }
+
+.leaflet-control-attribution a {
+	pointer-events: none;
+}

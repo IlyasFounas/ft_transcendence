@@ -11,7 +11,7 @@ import NextRoundTimer from "../../components/results/NextRoundTimer";
 
 export default function LobbyRoomPage() {
 
-	const { players, leaveLobby, lobbyInfos, kickPlayer, isCurrentUserHost, isClosed, startGame, round, gameStartAt } = useLobbySocket();
+	const { players, leaveLobby, lobbyInfos, kickPlayer, isCurrentUserHost, isClosed, startGame, round, gameStartAt, resetGame } = useLobbySocket();
 	const navigate = useNavigate();
 
 	useEffect(() => {
@@ -26,6 +26,7 @@ export default function LobbyRoomPage() {
 
 	function handleLeave() {
    		leaveLobby();
+		resetGame();
 		navigate("/home");
   	}
 

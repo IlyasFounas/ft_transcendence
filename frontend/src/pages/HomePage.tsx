@@ -1,9 +1,12 @@
 import PrimaryButton from "../components/buttons/PrimaryButton";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { useLobbySocket } from "../context/GameSocketContext";
 
 export default function HomePage() {
     const {isAuthenticated, authFetch} = useAuth();
+	const { connect } = useLobbySocket();
+
 	const handlePlaySolo = async () => {
 	const body = new URLSearchParams({
 			timer: "120",
@@ -17,6 +20,7 @@ export default function HomePage() {
 		});
 
 		if (result?.status === 200) {
+			connect();
 			navigate("/game/solo"); 
 		}
 	};

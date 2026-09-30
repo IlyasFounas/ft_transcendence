@@ -15,35 +15,45 @@ import GamePlayPage from './pages/game/GamePlayPage';
 import { GameSocketProvider } from './context/GameSocketContext';
 import SoloResultPage from './pages/results/SoloResultsPage';
 import MultiplayerResultsPage from './pages/results/MultiplayerResultsPage';
+import GameGuard from "./components/routes/GameGuard";
+
+const GameSessionLayout = () => {
+    return (
+        <>
+            <GameGuard />
+            <Outlet />
+        </>
+    );
+};
 
 function App() {
     return (
         <Router>
-            <Routes>
-                <Route element={<PublicRoute />}>
-                    <Route path="/" element={<LandingPage/>} />
-                    <Route path="/login" element={<AuthenticationPage/>} />
-                    <Route path="/components" element={<ComponentsPage/>} />
-                </Route>
-                <Route element={<ProtectedRoute />}>
-                    <Route element={<ChatLayout />}>
-                        <Route path="/home" element={<HomePage />} />
-                        <Route path="/multiplayer" element={<LobbyPage />} />
+            <GameSocketProvider>
+                <Routes>
+                    <Route element={<PublicRoute />}>
+                        <Route path="/" element={<LandingPage/>} />
+                        <Route path="/login" element={<AuthenticationPage/>} />
+                        <Route path="/components" element={<ComponentsPage/>} />
                     </Route>
-                    <Route element={<MainLayout />}>
-                        <Route path="/leaderboard" element={<LeaderboardPage />} />
-                        <Route path="/profile" element={<ProfilePage />} />
+                    <Route element={<ProtectedRoute />}>
+                        <Route element={<GameSessionLayout />}>
+                            <Route element={<ChatLayout />}>
+                                <Route path="/home" element={<HomePage />} />
+                                <Route path="/multiplayer" element={<LobbyPage />} />
+                                <Route path="/lobbyroom" element={<LobbyRoomPage />} />
+                            </Route>
+                            <Route element={<MainLayout />}>
+                                <Route path="/leaderboard" element={<LeaderboardPage />} />
+                                <Route path="/profile" element={<ProfilePage />} />
+                            </Route>
+                            <Route path="/game/:gameId" element={<GamePlayPage />} />
+                            <Route path="/soloresults" element={<SoloResultPage />} />
+                            <Route path="/multiresults" element={<MultiplayerResultsPage />} />
+                        </Route>
                     </Route>
-					<Route element={<GameSocketProvider><Outlet /></GameSocketProvider>}>
-						<Route element={<ChatLayout />}>
-							<Route path="/lobbyroom" element={<LobbyRoomPage />} />
-						</Route>
-						<Route path="/game/:gameId" element={<GamePlayPage />} />
-						<Route path="/soloresults" element={<SoloResultPage />} />
-						<Route path="/multiresults" element={<MultiplayerResultsPage />} />
-					</Route>
-                </Route>
-            </Routes>
+                </Routes>
+            </GameSocketProvider>
         </Router>
     )
 }
