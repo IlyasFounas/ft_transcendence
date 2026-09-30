@@ -189,7 +189,7 @@ func (r *StatisticsRepository) UpdateStats(ctx context.Context, userIds []int64)
 		Join("JOIN game AS ga ON ga.id = r.game_id").
 		Where("ga.finished_at IS NOT NULL").
 		Where("EXISTS (?)", inTheGameAtTheEnd).
-		Where("g.user_id IN (?)", bun.In(userIds)).
+		Where("g.user_id IN (?)", bun.Tuple(userIds)).
 		GroupExpr("g.user_id, r.game_id").
 		Scan(ctx, &perGame)
 	if err != nil {
