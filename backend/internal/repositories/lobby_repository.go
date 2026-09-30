@@ -169,8 +169,6 @@ func (r *LobbyRepository) Historic(ctx context.Context,
 			return q.Where("finished_at IS NOT NULL")
 		}).
 		Where("lo.left_at IS NOT NULL").
-		Where("lo.start_at IS NOT NULL").
-		Where("lo.left_at >= lo.start_at").
 		Where("lo.user_id = ?", userId).
 		Scan(ctx)
 	if err != nil {
