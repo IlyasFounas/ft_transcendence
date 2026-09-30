@@ -9,12 +9,11 @@ import (
 )
 
 type GameRepository struct {
-	db       *bun.DB
-	userRepo *UserRepository // to add the xp of the players when the game is finished
+	db *bun.DB
 }
 
-func NewGameRepository(db *bun.DB, userRepo *UserRepository) *GameRepository {
-	return &GameRepository{db: db, userRepo: userRepo}
+func NewGameRepository(db *bun.DB) *GameRepository {
+	return &GameRepository{db: db}
 }
 
 func (r *GameRepository) CreateGame(ctx context.Context, game *games.Game) (*games.Game, error){
@@ -187,29 +186,17 @@ func (r *GameRepository) SetDifficulty(ctx context.Context, gameId int64,
 	return nil
 }
 
-// Marks the game as finished, only once
+// Marks the game as finished (finished_at), only once: calling it again changes nothing, so the hub can retry it
+// safely. It does nothing else: the xp, rank and statistics of the players are updated separately (see the hub).
 func (r *GameRepository) SetFinished(ctx context.Context,
 	gameId int64) error {
-	return r.db.RunInTx(ctx, nil, func(ctx context.Context, tx bun.Tx) error {
-		res, err := tx.NewUpdate().
-			Model((*games.Game)(nil)).
-			Set("finished_at = ?", time.Now()).
-			Where("id = ?", gameId).
-			Where("finished_at IS NULL").
-			Exec(ctx)
-		if err != nil {
-			return err
-		}
-		affected, err := res.RowsAffected()
-		if err != nil {
-			return err
-		}
-		if affected == 0 {
-			// already finished: the xp of this game has already been added
-			return nil
-		}
-		return r.userRepo.AddGameXP(ctx, tx, gameId)
-	})
+	_, err := r.db.NewUpdate().
+		Model((*games.Game)(nil)).
+		Set("finished_at = ?", time.Now()).
+		Where("id = ?", gameId).
+		Where("finished_at IS NULL").
+		Exec(ctx)
+	return err
 }
 
 func (r *GameRepository) SetPlayerNb(ctx context.Context, game_id int64, 

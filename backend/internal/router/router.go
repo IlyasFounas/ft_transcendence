@@ -17,6 +17,7 @@ func NewRouter(ctx context.Context, h *handlers.Handlers, hub *lobby_ws.Hub,
 
 	// Splitting routes
 	registerUserRoutes(r, h.User, h.Token)
+	registerStatisticsRoutes(r, h.Statistics)
 	registerLocationRoutes(r, h.Location)
 	registerGameRoutes(r, h.Game)
 	registerLobbyRoutes(ctx, r, h.Game, h.Lobby, hub, wg)

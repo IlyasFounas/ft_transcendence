@@ -16,6 +16,7 @@ type Handlers struct {
 	Lobby		*LobbyHandler
 	Friend		*FriendHandler
 	Guess		*GuessHandler
+	Statistics	*StatisticsHandler
 }
 
 func googleConfigInit() *oauth2.Config {
@@ -40,5 +41,6 @@ func NewHandlers(repo *repositories.Repositories, reverser *rgeo.Rgeo) *Handlers
 		Lobby:		NewLobbyHandler(repo.Game, repo.Lobby, repo.User),
 		Friend:		NewFriendHandler(repo.Friend, repo.User),
 		Guess:		NewGuessHandler(repo.Guess, repo.Round, repo.Lobby, repo.Game, reverser),
+		Statistics:	NewStatisticsHandler(repo.Statistics),
 	}
 }
