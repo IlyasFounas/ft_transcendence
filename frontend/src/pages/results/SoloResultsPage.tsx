@@ -70,65 +70,58 @@ export default function SoloResultPage() {
 
 	return (
 		<div className="
-			grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_394px]
-			lg:grid-rows-[auto_1fr_auto]
-			lg:h-[calc(100vh-2rem)]
-			gap-4
-			p-4">
+			grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_394px] bg-[url(/backgrounds/results_background.png)]
+			gap-4 p-4 lg:items-stretch 
+			h-full min-h-screen">
 
-			<div className="order-1 lg:col-start-1 lg:row-start-1">
+			<div className="flex flex-col gap-4 order-1 lg:col-start-1 h-full">
 				<ResultInfoRow
 					title="Mission Debrief"
 					infos={`Round ${gameResult.currentRound} of ${totalRounds}`}
 					variant="primary"
 				/>
+
+				<div className="
+					w-full h-60 lg:h-auto lg:flex-1 lg:min-h-[400px]
+					outline outline-1 outline-sky-950
+					rounded-[10px] overflow-hidden flex flex-col
+				">
+					<ResultMap
+						actualLocation={actualLocation}
+						guesses={guesses}
+						currentUsername={gameResult.currentUsername}
+					/>
+				</div>
+
+				<div className="flex flex-row gap-2">
+					<ResultInfoRow
+						title="Score"
+						infos={String(animatedScore)}
+						variant="secondary"
+						suffix="pts"
+						animate={scoreJustFinished}
+					/>
+					<ResultInfoRow
+						title="Distance"
+						infos={String(animatedDistance)}
+						variant="secondary"
+						suffix={distanceUnit}
+						animate={distanceJustFinished}
+					/>
+				</div>
 			</div>
 
-			<div className="
-				order-2
-				lg:col-start-1 lg:row-start-2
-				w-full h-60 lg:h-full
-				outline outline-1 outline-sky-950
-				rounded-[10px]
-				overflow-hidden
-			">
-				<ResultMap
-					actualLocation={actualLocation}
-					guesses={guesses}
-					currentUsername={gameResult.currentUsername}
+			<div className="flex flex-col items-center gap-4 order-2 lg:col-start-2 h-full">
+				
+				<div className="hidden lg:flex w-full">
+					<ResultInfoRow title="Your results" variant="primary"/>
+				</div>
+				
+				<GameResultList 
+					currentRound={gameResult.currentRound} 
+					rounds={currentPlayerResult?.rounds ?? []} 
+					totalRounds={totalRounds} 
 				/>
-			</div>
-
-			<div className="
-				flex flex-row order-3 gap-2
-				lg:col-start-1 lg:row-start-3
-			">
-				<ResultInfoRow
-					title="Score"
-					infos={String(animatedScore)}
-					variant="secondary"
-					suffix="pts"
-					animate={scoreJustFinished}
-				/>
-				<ResultInfoRow
-					title="Distance"
-					infos={String(animatedDistance)}
-					variant="secondary"
-					suffix={distanceUnit}
-					animate={distanceJustFinished}
-				/>
-			</div>
-			<div className="hidden lg:flex lg:col-start-2 lg:row-start-1">
-				<ResultInfoRow title="Your results" variant="primary"/>
-			</div>
-			<div className="
-				order-4
-				lg:col-start-2 lg:row-start-2 lg:row-span-3
-				flex flex-col
-				items-center
-				gap-4
-			">
-				<GameResultList currentRound={gameResult.currentRound} rounds={currentPlayerResult?.rounds ?? []} totalRounds={totalRounds} />
 				<TotalScoreCard points={totalScore} distance={totalDistance} />
 				
 				<PrimaryButton size="medium" onClick={handleNext}>

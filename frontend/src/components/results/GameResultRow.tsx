@@ -28,7 +28,7 @@ export default function GameResultRow({
 		<div className={`
 			w-full h-[60px] lg:h-[100px]
 			outline outline-1 outline-offset-[-1px] outline-cyan-800/30
-			flex justify-around items-center
+			flex justify-around items-center flex-1
 			uppercase ${rowColor}
 			${
 				isCurrentRound

@@ -49,20 +49,20 @@ export default function RankResultList({
         : [sortedPlayers];
 
     return (
-        <div className={`grid gap-4 w-full ${shouldSplit ? "lg:grid-cols-2" : "grid-cols-1"}`}>
+        <div className={`grid gap-4 w-full ${shouldSplit ? "lg:grid-cols-2" : "grid-cols-1"} flex flex-col flex-1 min-h-0 w-full`}>
             {columnGroups.map((group, groupIndex) => (
                 <div
                     key={groupIndex}
                     className="@container flex flex-col rounded-[12px] bg-surface-base border border-border-default/30 shadow-[0_0_10px_rgba(40,215,255,0.5)] overflow-hidden"
                 >
                     <div className="sticky top-0 z-10 h-[40px] grid grid-cols-[90px_minmax(0,400px)_1fr] items-center px-4
-                        uppercase text-heading-small text-text-primary/70 bg-surface-base bg-linear-to-t from-black to-surface-base">
+                        uppercase text-heading-small text-text-primary/70 bg-surface-base bg-linear-to-t from-black to-surface-base shrink-0">
                         <h1>Rank</h1>
                         <h1 className="px-8">Agent</h1>
                         <h1 className="flex justify-end">Total</h1>
                     </div>
 
-                    <div className={scrollable ? "h-[230px] lg:h-[600px] overflow-y-auto [scrollbar-gutter:stable]" : ""}>
+                    <div className={scrollable ? "h-[230px] lg:h-[600px] overflow-y-auto [scrollbar-gutter:stable] flex-1 min-h-0 flex flex-col" : ""}>
                         {group.map((result) => (
                             <RankResultRow
                                 key={result.player.username}

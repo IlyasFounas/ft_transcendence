@@ -22,7 +22,8 @@ export default function TotalScoreCard({points, distance} : TotalScoreCardProps)
 
 			outline outline-2 rounded-xl
 			outline-offset-[-2px] 
-			outline-cyan-400/60">
+			outline-cyan-400/60
+			bg-surface-base">
 			<h1 className="text-heading-medium">Total</h1>
 			<h1 className="text-heading-small">{points} pts</h1>
 			<h1 className="text-heading-small">{value} {unit}</h1>
