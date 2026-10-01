@@ -77,6 +77,7 @@ func (r *UserRepository) User(ctx context.Context, userId int64) (*users.User, e
 		Model(user).
 		Column("id", "name", "email", "is_verified", "avatar", "xp", "rank", "created_at").
 		Where("id = ?", userId).
+		Where("NOT u.is_admin").
 		Scan(ctx)
 	if err != nil {
 		return nil, err
@@ -90,6 +91,7 @@ func (r *UserRepository) Name(ctx context.Context, userId int64) (*string, error
 		Model(user).
 		Column("name").
 		Where("id = ?", userId).
+		Where("NOT u.is_admin").
 		Scan(ctx)
 	if err != nil {
 		return nil, err
@@ -142,6 +144,7 @@ func (r *UserRepository) Email(ctx context.Context, userId int64) (*string, erro
 		Model(user).
 		Column("email").
 		Where("id = ?", userId).
+		Where("NOT u.is_admin").
 		Scan(ctx)
 	if err != nil {
 		return nil, err
@@ -156,6 +159,7 @@ func (r *UserRepository) UserByName(ctx context.Context,
 		Model(user).
 		Column("id", "name", "email", "is_verified", "avatar", "xp", "rank", "created_at").
 		Where("name = ?", username).
+		Where("NOT u.is_admin").
 		Scan(ctx)
 	if err != nil {
 		return nil, err
@@ -419,6 +423,7 @@ func (r *UserRepository) Leaderboard(ctx context.Context) ([]Leaderboard, error)
 		ColumnExpr("u.name AS username").
 		ColumnExpr("u.rank AS rank").
 		ColumnExpr("u.xp AS total").
+		Where("NOT u.is_admin").
 		OrderExpr("u.xp DESC, u.name ASC").
 		Limit(100).
 		Scan(ctx, &rows)
@@ -437,7 +442,8 @@ func (r *UserRepository) UserLeaderboard(ctx context.Context, userId int64) ([]L
 		ColumnExpr("RANK() OVER (ORDER BY u.xp DESC) AS position").
 		ColumnExpr("u.name AS username").
 		ColumnExpr("u.rank AS rank").
-		ColumnExpr("u.xp AS total")
+		ColumnExpr("u.xp AS total").
+		Where("NOT u.is_admin")
 	var rows []Leaderboard
 	err := r.db.NewSelect().
 		TableExpr("(?) AS ranked", ranked).

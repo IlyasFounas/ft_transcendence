@@ -32,13 +32,11 @@ func registerUserRoutes(r *gin.Engine, h *handlers.UserHandler, ht *handlers.Tok
 		public.POST("/auth/login", h.Login())
 		public.GET("/auth/google", h.GoogleLogin())
 		public.GET("/auth/google/callback", h.GoogleCallback())
-		// BUGFIX: ces deux routes appelaient h.ActivationToken() / h.RefreshToken(),
-		// des méthodes qui n'existent pas sur UserHandler — elles vivent sur TokenHandler.
 		public.GET("/user/activation", ht.ActivationToken())
 		public.GET("/auth/refresh", ht.RefreshToken())
-		public.GET("/leaderboard", h.Leaderboard()) // 100 first players ranked by xp
+		public.GET("/leaderboard", h.Leaderboard())
 	}
-	// it's private because only a registred user can access it
+
 	private := r.Group("/")
 	private.Use(middleware.AuthMiddleWare())
 	{
@@ -46,7 +44,6 @@ func registerUserRoutes(r *gin.Engine, h *handlers.UserHandler, ht *handlers.Tok
 		private.GET("/user/name", h.Name())
 		private.GET("/user/login", h.Login())
 		private.GET("/user/email", h.Email())
-		// private.GET("/user/:username", h.UserByName())
 		private.PATCH("/user/name", h.SetName())
 		private.PATCH("/user/login", h.SetLogin())
 		private.PATCH("/user/avatar", h.SetAvatar())
@@ -55,10 +52,11 @@ func registerUserRoutes(r *gin.Engine, h *handlers.UserHandler, ht *handlers.Tok
 		private.GET("/user/xp/:username", h.XPByName())
 		private.GET("/leaderboard/user", h.UserLeaderboard()) // position, name and xp of the connected user
 	}
-	// only for the admins: AuthMiddleWare identifies the user, then AdminMiddleWare checks that he is an admin
+	
 	admin := r.Group("/")
 	admin.Use(middleware.AuthMiddleWare(), middleware.AdminMiddleWare())
 	{
+		admin.GET("/user/:username", h.UserByName())
 		// admin.PATCH("/admin/user/:id/xp", h.SetXP())
 	}
 }
