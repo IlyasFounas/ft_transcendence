@@ -129,10 +129,10 @@ func (h *UserHandler) jwtGeneration(c *gin.Context, userId int64) (*tokens.Activ
 }
 
 type CreateUserValidation struct {
-	Email   	string	`form:"email" validate:"required,max=254,email"`
-	Login	  	string 	`form:"login" validate:"required,min=3,max=30"`
-	Username	string 	`form:"username" validate:"required,min=3,max=30"`
-	Password	string 	`form:"password" validate:"required,min=8,max=50,strongpwd"`
+	Email   	string `validate:"required,max=254,email"`
+	Login	  	string `validate:"required,min=3,max=30,matches=^[a-zA-Z0-9_-]+$"`
+	Username	string `validate:"required,min=3,max=30,matches=^[a-zA-Z0-9_-]+$"`
+	Password	string `validate:"required,strongpwd"`
 }
 
 func (h *UserHandler) CreateUser() gin.HandlerFunc {

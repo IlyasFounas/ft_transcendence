@@ -9,7 +9,7 @@ var (
 	upperRegex = regexp.MustCompile(`[A-z]`)
 	lowerRegex = regexp.MustCompile(`[a-z]`)
 	numberRegex = regexp.MustCompile(`[0-9]`)
-	specialRegex = regexp.MustCompile(`[!@#~$%^&*()+|_{}\[\]:;"'<>,.?/]`)
+	specialRegex = regexp.MustCompile(`[^A-Za-z0-9]`)
 )
 
 func RegisterCustomRules(v *validator.Validate) {
