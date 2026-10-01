@@ -28,6 +28,7 @@ import (
 	"backend/internal/tools/token_generation"
 	"backend/internal/models/users/tokens"
 	"backend/internal/tools/rank_calculation"
+	"backend/internal/validation"
 )
 
 /**
@@ -45,6 +46,7 @@ import (
 	rTokenRepo   *repositories.RefreshTokenRepository
 	tokenHandler *TokenHandler
 	googleConf   *oauth2.Config
+	validate	 *validator.Validate
 }
 
 func NewUserHandler(
@@ -54,12 +56,17 @@ func NewUserHandler(
 	tokenHandler *TokenHandler,
 	googleConf *oauth2.Config,
 ) *UserHandler {
+
+	validate := validator.New()
+	validation.RegisterCustomRules(validate)
+
 	return &UserHandler{
 		userRepo:     userRepo,
 		aTokenRepo:   aTokenRepo,
 		rTokenRepo:   rTokenRepo,
 		tokenHandler: tokenHandler,
 		googleConf:   googleConf,
+		validate:	  validate,
 	}
 }
 
@@ -137,30 +144,44 @@ type CreateUserValidation struct {
 
 func (h *UserHandler) CreateUser() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		input := CreateUserValidation{
+			Email:		c.PostForm("email"),
+			Login:		c.PostForm("login"),
+			Username:	c.PostForm("username"),
+			Password:	c.PostForm("password"),
+		}
+
+		err := h.validate.Struct(input)
+		if err != nil {
+			c.JSON(http.StatusBadRequest,
+				gin.H{"message": "Invalid input."})
+			return
+		}
+
 		hashpassword, hashErr := encryption.HashPassword(c.PostForm("password"))
 		if hashErr != nil {
             c.JSON(http.StatusInternalServerError,
                 gin.H{"message": "Something went wrong. Please try again."})
 			return
 		}
-		login := c.PostForm("login")
-		username := c.PostForm("username")
-		email := c.PostForm("email")
-		if len(login) == 0 || len(username) == 0 ||
-			len(email) == 0 {
-		    c.JSON(http.StatusBadRequest,
-                gin.H{"message": "Please fill in all required fields."})
-			return
-		}
-		if len(username) == 0 {
-			username = "player"	
-		}
-		parsedEmail, err := mail.ParseAddress(email)
-		if err != nil {
-            c.JSON(http.StatusBadRequest,
-                gin.H{"message": "Please enter a valid email address."})
-			return
-		}
+		// login := c.PostForm("login")
+		// username := c.PostForm("username")
+		// email := c.PostForm("email")
+		// if len(login) == 0 || len(username) == 0 ||
+		// 	len(email) == 0 {
+		//     c.JSON(http.StatusBadRequest,
+        //         gin.H{"message": "Please fill in all required fields."})
+		// 	return
+		// }
+		// if len(username) == 0 {
+		// 	username = "player"	
+		// }
+		// parsedEmail, err := mail.ParseAddress(email)
+		// if err != nil {
+        //     c.JSON(http.StatusBadRequest,
+        //         gin.H{"message": "Please enter a valid email address."})
+		// 	return
+		// }
 		existingLogin, err := h.userRepo.ExistingLogin(c.Request.Context(), login)
 		if err != nil {
             c.JSON(http.StatusUnauthorized,
