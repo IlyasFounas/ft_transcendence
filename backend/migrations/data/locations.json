@@ -496,5 +496,35 @@
     "latitude": -0.18743898877517,
     "longitude": 35.264437479168,
     "country_code": "KE"
+  },
+  {
+    "mapillary_id": 1892292331344025,
+    "latitude": 17.717522599469007,
+    "longitude": 83.290446868461,
+    "country_code": "IN"
+  },
+  {
+    "mapillary_id": 1153163045200263,
+    "latitude": 18.4311943,
+    "longitude": 79.13379340000006,
+    "country_code": "IN"
+  },
+  {
+    "mapillary_id": 546482386531323,
+    "latitude": 23.717038699972008,
+    "longitude": 76.009432599972,
+    "country_code": "IN"
+  },
+  {
+    "mapillary_id": 136438475184621,
+    "latitude": 18.4320692,
+    "longitude": 79.12831519999997,
+    "country_code": "IN"
+  },
+  {
+    "mapillary_id": 920929704248148,
+    "latitude": 25.323875504184997,
+    "longitude": 82.995347501835,
+    "country_code": "IN"
   }
 ]
