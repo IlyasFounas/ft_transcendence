@@ -448,5 +448,53 @@
     "latitude": 34.7027947,
     "longitude": 135.49036769999998,
     "country_code": "JP"
+  },
+  {
+    "mapillary_id": 1707020993079062,
+    "latitude": 30.0193636,
+    "longitude": 30.9950088,
+    "country_code": "EG"
+  },
+  {
+    "mapillary_id": 1920902451973369,
+    "latitude": 28.4954696,
+    "longitude": 34.5147296,
+    "country_code": "EG"
+  },
+  {
+    "mapillary_id": 1144078642734411,
+    "latitude": 33.895079721728,
+    "longitude": 35.512323053587,
+    "country_code": "LB"
+  },
+  {
+    "mapillary_id": 525617741776651,
+    "latitude": 33.887483831389,
+    "longitude": 35.5509731825,
+    "country_code": "LB"
+  },
+  {
+    "mapillary_id": 2068402976844929,
+    "latitude": -0.1026583,
+    "longitude": 34.2757639,
+    "country_code": "KE"
+  },
+  {
+    "mapillary_id": 491797080149966,
+    "latitude": -0.2864992,
+    "longitude": 36.0632366,
+    "country_code": "KE"
+  },
+  {
+    "mapillary_id": 1753679382116480,
+    "latitude": -1.30715042,
+    "longitude": 36.789654130423,
+    "country_code": "KE"
+  },
+  {
+    "mapillary_id": 2356877544805792,
+    "latitude": -0.18743898877517,
+    "longitude": 35.264437479168,
+    "country_code": "KE"
   }
 ]
