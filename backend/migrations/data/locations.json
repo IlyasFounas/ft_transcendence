@@ -526,5 +526,35 @@
     "latitude": 25.323875504184997,
     "longitude": 82.995347501835,
     "country_code": "IN"
+  },
+  {
+    "mapillary_id": 725711762042074,
+    "latitude": 30.65422819997204,
+    "longitude": 104.089516,
+    "country_code": "CN"
+  },
+  {
+    "mapillary_id": 334141838852997,
+    "latitude": 26.89179620000003,
+    "longitude": 100.21510279997005,
+    "country_code": "CN"
+  },
+  {
+    "mapillary_id": 1421653865005250,
+    "latitude": 27.879838100000015,
+    "longitude": 102.26351599996997,
+    "country_code": "CN"
+  },
+  {
+    "mapillary_id": 3358559464381255,
+    "latitude": 30.19835640000001,
+    "longitude": 103.50817510000002,
+    "country_code": "CN"
+  },
+  {
+    "mapillary_id": 591539835459224,
+    "latitude": 30.13829989997201,
+    "longitude": 104.60309239997002,
+    "country_code": "CN"
   }
 ]
