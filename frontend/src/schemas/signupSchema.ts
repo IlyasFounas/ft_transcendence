@@ -3,16 +3,17 @@ import { z } from "zod";
 export const signupSchema = z.object({
     email: z
         .string()
-        .email("Please enter a valid email")
+        .trim() 
         .toLowerCase()
-        .trim(),
+        .max(254, "Email must be less than or equal to 254 characters")
+        .email("Please enter a valid email"),
 
     loginId: z
         .string()
         .trim()
         .toLowerCase()
         .min(3, "Login ID must be at least 3 characters")
-        .max(20, "Login ID must be at most 30 characters")
+        .max(30, "Login ID must be at most 30 characters")
         .regex(/^[a-zA-Z0-9_-]+$/,"Login ID can only contain letters, numbers, underscores, and hyphens"),
 
     username: z
