@@ -118,6 +118,7 @@ func (c *Chat) sendToClient(userId int64, friends []*friends.FriendResponse) {
 			Name:   friend.Name,
 			Avatar: friend.Avatar,
 			Online: c.IsOnline(friend.UserID),
+			// LastMessage: c.IsOnline(friend.UserID),
 		})
 	}
 	response := &Response{

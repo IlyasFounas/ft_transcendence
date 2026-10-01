@@ -160,21 +160,40 @@ func (r *LobbyRepository) NbGames(ctx context.Context,
 	return count, nil
 }
 
-func (r *LobbyRepository) Historic(ctx context.Context,
-	userId int64) ([]*games.Lobby, error){
-	var lobbies []*games.Lobby
-	err := r.db.NewSelect().
-		Model(&lobbies).
-		Relation("Game", func(q *bun.SelectQuery) *bun.SelectQuery {
-			return q.Where("finished_at IS NOT NULL")
-		}).
-		Where("lo.left_at IS NOT NULL").
+func (r *LobbyRepository) historicSubquery(userId int64) *bun.SelectQuery {
+	return r.db.NewSelect().
+		Model((*games.Lobby)(nil)).
+		Column("lo.game_id").
+		Join("JOIN game AS game ON game.id = lo.game_id").
 		Where("lo.user_id = ?", userId).
-		Scan(ctx)
+		Where("lo.kicked IS FALSE").
+		Where("game.finished_at IS NOT NULL").
+		Where("lo.left_at IS NOT NULL").
+		DistinctOn("lo.game_id").
+		Order("lo.game_id, lo.left_at DESC")
+}
+
+func (r *LobbyRepository) Historic(ctx context.Context,
+	userId int64) ([]*games.HistoricGames, error){
+	var gameHistoric []*games.HistoricGames
+	err := r.db.NewSelect().
+		Model((*games.Lobby)(nil)).
+		ColumnExpr("g.id as id").
+		ColumnExpr("COALESCE(SUM(gu.base_score), 0) as xp").
+		ColumnExpr("g.finished_at AS date").
+		With("sub", r.historicSubquery(userId)).
+		ModelTableExpr("sub AS lo").
+		Join("JOIN game AS g on g.id = lo.game_id").
+		Join("JOIN rounds AS r on r.game_id = g.id").
+    	Join("LEFT JOIN guesses AS gu ON gu.round_id = r.id AND gu.user_id = ?", userId).
+		GroupExpr("g.id, g.finished_at").
+		Order("g.finished_at DESC").
+		Limit(20).
+		Scan(ctx, &gameHistoric)
 	if err != nil {
 		return nil, err
 	}
-	return lobbies, nil
+	return gameHistoric, nil
 }
 
 func (r *LobbyRepository) JoinCode(ctx context.Context,
