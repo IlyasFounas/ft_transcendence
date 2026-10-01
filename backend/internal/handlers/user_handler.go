@@ -17,6 +17,7 @@ import (
 	"github.com/google/uuid"
 	"golang.org/x/oauth2"
 	"path/filepath"
+	"github.com/go-playground/validator/v10"
 
 	"backend/internal/models/users"
 	"backend/internal/repositories"
@@ -125,6 +126,13 @@ func (h *UserHandler) jwtGeneration(c *gin.Context, userId int64) (*tokens.Activ
 	cookie.Set(c, "/api", "Authorization",
 		tokenObj.Token, 15 * time.Minute, true)
 	return tokenObj, true
+}
+
+type CreateUserValidation struct {
+	Email   	string	`form:"email" validate:"required,max=254,email"`
+	Login	  	string 	`form:"login" validate:"required,min=3,max=30"`
+	Username	string 	`form:"username" validate:"required,min=3,max=30"`
+	Password	string 	`form:"password" validate:"required,min=8,max=50,strongpwd"`
 }
 
 func (h *UserHandler) CreateUser() gin.HandlerFunc {
