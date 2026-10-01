@@ -412,9 +412,6 @@ func (h *Hub) handleAction(ctx context.Context, data *DataInfos) {
 
 	case "start_round":
 		if data.Client != nil {
-			// TODO or if the client plays in singleplayer, rounds should not start automatically
-			
-			// client != nil > real client request
 			h.handleStartRound(ctx, data.Client)
 			return
 		}
@@ -628,8 +625,6 @@ func (h *Hub) StartRound(ctx context.Context,  userId, gameId, roundNb int64) {
 		RoundEndsAt: roundEndsAt,
 		MID:         MID, //TODO should be kept server side if we fetch through the proxy, not sent to clients
 	}
-
-	// h.armRoundTimer(ctx, userId, gameId, roundNb, remaining)
 	remaining := time.Until(roundEndsAt)
 	if remaining <= 0 {
 		// round has expired: end it immediately (the state is set just above because EndRound only ends the running round)
