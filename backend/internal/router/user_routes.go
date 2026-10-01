@@ -17,7 +17,8 @@ import (
  * are available and what endpoints they expose (e.g., /user/login to authenticate users).
  *
  * Note that endpoints under the private group are only accessible
- * when the user is authenticated.
+ * when the user is authenticated, and endpoints under the admin group
+ * only when the authenticated user is an admin.
  *
  * The difference between PUT and PATCH in the database:
  * PUT = modify a lot of field
@@ -54,6 +55,10 @@ func registerUserRoutes(r *gin.Engine, h *handlers.UserHandler, ht *handlers.Tok
 		private.GET("/user/xp/:username", h.XPByName())
 		private.GET("/leaderboard/user", h.UserLeaderboard()) // position, name and xp of the connected user
 	}
-	// TODO admin: to be enabled in the admin group (a user must not be able to set his own xp)
-	// admin.PATCH("/admin/user/:id/xp", h.SetXP())
+	// only for the admins: AuthMiddleWare identifies the user, then AdminMiddleWare checks that he is an admin
+	admin := r.Group("/")
+	admin.Use(middleware.AuthMiddleWare(), middleware.AdminMiddleWare())
+	{
+		// admin.PATCH("/admin/user/:id/xp", h.SetXP())
+	}
 }

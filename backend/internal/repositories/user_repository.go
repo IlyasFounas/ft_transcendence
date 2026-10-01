@@ -275,6 +275,15 @@ func (r *UserRepository) SetIsVerified(ctx context.Context, userId int64) error 
 	return nil
 }
 
+// Tells whether this userId is an admin
+func (r *UserRepository) IsAdmin(ctx context.Context, userId int64) (bool, error) {
+	return r.db.NewSelect().
+		Model((*users.User)(nil)).
+		Where("id = ?", userId).
+		Where("is_admin = ?", true).
+		Exists(ctx)
+}
+
 // Getter xp
 func (r *UserRepository) XP(ctx context.Context, userId int64) (int64, error) {
 	user := new(users.User)
