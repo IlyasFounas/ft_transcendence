@@ -71,7 +71,8 @@ export default function GamePlayPage() {
 	}, [lobbyInfos, round, startGame]);
 	
 	const handleSubmit = () => {
-		if (!guess || !round) return;
+		if (!guess || !round) 
+			return;
 		sendGuess(guess);
 		setHasGuessed(true);
 	};
@@ -168,7 +169,7 @@ export default function GamePlayPage() {
 							disabled={!guess || hasGuessed} 
 							onClick={handleSubmit}
 						>
-							{hasGuessed ? "Waiting for agents..." : "Submit"}
+							{hasGuessed ? "Waiting for other agents..." : "Submit"}
 						</PrimaryButton>
 					)}
 				</div>

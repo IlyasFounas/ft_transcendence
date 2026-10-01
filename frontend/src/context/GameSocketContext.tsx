@@ -32,9 +32,11 @@ interface RoundInfo {
 }
 
 interface RoundResultBroadcast {
-	results: PlayerRoundResult[];
-	is_last_round: boolean;
-	next_round_at: string | null;
+    round_nb: number;
+    base: { lat: number; long: number; country_code: string }; 
+    results: PlayerRoundResult[];
+    is_last_round: boolean;
+    next_round_at: string | null;
 }
 
 interface GameSocketContextType {
@@ -143,56 +145,41 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
 				const data = message.payload as RoundResultBroadcast;
 				const own = data.results.find((r) => r.user_id === user.ID);
 				
-				if (own && own.round_infos) {
+				if (own && own.has_guessed && own.round_infos) {
 					setRoundHistory((prev) => [
 						...prev,
 						{
-							round: own.round_nb,
-							points: own.round_infos!.score,
-							distance: own.round_infos!.distance,
+							round: data.round_nb,
+							points: own.round_infos.score,
+							distance: own.round_infos.distance,
 							guessLocation: {
-								latitude: own.round_infos!.guess.lat,
-								longitude: own.round_infos!.guess.long,
+								latitude: own.round_infos.guess.lat,
+								longitude: own.round_infos.guess.long,
 							},
 						},
 					]);
-
-					setLastRoundResult({
-						isLastRound: data.is_last_round,
-						nextRoundAt: data.next_round_at,
-						actualLocation: {
-							latitude: own.round_infos.base.lat,
-							longitude: own.round_infos.base.long,
+				} else {
+					setRoundHistory((prev) => [
+						...prev,
+						{
+							round: data.round_nb,
+							points: 0,
+							distance: 0,
+							guessLocation: { latitude: 0, longitude: 0 }, 
 						},
-						allResults: data.results,
-					});
+					]);
 				}
-				else {
-					const playerWithInfos = data.results.find(r => r.round_infos);
-					const actualLat = playerWithInfos ? playerWithInfos.round_infos.base.lat : 0;
-					const actualLng = playerWithInfos ? playerWithInfos.round_infos.base.long : 0;
-
-				setRoundHistory((prev) => [
-					...prev,
-					{
-						round: own.round_nb,
-						points: 0,
-						distance: 0,
-						guessLocation: { latitude: 0, longitude: 0 }, 
-					},
-				]);
 
 				setLastRoundResult({
 					isLastRound: data.is_last_round,
 					nextRoundAt: data.next_round_at,
 					actualLocation: {
-						latitude: actualLat,
-						longitude: actualLng,
+						latitude: data.base.lat,
+						longitude: data.base.long,
 					},
 					allResults: data.results,
 				});
 			}
-		};
 
 		socket.onerror = (err) => console.log("WS error:", err);
 
@@ -219,8 +206,17 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
 	}
 
 	function sendGuess(guess: { lat: number; lng: number }) {
-		if (!round) return;
 		
+		if (!round) {
+            console.warn("❌ Clic refusé : aucun round actif");
+            return;
+        }
+
+        if (typeof guess.lat !== 'number' || typeof guess.lng !== 'number' || isNaN(guess.lat) || isNaN(guess.lng)) {
+            console.error("❌ Clic refusé : coordonnées invalides", guess);
+            return;
+        }
+
 		socketRef.current?.send(JSON.stringify({
 			action: "guess",
 			payload: {
