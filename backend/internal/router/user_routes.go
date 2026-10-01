@@ -57,6 +57,5 @@ func registerUserRoutes(r *gin.Engine, h *handlers.UserHandler, ht *handlers.Tok
 	admin.Use(middleware.AuthMiddleWare(), middleware.AdminMiddleWare())
 	{
 		admin.GET("/user/:username", h.UserByName())
-		// admin.PATCH("/admin/user/:id/xp", h.SetXP())
 	}
 }

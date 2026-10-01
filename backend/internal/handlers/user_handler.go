@@ -645,33 +645,6 @@ func (h *UserHandler) XPByName() gin.HandlerFunc {
 	}
 }
 
-// SetXP replaces the xp of a user (form field "xp").
-func (h *UserHandler) SetXP() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		userId, err := strconv.ParseInt(c.Param("id"), 10, 64)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"message": "invalid user id"})
-			return
-		}
-		xp, err := strconv.ParseInt(c.PostForm("xp"), 10, 64)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"message": "invalid xp"})
-			return
-		}
-		updated, err := h.userRepo.SetXP(c.Request.Context(), userId, xp)
-		if err != nil {
-			log.Printf("error : %s\n", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "Something went wrong"})
-			return
-		}
-		if !updated {
-			c.JSON(http.StatusBadRequest, gin.H{"message": "The xp can't be negative"})
-			return
-		}
-		c.JSON(http.StatusOK, gin.H{"message": "success"})
-	}
-}
-
 // Leaderboard returns the 100 first players ranked by xp
 func (h *UserHandler) Leaderboard() gin.HandlerFunc {
 	return func(c *gin.Context) {
