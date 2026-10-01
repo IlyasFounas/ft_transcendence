@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	upperRegex = regexp.MustCompile(`[A-z]`)
+	upperRegex = regexp.MustCompile(`[A-Z]`)
 	lowerRegex = regexp.MustCompile(`[a-z]`)
 	numberRegex = regexp.MustCompile(`[0-9]`)
 	specialRegex = regexp.MustCompile(`[^A-Za-z0-9]`)
