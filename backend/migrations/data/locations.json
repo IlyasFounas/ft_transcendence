@@ -556,5 +556,11 @@
     "latitude": 30.13829989997201,
     "longitude": 104.60309239997002,
     "country_code": "CN"
+  },
+  {
+    "mapillary_id": 1257781476446075,
+    "latitude": 37.575589628,
+    "longitude": 127.01060115999985,
+    "country_code": "KR"
   }
 ]
