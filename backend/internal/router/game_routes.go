@@ -32,6 +32,6 @@ func registerGameRoutes(r *gin.Engine, h *handlers.GameHandler) {
 	admin := r.Group("/")
 	admin.Use(middleware.AuthMiddleWare(), middleware.AdminMiddleWare())
 	{
-		admin.PATCH("/game/:id/finished", h.SetFinished())
+		admin.PATCH("/admin/game/:id/finished", h.SetFinished())
 	}
 }
