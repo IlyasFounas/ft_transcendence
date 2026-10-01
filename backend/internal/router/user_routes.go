@@ -56,6 +56,6 @@ func registerUserRoutes(r *gin.Engine, h *handlers.UserHandler, ht *handlers.Tok
 	admin := r.Group("/")
 	admin.Use(middleware.AuthMiddleWare(), middleware.AdminMiddleWare())
 	{
-		admin.GET("/user/:username", h.UserByName())
+		admin.GET("/admin/user/:username", h.UserByName())
 	}
 }
