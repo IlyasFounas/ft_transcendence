@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"strings"
-	"net/mail"
+	// "net/mail"
 	"crypto/sha256"
 	"log"
 	"fmt"
@@ -28,7 +28,7 @@ import (
 	"backend/internal/tools/token_generation"
 	"backend/internal/models/users/tokens"
 	"backend/internal/tools/rank_calculation"
-	"backend/internal/validation"
+	"backend/internal/tools/validation"
 )
 
 /**
@@ -145,20 +145,18 @@ type CreateUserValidation struct {
 func (h *UserHandler) CreateUser() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		input := CreateUserValidation{
-			Email:		c.PostForm("email"),
-			Login:		c.PostForm("login"),
-			Username:	c.PostForm("username"),
+			Email:		strings.ToLower(strings.TrimSpace(c.PostForm("email"))),
+			Login:		strings.ToLower(strings.TrimSpace(c.PostForm("login"))),
+			Username:	strings.ToLower(strings.TrimSpace(c.PostForm("username"))),
 			Password:	c.PostForm("password"),
 		}
-
 		err := h.validate.Struct(input)
 		if err != nil {
 			c.JSON(http.StatusBadRequest,
 				gin.H{"message": "Invalid input."})
 			return
 		}
-
-		hashpassword, hashErr := encryption.HashPassword(c.PostForm("password"))
+		hashpassword, hashErr := encryption.HashPassword(input.Password)
 		if hashErr != nil {
             c.JSON(http.StatusInternalServerError,
                 gin.H{"message": "Something went wrong. Please try again."})
@@ -182,7 +180,7 @@ func (h *UserHandler) CreateUser() gin.HandlerFunc {
         //         gin.H{"message": "Please enter a valid email address."})
 		// 	return
 		// }
-		existingLogin, err := h.userRepo.ExistingLogin(c.Request.Context(), login)
+		existingLogin, err := h.userRepo.ExistingLogin(c.Request.Context(), input.Login)
 		if err != nil {
             c.JSON(http.StatusUnauthorized,
                 gin.H{"message": "Something went wrong. Please try again."})
@@ -193,7 +191,7 @@ func (h *UserHandler) CreateUser() gin.HandlerFunc {
                 gin.H{"message": "This login or this username are unavailable. Please try another one."})
 			return
 		}
-		existingUsername, err := h.userRepo.ExistingName(c.Request.Context(), username)
+		existingUsername, err := h.userRepo.ExistingName(c.Request.Context(), input.Username)
 		if err != nil {
             c.JSON(http.StatusUnauthorized,
                 gin.H{"message": "Something went wrong. Please try again."})
@@ -204,10 +202,10 @@ func (h *UserHandler) CreateUser() gin.HandlerFunc {
                 gin.H{"message": "This username is unavailable. Please try another one."})
 			return
 		}		 
-		userObj := &users.User{Login: &login,
+		userObj := &users.User{Login: &input.Login,
 			Password:    &hashpassword,
-			Username:    strings.ToLower(username),
-			Email:       strings.ToLower(parsedEmail.Address),
+			Username:    input.Username,
+			Email:       input.Email,
 			Is_verified: false}
 		// check if the email is correct
 		user, err := h.userRepo.CreateUser(c.Request.Context(), userObj)
