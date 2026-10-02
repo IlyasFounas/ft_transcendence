@@ -531,6 +531,11 @@ func (h *UserHandler) UserByName() gin.HandlerFunc {
 }
 
 // Setters
+
+type SetNameValidation struct {
+	Username	string `validate:"required,min=3,max=30,acceptChar"`
+}
+
 func (h *UserHandler) SetName() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userId, ok := c.Get("userId")
@@ -539,7 +544,16 @@ func (h *UserHandler) SetName() gin.HandlerFunc {
 				gin.H{"message": "The user id is empty"})
 			return
 		}
-		state, err := h.userRepo.SetName(c.Request.Context(), userId.(int64), c.PostForm("name"))
+		input := SetNameValidation {
+			Username: strings.ToLower(strings.TrimSpace(c.PostForm("name"))),
+		}
+		err := h.validate.Struct(input)
+		if err != nil {
+			c.JSON(http.StatusBadRequest,
+				gin.H{"message": "Invalid input."})
+			return
+		}
+		state, err := h.userRepo.SetName(c.Request.Context(), userId.(int64), input.Username)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"message": "failed"})
 			return
