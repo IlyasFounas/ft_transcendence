@@ -224,10 +224,25 @@ func (h *UserHandler) CreateUser() gin.HandlerFunc {
 	}
 }
 
+type LoginValidation struct {
+	Login	  	string `validate:"required"`
+	Password	string `validate:"required"`
+}
+
 func (h *UserHandler) Login() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		input := LoginValidation {
+			Login:		strings.ToLower(strings.TrimSpace(c.PostForm("login"))),
+			Password:	c.PostForm("password"),
+		}
+		err := h.validate.Struct(input)
+		if err != nil {
+			c.JSON(http.StatusBadRequest,
+				gin.H{"message": "Invalid input."})
+			return
+		}
 		state, userId, err := h.userRepo.LoginUser(c.Request.Context(),
-			c.PostForm("login"), c.PostForm("password"))
+			input.Login, input.Password)
 		if err != nil && userId != 0 {
 			expiresAt := time.Now().Add(24 * time.Hour)
 			if err := h.createActivationToken(c, expiresAt, userId); err != nil {
