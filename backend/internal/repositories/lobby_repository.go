@@ -170,7 +170,7 @@ func (r *LobbyRepository) historicSubquery(userId int64) *bun.SelectQuery {
 		Where("game.finished_at IS NOT NULL").
 		Where("lo.left_at IS NOT NULL").
 		DistinctOn("lo.game_id").
-		Order("lo.game_id, lo.left_at DESC")
+		Order("lo.game_id", "lo.left_at DESC")
 }
 
 func (r *LobbyRepository) Historic(ctx context.Context,
