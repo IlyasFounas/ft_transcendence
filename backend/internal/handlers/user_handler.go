@@ -137,8 +137,8 @@ func (h *UserHandler) jwtGeneration(c *gin.Context, userId int64) (*tokens.Activ
 
 type CreateUserValidation struct {
 	Email   	string `validate:"required,max=254,email"`
-	Login	  	string `validate:"required,min=3,max=30,matches=^[a-zA-Z0-9_-]+$"`
-	Username	string `validate:"required,min=3,max=30,matches=^[a-zA-Z0-9_-]+$"`
+	Login	  	string `validate:"required,min=3,max=30,acceptChar"`
+	Username	string `validate:"required,min=3,max=30,acceptChar"`
 	Password	string `validate:"required,strongpwd"`
 }
 

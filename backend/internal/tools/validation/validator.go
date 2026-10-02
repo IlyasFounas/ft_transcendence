@@ -10,6 +10,7 @@ var (
 	lowerRegex = regexp.MustCompile(`[a-z]`)
 	numberRegex = regexp.MustCompile(`[0-9]`)
 	specialRegex = regexp.MustCompile(`[^A-Za-z0-9]`)
+	acceptCharRegex = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
 )
 
 func RegisterCustomRules(v *validator.Validate) {
@@ -22,4 +23,8 @@ func RegisterCustomRules(v *validator.Validate) {
 			numberRegex.MatchString(password) &&
 			specialRegex.MatchString(password)
 	})
+
+	v.RegisterValidation("acceptChar", func(fl validator.FieldLevel) bool {
+        return acceptCharRegex.MatchString(fl.Field().String())
+    })
 }
