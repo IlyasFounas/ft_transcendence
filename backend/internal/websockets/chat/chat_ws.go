@@ -72,11 +72,12 @@ type DataInfos struct {
 }
 
 type ChatFriend struct {
-	ID     int64   `json:"id"`
-	UserID int64   `json:"user_id"`
-	Name   string  `json:"name"`
-	Avatar *string `json:"avatar"`
-	Online bool    `json:"online"`
+	ID     		int64   `json:"id"`
+	UserID 		int64   `json:"user_id"`
+	Name   		string  `json:"name"`
+	Avatar 		*string `json:"avatar"`
+	Online 		bool    `json:"online"`
+	LastMessage string  `json:"last_message"`
 }
 
 func NewChat(
@@ -109,16 +110,17 @@ func (c *Chat) IsOnline(userId int64) bool {
 	return true
 }
 
-func (c *Chat) sendToClient(userId int64, friends []*friends.FriendResponse) {
+func (c *Chat) sendToClient(ctx context.Context, userId int64, friends []*friends.FriendResponse) {
 	friendsList := make([]ChatFriend, 0, len(friends))
 	for _, friend := range friends {
+		lastMessage := c.ChatHandler.LastFriendMessage(ctx, userId, friend.UserID)
 		friendsList = append(friendsList, ChatFriend{
 			ID:     friend.ID,
 			UserID: friend.UserID,
 			Name:   friend.Name,
 			Avatar: friend.Avatar,
 			Online: c.IsOnline(friend.UserID),
-			// LastMessage: c.IsOnline(friend.UserID),
+			LastMessage: lastMessage,
 		})
 	}
 	response := &Response{
@@ -361,7 +363,7 @@ func (c *Chat) Run(ctx context.Context, wg *sync.WaitGroup) {
 			if !ok {
 				continue
 			}
-			c.sendToClient(client.UserId, friends)
+			c.sendToClient(ctx, client.UserId, friends)
 			user, ok := c.ChatHandler.GetUser(ctx, client.UserId)
 			if !ok {
 				continue
