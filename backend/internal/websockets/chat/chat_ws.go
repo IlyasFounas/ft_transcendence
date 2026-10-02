@@ -113,14 +113,13 @@ func (c *Chat) IsOnline(userId int64) bool {
 func (c *Chat) sendToClient(ctx context.Context, userId int64, friends []*friends.FriendResponse) {
 	friendsList := make([]ChatFriend, 0, len(friends))
 	for _, friend := range friends {
-		lastMessage := c.ChatHandler.LastFriendMessage(ctx, userId, friend.UserID)
 		friendsList = append(friendsList, ChatFriend{
 			ID:     friend.ID,
 			UserID: friend.UserID,
 			Name:   friend.Name,
 			Avatar: friend.Avatar,
 			Online: c.IsOnline(friend.UserID),
-			LastMessage: lastMessage,
+			LastMessage: c.ChatHandler.LastFriendMessage(ctx, userId, friend.UserID),
 		})
 	}
 	response := &Response{
@@ -149,15 +148,6 @@ func (c *Chat) sendClientState(user *users.User, ctx context.Context) {
 		Avatar: user.Avatar,
 		Online: c.IsOnline(user.ID),
 	}
-	response := &Response{
-		Action: "friend_list",
-		Payload: friendLeft,
-	}
-	data, err := json.Marshal(response)
-	if err != nil {
-		log.Printf("error : %s\n", err)
-		return
-	}
 	for _, clients := range c.Clients {
 		for client := range clients {
 			friends, ok := c.ChatHandler.FriendList(ctx, client.UserId)
@@ -166,6 +156,16 @@ func (c *Chat) sendClientState(user *users.User, ctx context.Context) {
 			}
 			for _, friend := range friends {
 				if friend.UserID == friendLeft.ID {
+					friendLeft.LastMessage = c.ChatHandler.LastFriendMessage(ctx, client.UserId, friend.UserID)
+					response := &Response{
+						Action: "friend_list",
+						Payload: friendLeft,
+					}
+					data, err := json.Marshal(response)
+					if err != nil {
+						log.Printf("error : %s\n", err)
+						return
+					}
 					select {
 					case client.Connx.Send <- data:
 					default:
