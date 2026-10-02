@@ -153,7 +153,7 @@ func (h *UserHandler) CreateUser() gin.HandlerFunc {
 		err := h.validate.Struct(input)
 		if err != nil {
 			c.JSON(http.StatusBadRequest,
-				gin.H{"message": "Invalid input."})
+				gin.H{"message": validation.FormatErrors(err)})
 			return
 		}
 		hashpassword, hashErr := encryption.HashPassword(input.Password)
@@ -238,7 +238,7 @@ func (h *UserHandler) Login() gin.HandlerFunc {
 		err := h.validate.Struct(input)
 		if err != nil {
 			c.JSON(http.StatusBadRequest,
-				gin.H{"message": "Invalid input."})
+				gin.H{"message": validation.FormatErrors(err)})
 			return
 		}
 		state, userId, err := h.userRepo.LoginUser(c.Request.Context(),
@@ -550,7 +550,7 @@ func (h *UserHandler) SetName() gin.HandlerFunc {
 		err := h.validate.Struct(input)
 		if err != nil {
 			c.JSON(http.StatusBadRequest,
-				gin.H{"message": "Invalid input."})
+				gin.H{"message": validation.FormatErrors(err)})
 			return
 		}
 		state, err := h.userRepo.SetName(c.Request.Context(), userId.(int64), input.Username)
