@@ -11,9 +11,10 @@ type Props = {
 	gameId: number;
 	round: number;
 	totalRounds: number;
+	onLeave: () => void;
 };
 
-export default function GameBar({countdown, totalTime, gameId, round, totalRounds} : Props)
+export default function GameBar({countdown, totalTime, gameId, round, totalRounds, onLeave} : Props)
 {
 	return (
 		<div className="
@@ -59,7 +60,8 @@ export default function GameBar({countdown, totalTime, gameId, round, totalRound
 						hover:brightness-100
 						
 						active:scale-[0.9]
-						">
+						"
+						onClick={onLeave}>
 						<LogOut></LogOut>
 					</button>
 				</div>

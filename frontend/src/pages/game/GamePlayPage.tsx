@@ -12,7 +12,7 @@ import { useLobbySocket } from "../../context/GameSocketContext";
 export default function GamePlayPage() {
 	const [countdown, setCountDown] = useState(0);
 	const [isMapMain, setIsMapMain] = useState(false);
-	const { round, roundHistory, lastRoundResult, sendGuess, startGame, lobbyInfos, players } = useLobbySocket();
+	const { round, roundHistory, lastRoundResult, sendGuess, startGame, leaveGame, resetGame, lobbyInfos, players } = useLobbySocket();
 	const [guess, setGuess] = useState<{ lat: number; lng: number } | null>(null);
 	const navigate = useNavigate();
 	const [hasGuessed, setHasGuessed] = useState(false);
@@ -77,6 +77,12 @@ export default function GamePlayPage() {
 		setHasGuessed(true);
 	};
 
+	const handleLeave = () => {
+		leaveGame();
+		resetGame();
+		navigate("/"); 
+	}
+
 	if (!round) {
 		return <div className="h-screen w-full flex items-center justify-center text-white">Loading mission...</div>;
 	}
@@ -90,6 +96,7 @@ export default function GamePlayPage() {
 					totalTime={lobbyInfos?.timer ?? 120}
 					round={round.round_nb}
 					countdown={countdown}
+					onLeave={handleLeave}
 				/>
 			</div>
 
@@ -204,7 +211,7 @@ export default function GamePlayPage() {
 						</div>
 					</div>
 				)}
-				<div className="absolute left-1/2 -translate-x-1/2 top-5 lg:hidden z-1000">
+				<div className="absolute left-1/2 -translate-x-1/2 top-15 lg:hidden z-1000">
 					<Countdown countdown={countdown}/>
 				</div>
 			</div>

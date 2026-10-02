@@ -46,6 +46,7 @@ interface GameSocketContextType {
 	isClosed: boolean;
 	isCurrentUserHost: boolean;
 	leaveLobby: () => void;
+	leaveGame: () => void;
 	kickPlayer: (targetId: number) => void;
 	sendGuess: (guess: { lat: number; lng: number }) => void;
 	startGame: () => void;
@@ -70,6 +71,7 @@ const GameSocketContext = createContext<GameSocketContextType>({
 	isClosed: false,
 	isCurrentUserHost: false,
 	leaveLobby: () => {},
+	leaveGame: () => {},
 	kickPlayer: () => {},
 	sendGuess: () => {},
 	startGame: () => {},
@@ -205,15 +207,17 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
 		socketRef.current?.send(JSON.stringify({ action: "leave", payload: "" }));
 	}
 
+	function leaveGame() {
+    	socketRef.current?.send(JSON.stringify({ action: "leave", payload: "" }));
+}	
+
 	function sendGuess(guess: { lat: number; lng: number }) {
 		
 		if (!round) {
-            console.warn("❌ Clic refusé : aucun round actif");
             return;
         }
 
         if (typeof guess.lat !== 'number' || typeof guess.lng !== 'number' || isNaN(guess.lat) || isNaN(guess.lng)) {
-            console.error("❌ Clic refusé : coordonnées invalides", guess);
             return;
         }
 
@@ -269,7 +273,7 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
 
 	return (
 		<GameSocketContext.Provider
-		value={{ players, lobbyInfos, isConnected, isClosed, isCurrentUserHost, leaveLobby, kickPlayer, startGame, startNextRound, round, roundHistory, lastRoundResult, sendGuess, connect, resetGame, gameStartAt}}
+		value={{ players, lobbyInfos, isConnected, isClosed, isCurrentUserHost, leaveLobby, leaveGame, kickPlayer, startGame, startNextRound, round, roundHistory, lastRoundResult, sendGuess, connect, resetGame, gameStartAt}}
 		>
 		{children}
 		</GameSocketContext.Provider>
