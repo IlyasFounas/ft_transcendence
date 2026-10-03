@@ -698,30 +698,42 @@ func (h *Hub) abortGame(ctx context.Context, gameId int64, roundNb int64, solo b
 	}
 }
 
-// roundResults reads from the database everything EndRound needs: the results of every player still in the game
-// for the round roundNb, and whether it was the last round. The first error stops it.
-func (h *Hub) roundResults(ctx context.Context, gameId, roundNb int64) (*ws_handlers.RoundResult, bool, error) {
+// Retrieves from the database everything EndRound needs:
+// - the results of every player still in the game for the round specified
+// - whether it was the last round
+// - the results of every round of the game (if last round)
+func (h *Hub) roundResults(ctx context.Context, gameId, roundNb int64) (*ws_handlers.RoundResult,
+	[]ws_handlers.RoundResult, bool, error) {
 	roundID, err := h.GuessWsHandler.ResolveRoundID(ctx, gameId, roundNb)
 	if err != nil {
-		return nil, false, err
+		return nil, nil, false, err
 	}
 	activePlayers, err := h.LobbyRepo.AllPlayers(ctx, gameId)
 	if err != nil {
-		return nil, false, err
+		return nil, nil, false, err
 	}
 	roundGuesses, err := h.GuessWsHandler.GetRoundGuesses(ctx, roundID)
 	if err != nil {
-		return nil, false, err
+		return nil, nil, false, err
 	}
 	results, err := h.GuessWsHandler.BuildRoundResults(ctx, gameId, roundID, roundNb, activePlayers, roundGuesses)
 	if err != nil {
-		return nil, false, err
+		return nil, nil, false, err
 	}
 	isLastRound, err := h.GuessWsHandler.IsLastRound(ctx, gameId, roundNb)
 	if err != nil {
-		return nil, false, err
+		return nil, nil, false, err
 	}
-	return results, isLastRound, nil
+	if !isLastRound {
+		return results, nil, false, nil
+	}
+	// last round: this one first (already built above), then the rounds before it, down to round 1
+	previousRounds, err := h.GuessWsHandler.BuildGameResults(ctx, gameId, roundNb-1, activePlayers)
+	if err != nil {
+		return nil, nil, false, err
+	}
+	gameResults := append([]ws_handlers.RoundResult{*results}, previousRounds...)
+	return results, gameResults, true, nil
 }
 
 // Finalises the round roundNb: broadcasts the results of ALL active players (whether they guessed or not), then,
@@ -743,7 +755,7 @@ func (h *Hub) EndRound(ctx context.Context, userId, gameId, roundNb int64) {
 		delete(h.GameTimers, gameId)
 	}
 
-	results, isLastRound, err := h.roundResults(ctx, gameId, roundNb)
+	results, gameResults, isLastRound, err := h.roundResults(ctx, gameId, roundNb)
 	if err == nil && isLastRound {
 		// the game is over: finished_at is set (retried below with the rest for about a minute if it fails;
 		// calling it again changes nothing). The players are updated separately, after this loop.
@@ -773,9 +785,9 @@ func (h *Hub) EndRound(ctx context.Context, userId, gameId, roundNb int64) {
 		h.LobbyWsHandler.CloseLobby(ctx, gameId, h.connectedPlayers(gameId))
 	}
 
-	broadcastPayload := RoundResultBroadcast{RoundResult: *results, IsLastRound: isLastRound}
+	broadcastPayload := RoundResultBroadcast{RoundResult: *results}
 	// after the last round the state has no phase anymore: the game is over
-	next := &gameRoundState{Solo: solo, RoundNb: roundNb, LastResults: results}
+	next := &gameRoundState{Solo: solo, RoundNb: roundNb, LastResults: results, GameResults: gameResults}
 	if !isLastRound {
 		next.Phase = phasePause
 		if !solo {
@@ -788,7 +800,12 @@ func (h *Hub) EndRound(ctx context.Context, userId, gameId, roundNb int64) {
 	}
 	h.RoundState[gameId] = next
 
-	h.broadcast(gameId, WsMessage{Action: "round_results", Payload: broadcastPayload})
+	if isLastRound {
+		// the last round ends the game: the players get the results of every round (this one is the first of them)
+		h.broadcast(gameId, WsMessage{Action: "game_results", Payload: GameResultsBroadcast{Rounds: gameResults}})
+	} else {
+		h.broadcast(gameId, WsMessage{Action: "round_results", Payload: broadcastPayload})
+	}
 
 	if isLastRound && len(h.Clients[gameId]) == 0 {
 		// the game ended with nobody connected (everyone lost his connection): no disconnection will come
