@@ -78,14 +78,17 @@ type RoundStartedBroadcast struct {
 
 // It shares the results of the round to all players, even those who did not guess (they will see their own result as "not guessed").
 // The results are sorted by player ID for consistency across clients.
-// It is shared at the end of a round, with an indication of whether it was the last round or not :
-// 	-> multiplayer, not the last round: NextRoundAt is provided as an absolute timestamp for when the next round will start.
-// 	-> solo, not the last round: NextRoundAt is omitted, the player starts the next round himself with a "start_round" action.
-// It will be nil or omitted if IsLastRound is true.
+// It is shared at the end of every round but the last one:
+// 	-> multiplayer: NextRoundAt is provided as an absolute timestamp for when the next round will start.
+// 	-> solo: NextRoundAt is omitted, the player starts the next round himself with a "start_round" action.
 type RoundResultBroadcast struct {
 	ws_handlers.RoundResult
-	IsLastRound bool       `json:"is_last_round"`
 	NextRoundAt *time.Time `json:"next_round_at,omitempty"`
+}
+
+// Contains the esults of EVERY round of the game in decreased order
+type GameResultsBroadcast struct {
+	Rounds []ws_handlers.RoundResult `json:"rounds"`
 }
 
 // encapsulation of the message sent to the client, with an action and a payload interface{}
@@ -114,6 +117,7 @@ type gameRoundState struct {
 	EndRetries	int // failed attempts to end the running round so far (see EndRound)
 	NextRoundAt	time.Time // multiplayer only, valid when Phase == Pause: when the next round starts (zero otherwise)
 	LastResults	*ws_handlers.RoundResult // results of the round that just ended (pause after a round, game over); nil before round 1, or if the game was stopped
+	GameResults	[]ws_handlers.RoundResult // game over: results of every round of the game (resent to a second tab on the final results)
 	MID			int64 // the Mapillary ID of the location for the current round, valid when Phase == Playing
 }
 
@@ -297,8 +301,8 @@ func (h *Hub) resyncClient(ctx context.Context, client *ClientHub) {
 			return
 		}
 		h.sendToClient(client, WsMessage{
-			Action:  "round_results",
-			Payload: RoundResultBroadcast{RoundResult: *state.LastResults, IsLastRound: true},
+			Action:  "game_results",
+			Payload: GameResultsBroadcast{Rounds: state.GameResults},
 		})
 	}
 }
