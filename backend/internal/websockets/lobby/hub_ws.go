@@ -430,7 +430,7 @@ func (h *Hub) handleAction(ctx context.Context, data *DataInfos) {
 		}
 		// only start the round the game is really waiting for (ignores a stale timer)
 		if roundNb, ok := h.nextRoundToStart(evt.GameId); ok && roundNb == evt.RoundNb {
-			h.StartRound(ctx, data.Client.UserId, evt.GameId, evt.RoundNb)
+			h.StartRound(ctx, evt.GameId, evt.RoundNb)
 		}
 
 	case "round_timeout":
@@ -444,7 +444,7 @@ func (h *Hub) handleAction(ctx context.Context, data *DataInfos) {
 			log.Printf("error : %s\n", err)
 			return
 		}
-		h.EndRound(ctx, data.Client.UserId, evt.GameId, evt.RoundNb)
+		h.EndRound(ctx, evt.GameId, evt.RoundNb)
 
 	case "finished":
 		// each player leaves the finished game on his own
@@ -511,7 +511,7 @@ func (h *Hub) handleGuess(ctx context.Context, data *DataInfos) {
 		}
 	}
 	if guessed >= len(activePlayers) {
-		h.EndRound(ctx, data.Client.UserId, data.Client.GameId, createdGuess.RoundNb)
+		h.EndRound(ctx, data.Client.GameId, createdGuess.RoundNb)
 	}
 }
 
@@ -558,9 +558,9 @@ func (h *Hub) handleStartGame(ctx context.Context, client *ClientHub) {
 	h.broadcast(gameId, gameStartedMessage(state))
 
 	if state.Solo {
-		h.StartRound(ctx, client.UserId, gameId, 1)
+		h.StartRound(ctx, gameId, 1)
 	} else {
-		h.armTimer(ctx, client.UserId, gameId, time.Until(state.NextRoundAt), "start_round", 1)
+		h.armTimer(ctx, gameId, time.Until(state.NextRoundAt), "start_round", 1)
 	}
 }
 
@@ -587,7 +587,7 @@ func (h *Hub) handleStartRound(ctx context.Context, client *ClientHub) {
 		h.sendError(client, "there is no round to start")
 		return
 	}
-	h.StartRound(ctx, client.UserId, client.GameId, roundNb)
+	h.StartRound(ctx, client.GameId, roundNb)
 }
 
 // gameStartedMessage builds the "game_started" message from the game's state
@@ -605,7 +605,7 @@ func gameStartedMessage(state *gameRoundState) WsMessage {
 // If the round has already expired (remaining <= 0), it immediately ends the round instead of arming a negative timer:
 // a round that already existed (ex: a start that failed halfway and was retried later) never gets more time than expected,
 // and all clients stay synchronized with the actual round start time.
-func (h *Hub) StartRound(ctx context.Context,  userId, gameId, roundNb int64) {
+func (h *Hub) StartRound(ctx context.Context, gameId, roundNb int64) {
 	round, err := h.GuessWsHandler.EnsureRound(ctx, gameId, roundNb)
 	if err != nil {
 		log.Printf("error starting round: %s\n", err)
@@ -637,11 +637,11 @@ func (h *Hub) StartRound(ctx context.Context,  userId, gameId, roundNb int64) {
 	remaining := time.Until(roundEndsAt)
 	if remaining <= 0 {
 		// round has expired: end it immediately (the state is set just above because EndRound only ends the running round)
-		h.EndRound(ctx, userId, gameId, roundNb)
+		h.EndRound(ctx, gameId, roundNb)
 		return
 	}
 
-	h.armTimer(ctx, userId, gameId, remaining, "round_timeout", roundNb)
+	h.armTimer(ctx, gameId, remaining, "round_timeout", roundNb)
 
 	h.broadcast(gameId, WsMessage{
 		Action: "round_started",
@@ -657,7 +657,7 @@ func (h *Hub) StartRound(ctx context.Context,  userId, gameId, roundNb int64) {
 // automatic start of the next round during a multiplayer pause ("start_round"). There's never more than one at a time,
 // so arming one stops the previous one. When it fires, the callback doesn't touch the hub's state itself: it sends an
 // internal event (Client nil) on h.Action, handled sequentially in Run like any other action.
-func (h *Hub) armTimer(ctx context.Context, userId, gameId int64, delay time.Duration,
+func (h *Hub) armTimer(ctx context.Context, gameId int64, delay time.Duration,
 	action string, roundNb int64) {
 	if existing, ok := h.GameTimers[gameId]; ok {
 		existing.Stop()
@@ -669,7 +669,7 @@ func (h *Hub) armTimer(ctx context.Context, userId, gameId int64, delay time.Dur
 			return
 		}
 		securesend.SecureSend(ctx, h.Action, &DataInfos{Action: action, Payload: payload},
-			fmt.Sprintf("Hub : Client %d can't do this action", userId))
+			fmt.Sprintf("Hub : the %s event of game %d can't be delivered", action, gameId))
 	})
 }
 
@@ -742,7 +742,7 @@ func (h *Hub) roundResults(ctx context.Context, gameId, roundNb int64) (*ws_hand
 //   - solo: schedules nothing, the game waits for the player's "start_round" (see handleStartRound)
 // EndRound is the only way out of a running round. If the database fails, nothing has changed yet (state still
 // "playing", nothing sent): it arms a retry instead of giving up, otherwise the game would stay stuck in this round.
-func (h *Hub) EndRound(ctx context.Context, userId, gameId, roundNb int64) {
+func (h *Hub) EndRound(ctx context.Context, gameId, roundNb int64) {
 	state, ok := h.RoundState[gameId]
 	if !ok || state.Phase != phasePlaying || state.RoundNb != roundNb {
 		// only the round currently running can be ended. Happens when the last guess of a round is processed at almost
@@ -767,7 +767,7 @@ func (h *Hub) EndRound(ctx context.Context, userId, gameId, roundNb int64) {
 			state.EndRetries++
 			log.Printf("error : could not end round %d of game %d (retry %d/%d in %s): %s\n",
 				roundNb, gameId, state.EndRetries, endRoundMaxRetries, endRoundRetryDelay, err)
-			h.armTimer(ctx, userId, gameId, endRoundRetryDelay, "round_timeout", roundNb)
+			h.armTimer(ctx, gameId, endRoundRetryDelay, "round_timeout", roundNb)
 			return
 		}
 		// still failing after about a minute: the error won't go away by itself (missing data, database down for good)
@@ -816,7 +816,7 @@ func (h *Hub) EndRound(ctx context.Context, userId, gameId, roundNb int64) {
 		// solo: no timer, the next round will be started by the player's "start_round" (see handleStartRound)
 		return
 	}
-	h.armTimer(ctx, userId, gameId, time.Until(next.NextRoundAt), "start_round", roundNb+1)
+	h.armTimer(ctx, gameId, time.Until(next.NextRoundAt), "start_round", roundNb+1)
 }
 
 func (h *Hub) closeClients(ctx context.Context) {
@@ -836,9 +836,7 @@ func (h *Hub) closeClients(ctx context.Context) {
 	}
 }
 
-// updatePlayers recomputes the xp, then the rank (from this new xp), then the statistics of the players in connected
-// (the players still connected at the end of the game). Nothing is added: everything is recomputed from all their
-// finished games, so each step is tried once, even if the previous one failed, and the errors are only logged.
+// Updates the xp, then the rank, then the statistics of the players that finished the game
 func (h *Hub) updatePlayers(ctx context.Context, connected map[int64]bool) {
 	userIds := make([]int64, 0, len(connected))
 	for userId := range connected {
