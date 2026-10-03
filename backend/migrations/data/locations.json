@@ -562,5 +562,119 @@
     "latitude": 37.575589628,
     "longitude": 127.01060115999985,
     "country_code": "KR"
+  },
+  {
+    "mapillary_id": 1511482963878844,
+    "latitude": 0.028336935378459,
+    "longitude": 37.6588987,
+    "country_code": "KE"
+  },
+  {
+    "mapillary_id": 1433067735104159,
+    "latitude": -4.020611280173256,
+    "longitude": 39.71905329978301,
+    "country_code": "KE"
+  },
+  {
+    "mapillary_id": 689593854146897,
+    "latitude": -4.0468551422267,
+    "longitude": 39.69587827581,
+    "country_code": "KE"
+  },
+  {
+    "mapillary_id": 1080766633766202,
+    "latitude": -1.3079118958063,
+    "longitude": 36.827972265343,
+    "country_code": "KE"
+  },
+  {
+    "mapillary_id": 1641592860031104,
+    "latitude": -1.3191444567140707,
+    "longitude": 36.83760394603894,
+    "country_code": "KE"
+  },
+  {
+    "mapillary_id": 312601756935075,
+    "latitude": 5.0846886666667,
+    "longitude": 39.766262,
+    "country_code": "TZ"
+  },
+  {
+    "mapillary_id": 472457937157656,
+    "latitude": -6.1614568,
+    "longitude": 39.192154870056,
+    "country_code": "TZ"
+  },
+  {
+    "mapillary_id": 1132577915090698,
+    "latitude": -6.7763839854968,
+    "longitude": 39.241498058413,
+    "country_code": "TZ"
+  },
+  {
+    "mapillary_id": 660640079601599,
+    "latitude": -6.8104748670963,
+    "longitude": 39.281184458302,
+    "country_code": "TZ"
+  },
+  {
+    "mapillary_id": 1724131834814226,
+    "latitude": -12.7832316,
+    "longitude": 45.2240736,
+    "country_code": "YT"
+  },
+  {
+    "mapillary_id": 1048598736273611,
+    "latitude": -12.7797711,
+    "longitude": 45.2301653,
+    "country_code": "YT"
+  },
+  {
+    "mapillary_id": 7478412295539291,
+    "latitude": -12.8338927,
+    "longitude": 45.1324213,
+    "country_code": "YT"
+  },
+  {
+    "mapillary_id": 3784328088525505,
+    "latitude": -12.9162754,
+    "longitude": 45.0823678,
+    "country_code": "YT"
+  },
+  {
+    "mapillary_id": 1814588232603052,
+    "latitude": -12.9443938,
+    "longitude": 45.1012503,
+    "country_code": "YT"
+  },
+  {
+    "mapillary_id": 1261043498567822,
+    "latitude": -12.9464271,
+    "longitude": 45.1006821,
+    "country_code": "YT"
+  },
+  {
+    "mapillary_id": 554705253663327,
+    "latitude": -12.7895643,
+    "longitude": 45.1310898,
+    "country_code": "YT"
+  },
+  {
+    "mapillary_id": 655187925853762,
+    "latitude": -12.795669999972,
+    "longitude": 45.2737053,
+    "country_code": "YT"
+  },
+  {
+    "mapillary_id": 379148507527733,
+    "latitude": -21.331016111111,
+    "longitude": 55.472188055556,
+    "country_code": "RE"
+  },
+  {
+    "mapillary_id": 814208252522485,
+    "latitude": -20.893722222222,
+    "longitude": 55.465461111111,
+    "country_code": "RE"
   }
 ]
