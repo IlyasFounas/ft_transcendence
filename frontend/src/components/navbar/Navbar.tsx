@@ -31,6 +31,7 @@ export function Navbar({
                 w-full
                 h-20
                 lg:h-30
+                shrink-0
                 bg-surface-base
                 border
                 border-border-default
