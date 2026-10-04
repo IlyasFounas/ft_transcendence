@@ -1,26 +1,26 @@
 package handlers
 
 import (
-	// "strconv"
 	"backend/internal/models/games"
 	"backend/internal/repositories"
 	"log"
 	"net/http"
 	"strconv"
-
 	"github.com/gin-gonic/gin"
 )
 
 type LobbyHandler struct {
 	gameRepo *repositories.GameRepository
+	guessRepo *repositories.GuessRepository
 	lobbyRepo *repositories.LobbyRepository
 	userRepo *repositories.UserRepository
 }
 
 func NewLobbyHandler(gameRepo *repositories.GameRepository,
+	guessRepo *repositories.GuessRepository,
 	lobbyRepo *repositories.LobbyRepository,
 	userRepo *repositories.UserRepository) *LobbyHandler {
-	return &LobbyHandler{gameRepo: gameRepo, lobbyRepo: lobbyRepo,
+	return &LobbyHandler{gameRepo: gameRepo, guessRepo: guessRepo, lobbyRepo: lobbyRepo,
 		userRepo: userRepo}
 }
 
@@ -260,7 +260,7 @@ func (h *LobbyHandler) AllPlayers() gin.HandlerFunc {
 
 func (h *LobbyHandler) NbGames() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		userId, err := strconv.ParseInt(c.Param("userId"), 10, 64)
+		userId, err := strconv.ParseInt(c.Param("userid"), 10, 64)
 		if err != nil {
 			log.Printf("error : %s\n", err)
 			c.JSON(http.StatusUnauthorized, 
@@ -281,21 +281,21 @@ func (h *LobbyHandler) NbGames() gin.HandlerFunc {
 
 func (h *LobbyHandler) Historic() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		userId, err := strconv.ParseInt(c.Param("userId"), 10, 64)
+		userId, err := strconv.ParseInt(c.Param("userid"), 10, 64)
 		if err != nil {
 			log.Printf("error : %s\n", err)
-			c.JSON(http.StatusUnauthorized, 
+			c.JSON(http.StatusBadRequest, 
 				gin.H{"message": "An error occured. Please try again."})
 			return
 		} 
-		games, err := h.lobbyRepo.Historic(c.Request.Context(), userId)
+		historicGames, err := h.lobbyRepo.Historic(c.Request.Context(), userId)
 		if err != nil {
 			log.Printf("error : %s\n", err)
-			c.JSON(http.StatusUnauthorized, 
+			c.JSON(http.StatusInternalServerError, 
 				gin.H{"message": "An error occured. Please try again."})
 			return
 		}
 		c.JSON(http.StatusOK,
-			gin.H{"message": "success", "historic": games})
+			gin.H{"message": "success", "historic_games": historicGames})
 	}
 }

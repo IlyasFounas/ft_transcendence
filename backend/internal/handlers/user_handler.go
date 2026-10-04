@@ -89,7 +89,7 @@ func (h *UserHandler) createActivationToken(c *gin.Context, expiresAt time.Time,
 		emailString, err := h.userRepo.Email(c.Request.Context(), userId)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError,
-				gin.H{"message": "Something went wrong. Please try again."})
+				gin.H{"message": "Can't find your email. Please try again."})
 			return err
 		}
 		err = mailing.SendActivationEmail(*emailString, tokenObj.Token);
