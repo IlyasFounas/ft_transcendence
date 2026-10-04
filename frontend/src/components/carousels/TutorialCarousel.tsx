@@ -1,52 +1,184 @@
 import { useState } from "react";
+import { tutorialPages } from "../../data/tutorial";
+import PrimaryButton from "../buttons/PrimaryButton";
 
-interface TutorialCarouseProps {
-    images: string[];
+interface TutorialCarouselProps {
+    mode: "landing" | "game";
+    onClose: () => void;
+    onStartOperation?: () => void;
 }
 
 export default function TutorialCarousel({
-    images,
-}: TutorialCarouseProps) {
+    mode,
+    onClose,
+    onStartOperation,
+}: TutorialCarouselProps) {
+    const [currentPage, setCurrentPage] = useState(0);
 
-    const [currentIndex, setCurrentIndex] = useState(0);
+    const page = tutorialPages[currentPage];
+    const isLastPage = currentPage === tutorialPages.length - 1;
 
-    const nextSlide = () => {
-        setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
+    const handleNext = () => {
+        if (!isLastPage) {
+            setCurrentPage((current) => current + 1);
+        }
     };
 
-    const prevSlide = () => {
-        setCurrentIndex((prevIndex) => (prevIndex - 1 + images.length) % images.length);
+    const handleBack = () => {
+        if (currentPage > 0) {
+            setCurrentPage((current) => current - 1);
+        }
+    };
+
+    const handleLastPageAction = () => {
+        if (mode === "landing") {
+            onStartOperation?.();
+        } else {
+            onClose();
+        }
     };
 
     return (
-        <div className="relative w-full max-w-3xl mx-auto">
-            <div className="overflow-hidden relative h-150">
-                {images.map((image, index) => (
-                    <div
-                        key={index}
-                        className={`absolute inset-0 transition-transform 
-                            ${index === currentIndex ? 'translate-x-0' : 'translate-x-full'}`}
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+            <div
+                className="
+                    relative
+                    w-full
+                    max-w-208
+                    aspect-832/612
+                    rounded-2xl
+                    border
+                    border-border-default
+                    bg-background-base
+                    p-6
+                    md:p-8
+                "
+            >
+                <div className="flex items-center justify-between">
+                    <img
+                        src="/logos/atlas-logo.png"
+                        alt="Atlas"
+                        className="h-12"
+                    />
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="
+                            text-4xl
+                            text-text-primary
+                            transition
+                            hover:text-primary
+                        "
                     >
-                        <img 
-                            src={image}
-                            alt={`Tutorial slide ${index + 1}`}
-                            className="w-full h-full object-cover"
-                        />
+                        ×
+                    </button>
+                </div>
+
+                <div className="mt-4 flex items-start justify-between gap-4">
+                    <div className="text-left">
+                        <h2 className="text-hero uppercase">
+                            <span className="text-text-primary">
+                                {page.title}{" "}
+                            </span>
+                            <span className="text-primary">
+                                {page.highlight}
+                            </span>
+                        </h2>
+                        <p className="mt-2 text-heading-small text-text-primary">
+                            {page.description}
+                        </p>
                     </div>
-                ))}
+
+                    <span className="shrink-0 text-text-secondary text-heading-small">
+                        {String(currentPage + 1).padStart(2, "0")} /{" "}
+                        {String(tutorialPages.length).padStart(2, "0")}
+                    </span>
+                </div>
+
+                <div className="mt-6 flex justify-center">
+                    <img
+                        src={page.image}
+                        alt={page.title}
+                        className="
+                            w-full
+                            aspect-video
+                            object-contain
+                        "
+                    />
+                </div>
+
+                {isLastPage && (
+                    <div className="mt-4 flex justify-center">
+                        <PrimaryButton
+                            type="button"
+                            size="small"
+                            onClick={handleLastPageAction}
+                        >
+                            {mode === "landing"
+                                ? "START OPERATION"
+                                : "CONTINUE TO PLAY"}
+                        </PrimaryButton>
+                    </div>
+                )}
+
+                <div className="mt-6 flex items-center justify-between">
+                    {currentPage > 0 ? (
+                        <button
+                            type="button"
+                            onClick={handleBack}
+                            className="
+                                text-button
+                                uppercase
+                                text-heading-small
+                                text-text-secondary
+                                transition
+                                hover:text-primary
+                            "
+                        >
+                            ← BACK
+                        </button>
+                    ) : (
+                        <div className="w-17.5" />
+                    )}
+
+                    <div className="flex items-center gap-2">
+                        {tutorialPages.map((_, index) => (
+                            <span
+                                key={index}
+                                className={`
+                                    h-2
+                                    w-2
+                                    rounded-full
+                                    ${
+                                        index === currentPage
+                                            ? "bg-primary"
+                                            : "bg-text-secondary"
+                                    }
+                                `}
+                            />
+                        ))}
+                    </div>
+
+                    {!isLastPage ? (
+                        <button
+                            type="button"
+                            onClick={handleNext}
+                            className="
+                                text-button
+                                uppercase
+                                text-heading-small
+                                text-primary
+                                transition
+                                hover:text-text-primary
+                            "
+                        >
+                            NEXT →
+                        </button>
+                    ) : (
+                        <div className="w-17.5" />
+                    )}
+                </div>
             </div>
-            <button 
-                className="absolute top-1/2 left-0 transform -translate-y-1/2 bg-gray-800 text-white p-2"
-                onClick={prevSlide}
-            >
-                Prev
-            </button>
-            <button 
-                className="absolute top-1/2 right-0 transform -translate-y-1/2 bg-gray-800 text-white p-2"
-                onClick={nextSlide}
-            >
-                Next
-            </button>
         </div>
     );
 }

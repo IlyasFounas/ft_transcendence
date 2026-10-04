@@ -8,11 +8,6 @@ export default function LandingPage() {
 
     const [showTutorial, setShowTutorial] = useState(false);
 
-    const tutorialImages = [
-        "/tutorials/tutorial-1.png",
-        "/tutorials/tutorial-2.png",
-    ]
-
     return (
         <main
             className="
@@ -112,18 +107,11 @@ export default function LandingPage() {
                 </button>
 
                 {showTutorial && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
-                        <div className="relative w-full max-w-3xl mx-4">
-                            <TutorialCarousel images={tutorialImages} />
-                            <button
-                                type="button"
-                                onClick={() => (setShowTutorial(false))}
-                                className="absolute top-2 right-2 z-10 bg-black text-white px-4 py-2"
-                            >
-                                x
-                            </button>
-                        </div>
-                    </div>
+                    <TutorialCarousel
+                        mode="landing"
+                        onClose={() => setShowTutorial(false)}
+                        onStartOperation={() => navigate("/login")}
+                    />
                 )}
             </div>
         </main>
