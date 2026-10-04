@@ -5,19 +5,26 @@ import CalculateRank from "../utils/rank";
 import SecondaryButton from "../components/buttons/SecondaryButton";
 import StatCard from "../components/cards/StatCard";
 import OperationHistory from "../components/cards/OperationHistory";
-import { operations } from "../data/operations";
 import FriendListPanel from "../components/cards/FriendListPanel";
 import { useState, useEffect } from "react";
 import EditProfileModal from "../components/cards/EditProfileModal";
 import type { UserStatistics } from "../types/statistics.type";
 import type { UserLeaderboard } from "../types/user.types";
+import type { Operation } from "../types/operation.types";
+
+interface HistoricGameResponse {
+    id: number;
+    xp: number;
+    date: string;
+}
 
 export default function ProfilePage() {
 
 	const { user, authFetch } = useAuth();
     const [statistics, setStatistics] = useState<UserStatistics | null>(null);
     const [leaderboard, setLeaderboard] = useState<UserLeaderboard[]>([]);
-    
+    const [operations, setOperations] = useState<Operation[]>([]);
+
 	const totalScore = user?.XP ?? 0;
 	const rank = CalculateRank(totalScore);
 
@@ -46,8 +53,31 @@ export default function ProfilePage() {
             console.log("position: ",result?.data.leaderboard[0].position);
         };
 
+        const getOperations = async () => {
+        if (!user?.ID) {
+            return;
+        }
+
+        const result = await authFetch(`api/game/historic/${user.ID}`);
+
+        if (!result || result.status !== 200) {
+            return;
+        }
+
+        const historicGames: HistoricGameResponse[] = result.data.historic_games;
+
+        setOperations(
+            historicGames.map((game) => ({
+                operationId: game.id.toString(),
+                points: game.xp,
+                dateTime: game.date,
+            }))
+        );
+    };
+
         getStatistics();
         getLeaderboard();
+        getOperations();
     }, []);
 
 
