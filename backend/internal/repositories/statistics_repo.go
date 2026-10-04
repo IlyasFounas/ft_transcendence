@@ -153,7 +153,7 @@ func (r *StatisticsRepository) UpdateStats(ctx context.Context, userIds []int64)
 			// still in the game when it ended (not left, or left after finished_at)
 			return q.Where("lo.left_at IS NULL").WhereOr("lo.left_at >= ga.finished_at")
 		}).
-		Where("lo.user_id IN (?)", bun.Tuple(userIds)).
+		Where("lo.user_id IN ?", bun.Tuple(userIds)).
 		Group("lo.user_id").
 		Scan(ctx, &counts)
 	if err != nil {
@@ -187,7 +187,7 @@ func (r *StatisticsRepository) UpdateStats(ctx context.Context, userIds []int64)
 		Join("JOIN game AS ga ON ga.id = r.game_id").
 		Where("ga.finished_at IS NOT NULL").
 		Where("EXISTS (?)", inTheGameAtTheEnd).
-		Where("g.user_id IN (?)", bun.Tuple(userIds)).
+		Where("g.user_id IN ?", bun.Tuple(userIds)).
 		GroupExpr("g.user_id, r.game_id").
 		Scan(ctx, &perGame)
 	if err != nil {

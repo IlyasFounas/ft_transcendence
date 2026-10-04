@@ -32,9 +32,13 @@ func (h *LobbyWsHandler) LeaveLobby(ctx context.Context,
 	userId int64) bool {
 	lobby, err := h.lobbyRepo.ActualLobby(ctx,
 		userId)
-	if err != nil || lobby == nil {
+	if err != nil {
 		log.Printf("error : %s\n", err)
 		return false
+	}
+	if lobby == nil {
+		// already out of the lobby (the player has just left it with a "leave" action, or was kicked out): nothing to do
+		return true
 	}
 	err = h.lobbyRepo.SetLeftAt(ctx, lobby.ID)
 	if err != nil {

@@ -410,48 +410,48 @@ func (h *GameHandler) SetDifficulty() gin.HandlerFunc {
 	}
 }
 
-// func (h *GameHandler) SetFinished() gin.HandlerFunc {
-// 	return func(c *gin.Context) {
-// 		id, err := strconv.ParseInt(c.Param("id"), 10, 64)
-// 		if err != nil {
-// 			c.JSON(http.StatusUnauthorized,
-// 				gin.H{"success": false})
-// 			return ;
-// 		}
-// 		err = h.gameRepo.SetFinished(c.Request.Context(), id)
-// 		if err != nil {
-// 			c.JSON(http.StatusUnauthorized,
-// 				gin.H{"success": false})
-// 			return ;
-// 		}
-// 		lobbies, err := h.lobbyRepo.AllPlayers(c.Request.Context(), id)
-// 		if err != nil {
-// 			c.JSON(http.StatusUnauthorized,
-// 				gin.H{"success": false})
-// 			return ;
-// 		}
-// 		for _, lobby := range lobbies {
-// 			if lobby.JoinCode != nil {
-// 				err = h.lobbyRepo.SetJoinCode(c.Request.Context(), lobby.ID, nil)
-// 				if err != nil {
-// 					c.JSON(http.StatusUnauthorized, 
-// 						gin.H{"success": false})
-// 					return
-// 				}
-// 			}
-// 			if lobby.LeftAt == nil {
-// 				err = h.lobbyRepo.SetLeftAt(c.Request.Context(), lobby.ID)
-// 				if err != nil {
-// 					c.JSON(http.StatusUnauthorized, 
-// 						gin.H{"success": false})
-// 					return
-// 				}
-// 			}
-// 		}
-// 		c.JSON(http.StatusOK,
-// 			gin.H{"success": true})
-// 	}
-// }
+func (h *GameHandler) SetFinished() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized,
+				gin.H{"success": false})
+			return ;
+		}
+		err = h.gameRepo.SetFinished(c.Request.Context(), id)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized,
+				gin.H{"success": false})
+			return ;
+		}
+		// lobbies, err := h.lobbyRepo.AllPlayers(c.Request.Context(), id)
+		// if err != nil {
+		// 	c.JSON(http.StatusUnauthorized,
+		// 		gin.H{"success": false})
+		// 	return ;
+		// }
+		// for _, lobby := range lobbies {
+		// 	if lobby.JoinCode != nil {
+		// 		err = h.lobbyRepo.SetJoinCode(c.Request.Context(), lobby.ID, nil)
+		// 		if err != nil {
+		// 			c.JSON(http.StatusUnauthorized, 
+		// 				gin.H{"success": false})
+		// 			return
+		// 		}
+		// 	}
+		// 	if lobby.LeftAt == nil {
+		// 		err = h.lobbyRepo.SetLeftAt(c.Request.Context(), lobby.ID)
+		// 		if err != nil {
+		// 			c.JSON(http.StatusUnauthorized, 
+		// 				gin.H{"success": false})
+		// 			return
+		// 		}
+		// 	}
+		// }
+		c.JSON(http.StatusOK,
+			gin.H{"success": true})
+	}
+}
 
 func (h *GameHandler) SetPlayerNb() gin.HandlerFunc {
 	return func(c *gin.Context) {

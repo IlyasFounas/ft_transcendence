@@ -9,10 +9,13 @@ import (
 	"errors"
 	"log"
 	"runtime/debug"
-	"time"
 	"net/http"
+	"sync"
+	"time"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+	securesend "backend/internal/tools/secure_send"
 )
 
 var upgrader = websocket.Upgrader {
@@ -75,14 +78,17 @@ type RoundStartedBroadcast struct {
 
 // It shares the results of the round to all players, even those who did not guess (they will see their own result as "not guessed").
 // The results are sorted by player ID for consistency across clients.
-// It is shared at the end of a round, with an indication of whether it was the last round or not :
-// 	-> multiplayer, not the last round: NextRoundAt is provided as an absolute timestamp for when the next round will start.
-// 	-> solo, not the last round: NextRoundAt is omitted, the player starts the next round himself with a "start_round" action.
-// It will be nil or omitted if IsLastRound is true.
+// It is shared at the end of every round but the last one:
+// 	-> multiplayer: NextRoundAt is provided as an absolute timestamp for when the next round will start.
+// 	-> solo: NextRoundAt is omitted, the player starts the next round himself with a "start_round" action.
 type RoundResultBroadcast struct {
 	ws_handlers.RoundResult
-	IsLastRound bool       `json:"is_last_round"`
 	NextRoundAt *time.Time `json:"next_round_at,omitempty"`
+}
+
+// Contains the esults of EVERY round of the game in decreased order
+type GameResultsBroadcast struct {
+	Rounds []ws_handlers.RoundResult `json:"rounds"`
 }
 
 // encapsulation of the message sent to the client, with an action and a payload interface{}
@@ -111,6 +117,7 @@ type gameRoundState struct {
 	EndRetries	int // failed attempts to end the running round so far (see EndRound)
 	NextRoundAt	time.Time // multiplayer only, valid when Phase == Pause: when the next round starts (zero otherwise)
 	LastResults	*ws_handlers.RoundResult // results of the round that just ended (pause after a round, game over); nil before round 1, or if the game was stopped
+	GameResults	[]ws_handlers.RoundResult // game over: results of every round of the game (resent to a second tab on the final results)
 	MID			int64 // the Mapillary ID of the location for the current round, valid when Phase == Playing
 }
 
@@ -180,7 +187,11 @@ func (h *Hub) broadcast(gameId int64, payload interface{}) {
 		return
 	}
 	for client := range h.Clients[gameId] {
-		client.Connx.Send <- serializedData
+		select {
+		case client.Connx.Send <- serializedData:
+		default:
+			log.Printf("client_error : the client %d can't read\n", client.UserId)
+		}
 	}
 }
 
@@ -192,7 +203,11 @@ func (h *Hub) sendToClient(client *ClientHub, payload interface{}) {
 		log.Printf("error : %s\n", err)
 		return
 	}
-	client.Connx.Send <- serializedData
+	select {
+	case client.Connx.Send <- serializedData:
+	default:
+		log.Printf("client_error : the client %d can't read\n", client.UserId)
+	}
 }
 
 func (h *Hub) sendToClientByUserID(gameId int64, userId int64, payload interface{}) {
@@ -203,7 +218,11 @@ func (h *Hub) sendToClientByUserID(gameId int64, userId int64, payload interface
     }
 	for client := range h.Clients[gameId] {
 		if client.UserId == userId {
-			client.Connx.Send <- serializedData
+			select {
+			case client.Connx.Send <- serializedData:
+			default:
+				log.Printf("client_error : the client %d can't read\n", client.UserId)
+			}
 		}	
 	}
 }
@@ -282,8 +301,8 @@ func (h *Hub) resyncClient(ctx context.Context, client *ClientHub) {
 			return
 		}
 		h.sendToClient(client, WsMessage{
-			Action:  "round_results",
-			Payload: RoundResultBroadcast{RoundResult: *state.LastResults, IsLastRound: true},
+			Action:  "game_results",
+			Payload: GameResultsBroadcast{Rounds: state.GameResults},
 		})
 	}
 }
@@ -397,6 +416,9 @@ func (h *Hub) handleAction(ctx context.Context, data *DataInfos) {
 
 	case "start_round":
 		if data.Client != nil {
+			// TODO or if the client plays in singleplayer, rounds should not start automatically
+			
+			// client != nil > real client request
 			h.handleStartRound(ctx, data.Client)
 			return
 		}
@@ -538,7 +560,7 @@ func (h *Hub) handleStartGame(ctx context.Context, client *ClientHub) {
 	if state.Solo {
 		h.StartRound(ctx, gameId, 1)
 	} else {
-		h.armTimer(gameId, time.Until(state.NextRoundAt), "start_round", 1)
+		h.armTimer(ctx, gameId, time.Until(state.NextRoundAt), "start_round", 1)
 	}
 }
 
@@ -611,6 +633,7 @@ func (h *Hub) StartRound(ctx context.Context, gameId, roundNb int64) {
 		MID:         MID, //TODO should be kept server side if we fetch through the proxy, not sent to clients
 	}
 
+	// h.armRoundTimer(ctx, userId, gameId, roundNb, remaining)
 	remaining := time.Until(roundEndsAt)
 	if remaining <= 0 {
 		// round has expired: end it immediately (the state is set just above because EndRound only ends the running round)
@@ -618,7 +641,7 @@ func (h *Hub) StartRound(ctx context.Context, gameId, roundNb int64) {
 		return
 	}
 
-	h.armTimer(gameId, remaining, "round_timeout", roundNb)
+	h.armTimer(ctx, gameId, remaining, "round_timeout", roundNb)
 
 	h.broadcast(gameId, WsMessage{
 		Action: "round_started",
@@ -634,7 +657,8 @@ func (h *Hub) StartRound(ctx context.Context, gameId, roundNb int64) {
 // automatic start of the next round during a multiplayer pause ("start_round"). There's never more than one at a time,
 // so arming one stops the previous one. When it fires, the callback doesn't touch the hub's state itself: it sends an
 // internal event (Client nil) on h.Action, handled sequentially in Run like any other action.
-func (h *Hub) armTimer(gameId int64, delay time.Duration, action string, roundNb int64) {
+func (h *Hub) armTimer(ctx context.Context, gameId int64, delay time.Duration,
+	action string, roundNb int64) {
 	if existing, ok := h.GameTimers[gameId]; ok {
 		existing.Stop()
 	}
@@ -644,7 +668,8 @@ func (h *Hub) armTimer(gameId int64, delay time.Duration, action string, roundNb
 			log.Printf("error : %s\n", err)
 			return
 		}
-		h.Action <- &DataInfos{Action: action, Payload: payload}
+		securesend.SecureSend(ctx, h.Action, &DataInfos{Action: action, Payload: payload},
+			fmt.Sprintf("Hub : the %s event of game %d can't be delivered", action, gameId))
 	})
 }
 
@@ -673,30 +698,42 @@ func (h *Hub) abortGame(ctx context.Context, gameId int64, roundNb int64, solo b
 	}
 }
 
-// roundResults reads from the database everything EndRound needs: the results of every player still in the game
-// for the round roundNb, and whether it was the last round. The first error stops it.
-func (h *Hub) roundResults(ctx context.Context, gameId, roundNb int64) (*ws_handlers.RoundResult, bool, error) {
+// Retrieves from the database everything EndRound needs:
+// - the results of every player still in the game for the round specified
+// - whether it was the last round
+// - the results of every round of the game (if last round)
+func (h *Hub) roundResults(ctx context.Context, gameId, roundNb int64) (*ws_handlers.RoundResult,
+	[]ws_handlers.RoundResult, bool, error) {
 	roundID, err := h.GuessWsHandler.ResolveRoundID(ctx, gameId, roundNb)
 	if err != nil {
-		return nil, false, err
+		return nil, nil, false, err
 	}
 	activePlayers, err := h.LobbyRepo.AllPlayers(ctx, gameId)
 	if err != nil {
-		return nil, false, err
+		return nil, nil, false, err
 	}
 	roundGuesses, err := h.GuessWsHandler.GetRoundGuesses(ctx, roundID)
 	if err != nil {
-		return nil, false, err
+		return nil, nil, false, err
 	}
 	results, err := h.GuessWsHandler.BuildRoundResults(ctx, gameId, roundID, roundNb, activePlayers, roundGuesses)
 	if err != nil {
-		return nil, false, err
+		return nil, nil, false, err
 	}
 	isLastRound, err := h.GuessWsHandler.IsLastRound(ctx, gameId, roundNb)
 	if err != nil {
-		return nil, false, err
+		return nil, nil, false, err
 	}
-	return results, isLastRound, nil
+	if !isLastRound {
+		return results, nil, false, nil
+	}
+	// last round: this one first (already built above), then the rounds before it, down to round 1
+	previousRounds, err := h.GuessWsHandler.BuildGameResults(ctx, gameId, roundNb-1, activePlayers)
+	if err != nil {
+		return nil, nil, false, err
+	}
+	gameResults := append([]ws_handlers.RoundResult{*results}, previousRounds...)
+	return results, gameResults, true, nil
 }
 
 // Finalises the round roundNb: broadcasts the results of ALL active players (whether they guessed or not), then,
@@ -718,7 +755,7 @@ func (h *Hub) EndRound(ctx context.Context, gameId, roundNb int64) {
 		delete(h.GameTimers, gameId)
 	}
 
-	results, isLastRound, err := h.roundResults(ctx, gameId, roundNb)
+	results, gameResults, isLastRound, err := h.roundResults(ctx, gameId, roundNb)
 	if err == nil && isLastRound {
 		// the game is over: finished_at is set (retried below with the rest for about a minute if it fails;
 		// calling it again changes nothing). The players are updated separately, after this loop.
@@ -730,7 +767,7 @@ func (h *Hub) EndRound(ctx context.Context, gameId, roundNb int64) {
 			state.EndRetries++
 			log.Printf("error : could not end round %d of game %d (retry %d/%d in %s): %s\n",
 				roundNb, gameId, state.EndRetries, endRoundMaxRetries, endRoundRetryDelay, err)
-			h.armTimer(gameId, endRoundRetryDelay, "round_timeout", roundNb)
+			h.armTimer(ctx, gameId, endRoundRetryDelay, "round_timeout", roundNb)
 			return
 		}
 		// still failing after about a minute: the error won't go away by itself (missing data, database down for good)
@@ -748,9 +785,9 @@ func (h *Hub) EndRound(ctx context.Context, gameId, roundNb int64) {
 		h.LobbyWsHandler.CloseLobby(ctx, gameId, h.connectedPlayers(gameId))
 	}
 
-	broadcastPayload := RoundResultBroadcast{RoundResult: *results, IsLastRound: isLastRound}
+	broadcastPayload := RoundResultBroadcast{RoundResult: *results}
 	// after the last round the state has no phase anymore: the game is over
-	next := &gameRoundState{Solo: solo, RoundNb: roundNb, LastResults: results}
+	next := &gameRoundState{Solo: solo, RoundNb: roundNb, LastResults: results, GameResults: gameResults}
 	if !isLastRound {
 		next.Phase = phasePause
 		if !solo {
@@ -763,7 +800,12 @@ func (h *Hub) EndRound(ctx context.Context, gameId, roundNb int64) {
 	}
 	h.RoundState[gameId] = next
 
-	h.broadcast(gameId, WsMessage{Action: "round_results", Payload: broadcastPayload})
+	if isLastRound {
+		// the last round ends the game: the players get the results of every round (this one is the first of them)
+		h.broadcast(gameId, WsMessage{Action: "game_results", Payload: GameResultsBroadcast{Rounds: gameResults}})
+	} else {
+		h.broadcast(gameId, WsMessage{Action: "round_results", Payload: broadcastPayload})
+	}
 
 	if isLastRound && len(h.Clients[gameId]) == 0 {
 		// the game ended with nobody connected (everyone lost his connection): no disconnection will come
@@ -774,12 +816,27 @@ func (h *Hub) EndRound(ctx context.Context, gameId, roundNb int64) {
 		// solo: no timer, the next round will be started by the player's "start_round" (see handleStartRound)
 		return
 	}
-	h.armTimer(gameId, time.Until(next.NextRoundAt), "start_round", roundNb+1)
+	h.armTimer(ctx, gameId, time.Until(next.NextRoundAt), "start_round", roundNb+1)
 }
 
-// updatePlayers recomputes the xp, then the rank (from this new xp), then the statistics of the players in connected
-// (the players still connected at the end of the game). Nothing is added: everything is recomputed from all their
-// finished games, so each step is tried once, even if the previous one failed, and the errors are only logged.
+func (h *Hub) closeClients(ctx context.Context) {
+	var clientsCpy []*ClientHub
+	for _, clients := range h.Clients {
+		for client := range clients {
+			clientsCpy = append(clientsCpy, client)
+		}
+	}
+	for _, client := range clientsCpy {
+		h.unregisterClient(client)
+		if !h.LobbyWsHandler.LeaveLobby(ctx, client.UserId) {
+			log.Printf("error : the client %d can't leave the lobby in the database\n", 
+				client.UserId)
+			continue
+		}
+	}
+}
+
+// Updates the xp, then the rank, then the statistics of the players that finished the game
 func (h *Hub) updatePlayers(ctx context.Context, connected map[int64]bool) {
 	userIds := make([]int64, 0, len(connected))
 	for userId := range connected {
@@ -796,7 +853,7 @@ func (h *Hub) updatePlayers(ctx context.Context, connected map[int64]bool) {
 	}
 }
 
-func JoinLobby(hub *Hub) gin.HandlerFunc {
+func JoinLobby(ctx context.Context, hub *Hub, wg *sync.WaitGroup) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userId, ok := c.Get("userId")
 		if !ok {
@@ -825,8 +882,10 @@ func JoinLobby(hub *Hub) gin.HandlerFunc {
 		connx := client_ws.NewConnexion(conn)
 		clientHub := NewClientHub(connx, userId.(int64),
 			lobby.ID, lobby.GameId)
-		hub.Register <- clientHub
-		go clientHub.Connx.WritePump()
+		securesend.SecureSend(ctx, hub.Register, clientHub,
+			fmt.Sprintf("Chat : Client %d can't be registered", clientHub.UserId))
+		wg.Add(1)
+		go clientHub.Connx.WritePump(wg)
 		actionClient := func(data []byte) {
 			var dataInfos DataInfos
 			err := json.Unmarshal(data, &dataInfos)
@@ -835,12 +894,15 @@ func JoinLobby(hub *Hub) gin.HandlerFunc {
 				return
 			}
 			dataInfos.Client = clientHub
-			hub.Action <- &dataInfos 
+			securesend.SecureSend(ctx, hub.Action, &dataInfos,
+				fmt.Sprintf("Chat : Client %d can't do this action", clientHub.UserId))
 		}
 		unregisterClient := func() {
-			hub.Unregister <- clientHub
+			securesend.SecureSend(ctx, hub.Unregister, clientHub,
+				fmt.Sprintf("Chat : Client %d can't be unregistered", clientHub.UserId))
 		}
-		clientHub.Connx.ReadPump(actionClient, unregisterClient)
+		wg.Add(1)
+		clientHub.Connx.ReadPump(actionClient, unregisterClient, wg)
 	}
 }
 
@@ -894,7 +956,8 @@ func (h *Hub) safely(event string, fn func()) {
 	fn()
 }
 
-func (h *Hub) Run(ctx context.Context) {
+func (h *Hub) Run(ctx context.Context, wg *sync.WaitGroup) {
+	defer wg.Done()
 	for {
 		select {
 		case client := <- h.Register:
@@ -919,10 +982,16 @@ func (h *Hub) Run(ctx context.Context) {
 					delete(h.RoundState, client.GameId)
 				}
 			})
-		case serializedData := <- h.Action:
+		case serializedData := <- h.Action:			
 			h.safely("action "+serializedData.Action, func() {
 				h.handleAction(ctx, serializedData)
 			})
+		case <- ctx.Done():
+			cleanupCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 2*time.Second)
+			defer cancel()
+			h.closeClients(cleanupCtx)
+			log.Println("The program is finished")
+			return
 		}
 	}
-}
+} 

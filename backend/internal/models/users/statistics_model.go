@@ -9,7 +9,7 @@ type Statistics struct {
 
 	ID				int64	`bun:"id,pk,autoincrement"`
 	UserID			int64	`bun:"user_id,notnull,unique"`
-	FinishedGames	int64	`bun:"finished_games,notnull,default:0"`
+	FinishedGames	int64	`bun:"finished_games,notnull,default:0" json:"finished_games, notnull"`
 	Accuracy		float64	`bun:"accuracy,notnull,default:0"`
 	BestScore		int64	`bun:"best_score,notnull,default:0"`
 	ClosestGuess	*int64	`bun:"closest_guess"`

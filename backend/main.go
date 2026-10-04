@@ -1,21 +1,24 @@
 package main
 
 import (
+	"backend/internal/database"
+	"backend/internal/handlers"
+	"backend/internal/middleware"
+	"backend/internal/repositories"
+	"backend/internal/router"
+	chat_ws "backend/internal/websockets/chat"
+	"backend/internal/websockets/handlers"
+	"backend/internal/websockets/lobby"
 	"context"
 	"errors"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 	"time"
-	"backend/internal/database"
-	"backend/internal/handlers"
-	"backend/internal/repositories"
-	"backend/internal/router"
-	"backend/internal/websockets/lobby"
-	"backend/internal/websockets/handlers"
-	chat_ws "backend/internal/websockets/chat"
+
 	"github.com/gin-gonic/gin"
 	"github.com/sams96/rgeo"
 )
@@ -49,6 +52,8 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to initialize location repo: %v", err)
 	}
+	// the admin routes check in the database that the user is an admin
+	middleware.SetAdminChecker(repo.User)
 
 	// 3. Instanciation of handlers
 	reverser, err := rgeo.New(rgeo.Countries110)
@@ -61,16 +66,21 @@ func main() {
 	wh := ws_handlers.NewWsHandlers(repo, reverser)
 
 	// 5. Run the hub websocket
-	appCtx, appCancel := context.WithCancel(context.Background())
-	defer appCancel()
+	signalCtx, stop := signal.NotifyContext(context.Background(),
+		os.Interrupt, syscall.SIGTERM) 
+	defer stop()
+	var wg sync.WaitGroup
+	wg.Add(1)
 	hub := lobby_ws.NewHub(repo, wh)
-	go hub.Run(appCtx)
+	go hub.Run(signalCtx, &wg)
 
+	wg.Add(1)
 	chat := chat_ws.NewChat(repo, wh)
-	go chat.Run(appCtx)
+	go chat.Run(signalCtx, &wg)
 
 	// 6. Router setup
-	r := router.NewRouter(h, hub, chat)
+
+	r := router.NewRouter(signalCtx, h, hub, chat, &wg)
 	srv := &http.Server{
 		Addr:         ":8080",
 		Handler:      r,
@@ -83,16 +93,14 @@ func main() {
 	go func() {
 		log.Println("Starting server and listening on :8080...")
 		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			log.Fatalf("Unexpected error from HTTP server: %v", err)
+			log.Printf("Unexpected error from HTTP server: %v", err)
+			return
 		}
 	}()
 
-	// 8. Graceful shutdown on SIGINT or SIGTERM
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
-	log.Println("Shutdown signal received. Beginning graceful shutdown...")
-
+	// 8. Graceful shutdown
+	<-signalCtx.Done()
+	
 	// 9. Shutdown the server with a timeout context
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -100,7 +108,20 @@ func main() {
 		log.Printf("Error during forced shutdown of HTTP server: %v", err)
 	}
 
-	// 10. Final cleanup of the asynchronous logs buffer
+	// 10. Wait until every clients connexions are closed proprely
+	done := make(chan struct{})
+	go func() {
+		wg.Wait()
+		close(done)
+	}()
+
+	select {
+	case <- done:
+		log.Println("All connexion has been closed")
+	case <-time.After(3*time.Second):
+		log.Println("timeout occured to shutdown the server")
+	}
+	// 11. Final cleanup of the asynchronous logs buffer
 	log.Println("Closing location repository and flushing logs...")
 	repo.Location.Close()
 	log.Println("Application closed properly.")
