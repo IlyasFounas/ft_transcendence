@@ -4,6 +4,7 @@ import type { Operation } from "../../types/operation.types";
 interface OperationHistoryProps {
     operations: Operation[];
 }
+
 function TableHeader() {
     return (
         <div className="

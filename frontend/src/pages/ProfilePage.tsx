@@ -11,6 +11,7 @@ import EditProfileModal from "../components/cards/EditProfileModal";
 import type { UserStatistics } from "../types/statistics.type";
 import type { UserLeaderboard } from "../types/user.types";
 import type { Operation } from "../types/operation.types";
+import { formatOperationDate } from "../utils/formatDate";
 
 interface HistoricGameResponse {
     id: number;
@@ -70,7 +71,7 @@ export default function ProfilePage() {
             historicGames.map((game) => ({
                 operationId: game.id.toString(),
                 points: game.xp,
-                dateTime: game.date,
+                dateTime: formatOperationDate(game.date),
             }))
         );
     };
