@@ -8,7 +8,7 @@ export default function GameGuard() {
     const navigate = useNavigate();
 
     useEffect(() => {
-       	const isPlaying = location.pathname.includes("/game/") || location.pathname.includes("multiresults") || location.pathname.includes("soloresults");
+       	const isPlaying = location.pathname.includes("/game/") || location.pathname.includes("multiresults") || location.pathname.includes("soloresults") || location.pathname.includes("summaryresults");
         const isLobby = location.pathname === "/lobbyroom";
         const isMultiMenu = location.pathname === "/multiplayer";
 

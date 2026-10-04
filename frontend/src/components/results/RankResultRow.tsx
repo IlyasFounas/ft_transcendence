@@ -52,9 +52,6 @@ export default function RankResultRow({
                     <span className="text-heading-small truncate text-white">
                         {player.username}
                     </span>
-                    <span className="hidden @[456px]:block text-body-primary truncate">
-                        {player.role}
-                    </span>
                 </div>
             </div>
 

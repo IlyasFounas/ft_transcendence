@@ -32,11 +32,11 @@ interface RoundInfo {
 }
 
 interface RoundResultBroadcast {
-    round_nb: number;
-    base: { lat: number; long: number; country_code: string }; 
-    results: PlayerRoundResult[];
-    is_last_round: boolean;
-    next_round_at: string | null;
+	round_nb: number;
+	base: { lat: number; long: number; country_code: string }; 
+	results: PlayerRoundResult[];
+	is_last_round: boolean;
+	next_round_at: string | null;
 }
 
 interface GameSocketContextType {
@@ -60,6 +60,7 @@ interface GameSocketContextType {
 		nextRoundAt: string | null;
 		actualLocation: { latitude: number; longitude: number };
 		allResults: PlayerRoundResult[];
+		fullHistory?: any[]; 
 	} | null;
 	gameStartAt: string | null;
 }
@@ -98,6 +99,7 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
 		nextRoundAt: string | null;
 		actualLocation: { latitude: number; longitude: number };
 		allResults: PlayerRoundResult[];
+		fullHistory?: any[];
 	} | null>(null);
 	const [gameStartAt, setGameStartAt] = useState<string | null>(null);
 
@@ -171,7 +173,6 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
 						},
 					]);
 				}
-
 				setLastRoundResult({
 					isLastRound: data.is_last_round,
 					nextRoundAt: data.next_round_at,
@@ -182,6 +183,24 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
 					allResults: data.results,
 				});
 			}
+			else if (message.action === "game_results") {
+				const rounds = message.payload.rounds;
+				
+				const lastRoundData = rounds.reduce((prev, current) => 
+					(prev.round_nb > current.round_nb) ? prev : current
+				);
+
+				setLastRoundResult({
+					isLastRound: true,
+					nextRoundAt: null,
+					actualLocation: {
+						latitude: lastRoundData.base.lat,
+						longitude: lastRoundData.base.long,
+					},
+					allResults: lastRoundData.results,
+					fullHistory: rounds,
+			});
+}
 
 		socket.onerror = (err) => console.log("WS error:", err);
 
@@ -208,18 +227,18 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
 	}
 
 	function leaveGame() {
-    	socketRef.current?.send(JSON.stringify({ action: "leave", payload: "" }));
-}	
+		socketRef.current?.send(JSON.stringify({ action: "leave", payload: "" }));
+}   
 
 	function sendGuess(guess: { lat: number; lng: number }) {
 		
 		if (!round) {
-            return;
-        }
+			return;
+		}
 
-        if (typeof guess.lat !== 'number' || typeof guess.lng !== 'number' || isNaN(guess.lat) || isNaN(guess.lng)) {
-            return;
-        }
+		if (typeof guess.lat !== 'number' || typeof guess.lng !== 'number' || isNaN(guess.lat) || isNaN(guess.lng)) {
+			return;
+		}
 
 		socketRef.current?.send(JSON.stringify({
 			action: "guess",
@@ -281,5 +300,5 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
 }
 
 export function useLobbySocket() {
-  	return useContext(GameSocketContext);
+	return useContext(GameSocketContext);
 }

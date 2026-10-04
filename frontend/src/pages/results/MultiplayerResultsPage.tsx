@@ -16,7 +16,7 @@ export default function MultiplayerResultsPage() {
 	const location = useLocation();
 	const navigate = useNavigate();
 	const { user } = useAuth();
-	const { round, players, leaveLobby, resetGame } = useLobbySocket();
+	const { round, players } = useLobbySocket();
 	const [hoveredPlayerId, setHoveredPlayerId] = useState<string | null>(null);
 
 	const { 
@@ -25,7 +25,8 @@ export default function MultiplayerResultsPage() {
 		allResults, 
 		actualLocation, 
 		nextRoundAt, 
-		isLastRound 
+		isLastRound,
+		fullHistory,
 	} = location.state as {
 		currentRound: number;
 		totalRounds: number;
@@ -33,6 +34,7 @@ export default function MultiplayerResultsPage() {
 		actualLocation: { latitude: number; longitude: number };
 		nextRoundAt: string | null;
 		isLastRound: boolean;
+		fullHistory: any[];
 	};
 
 	useEffect(() => {
@@ -41,10 +43,10 @@ export default function MultiplayerResultsPage() {
 		}
 	}, [round, currentRound, navigate]);
 
-	const finishGame = () => {
-		leaveLobby();
-		resetGame();
-		navigate("/home");
+   const goToSummary = () => {
+		navigate("/summaryresults", { 
+			state: { fullHistory, totalRounds, players } 
+		});
 	}
 	
 	const myResult = allResults.find(r => r.user_id === user?.ID);
@@ -141,7 +143,7 @@ export default function MultiplayerResultsPage() {
 					{!isLastRound ? (
 						<NextRoundTimer targetTime={nextRoundAt}>Next round starts in</NextRoundTimer> 
 					) : (
-						<PrimaryButton size="medium" onClick={finishGame} >Finish Mission</PrimaryButton>
+						<PrimaryButton size="medium" onClick={goToSummary} >Match Summary</PrimaryButton>
 					)}
 				</div>
 			</div>

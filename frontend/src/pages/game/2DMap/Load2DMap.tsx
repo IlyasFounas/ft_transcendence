@@ -10,7 +10,7 @@ type Props = {
     initialGuess?: { lat: number, lng: number } | null,
 }
 
-export default function Load2DMap({latitude, longitude}: Props) {
+export default function Load2DMap({latitude, longitude, initialGuess, onGuess}: Props) {
   useEffect(() => {
     // Initializes the map and sets the view to the specified latitude and longitude with a zoom level
     const map = L.map('leaflet-map').setView([latitude, longitude], 2.5);

@@ -51,7 +51,8 @@ export default function GamePlayPage() {
 					allResults: lastRoundResult.allResults,
 					actualLocation: lastRoundResult.actualLocation,
 					nextRoundAt: lastRoundResult.nextRoundAt,
-					isLastRound: lastRoundResult.isLastRound
+					isLastRound: lastRoundResult.isLastRound,
+					fullHistory: lastRoundResult.fullHistory
 				}
 			});
 		} else {

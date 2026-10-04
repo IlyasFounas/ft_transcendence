@@ -16,6 +16,7 @@ import { GameSocketProvider } from './context/GameSocketContext';
 import SoloResultPage from './pages/results/SoloResultsPage';
 import MultiplayerResultsPage from './pages/results/MultiplayerResultsPage';
 import GameGuard from "./components/routes/GameGuard";
+import SummaryResultsPage from './pages/results/SummaryResultsPage';
 
 const GameSessionLayout = () => {
 	return (
@@ -50,6 +51,7 @@ function App() {
 							<Route path="/game/:gameId" element={<GamePlayPage />} />
 							<Route path="/soloresults" element={<SoloResultPage />} />
 							<Route path="/multiresults" element={<MultiplayerResultsPage />} />
+							<Route path="/summaryresults" element={<SummaryResultsPage />} />
 						</Route>
 					</Route>
 				</Routes>
