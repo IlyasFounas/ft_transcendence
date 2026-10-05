@@ -73,7 +73,7 @@ export default function TutorialCarousel({
 
                 <div className="mt-4 flex items-start justify-between gap-4">
                     <div className="text-left">
-                        <h2 className="text-hero uppercase">
+                        <h2 className="text-heading-medium lg:text-hero uppercase">
                             <span className="text-text-primary">
                                 {page.title}{" "}
                             </span>
@@ -82,13 +82,13 @@ export default function TutorialCarousel({
                             </span>
                         </h2>
                         <div className="h-12">
-                            <p className="mt-2 text-heading-small text-text-primary">
+                            <p className="mt-2 text-label-small lg:text-heading-small text-text-primary">
                                 {page.description}
                             </p>
                         </div>
                     </div>
 
-                    <span className="shrink-0 text-text-secondary text-heading-small">
+                    <span className="hidden md:block shrink-0 text-text-secondary text-heading-small">
                         {String(currentPage + 1).padStart(2, "0")} /{" "}
                         {String(tutorialPages.length).padStart(2, "0")}
                     </span>
@@ -99,7 +99,12 @@ export default function TutorialCarousel({
                         <img
                             src={page.image}
                             alt={page.title}
-                            className="max-h-full max-w-full object-contain"
+                            className="hidden md:block max-h-full max-w-full object-contain"
+                        />
+                        <img
+                            src={page.moibileImage}
+                            alt={page.title}
+                            className="block md:hidden max-h-full max-w-full object-contain"
                         />
                     </div>
 
