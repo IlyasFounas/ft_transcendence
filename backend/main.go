@@ -3,6 +3,7 @@ package main
 import (
 	"backend/internal/database"
 	"backend/internal/handlers"
+	"backend/internal/middleware"
 	"backend/internal/repositories"
 	"backend/internal/router"
 	chat_ws "backend/internal/websockets/chat"
@@ -51,6 +52,8 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to initialize location repo: %v", err)
 	}
+	// the admin routes check in the database that the user is an admin
+	middleware.SetAdminChecker(repo.User)
 
 	// 3. Instanciation of handlers
 	reverser, err := rgeo.New(rgeo.Countries110)

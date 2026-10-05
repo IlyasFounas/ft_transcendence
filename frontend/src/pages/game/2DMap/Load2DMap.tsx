@@ -11,11 +11,12 @@ type Props = {
 export default function Load2DMap({latitude, longitude}: Props) {
   useEffect(() => {
     // Initializes the map and sets the view to the specified latitude and longitude with a zoom level
-    const map = L.map('leaflet-map').setView([latitude, longitude], 3);
+    const map = L.map('leaflet-map').setView([latitude, longitude], 2.5);
 
     // Adds the OpenStreetMap tile layer to the map with attribution and maximum zoom level
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
+      minZoom: 2.5,
       attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
     }).addTo(map);
 

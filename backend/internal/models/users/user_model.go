@@ -20,6 +20,7 @@ type User struct {
 	Avatar		*string			`bun:"avatar,default:'/avatars/avatar1.png'"`
 	XP   		int64			`bun:"xp,notnull,default:0"`
     Rank		string			`bun:"rank,notnull,default:'Junior Agent'"`
+	IsAdmin		bool			`bun:"is_admin,notnull,default:false" json:"-"`
 	CreatedAt   time.Time     	`bun:"created_at,default:current_timestamp"`
 
 	Lobby 		[]*games.Lobby	`bun:"rel:has-many,join:id=user_id"`
