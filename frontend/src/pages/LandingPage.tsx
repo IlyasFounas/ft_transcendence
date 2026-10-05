@@ -52,13 +52,10 @@ export default function LandingPage() {
                         uppercase
                         text-white
                         py-4
-
                         gap-5
                         text-heading-small
-                        
                         md:text-heading-medium
                         md:gap-8
-
                         lg:text-heading-large
                     "
                 >
@@ -74,7 +71,6 @@ export default function LandingPage() {
                         flex-col
                         items-center
                         mt-2
-                        
                         max-w-xs
                         lg:max-w-md
                     "
@@ -92,7 +88,6 @@ export default function LandingPage() {
                     onClick={() => (setShowTutorial(true))}
                     className="
                         mt-7
-                        md:mt-7
                         cursor-pointer
                         text-body-primary
                         md:text-heading-small
