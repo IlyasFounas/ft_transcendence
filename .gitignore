@@ -8,6 +8,9 @@ frontend/.env
 # Backend
 backend/tmp/
 
+# Secrets
+secrets/
+
 # Logs
 *.log
 .DS_Store

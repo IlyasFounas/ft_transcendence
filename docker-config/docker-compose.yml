@@ -12,7 +12,7 @@ services:
     image: postgres:16-alpine
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PASSWORD: /run/secrets/postgres_password
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -33,21 +33,29 @@ services:
       target: ${ENV}
     working_dir: /app
     environment:
-      ACTIVATION_JWT_SECRET: ${ACTIVATION_JWT_SECRET}
-      JWT_SECRET: ${JWT_SECRET}
+      ACTIVATION_JWT_SECRET_FILE: /run/secrets/activation_jwt_secret
+      JWT_SECRET_FILE: /run/secrets/jwt_secret
       POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_HOST: postgres
-      POSTGRES_PORT: 5432
+      POSTGRES_PORT: 5432 
       ENV: ${ENV}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
-      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      GOOGLE_CLIENT_SECRET_FILE: /run/secrets/google_client_secret
       GOOGLE_REDIRECT_URL: ${GOOGLE_REDIRECT_URL}
       LOCATION_FILE_PATH: ${LOCATION_FILE_PATH}
-      ADMIN_USERNAME: ${ADMIN_USERNAME}
-      ADMIN_EMAIL: ${ADMIN_EMAIL}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      ADMIN_USERNAME_FILE: /run/secrets/admin_username
+      ADMIN_EMAIL_FILE: /run/secrets/admin_email
+      ADMIN_PASSWORD_FILE: /run/secrets/admin_password
+    secrets:
+      - activation_jwt_secret
+      - jwt_secret
+      - postgres_password
+      - google_client_secret
+      - admin_username
+      - admin_email
+      - admin_password
     depends_on:
       postgres:
         condition: service_healthy
@@ -64,6 +72,9 @@ services:
     working_dir: /app
     environment:
       ENV: ${ENV}
+      VITE_MAPILLARY_ACCESS_TOKEN_FILE: /run/secrets/mapillary_token
+    secrets:
+      - mapillary_token
     depends_on:
       - golang
     stdin_open: true
@@ -88,3 +99,21 @@ services:
 
 volumes:
   postgres_data:
+
+secrets:
+  activation_jwt_secret:
+    file: ../secrets/jwt/activation/secret.txt
+  jwt_secret:
+    file: ../secrets/jwt/secret.txt
+  postgres_password:
+    file: ../secrets/postgres/password.txt
+  google_client_secret:
+    file: ../secrets/google/secret.txt
+  admin_username:
+    file: ../secrets/admin/username.txt
+  admin_email:
+    file: ../secrets/admin/email.txt
+  admin_password:
+    file: ../secrets/admin/password.txt
+  mapillary_token:
+    file: ../secrets/mapillary/access_token.txt

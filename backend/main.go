@@ -36,6 +36,12 @@ func main() {
     if (len(env) != 0 && env == "prod") {
         gin.SetMode(gin.ReleaseMode)
     }
+	// TODO: add a function that set each inside of the env? or return err if one fails to be read
+	// jwt_secret, err := secret.GetSecret("JWT_SECRET_FILE")
+	// if err != nil{
+	// 	return err
+	// }
+
 	// 1. Connection to the database
 	db := database.InitDatabase()
 	defer func() {
