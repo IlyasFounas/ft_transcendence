@@ -25,10 +25,11 @@ import (
 
 // Leaderboard is a line of the leaderboard: the position of a player, his name and his xp
 type Leaderboard struct {
-	Position int64  `json:"position"`
-	Username string `json:"username"`
-	Rank string 	`json:"rank"`
-	Total    int64  `json:"total"`
+	Position	int64	`json:"position"`
+	Username	string	`json:"username"`
+	Rank		string	`json:"rank"`
+	Avatar		string	`json:"avatar"`
+	Total		int64	`json:"total"`
 }
 
 type UserRepository struct {
@@ -358,7 +359,7 @@ func (r *UserRepository) UpdateXP(ctx context.Context, userIds []int64) error {
 		Join("JOIN game AS ga ON ga.id = r.game_id").
 		Where("ga.finished_at IS NOT NULL").
 		Where("EXISTS (?)", inTheGameAtTheEnd).
-		Where("g.user_id IN (?)", bun.Tuple(userIds)).
+		Where("g.user_id IN ?", bun.Tuple(userIds)).
 		Group("g.user_id").
 		Scan(ctx, &totals)
 	if err != nil {
@@ -422,6 +423,7 @@ func (r *UserRepository) Leaderboard(ctx context.Context) ([]Leaderboard, error)
 		ColumnExpr("RANK() OVER (ORDER BY u.xp DESC) AS position").
 		ColumnExpr("u.name AS username").
 		ColumnExpr("u.rank AS rank").
+		ColumnExpr("u.avatar AS avatar").
 		ColumnExpr("u.xp AS total").
 		Where("NOT u.is_admin").
 		OrderExpr("u.xp DESC, u.name ASC").
@@ -442,12 +444,13 @@ func (r *UserRepository) UserLeaderboard(ctx context.Context, userId int64) ([]L
 		ColumnExpr("RANK() OVER (ORDER BY u.xp DESC) AS position").
 		ColumnExpr("u.name AS username").
 		ColumnExpr("u.rank AS rank").
+		ColumnExpr("u.avatar AS avatar").
 		ColumnExpr("u.xp AS total").
 		Where("NOT u.is_admin")
 	var rows []Leaderboard
 	err := r.db.NewSelect().
 		TableExpr("(?) AS ranked", ranked).
-		ColumnExpr("ranked.position, ranked.username, ranked.rank, ranked.total").
+		ColumnExpr("ranked.position, ranked.username, ranked.rank, ranked.avatar, ranked.total").
 		Where("ranked.id = ?", userId).
 		Scan(ctx, &rows)
 	if err != nil {

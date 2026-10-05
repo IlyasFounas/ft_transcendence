@@ -1,7 +1,9 @@
 package client_ws
 
 import (
+	"errors"
 	"log"
+	"net"
 	"time"
     "sync"
 	"github.com/gorilla/websocket"
@@ -44,7 +46,8 @@ func (c *Connexion) WritePump(wg *sync.WaitGroup) {
                 err := c.Conn.WriteControl(websocket.CloseMessage,
                     websocket.FormatCloseMessage(websocket.CloseGoingAway,
                         "the connexion is shutting down"), deadline)
-                if err != nil {
+                // the connection is usually already closed by ReadPump (the client left): not an error
+                if err != nil && !errors.Is(err, net.ErrClosed) {
                     log.Printf("error : %s\n", err)
                 }
                 return
