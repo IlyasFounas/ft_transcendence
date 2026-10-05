@@ -162,24 +162,6 @@ func (h *UserHandler) CreateUser() gin.HandlerFunc {
                 gin.H{"message": "Something went wrong. Please try again."})
 			return
 		}
-		// login := c.PostForm("login")
-		// username := c.PostForm("username")
-		// email := c.PostForm("email")
-		// if len(login) == 0 || len(username) == 0 ||
-		// 	len(email) == 0 {
-		//     c.JSON(http.StatusBadRequest,
-        //         gin.H{"message": "Please fill in all required fields."})
-		// 	return
-		// }
-		// if len(username) == 0 {
-		// 	username = "player"	
-		// }
-		// parsedEmail, err := mail.ParseAddress(email)
-		// if err != nil {
-        //     c.JSON(http.StatusBadRequest,
-        //         gin.H{"message": "Please enter a valid email address."})
-		// 	return
-		// }
 		existingLogin, err := h.userRepo.ExistingLogin(c.Request.Context(), input.Login)
 		if err != nil {
             c.JSON(http.StatusUnauthorized,
@@ -207,7 +189,6 @@ func (h *UserHandler) CreateUser() gin.HandlerFunc {
 			Username:    input.Username,
 			Email:       input.Email,
 			Is_verified: false}
-		// check if the email is correct
 		user, err := h.userRepo.CreateUser(c.Request.Context(), userObj)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError,
