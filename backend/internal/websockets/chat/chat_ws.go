@@ -221,6 +221,7 @@ func (c *Chat) sendNewChats(chatsList []*chats.Chat,
 		return
 	}
 	for client := range c.Clients[targetId] {
+		// todo erase this line if, there's no need of a specific send struct for the front
 		// if client.UserId == targetId && client.TargetId == userId {
 		if client.UserId == targetId {
 			select {
