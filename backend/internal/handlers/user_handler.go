@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"strings"
-	// "net/mail"
 	"crypto/sha256"
 	"log"
 	"fmt"
