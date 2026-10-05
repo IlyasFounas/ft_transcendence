@@ -39,7 +39,7 @@ export const tutorialPages: TutorialPage[] = [
         title: "READY TO",
         highlight: "OPERATE?",
         description: "Use your observation skills, explore the world, and submit your best guess before the signal is lost.",
-        image: "/images/tutorial/tutorial-4.png",
+        image: "/images/tutorial/tutorial-5.png",
         moibileImage: "/images/tutorial/tutorial-5 (phone).png",
     },
 ];

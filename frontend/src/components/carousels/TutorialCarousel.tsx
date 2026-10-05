@@ -73,7 +73,7 @@ export default function TutorialCarousel({
 
                 <div className="mt-4 flex items-start justify-between gap-4">
                     <div className="text-left">
-                        <h2 className="text-heading-medium lg:text-hero uppercase">
+                        <h2 className="text-heading-medium md:text-heading-large md:font-bold lg:text-hero uppercase">
                             <span className="text-text-primary">
                                 {page.title}{" "}
                             </span>
@@ -82,7 +82,7 @@ export default function TutorialCarousel({
                             </span>
                         </h2>
                         <div className="h-12">
-                            <p className="mt-2 text-label-small lg:text-heading-small text-text-primary">
+                            <p className="mt-2 text-label-small md:text-body-primary lg:text-heading-small text-text-primary">
                                 {page.description}
                             </p>
                         </div>
