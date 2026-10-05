@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { tutorialPages } from "../../data/tutorial";
 import PrimaryButton from "../buttons/PrimaryButton";
+import { X } from "lucide-react";
 
 interface TutorialCarouselProps {
     mode: "landing" | "game";
@@ -62,18 +63,12 @@ export default function TutorialCarousel({
                         alt="Atlas"
                         className="h-12"
                     />
-                    <button
+                    <X 
+                        size={24}
                         type="button"
                         onClick={onClose}
-                        className="
-                            text-4xl
-                            text-text-primary
-                            transition
-                            hover:text-primary
-                        "
-                    >
-                        ×
-                    </button>
+                        className="text-text-primary transition hover:text-primary"
+                    />
                 </div>
 
                 <div className="mt-4 flex items-start justify-between gap-4">
