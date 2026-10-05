@@ -45,13 +45,15 @@ export default function TutorialCarousel({
                     relative
                     w-full
                     max-w-208
-                    aspect-832/612
-                    rounded-2xl
+                    h-157
+                    rounded-xl
                     border
                     border-border-default
-                    bg-background-base
+                    bg-surface-base
                     p-6
                     md:p-8
+                    flex
+                    flex-col
                 "
             >
                 <div className="flex items-center justify-between">
@@ -84,9 +86,11 @@ export default function TutorialCarousel({
                                 {page.highlight}
                             </span>
                         </h2>
-                        <p className="mt-2 text-heading-small text-text-primary">
-                            {page.description}
-                        </p>
+                        <div className="h-12">
+                            <p className="mt-2 text-heading-small text-text-primary">
+                                {page.description}
+                            </p>
+                        </div>
                     </div>
 
                     <span className="shrink-0 text-text-secondary text-heading-small">
@@ -95,33 +99,31 @@ export default function TutorialCarousel({
                     </span>
                 </div>
 
-                <div className="mt-6 flex justify-center">
-                    <img
-                        src={page.image}
-                        alt={page.title}
-                        className="
-                            w-full
-                            aspect-video
-                            object-contain
-                        "
-                    />
+                <div className="relative mt-3 h-87.5 w-full shrink-0">
+                    <div className="flex h-full w-full items-center justify-center">
+                        <img
+                            src={page.image}
+                            alt={page.title}
+                            className="max-h-full max-w-full object-contain"
+                        />
+                    </div>
+
+                    {isLastPage && (
+                       <div className="absolute bottom-12 left-1/2 w-60 -translate-x-1/2 translate-y-1/2">
+                            <PrimaryButton
+                                type="button"
+                                size="small"
+                                onClick={handleLastPageAction}
+                            >
+                                {mode === "landing"
+                                    ? "START OPERATION"
+                                    : "CONTINUE TO PLAY"}
+                            </PrimaryButton>
+                        </div>
+                    )}
                 </div>
 
-                {isLastPage && (
-                    <div className="mt-4 flex justify-center">
-                        <PrimaryButton
-                            type="button"
-                            size="small"
-                            onClick={handleLastPageAction}
-                        >
-                            {mode === "landing"
-                                ? "START OPERATION"
-                                : "CONTINUE TO PLAY"}
-                        </PrimaryButton>
-                    </div>
-                )}
-
-                <div className="mt-6 flex items-center justify-between">
+                <div className="mt-auto flex items-center justify-between">
                     {currentPage > 0 ? (
                         <button
                             type="button"
