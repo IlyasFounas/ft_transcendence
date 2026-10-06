@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { mockGame } from "../../mocks/game.mock";
 import { useNavigate } from "react-router-dom";
 import { useLobbySocket } from "../../context/GameSocketContext";
 import PrimaryButton from "../../components/buttons/PrimaryButton";
@@ -119,7 +118,6 @@ export default function GamePlayPage() {
 						${hasGuessed ? "pointer-events-none opacity-80" : ""}
 					`}>
 						<Load2DMap 
-							{...mockGame.location} 
 							onGuess={(lat, lng) => {
 								if (!hasGuessed) {
 									setGuess({ lat, lng });
@@ -168,9 +166,6 @@ export default function GamePlayPage() {
 						<div className={isMapMain ? "absolute inset-0" : "w-full h-full"}>
 							<LoadStreetView
 								id={String(round.mid)}
-								moving={mockGame.streetView.moving}
-								zooming={mockGame.streetView.zooming}
-								panning={mockGame.streetView.panning}
 								interactive={!isMapMain}
 							/>
 						</div>
@@ -215,7 +210,7 @@ export default function GamePlayPage() {
 							"
 							onClick={() => setIsMapMain(true)}
 						>
-							<Preview2DMap {...mockGame.location}/>
+							<Preview2DMap />
 						</div>
 					</div>
 				)}

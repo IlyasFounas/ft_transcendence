@@ -5,17 +5,11 @@ import { Viewer } from 'mapillary-js';
 
 type Props = {
     id: string;
-    moving: boolean;
-    zooming: boolean;
-    panning: boolean;
     interactive?: boolean;
 };
 
 export default function LoadStreetView({
     id,
-    moving,
-    zooming,
-    panning,
     interactive = true,
 }: Props) {
     const containerRef = useRef<HTMLDivElement>(null);
@@ -29,26 +23,26 @@ export default function LoadStreetView({
 			component: {
 				cover: false,
 
-				zoom: zooming,
+				zoom: true,
 
 				pointer: {
-					scrollZoom: zooming,
-					touchZoom: zooming,
-					doubleClickZoom: zooming,
-					touchPan: panning,
-					dragPan: panning,
-					earthControls: panning,
+					scrollZoom: true,
+					touchZoom: true,
+					doubleClickZoom: true,
+					touchPan: true,
+					dragPan: true,
+					earthControls: true,
 				},
 
-				sequence: moving,
+				sequence: true,
 
 				keyboard: {
-					keySequenceNavigation: moving,
-					keySpatialNavigation: moving,
-					keyZoom: zooming,
+					keySequenceNavigation: true,
+					keySpatialNavigation: true,
+					keyZoom: true,
 				},
 
-				direction: moving,
+				direction: true,
 			},
 
 			imageTiling: true,
