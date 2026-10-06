@@ -14,7 +14,7 @@ import (
 	"log"
 	"net/http"
 	"sync"
-
+	"time"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 )
@@ -72,12 +72,13 @@ type DataInfos struct {
 }
 
 type ChatFriend struct {
-	ID     		int64   `json:"id"`
-	UserID 		int64   `json:"user_id"`
-	Name   		string  `json:"name"`
-	Avatar 		*string `json:"avatar"`
-	Online 		bool    `json:"online"`
-	LastMessage string  `json:"last_message"`
+	ID     		int64   	`json:"id"`
+	UserID 		int64   	`json:"user_id"`
+	Name   		string  	`json:"name"`
+	Avatar 		*string 	`json:"avatar"`
+	Online 		bool    	`json:"online"`
+	LastMessage string  	`json:"last_message"`
+	Date 		time.Time  	`json:"date"`
 }
 
 func NewChat(
@@ -113,13 +114,15 @@ func (c *Chat) IsOnline(userId int64) bool {
 func (c *Chat) sendToClient(ctx context.Context, userId int64, friends []*friends.FriendResponse) {
 	friendsList := make([]ChatFriend, 0, len(friends))
 	for _, friend := range friends {
+		lMessage, date := c.ChatHandler.LastFriendMessage(ctx, userId, friend.UserID)
 		friendsList = append(friendsList, ChatFriend{
 			ID:     friend.ID,
 			UserID: friend.UserID,
 			Name:   friend.Name,
 			Avatar: friend.Avatar,
 			Online: c.IsOnline(friend.UserID),
-			LastMessage: c.ChatHandler.LastFriendMessage(ctx, userId, friend.UserID),
+			LastMessage: lMessage,
+			Date: date,
 		})
 	}
 	response := &Response{
@@ -156,7 +159,8 @@ func (c *Chat) sendClientState(user *users.User, ctx context.Context) {
 			}
 			for _, friend := range friends {
 				if friend.UserID == friendLeft.ID {
-					friendLeft.LastMessage = c.ChatHandler.LastFriendMessage(ctx, client.UserId, friend.UserID)
+					friendLeft.LastMessage, 
+						friendLeft.Date = c.ChatHandler.LastFriendMessage(ctx, client.UserId, friend.UserID)
 					response := &Response{
 						Action: "friend_list",
 						Payload: friendLeft,
@@ -217,7 +221,9 @@ func (c *Chat) sendNewChats(chatsList []*chats.Chat,
 		return
 	}
 	for client := range c.Clients[targetId] {
-		if client.UserId == targetId && client.TargetId == userId {
+		// todo erase this line if, there's no need of a specific send struct for the front
+		// if client.UserId == targetId && client.TargetId == userId {
+		if client.UserId == targetId {
 			select {
 			case client.Connx.Send <- data:
 			default:

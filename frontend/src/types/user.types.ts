@@ -24,7 +24,7 @@ export interface User {
     GoogleId: string | null;
     Email: string;
     Is_verified: boolean;
-    Avatar: string | null;
+    Avatar: string;
     XP: number;
     Rank: string;
     CreatedAt: string;

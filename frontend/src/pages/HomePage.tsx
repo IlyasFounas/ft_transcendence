@@ -2,11 +2,30 @@ import PrimaryButton from "../components/buttons/PrimaryButton";
 import ProfileCard from "../components/cards/ProfileCard";
 import { useAuth } from "../context/AuthContext";
 import CalculateRank from "../utils/rank";
+import { useEffect, useState } from "react";
+import type { UserStatistics } from "../types/statistics.type";
 
 export default function HomePage() {
-    const { user } = useAuth();
-    const totalScore = 24658; // need to call api + api for operation + accuracy
+    const { user, authFetch } = useAuth();
+    const [statistics, setStatistics] = useState<UserStatistics | null>(null);
+
+    const totalScore = user?.XP ?? 0;
     const rank = CalculateRank(totalScore);
+    
+    useEffect(() => {
+        const getStatistics = async () => {
+            const result = await authFetch("api/user/statistics");
+
+            if (!result) {
+                return ;
+            }
+            
+            setStatistics(result.data.statistics);
+        };
+
+        getStatistics();
+    }, []);
+
     return (
         <main
             className="
@@ -38,10 +57,10 @@ export default function HomePage() {
                 <ProfileCard 
                     username={user?.Username ?? "player"}
                     avatar={user?.Avatar ?? "/avatars/avatar1.png"}
-                    role={rank.currentRank}
-                    operations={123}
-                    accuracy={74}
-                    score={totalScore}
+                    role={user?.Rank ?? "Junior Agent"}
+                    operations={statistics?.finished_games ?? 0}
+                    accuracy={statistics?.accuracy ?? 0}
+                    score={statistics?.best_score ?? 0}
                     nextRank={rank.nextRank ?? ""}
                     xpToNextRank={rank.xpRemaining}
                     progress={rank.progress}
@@ -54,7 +73,7 @@ export default function HomePage() {
                 
                 items-center
                 lg:self-center
-                
+
                 space-y-2
                 lg:space-y-6
                 lg:px-20
@@ -65,14 +84,12 @@ export default function HomePage() {
             >
                 <div className="
                     flex
-                    w-[250px]
+                    w-62.5
                     gap-4
                     items-center
-
                     sm:px-6
-
-                    md:w-[420px]
-                    lg:w-[500px]
+                    md:w-105
+                    lg:w-125
                     "
                 >
                     <hr className="h-px flex-1 border-primary" />

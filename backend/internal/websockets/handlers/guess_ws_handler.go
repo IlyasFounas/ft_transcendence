@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"errors"
 	"log"
+	"math"
 	"time"
 
 	"github.com/sams96/rgeo"
@@ -94,9 +95,21 @@ func (h *GuessWsHandler) AddGuess(ctx context.Context, payload json.RawMessage, 
 		log.Println("error : latitude and longitude must be provided")
 		return nil, false
 	}
-	if *guess.Lat < -90 || *guess.Lat > 90 || *guess.Long < -180 || *guess.Long > 180 {
-		log.Printf("error : invalid coordinates (%f, %f)\n", *guess.Lat, *guess.Long)
-		return nil, false
+	if *guess.Lat > 90 || *guess.Lat < -90 {
+		*guess.Lat = math.Mod(*guess.Lat+90, 180) // works between 0 and 180
+		if *guess.Lat < 0 { //set back to normal coordinates
+			*guess.Lat += 90
+		} else {
+			*guess.Lat -= 90
+		}
+	}
+	if *guess.Long > 180 || *guess.Long < -180 {
+		*guess.Long = math.Mod(*guess.Long+180, 360) // works between 0 and 360
+		if *guess.Long < 0 { //set back to normal coordinates
+			*guess.Long += 180
+		} else {
+			*guess.Long -= 180
+		}
 	}
 	if guess.RoundNb <= 0 {
 		log.Println("error : round_nb must be provided")
@@ -106,8 +119,6 @@ func (h *GuessWsHandler) AddGuess(ctx context.Context, payload json.RawMessage, 
 		log.Println("error : user_id must be provided")
 		return nil, false
 	}
-
-	// TODO check if the player has not left the lobby (h.lobbyRepo.ActualLobby) > is not it done in the lobby handler already ?
 
 	var err error
 	guess.RoundID, err = h.roundRepo.GetIDByGameIDAndRoundNb(ctx, gameID, guess.RoundNb)
@@ -221,10 +232,7 @@ func (h *GuessWsHandler) GetRoundGuesses(ctx context.Context, roundID int64) ([]
 	return h.guessRepo.GetByRoundID(ctx, roundID)
 }
 
-// Transforms the raw guesses of a round into its results: the round number and the actual location (base) once
-// always present, then an entry for EACH active player in the game (activePlayers),
-// not just those who guessed (a player who did not guess in time appears
-// with HasGuessed:false and RoundInfos nil, rather than being absent from the payload).
+// Transforms the raw guesses of a round into its results
 func (h *GuessWsHandler) BuildRoundResults(
 	ctx context.Context,
 	gameID, roundID, roundNb int64,
@@ -295,6 +303,31 @@ func (h *GuessWsHandler) BuildRoundResults(
 		results.PlayerRoundResult = append(results.PlayerRoundResult, result)
 	}
 	return results, nil
+}
+
+// Builds the results of every round of the game from round n to round 1
+func (h *GuessWsHandler) BuildGameResults(
+	ctx context.Context,
+	gameID, upToRoundNb int64,
+	activePlayers []*games.Lobby,
+) ([]RoundResult, error) {
+	rounds := make([]RoundResult, 0, upToRoundNb)
+	for roundNb := upToRoundNb; roundNb >= 1; roundNb-- {
+		roundID, err := h.ResolveRoundID(ctx, gameID, roundNb)
+		if err != nil {
+			return nil, err
+		}
+		roundGuesses, err := h.GetRoundGuesses(ctx, roundID)
+		if err != nil {
+			return nil, err
+		}
+		result, err := h.BuildRoundResults(ctx, gameID, roundID, roundNb, activePlayers, roundGuesses)
+		if err != nil {
+			return nil, err
+		}
+		rounds = append(rounds, *result)
+	}
+	return rounds, nil
 }
 
 // Tells whether userID has already sent his guess for the round roundNb of gameID

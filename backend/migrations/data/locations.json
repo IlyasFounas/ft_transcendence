@@ -262,5 +262,305 @@
     "latitude": 12.681610799972,
     "longitude": 101.279059,
     "country_code": "TH"
+  },
+  {
+    "mapillary_id": 735254922939869,
+    "latitude": 38.2650596,
+    "longitude": 76.45031089999998,
+    "country_code": "US"
+  },
+  {
+    "mapillary_id": 1662747627969375,
+    "latitude": 42.30708201273001,
+    "longitude": -71.30895516577101,
+    "country_code": "US"
+  },
+  {
+    "mapillary_id": 979272216648091,
+    "latitude": 41.95122529997201,
+    "longitude": -87.659707999972,
+    "country_code": "US"
+  },
+  {
+    "mapillary_id": 2006350429903847,
+    "latitude": 34.19207049999997,
+    "longitude": -118.13810460000002,
+    "country_code": "US"
+  },
+  {
+    "mapillary_id": 946180094248018,
+    "latitude": 33.85975789999999,
+    "longitude": -118.3994482,
+    "country_code": "US"
+  },
+  {
+    "mapillary_id": 1067633391806472,
+    "latitude": 41.032592100000016,
+    "longitude": -111.9123899,
+    "country_code": "US"
+  },
+  {
+    "mapillary_id": 1009196246709497,
+    "latitude": 40.81566537694701,
+    "longitude": -96.704011282691,
+    "country_code": "US"
+  },
+  {
+    "mapillary_id": 1299646814697640,
+    "latitude": 41.586859722718,
+    "longitude": -93.62495043568197,
+    "country_code": "US"
+  },
+  {
+    "mapillary_id": 1302285813952400,
+    "latitude": 28.54354529999999,
+    "longitude": -81.37803810000003,
+    "country_code": "US"
+  },
+  {
+    "mapillary_id": 1185254869711295,
+    "latitude": 42.931147751364,
+    "longitude": 13.878413510931,
+    "country_code": "IT"
+  },
+  {
+    "mapillary_id": 2549582645243841,
+    "latitude": 41.9018158222716,
+    "longitude": 12.490274147459104,
+    "country_code": "IT"
+  },
+  {
+    "mapillary_id": 1421497398863324,
+    "latitude": 41.902061752007,
+    "longitude": 12.457971260879,
+    "country_code": "VA"
+  },
+  {
+    "mapillary_id": 683359740852984,
+    "latitude": 42.624080786728,
+    "longitude": 12.081104819498,
+    "country_code": "IT"
+  },
+  {
+    "mapillary_id": 1497706438529136,
+    "latitude": 43.560915532573,
+    "longitude": 10.341820024705,
+    "country_code": "IT"
+  },
+  {
+    "mapillary_id": 1684024682623062,
+    "latitude": 43.727375666071,
+    "longitude": 10.377839030804,
+    "country_code": "IT"
+  },
+  {
+    "mapillary_id": 4151326541769571,
+    "latitude": 44.48443016555,
+    "longitude": 12.28235189097,
+    "country_code": "IT"
+  },
+  {
+    "mapillary_id": 920653676949832,
+    "latitude": 44.2815216,
+    "longitude": 11.8939008,
+    "country_code": "IT"
+  },
+  {
+    "mapillary_id": 1163633695534740,
+    "latitude": 44.497923568889,
+    "longitude": 11.355203933333,
+    "country_code": "IT"
+  },
+  {
+    "mapillary_id": 931020268982375,
+    "latitude": 45.408973,
+    "longitude": 11.8787751,
+    "country_code": "IT"
+  },
+  {
+    "mapillary_id": 1276623073891760,
+    "latitude": 45.460636789963,
+    "longitude": 9.1768965433706,
+    "country_code": "IT"
+  },
+  {
+    "mapillary_id": 1095792725576476,
+    "latitude": 45.464073110588,
+    "longitude": 9.1890653988235,
+    "country_code": "IT"
+  },
+  {
+    "mapillary_id": 832871056510246,
+    "latitude": 43.739522350501,
+    "longitude": 7.4273718087841,
+    "country_code": "MC"
+  },
+  {
+    "mapillary_id": 137096681809656,
+    "latitude": 43.733152978571,
+    "longitude": 7.4180305742466,
+    "country_code": "MC"
+  },
+  {
+    "mapillary_id": 3241471939398000,
+    "latitude": 43.252985199972,
+    "longitude": 6.593014,
+    "country_code": "FR"
+  },
+  {
+    "mapillary_id": 574252641331627,
+    "latitude": 43.2981025,
+    "longitude": 5.3726397,
+    "country_code": "FR"
+  },
+  {
+    "mapillary_id": 1058171205972496,
+    "latitude": 43.89805137305,
+    "longitude": 2.3134824336575,
+    "country_code": "FR"
+  },
+  {
+    "mapillary_id": 1359251088792994,
+    "latitude": 43.3721951,
+    "longitude": -0.6265453,
+    "country_code": "FR"
+  },
+  {
+    "mapillary_id": 383684322878081,
+    "latitude": 43.597202380951984,
+    "longitude": 1.445504127590084,
+    "country_code": "FR"
+  },
+  {
+    "mapillary_id": 1607646386588997,
+    "latitude": 35.88086431026501,
+    "longitude": 139.64134665053996,
+    "country_code": "JP"
+  },
+  {
+    "mapillary_id": 2453421405051215,
+    "latitude": 37.401385852133004,
+    "longitude": 136.94398020660003,
+    "country_code": "JP"
+  },
+  {
+    "mapillary_id": 1065402672120022,
+    "latitude": 34.7027947,
+    "longitude": 135.49036769999998,
+    "country_code": "JP"
+  },
+  {
+    "mapillary_id": 1707020993079062,
+    "latitude": 30.0193636,
+    "longitude": 30.9950088,
+    "country_code": "EG"
+  },
+  {
+    "mapillary_id": 1920902451973369,
+    "latitude": 28.4954696,
+    "longitude": 34.5147296,
+    "country_code": "EG"
+  },
+  {
+    "mapillary_id": 1144078642734411,
+    "latitude": 33.895079721728,
+    "longitude": 35.512323053587,
+    "country_code": "LB"
+  },
+  {
+    "mapillary_id": 525617741776651,
+    "latitude": 33.887483831389,
+    "longitude": 35.5509731825,
+    "country_code": "LB"
+  },
+  {
+    "mapillary_id": 2068402976844929,
+    "latitude": -0.1026583,
+    "longitude": 34.2757639,
+    "country_code": "KE"
+  },
+  {
+    "mapillary_id": 491797080149966,
+    "latitude": -0.2864992,
+    "longitude": 36.0632366,
+    "country_code": "KE"
+  },
+  {
+    "mapillary_id": 1753679382116480,
+    "latitude": -1.30715042,
+    "longitude": 36.789654130423,
+    "country_code": "KE"
+  },
+  {
+    "mapillary_id": 2356877544805792,
+    "latitude": -0.18743898877517,
+    "longitude": 35.264437479168,
+    "country_code": "KE"
+  },
+  {
+    "mapillary_id": 1892292331344025,
+    "latitude": 17.717522599469007,
+    "longitude": 83.290446868461,
+    "country_code": "IN"
+  },
+  {
+    "mapillary_id": 1153163045200263,
+    "latitude": 18.4311943,
+    "longitude": 79.13379340000006,
+    "country_code": "IN"
+  },
+  {
+    "mapillary_id": 546482386531323,
+    "latitude": 23.717038699972008,
+    "longitude": 76.009432599972,
+    "country_code": "IN"
+  },
+  {
+    "mapillary_id": 136438475184621,
+    "latitude": 18.4320692,
+    "longitude": 79.12831519999997,
+    "country_code": "IN"
+  },
+  {
+    "mapillary_id": 920929704248148,
+    "latitude": 25.323875504184997,
+    "longitude": 82.995347501835,
+    "country_code": "IN"
+  },
+  {
+    "mapillary_id": 725711762042074,
+    "latitude": 30.65422819997204,
+    "longitude": 104.089516,
+    "country_code": "CN"
+  },
+  {
+    "mapillary_id": 334141838852997,
+    "latitude": 26.89179620000003,
+    "longitude": 100.21510279997005,
+    "country_code": "CN"
+  },
+  {
+    "mapillary_id": 1421653865005250,
+    "latitude": 27.879838100000015,
+    "longitude": 102.26351599996997,
+    "country_code": "CN"
+  },
+  {
+    "mapillary_id": 3358559464381255,
+    "latitude": 30.19835640000001,
+    "longitude": 103.50817510000002,
+    "country_code": "CN"
+  },
+  {
+    "mapillary_id": 591539835459224,
+    "latitude": 30.13829989997201,
+    "longitude": 104.60309239997002,
+    "country_code": "CN"
+  },
+  {
+    "mapillary_id": 1257781476446075,
+    "latitude": 37.575589628,
+    "longitude": 127.01060115999985,
+    "country_code": "KR"
   }
 ]
