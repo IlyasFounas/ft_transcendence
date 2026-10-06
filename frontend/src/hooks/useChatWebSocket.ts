@@ -7,6 +7,8 @@ interface ChatFriend {
     name: string;
     avatar: string | null;
     online: boolean;
+    last_message: string;
+    date: string;
 }
 
 export default function useChatWebSocket() {
@@ -80,7 +82,7 @@ export default function useChatWebSocket() {
         socket.onmessage = (event) => {
             const data = JSON.parse(event.data);
             
-            if (data.title === "friend_list") {
+            if (data.action === "friend_list") {
                 if (Array.isArray(data.payload)) {
                     
                     const payload = data.payload as ChatFriend[];
@@ -102,7 +104,7 @@ export default function useChatWebSocket() {
                 }
             }
 
-            if (data.title === "chats") {
+            if (data.action === "chats") {
                 console.log("This is a chat history:", data.payload);
                 
                 const chats = data.payload.chats ?? [];
@@ -122,12 +124,34 @@ export default function useChatWebSocket() {
                 }
             }
 
-            if (data.title === "new_message") {
+            if (data.action === "new_message") {
                 console.log("This is a new message:", data.payload);
+
+                const newMessages = data.payload.chats ?? [];
+                const latestMessage = newMessages[newMessages.length - 1];
+
+                console.log("LATEST MESSAGE:", latestMessage);
+                console.log("CURRENT FRIENDS:", chatFriends);
+
                 setMessages(currentMessages => [
                     ...currentMessages,
-                    ...(data.payload.chats ?? []),
+                    ...newMessages,
                 ]);
+
+                if (latestMessage) {
+                    setChatFriends(currentFriends =>
+                        currentFriends.map(friend =>
+                            friend.user_id === latestMessage.user_id ||
+                            friend.user_id === latestMessage.friend_id
+                                ? {
+                                    ...friend,
+                                    last_message: latestMessage.message,
+                                    date: latestMessage.date,
+                                }
+                                : friend
+                        )
+                    );
+                }
             }
         }
         

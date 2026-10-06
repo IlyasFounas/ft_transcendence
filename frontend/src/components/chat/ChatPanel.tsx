@@ -45,6 +45,8 @@ export default function ChatPanel() {
         return {
             ...friend,
             online: chatFriend?.online ?? false,
+            lastMessage: chatFriend?.last_message ?? "",
+            timestamp: chatFriend?.date ?? "",
         };
     });
 
