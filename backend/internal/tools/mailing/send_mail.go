@@ -42,7 +42,8 @@ func SendEmail(toEmail string, message *mail.Msg) error {
 
 func returnActivationLink(activationJWT string) string {
     return fmt.Sprintf(
-        "This is your activation link: http://localhost:5130/api/user/activation?token=%s\n%s",
+        "This is your activation link: %s/api/user/activation?token=%s\n%s",
+		os.Getenv("PUBLIC_URL"),
         activationJWT,
 		"you have 24 hours to activate your account before it gets deleted",
 	)

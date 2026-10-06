@@ -1,4 +1,4 @@
-.PHONY: up down restart logs logs-backend logs-frontend ps stop clean create_mig init_mig exec_mig rollback_mig status_mig
+.PHONY: up data-races down restart logs logs-backend logs-frontend ps stop clean create_mig init_mig exec_mig rollback_mig status_mig
 
 DOCKER_COMPOSE_OVERRIDE = docker-config/docker-compose.override.yml
 DOCKER_COMPOSE_PROD = docker-config/docker-compose.prod.yml
@@ -6,6 +6,10 @@ DOCKER_COMPOSE = docker-config/docker-compose.yml
 ENV_PROD = docker-config/.env.prod
 
 up:
+	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_OVERRIDE) up -d
+	make print_posgres_ip
+
+data-races:
 	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_OVERRIDE) up -d
 	make print_posgres_ip
 
@@ -23,9 +27,7 @@ fclean:
 
 restart:
 	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_OVERRIDE) restart
-
-# clean:
-# 	rm -rf dist/ build/ main #put the right folders/files
+	make print_posgres_ip
 
 clean-images: clean
 	@echo "Cleaning images..."
