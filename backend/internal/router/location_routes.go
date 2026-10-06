@@ -1,20 +1,19 @@
 package router
 
 import (
-	// EXTERNAL PACKAGE
 	// "log" // TEMPORARY TEST SHUTDOWN
 	// "net/http" // TEMPORARY TEST SHUTDOWN
 	// "time" // TEMPORARY TEST SHUTDOWN
 
-	// OUR PACKAGE
+	"backend/internal/middleware"
 	"backend/internal/handlers"
 	"github.com/gin-gonic/gin"
 )
 
 func registerLocationRoutes(r *gin.Engine, h *handlers.LocationHandler) {
 	// Public user
-	public := r.Group("/")
-	{
+	// public := r.Group("/")
+	// {
 		// // TEMPORARY TEST ROUTE FOR GRACEFUL SHUTDOWN
 		// public.GET("locations/slow", func(c *gin.Context) {
 		// 	log.Println("[Request] Started processing slow endpoint...")
@@ -22,30 +21,21 @@ func registerLocationRoutes(r *gin.Engine, h *handlers.LocationHandler) {
 		// 	c.String(http.StatusOK, "Finished!")
 		// 	log.Println("[Request] Completed slow endpoint.")
 		// })
-		public.POST("/locations", h.AddLocations) // TODO: put in admin group when admin exists
-		public.GET("/locations/:location_id", h.GetLocationByID)
-		// public.GET("/locations/:location_id/coordinates", h.GetCoordinatesByID)
-		// public.GET("/locations/:location_id/cc", h.GetCountryCodeByID)
-		public.GET("/locations/mapillary/:mid", h.GetLocationByMID)
-		public.GET("/locations/random", h.GetRandomLocation)
-		public.GET("/locations/random/country/:cc", h.GetRandomLocationByCC)
-		public.PATCH("/locations/:location_id", h.UpdateLocationByID)     // TODO: admin
-		public.PATCH("/locations/mapillary/:mid", h.UpdateLocationByMID)  // TODO: admin
-		public.DELETE("/locations/:location_id", h.DeleteLocation)        // TODO: admin
-		public.DELETE("/locations/mapillary/:mid", h.DeleteLocationByMID) // TODO: admin
+	// }
+
+	admin := r.Group("/")
+	admin.Use(middleware.AuthMiddleWare(), middleware.AdminMiddleWare())
+	{
+		admin.POST("/admin/locations", h.AddLocations)
+		admin.GET("/admin/locations/:location_id", h.GetLocationByID)
+		admin.GET("/admin/locations/mapillary/:mid", h.GetLocationByMID)
+		admin.GET("/admin/locations/random", h.GetRandomLocation)
+		admin.GET("/admin/locations/random/country/:cc", h.GetRandomLocationByCC)
+		admin.GET("/admin/locations/:location_id/coordinates", h.GetCoordinatesByID)
+		admin.GET("/admin/locations/:location_id/cc", h.GetCountryCodeByID)
+		admin.PATCH("/admin/locations/:location_id", h.UpdateLocationByID)
+		admin.PATCH("/admin/locations/mapillary/:mid", h.UpdateLocationByMID)
+		admin.DELETE("/admin/locations/:location_id", h.DeleteLocation)
+		admin.DELETE("/admin/locations/mapillary/:mid", h.DeleteLocationByMID)
 	}
-
-	// 	// Authentificated user
-	// 	// private := r.Group("/")
-	// 	// private.Use(auth.AuthRequired())
-	// 	// {
-
-	// 	// }
-
-	// 	// Admin user
-	// 	// admin := r.Group("/")
-	// 	// admin.Use(auth.AuthRequired())
-	// 	// {
-
-	// 	// }
 }

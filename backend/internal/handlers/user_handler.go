@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"strings"
-	"net/mail"
 	"crypto/sha256"
 	"log"
 	"fmt"
@@ -16,6 +15,7 @@ import (
 	"github.com/google/uuid"
 	"golang.org/x/oauth2"
 	"path/filepath"
+	"github.com/go-playground/validator/v10"
 
 	"backend/internal/models/users"
 	"backend/internal/repositories"
@@ -25,6 +25,8 @@ import (
 	"backend/internal/tools/mailing"
 	"backend/internal/tools/token_generation"
 	"backend/internal/models/users/tokens"
+	"backend/internal/tools/rank_calculation"
+	"backend/internal/tools/validation"
 )
 
 /**
@@ -42,6 +44,7 @@ import (
 	rTokenRepo   *repositories.RefreshTokenRepository
 	tokenHandler *TokenHandler
 	googleConf   *oauth2.Config
+	validate	 *validator.Validate
 }
 
 func NewUserHandler(
@@ -51,12 +54,17 @@ func NewUserHandler(
 	tokenHandler *TokenHandler,
 	googleConf *oauth2.Config,
 ) *UserHandler {
+
+	validate := validator.New()
+	validation.RegisterCustomRules(validate)
+
 	return &UserHandler{
 		userRepo:     userRepo,
 		aTokenRepo:   aTokenRepo,
 		rTokenRepo:   rTokenRepo,
 		tokenHandler: tokenHandler,
 		googleConf:   googleConf,
+		validate:	  validate,
 	}
 }
 
@@ -87,7 +95,7 @@ func (h *UserHandler) createActivationToken(c *gin.Context, expiresAt time.Time,
 		emailString, err := h.userRepo.Email(c.Request.Context(), userId)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError,
-				gin.H{"message": "Something went wrong. Please try again."})
+				gin.H{"message": "Can't find your email. Please try again."})
 			return err
 		}
 		err = mailing.SendActivationEmail(*emailString, tokenObj.Token);
@@ -125,33 +133,34 @@ func (h *UserHandler) jwtGeneration(c *gin.Context, userId int64) (*tokens.Activ
 	return tokenObj, true
 }
 
+type CreateUserValidation struct {
+	Email   	string `validate:"required,max=254,email"`
+	Login	  	string `validate:"required,min=3,max=30,acceptChar"`
+	Username	string `validate:"required,min=3,max=30,acceptChar"`
+	Password	string `validate:"required,strongpwd"`
+}
+
 func (h *UserHandler) CreateUser() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		hashpassword, hashErr := encryption.HashPassword(c.PostForm("password"))
+		input := CreateUserValidation{
+			Email:		strings.ToLower(strings.TrimSpace(c.PostForm("email"))),
+			Login:		strings.ToLower(strings.TrimSpace(c.PostForm("login"))),
+			Username:	strings.ToLower(strings.TrimSpace(c.PostForm("username"))),
+			Password:	c.PostForm("password"),
+		}
+		err := h.validate.Struct(input)
+		if err != nil {
+			c.JSON(http.StatusBadRequest,
+				gin.H{"message": validation.FormatErrors(err)})
+			return
+		}
+		hashpassword, hashErr := encryption.HashPassword(input.Password)
 		if hashErr != nil {
             c.JSON(http.StatusInternalServerError,
                 gin.H{"message": "Something went wrong. Please try again."})
 			return
 		}
-		login := c.PostForm("login")
-		username := c.PostForm("username")
-		email := c.PostForm("email")
-		if len(login) == 0 || len(username) == 0 ||
-			len(email) == 0 {
-		    c.JSON(http.StatusBadRequest,
-                gin.H{"message": "Please fill in all required fields."})
-			return
-		}
-		if len(username) == 0 {
-			username = "player"	
-		}
-		parsedEmail, err := mail.ParseAddress(email)
-		if err != nil {
-            c.JSON(http.StatusBadRequest,
-                gin.H{"message": "Please enter a valid email address."})
-			return
-		}
-		existingLogin, err := h.userRepo.ExistingLogin(c.Request.Context(), login)
+		existingLogin, err := h.userRepo.ExistingLogin(c.Request.Context(), input.Login)
 		if err != nil {
             c.JSON(http.StatusUnauthorized,
                 gin.H{"message": "Something went wrong. Please try again."})
@@ -162,24 +171,22 @@ func (h *UserHandler) CreateUser() gin.HandlerFunc {
                 gin.H{"message": "This login or this username are unavailable. Please try another one."})
 			return
 		}
-		existingUsername, err := h.userRepo.ExistingName(c.Request.Context(), username)
+		existingUsername, err := h.userRepo.ExistingName(c.Request.Context(), input.Username)
 		if err != nil {
             c.JSON(http.StatusUnauthorized,
                 gin.H{"message": "Something went wrong. Please try again."})
 			return
 		}
-		if existingUsername != "" {
+		if existingUsername {
             c.JSON(http.StatusBadRequest,
                 gin.H{"message": "This username is unavailable. Please try another one."})
 			return
-		}
-
-		userObj := &users.User{Login: &login,
+		}		 
+		userObj := &users.User{Login: &input.Login,
 			Password:    &hashpassword,
-			Username:    username,
-			Email:       strings.ToLower(parsedEmail.Address),
+			Username:    input.Username,
+			Email:       input.Email,
 			Is_verified: false}
-		// check if the email is correct
 		user, err := h.userRepo.CreateUser(c.Request.Context(), userObj)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError,
@@ -196,15 +203,31 @@ func (h *UserHandler) CreateUser() gin.HandlerFunc {
 	}
 }
 
+type LoginValidation struct {
+	Login	  	string `validate:"required"`
+	Password	string `validate:"required"`
+}
+
 func (h *UserHandler) Login() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		input := LoginValidation {
+			Login:		strings.ToLower(strings.TrimSpace(c.PostForm("login"))),
+			Password:	c.PostForm("password"),
+		}
+		err := h.validate.Struct(input)
+		if err != nil {
+			c.JSON(http.StatusBadRequest,
+				gin.H{"message": validation.FormatErrors(err)})
+			return
+		}
 		state, userId, err := h.userRepo.LoginUser(c.Request.Context(),
-			c.PostForm("login"), c.PostForm("password"))
+			input.Login, input.Password)
 		if err != nil && userId != 0 {
 			expiresAt := time.Now().Add(24 * time.Hour)
 			if err := h.createActivationToken(c, expiresAt, userId); err != nil {
 				return
 			}
+			log.Printf("error : %s\n", err)
 			c.JSON(http.StatusUnauthorized,
                 gin.H{"message": "The activation link has been resent on your email"})
             return
@@ -295,7 +318,7 @@ func (h *UserHandler) resolveGoogleUser(c *gin.Context, info *users.GoogleUserIn
 			log.Printf("error : %s\n", err)
 			return nil, errors.New("failed")
 		}
-		if existingName == "" {
+		if existingName == false {
 			break 
 		}
 		code, err := code_generation.RandGenerate(4)
@@ -307,8 +330,8 @@ func (h *UserHandler) resolveGoogleUser(c *gin.Context, info *users.GoogleUserIn
 	}
 	userObj := &users.User{Login: nil,
 			Password:    nil,
-			Username:    checkUsername,
-			Email:       info.Email,
+			Username:    strings.ToLower(checkUsername),
+			Email:       strings.ToLower(info.Email),
 			Is_verified: true,
 			GoogleId: 	 &info.Sub,}
 	user, err = h.userRepo.CreateUser(c.Request.Context(), userObj)
@@ -487,6 +510,11 @@ func (h *UserHandler) UserByName() gin.HandlerFunc {
 }
 
 // Setters
+
+type SetNameValidation struct {
+	Username	string `validate:"required,min=3,max=30,acceptChar"`
+}
+
 func (h *UserHandler) SetName() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userId, ok := c.Get("userId")
@@ -495,7 +523,16 @@ func (h *UserHandler) SetName() gin.HandlerFunc {
 				gin.H{"message": "The user id is empty"})
 			return
 		}
-		state, err := h.userRepo.SetName(c.Request.Context(), userId.(int64), c.PostForm("name"))
+		input := SetNameValidation {
+			Username: strings.ToLower(strings.TrimSpace(c.PostForm("name"))),
+		}
+		err := h.validate.Struct(input)
+		if err != nil {
+			c.JSON(http.StatusBadRequest,
+				gin.H{"message": validation.FormatErrors(err)})
+			return
+		}
+		state, err := h.userRepo.SetName(c.Request.Context(), userId.(int64), input.Username)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"message": "failed"})
 			return
@@ -619,5 +656,80 @@ func (h *UserHandler) UploadAvatar() gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, gin.H{"message": "success", "avatar": avatarURL})
+	}
+}
+
+// XP returns the xp of the connected user (sum of the base_score of all his finished games)
+func (h *UserHandler) XPByName() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		_, ok := c.Get("userId")
+		if !ok {
+			c.JSON(http.StatusUnauthorized,
+				gin.H{"message": "The userId is empty"})
+			return
+		}
+		username := c.Param("username")
+		user, err := h.userRepo.UserByName(c.Request.Context(), username)
+		if err != nil {
+			log.Printf("error : %s\n", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "failed"})
+			return
+		}
+		c.JSON(http.StatusOK,
+			gin.H{"message": "success", "user_xp": user.XP})
+	}
+}
+
+// Leaderboard returns the 100 first players ranked by xp
+func (h *UserHandler) Leaderboard() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		leaderboard, err := h.userRepo.Leaderboard(c.Request.Context())
+		if err != nil {
+			log.Printf("error : %s\n", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "Something went wrong"})
+			return
+		}
+		c.JSON(http.StatusOK,
+			gin.H{"message": "success", "leaderboard": leaderboard})
+	}
+}
+
+// UserLeaderboard returns the position, name and xp of the connected user
+func (h *UserHandler) UserLeaderboard() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userId, ok := c.Get("userId")
+		if !ok {
+			c.JSON(http.StatusUnauthorized,
+				gin.H{"message": "The userId is empty"})
+			return
+		}
+		leaderboard, err := h.userRepo.UserLeaderboard(c.Request.Context(), userId.(int64))
+		if err != nil {
+			log.Printf("error : %s\n", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "Something went wrong"})
+			return
+		}
+		c.JSON(http.StatusOK,
+			gin.H{"message": "success", "leaderboard": leaderboard})
+	}
+}
+
+func (h *UserHandler) SetRank(xp int64) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userId, ok := c.Get("userId")
+		if !ok {
+			c.JSON(http.StatusUnauthorized,
+				gin.H{"message": "The user id is empty"})
+			return
+		}
+		rank := rank_calculation.CalculateRank(xp)
+
+		_, err := h.userRepo.SetRank(c.Request.Context(), userId.(int64), rank)
+		if err != nil {
+			log.Printf("error : %s\n", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "Something went wrong"})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"message": "success"})
 	}
 }

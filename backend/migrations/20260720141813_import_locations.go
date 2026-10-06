@@ -76,7 +76,7 @@ func init() {
 		}
 		_, err = db.NewDelete().
 			Model((*locations.Location)(nil)).
-			Where("mapillary_id IN (?)", bun.In(location_ids)).
+			Where("mapillary_id IN ?", bun.Tuple(location_ids)).
 			Exec(ctx)
 		return err
 	})

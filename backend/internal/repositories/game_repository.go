@@ -4,8 +4,9 @@ import (
 	"backend/internal/models/games"
 	"context"
 	"errors"
-	"github.com/uptrace/bun"
 	"time"
+
+	"github.com/uptrace/bun"
 )
 
 type GameRepository struct {
@@ -104,14 +105,6 @@ func (r *GameRepository) RoundTotal(ctx context.Context, gameId int64) (int64, e
 	return game.RoundTotal, nil
 }
 
-func (r *GameRepository) Finished(ctx context.Context, gameId int64) (bool, error){
-	return r.db.NewSelect().
-		Model((*games.Game)(nil)).
-		Column("finished_at").
-		Where("id = ?", gameId).
-		Exists(ctx)
-}
-
 func (r *GameRepository) FinishedAt(ctx context.Context, gameId int64) (*time.Time, error){
 	game := new(games.Game)
 	err := r.db.NewSelect().
@@ -194,47 +187,17 @@ func (r *GameRepository) SetDifficulty(ctx context.Context, gameId int64,
 	return nil
 }
 
-func (r *GameRepository) SetTimer(ctx context.Context, gameId int64, 
-	timer int64) error {
-	game := &games.Game{Timer: timer}
-	_, err := r.db.NewUpdate().
-		Model(game).
-		Column("timer").
-		Where("id = ?", gameId).
-		Exec(ctx)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (r *GameRepository) SetRoundTotal(ctx context.Context, gameId int64, 
-	round_total int64) error {
-	game := &games.Game{RoundTotal: round_total}
-	_, err := r.db.NewUpdate().
-		Model(game).
-		Column("round_total").
-		Where("id = ?", gameId).
-		Exec(ctx)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
+// Marks the game as finished (finished_at), only once: calling it again changes nothing, so the hub can retry it
+// safely. It does nothing else: the xp, rank and statistics of the players are updated separately (see the hub).
 func (r *GameRepository) SetFinished(ctx context.Context,
 	gameId int64) error {
-	finished := time.Now()
-	game := &games.Game{FinishedAt: &finished}
 	_, err := r.db.NewUpdate().
-		Model(game).
-		Column("finished_at").
+		Model((*games.Game)(nil)).
+		Set("finished_at = ?", time.Now()).
 		Where("id = ?", gameId).
+		Where("finished_at IS NULL").
 		Exec(ctx)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 func (r *GameRepository) SetPlayerNb(ctx context.Context, game_id int64, 
