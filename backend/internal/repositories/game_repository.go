@@ -4,8 +4,9 @@ import (
 	"backend/internal/models/games"
 	"context"
 	"errors"
-	"github.com/uptrace/bun"
 	"time"
+
+	"github.com/uptrace/bun"
 )
 
 type GameRepository struct {

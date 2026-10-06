@@ -158,7 +158,6 @@ func (h *GameHandler) CreateLobby() gin.HandlerFunc {
 		}
 		c.JSON(http.StatusUnauthorized,
 			gin.H{"message": "the creation of the lobby failed, try again"})
-		return
 	}
 }
 
