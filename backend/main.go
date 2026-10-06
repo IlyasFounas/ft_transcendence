@@ -20,7 +20,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/sams96/rgeo"
+	"backend/internal/tools/rgeo"
 )
 
 /**
