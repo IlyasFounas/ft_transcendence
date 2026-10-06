@@ -15,6 +15,7 @@ type Repositories struct {
 	Guess		*GuessRepository
 	Friend		*FriendRepository
 	Chat		*ChatRepository
+	Statistics	*StatisticsRepository
 }
 
 // NewRepositories instanciates and assembles all the repositories
@@ -24,9 +25,11 @@ func NewRepositories(db *bun.DB) (*Repositories, error) {
 		return nil, err
 	}
 
+	userRepo := NewUserRepository(db)
+
 	return &Repositories{
 		Location:	locationRepo,
-		User:		NewUserRepository(db),
+		User:		userRepo,
 		AToken:		NewActivationTokenRepository(db),
 		RToken:		NewRefreshTokenRepository(db),
 		Game:		NewGameRepository(db),
@@ -35,5 +38,6 @@ func NewRepositories(db *bun.DB) (*Repositories, error) {
 		Guess:		NewGuessRepository(db),
 		Friend:		NewFriendRepository(db),
 		Chat:		NewChatRepository(db),
+		Statistics:	NewStatisticsRepository(db),
 	}, nil
 }

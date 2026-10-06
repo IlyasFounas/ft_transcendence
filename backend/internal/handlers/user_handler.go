@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 	"errors"
 	"encoding/json"
@@ -25,6 +26,7 @@ import (
 	"backend/internal/tools/mailing"
 	"backend/internal/tools/token_generation"
 	"backend/internal/models/users/tokens"
+	"backend/internal/tools/rank_calculation"
 )
 
 /**
@@ -87,7 +89,7 @@ func (h *UserHandler) createActivationToken(c *gin.Context, expiresAt time.Time,
 		emailString, err := h.userRepo.Email(c.Request.Context(), userId)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError,
-				gin.H{"message": "Something went wrong. Please try again."})
+				gin.H{"message": "Can't find your email. Please try again."})
 			return err
 		}
 		err = mailing.SendActivationEmail(*emailString, tokenObj.Token);
@@ -619,5 +621,107 @@ func (h *UserHandler) UploadAvatar() gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, gin.H{"message": "success", "avatar": avatarURL})
+	}
+}
+
+// XP returns the xp of the connected user (sum of the base_score of all his finished games)
+func (h *UserHandler) XPByName() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		_, ok := c.Get("userId")
+		if !ok {
+			c.JSON(http.StatusUnauthorized,
+				gin.H{"message": "The userId is empty"})
+			return
+		}
+		username := c.Param("username")
+		user, err := h.userRepo.UserByName(c.Request.Context(), username)
+		if err != nil {
+			log.Printf("error : %s\n", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "failed"})
+			return
+		}
+		c.JSON(http.StatusOK,
+			gin.H{"message": "success", "user_xp": user.XP})
+	}
+}
+
+// SetXP replaces the xp of a user (form field "xp").
+func (h *UserHandler) SetXP() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userId, err := strconv.ParseInt(c.Param("id"), 10, 64)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"message": "invalid user id"})
+			return
+		}
+		xp, err := strconv.ParseInt(c.PostForm("xp"), 10, 64)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"message": "invalid xp"})
+			return
+		}
+		updated, err := h.userRepo.SetXP(c.Request.Context(), userId, xp)
+		if err != nil {
+			log.Printf("error : %s\n", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "Something went wrong"})
+			return
+		}
+		if !updated {
+			c.JSON(http.StatusBadRequest, gin.H{"message": "The xp can't be negative"})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"message": "success"})
+	}
+}
+
+// Leaderboard returns the 100 first players ranked by xp
+func (h *UserHandler) Leaderboard() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		leaderboard, err := h.userRepo.Leaderboard(c.Request.Context())
+		if err != nil {
+			log.Printf("error : %s\n", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "Something went wrong"})
+			return
+		}
+		c.JSON(http.StatusOK,
+			gin.H{"message": "success", "leaderboard": leaderboard})
+	}
+}
+
+// UserLeaderboard returns the position, name and xp of the connected user
+func (h *UserHandler) UserLeaderboard() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userId, ok := c.Get("userId")
+		if !ok {
+			c.JSON(http.StatusUnauthorized,
+				gin.H{"message": "The userId is empty"})
+			return
+		}
+		leaderboard, err := h.userRepo.UserLeaderboard(c.Request.Context(), userId.(int64))
+		if err != nil {
+			log.Printf("error : %s\n", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "Something went wrong"})
+			return
+		}
+		c.JSON(http.StatusOK,
+			gin.H{"message": "success", "leaderboard": leaderboard})
+	}
+}
+
+func (h *UserHandler) SetRank(xp int64) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userId, ok := c.Get("userId")
+		if !ok {
+			c.JSON(http.StatusUnauthorized,
+				gin.H{"message": "The user id is empty"})
+			return
+		}
+		rank := rank_calculation.CalculateRank(xp)
+
+		_, err := h.userRepo.SetRank(c.Request.Context(), userId.(int64), rank)
+		if err != nil {
+			log.Printf("error : %s\n", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "Something went wrong"})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"message": "success"})
 	}
 }
