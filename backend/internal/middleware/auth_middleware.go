@@ -1,12 +1,14 @@
 package middleware
 
 import (
-    "os"
-    "fmt"
-    "net/http"
-    "strconv"
-    "github.com/gin-gonic/gin"
-    "github.com/golang-jwt/jwt/v5"
+	"context"
+	"os"
+	"fmt"
+	"net/http"
+	"log"
+	"strconv"
+	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 /**
@@ -52,4 +54,53 @@ func AuthMiddleWare() gin.HandlerFunc {
     c.Set("userId", id)
     c.Next()
   }
+}
+
+// Tells whether a user is an admin
+// UserRepository implements it, so the middleware package doesn't need to import the repositories.
+type AdminChecker interface {
+	IsAdmin(ctx context.Context, userId int64) (bool, error)
+}
+
+var adminChecker AdminChecker
+
+// Way to check in the database that a user is an admin
+// Called once in the main, right after the repositories are created
+func SetAdminChecker(checker AdminChecker) {
+	adminChecker = checker
+}
+
+// AdminMiddleWare only lets the admins through. It reads the userId set by AuthMiddleWare, so it must come after it:
+// The admin flag is read from the database at every request (not from the token): taking the admin rights away
+// from a user takes effect at once.
+func AdminMiddleWare() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		value, ok := c.Get("userId")
+		if !ok {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "you have to login"})
+			return
+		}
+		userId, ok := value.(int64)
+		if !ok {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "you have to login"})
+			return
+		}
+		if adminChecker == nil {
+			// SetAdminChecker was never called: nobody gets through, rather than everybody
+			log.Println("error : AdminMiddleWare is used but SetAdminChecker was never called")
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": "Something went wrong"})
+			return
+		}
+		isAdmin, err := adminChecker.IsAdmin(c.Request.Context(), userId)
+		if err != nil {
+			log.Printf("error : %s\n", err)
+			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"message": "Something went wrong"})
+			return
+		}
+		if !isAdmin {
+			c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"message": "you are not allowed to do this"})
+			return
+		}
+		c.Next()
+	}
 }

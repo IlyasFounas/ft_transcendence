@@ -2,13 +2,11 @@ package handlers
 
 import (
 	"strings"
-	"net/mail"
 	"crypto/sha256"
 	"log"
 	"fmt"
 	"net/http"
 	"os"
-	"strconv"
 	"time"
 	"errors"
 	"encoding/json"
@@ -17,6 +15,7 @@ import (
 	"github.com/google/uuid"
 	"golang.org/x/oauth2"
 	"path/filepath"
+	"github.com/go-playground/validator/v10"
 
 	"backend/internal/models/users"
 	"backend/internal/repositories"
@@ -27,6 +26,7 @@ import (
 	"backend/internal/tools/token_generation"
 	"backend/internal/models/users/tokens"
 	"backend/internal/tools/rank_calculation"
+	"backend/internal/tools/validation"
 )
 
 /**
@@ -44,6 +44,7 @@ import (
 	rTokenRepo   *repositories.RefreshTokenRepository
 	tokenHandler *TokenHandler
 	googleConf   *oauth2.Config
+	validate	 *validator.Validate
 }
 
 func NewUserHandler(
@@ -53,12 +54,17 @@ func NewUserHandler(
 	tokenHandler *TokenHandler,
 	googleConf *oauth2.Config,
 ) *UserHandler {
+
+	validate := validator.New()
+	validation.RegisterCustomRules(validate)
+
 	return &UserHandler{
 		userRepo:     userRepo,
 		aTokenRepo:   aTokenRepo,
 		rTokenRepo:   rTokenRepo,
 		tokenHandler: tokenHandler,
 		googleConf:   googleConf,
+		validate:	  validate,
 	}
 }
 
@@ -127,33 +133,34 @@ func (h *UserHandler) jwtGeneration(c *gin.Context, userId int64) (*tokens.Activ
 	return tokenObj, true
 }
 
+type CreateUserValidation struct {
+	Email   	string `validate:"required,max=254,email"`
+	Login	  	string `validate:"required,min=3,max=30,acceptChar"`
+	Username	string `validate:"required,min=3,max=30,acceptChar"`
+	Password	string `validate:"required,strongpwd"`
+}
+
 func (h *UserHandler) CreateUser() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		hashpassword, hashErr := encryption.HashPassword(c.PostForm("password"))
+		input := CreateUserValidation{
+			Email:		strings.ToLower(strings.TrimSpace(c.PostForm("email"))),
+			Login:		strings.ToLower(strings.TrimSpace(c.PostForm("login"))),
+			Username:	strings.ToLower(strings.TrimSpace(c.PostForm("username"))),
+			Password:	c.PostForm("password"),
+		}
+		err := h.validate.Struct(input)
+		if err != nil {
+			c.JSON(http.StatusBadRequest,
+				gin.H{"message": validation.FormatErrors(err)})
+			return
+		}
+		hashpassword, hashErr := encryption.HashPassword(input.Password)
 		if hashErr != nil {
             c.JSON(http.StatusInternalServerError,
                 gin.H{"message": "Something went wrong. Please try again."})
 			return
 		}
-		login := c.PostForm("login")
-		username := c.PostForm("username")
-		email := c.PostForm("email")
-		if len(login) == 0 || len(username) == 0 ||
-			len(email) == 0 {
-		    c.JSON(http.StatusBadRequest,
-                gin.H{"message": "Please fill in all required fields."})
-			return
-		}
-		if len(username) == 0 {
-			username = "player"	
-		}
-		parsedEmail, err := mail.ParseAddress(email)
-		if err != nil {
-            c.JSON(http.StatusBadRequest,
-                gin.H{"message": "Please enter a valid email address."})
-			return
-		}
-		existingLogin, err := h.userRepo.ExistingLogin(c.Request.Context(), login)
+		existingLogin, err := h.userRepo.ExistingLogin(c.Request.Context(), input.Login)
 		if err != nil {
             c.JSON(http.StatusUnauthorized,
                 gin.H{"message": "Something went wrong. Please try again."})
@@ -164,7 +171,7 @@ func (h *UserHandler) CreateUser() gin.HandlerFunc {
                 gin.H{"message": "This login or this username are unavailable. Please try another one."})
 			return
 		}
-		existingUsername, err := h.userRepo.ExistingName(c.Request.Context(), username)
+		existingUsername, err := h.userRepo.ExistingName(c.Request.Context(), input.Username)
 		if err != nil {
             c.JSON(http.StatusUnauthorized,
                 gin.H{"message": "Something went wrong. Please try again."})
@@ -175,12 +182,11 @@ func (h *UserHandler) CreateUser() gin.HandlerFunc {
                 gin.H{"message": "This username is unavailable. Please try another one."})
 			return
 		}		 
-		userObj := &users.User{Login: &login,
+		userObj := &users.User{Login: &input.Login,
 			Password:    &hashpassword,
-			Username:    strings.ToLower(username),
-			Email:       strings.ToLower(parsedEmail.Address),
+			Username:    input.Username,
+			Email:       input.Email,
 			Is_verified: false}
-		// check if the email is correct
 		user, err := h.userRepo.CreateUser(c.Request.Context(), userObj)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError,
@@ -197,10 +203,25 @@ func (h *UserHandler) CreateUser() gin.HandlerFunc {
 	}
 }
 
+type LoginValidation struct {
+	Login	  	string `validate:"required"`
+	Password	string `validate:"required"`
+}
+
 func (h *UserHandler) Login() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		input := LoginValidation {
+			Login:		strings.ToLower(strings.TrimSpace(c.PostForm("login"))),
+			Password:	c.PostForm("password"),
+		}
+		err := h.validate.Struct(input)
+		if err != nil {
+			c.JSON(http.StatusBadRequest,
+				gin.H{"message": validation.FormatErrors(err)})
+			return
+		}
 		state, userId, err := h.userRepo.LoginUser(c.Request.Context(),
-			c.PostForm("login"), c.PostForm("password"))
+			input.Login, input.Password)
 		if err != nil && userId != 0 {
 			expiresAt := time.Now().Add(24 * time.Hour)
 			if err := h.createActivationToken(c, expiresAt, userId); err != nil {
@@ -489,6 +510,11 @@ func (h *UserHandler) UserByName() gin.HandlerFunc {
 }
 
 // Setters
+
+type SetNameValidation struct {
+	Username	string `validate:"required,min=3,max=30,acceptChar"`
+}
+
 func (h *UserHandler) SetName() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userId, ok := c.Get("userId")
@@ -497,7 +523,16 @@ func (h *UserHandler) SetName() gin.HandlerFunc {
 				gin.H{"message": "The user id is empty"})
 			return
 		}
-		state, err := h.userRepo.SetName(c.Request.Context(), userId.(int64), c.PostForm("name"))
+		input := SetNameValidation {
+			Username: strings.ToLower(strings.TrimSpace(c.PostForm("name"))),
+		}
+		err := h.validate.Struct(input)
+		if err != nil {
+			c.JSON(http.StatusBadRequest,
+				gin.H{"message": validation.FormatErrors(err)})
+			return
+		}
+		state, err := h.userRepo.SetName(c.Request.Context(), userId.(int64), input.Username)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"message": "failed"})
 			return
@@ -671,33 +706,6 @@ func (h *UserHandler) XPByName() gin.HandlerFunc {
 		}
 		c.JSON(http.StatusOK,
 			gin.H{"message": "success", "user_xp": user.XP})
-	}
-}
-
-// SetXP replaces the xp of a user (form field "xp").
-func (h *UserHandler) SetXP() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		userId, err := strconv.ParseInt(c.Param("id"), 10, 64)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"message": "invalid user id"})
-			return
-		}
-		xp, err := strconv.ParseInt(c.PostForm("xp"), 10, 64)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"message": "invalid xp"})
-			return
-		}
-		updated, err := h.userRepo.SetXP(c.Request.Context(), userId, xp)
-		if err != nil {
-			log.Printf("error : %s\n", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "Something went wrong"})
-			return
-		}
-		if !updated {
-			c.JSON(http.StatusBadRequest, gin.H{"message": "The xp can't be negative"})
-			return
-		}
-		c.JSON(http.StatusOK, gin.H{"message": "success"})
 	}
 }
 

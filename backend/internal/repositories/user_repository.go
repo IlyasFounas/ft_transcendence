@@ -25,10 +25,11 @@ import (
 
 // Leaderboard is a line of the leaderboard: the position of a player, his name and his xp
 type Leaderboard struct {
-	Position int64  `json:"position"`
-	Username string `json:"username"`
-	Rank string 	`json:"rank"`
-	Total    int64  `json:"total"`
+	Position	int64	`json:"position"`
+	Username	string	`json:"username"`
+	Rank		string	`json:"rank"`
+	Avatar		string	`json:"avatar"`
+	Total		int64	`json:"total"`
 }
 
 type UserRepository struct {
@@ -77,6 +78,7 @@ func (r *UserRepository) User(ctx context.Context, userId int64) (*users.User, e
 		Model(user).
 		Column("id", "name", "email", "is_verified", "avatar", "xp", "rank", "created_at").
 		Where("id = ?", userId).
+		Where("NOT u.is_admin").
 		Scan(ctx)
 	if err != nil {
 		return nil, err
@@ -90,6 +92,7 @@ func (r *UserRepository) Name(ctx context.Context, userId int64) (*string, error
 		Model(user).
 		Column("name").
 		Where("id = ?", userId).
+		Where("NOT u.is_admin").
 		Scan(ctx)
 	if err != nil {
 		return nil, err
@@ -142,6 +145,7 @@ func (r *UserRepository) Email(ctx context.Context, userId int64) (*string, erro
 		Model(user).
 		Column("email").
 		Where("id = ?", userId).
+		Where("NOT u.is_admin").
 		Scan(ctx)
 	if err != nil {
 		return nil, err
@@ -156,6 +160,7 @@ func (r *UserRepository) UserByName(ctx context.Context,
 		Model(user).
 		Column("id", "name", "email", "is_verified", "avatar", "xp", "rank", "created_at").
 		Where("name = ?", username).
+		Where("NOT u.is_admin").
 		Scan(ctx)
 	if err != nil {
 		return nil, err
@@ -275,6 +280,15 @@ func (r *UserRepository) SetIsVerified(ctx context.Context, userId int64) error 
 	return nil
 }
 
+// Tells whether this userId is an admin
+func (r *UserRepository) IsAdmin(ctx context.Context, userId int64) (bool, error) {
+	return r.db.NewSelect().
+		Model((*users.User)(nil)).
+		Where("id = ?", userId).
+		Where("is_admin = ?", true).
+		Exists(ctx)
+}
+
 // Getter xp
 func (r *UserRepository) XP(ctx context.Context, userId int64) (int64, error) {
 	user := new(users.User)
@@ -345,7 +359,7 @@ func (r *UserRepository) UpdateXP(ctx context.Context, userIds []int64) error {
 		Join("JOIN game AS ga ON ga.id = r.game_id").
 		Where("ga.finished_at IS NOT NULL").
 		Where("EXISTS (?)", inTheGameAtTheEnd).
-		Where("g.user_id IN (?)", bun.Tuple(userIds)).
+		Where("g.user_id IN ?", bun.Tuple(userIds)).
 		Group("g.user_id").
 		Scan(ctx, &totals)
 	if err != nil {
@@ -409,7 +423,9 @@ func (r *UserRepository) Leaderboard(ctx context.Context) ([]Leaderboard, error)
 		ColumnExpr("RANK() OVER (ORDER BY u.xp DESC) AS position").
 		ColumnExpr("u.name AS username").
 		ColumnExpr("u.rank AS rank").
+		ColumnExpr("u.avatar AS avatar").
 		ColumnExpr("u.xp AS total").
+		Where("NOT u.is_admin").
 		OrderExpr("u.xp DESC, u.name ASC").
 		Limit(100).
 		Scan(ctx, &rows)
@@ -428,11 +444,13 @@ func (r *UserRepository) UserLeaderboard(ctx context.Context, userId int64) ([]L
 		ColumnExpr("RANK() OVER (ORDER BY u.xp DESC) AS position").
 		ColumnExpr("u.name AS username").
 		ColumnExpr("u.rank AS rank").
-		ColumnExpr("u.xp AS total")
+		ColumnExpr("u.avatar AS avatar").
+		ColumnExpr("u.xp AS total").
+		Where("NOT u.is_admin")
 	var rows []Leaderboard
 	err := r.db.NewSelect().
 		TableExpr("(?) AS ranked", ranked).
-		ColumnExpr("ranked.position, ranked.username, ranked.rank, ranked.total").
+		ColumnExpr("ranked.position, ranked.username, ranked.rank, ranked.avatar, ranked.total").
 		Where("ranked.id = ?", userId).
 		Scan(ctx, &rows)
 	if err != nil {
