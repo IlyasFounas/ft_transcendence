@@ -130,7 +130,7 @@ export default function SummaryResultsPage()
 
 
 	return (
-		<div className="w-full h-[calc(100vh-5rem)] p-5 flex flex-col gap-5
+		<div className="w-full h-screen p-5 flex flex-col gap-5
 		bg-[url(/backgrounds/earth_background.png)] bg-cover bg-no-repeat bg-center">
 			<ResultInfoRow title="Global ranking" variant="primary"></ResultInfoRow>
 			<div className="shrink-0">

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useLobbySocket } from "../../context/GameSocketContext";
@@ -48,37 +48,39 @@ export default function MultiplayerResultsPage() {
 			state: { fullHistory, totalRounds, players } 
 		});
 	}
-	
-	const myResult = allResults.find(r => r.user_id === user?.ID);
-	
-	const formattedPlayers = allResults.map(res => {
-		const playerInfo = players.find(p => p.id === res.user_id);
-		return {
-			player: {
-				username: res.username,
-				role: playerInfo?.isHost ? "Host" : "Player",
-				avatar: playerInfo?.avatar ?? "/avatars/avatar1.png",
-				id: res.user_id.toString()
-			},
-			rounds: [{
-				round: currentRound, 
-				points: res.round_infos?.score ?? 0,
-				distance: res.round_infos?.distance ?? 0,
-				guessLocation: res.has_guessed && res.round_infos ? {
-					latitude: res.round_infos.guess.lat,
-					longitude: res.round_infos.guess.long
-				} : { latitude: 0, longitude: 0 } 
-			}]
-		};
-	});
 
-	const gameResult: GameResult = {
-		currentRound,
-		totalRounds,
-		currentUsername: user?.Username ?? "",
-		distance: myResult?.round_infos?.distance ?? 0,
-		players: formattedPlayers,
-	};
+	const gameResult = useMemo<GameResult>(() => {
+		const myResult = allResults.find(r => r.user_id === user?.ID);
+		
+		const formattedPlayers = allResults.map(res => {
+			const playerInfo = players.find(p => p.id === res.user_id);
+			return {
+				player: {
+					username: res.username,
+					role: playerInfo?.isHost ? "Host" : "Player",
+					avatar: playerInfo?.avatar ?? "/avatars/avatar1.png",
+					id: res.user_id.toString()
+				},
+				rounds: [{
+					round: currentRound, 
+					points: res.round_infos?.score ?? 0,
+					distance: res.round_infos?.distance ?? 0,
+					guessLocation: res.has_guessed && res.round_infos ? {
+						latitude: res.round_infos.guess.lat,
+						longitude: res.round_infos.guess.long
+					} : { latitude: 0, longitude: 0 } 
+				}]
+			};
+		});
+
+		return {
+			currentRound,
+			totalRounds,
+			currentUsername: user?.Username ?? "",
+			distance: myResult?.round_infos?.distance ?? 0,
+			players: formattedPlayers,
+		};
+	}, [allResults, players, currentRound, totalRounds, user?.ID, user?.Username]);
 
 	const {
 		animatedScore,
