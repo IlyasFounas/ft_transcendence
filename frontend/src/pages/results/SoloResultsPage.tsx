@@ -70,7 +70,7 @@ export default function SoloResultPage() {
 
 	return (
 		<div className="
-			grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_394px] bg-[url(/backgrounds/results_background.png)]
+			grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_394px] bg-cover bg-no-repeat bg-center bg-[url(/backgrounds/results_background.png)]
 			gap-4 p-4 lg:items-stretch 
 			h-full min-h-screen">
 

@@ -90,7 +90,7 @@ export default function MultiplayerResultsPage() {
 	const guesses = useRoundGuesses(gameResult);
 
 	return (
-		<div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_394px] gap-4 p-4 items-start lg:items-stretch h-screen min-h-[calc(100vh-2rem)] bg-[url(/backgrounds/results_background.png)]">
+		<div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_394px] gap-4 p-4 items-start lg:items-stretch h-screen min-h-[calc(100vh-2rem)] bg-cover bg-no-repeat bg-center bg-[url(/backgrounds/results_background.png)]">
 			
 			<div className="flex flex-col gap-4 order-1 lg:col-start-1 h-full">
 				<ResultInfoRow

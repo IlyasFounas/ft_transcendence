@@ -2,7 +2,6 @@ import { BrowserRouter as Router, Routes, Route, Outlet } from 'react-router-dom
 import ComponentsPage from './pages/ComponentsPage';
 import LandingPage from './pages/LandingPage';
 import HomePage from './pages/HomePage';
-import LeaderboardPage from './pages/LeaderboardPage';
 import ProfilePage from './pages/ProfilePage';
 import { ChatLayout } from './layouts/ChatLayout';
 import { MainLayout } from './layouts/MainLayout';
@@ -17,6 +16,7 @@ import SoloResultPage from './pages/results/SoloResultsPage';
 import MultiplayerResultsPage from './pages/results/MultiplayerResultsPage';
 import GameGuard from "./components/routes/GameGuard";
 import SummaryResultsPage from './pages/results/SummaryResultsPage';
+import LeaderboardPage from './pages/LeaderboardPage';
 
 const GameSessionLayout = () => {
 	return (
@@ -45,8 +45,8 @@ function App() {
 								<Route path="/lobbyroom" element={<LobbyRoomPage />} />
 							</Route>
 							<Route element={<MainLayout />}>
-								<Route path="/leaderboard" element={<LeaderboardPage />} />
 								<Route path="/profile" element={<ProfilePage />} />
+								<Route path="/leaderboard" element={<LeaderboardPage />} />
 							</Route>
 							<Route path="/game/:gameId" element={<GamePlayPage />} />
 							<Route path="/soloresults" element={<SoloResultPage />} />

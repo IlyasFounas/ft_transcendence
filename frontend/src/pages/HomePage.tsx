@@ -28,6 +28,10 @@ export default function HomePage() {
 
         getStatistics();
     }, []);
+<<<<<<< Updated upstream
+=======
+	
+>>>>>>> Stashed changes
 
 	const handlePlaySolo = async () => {
 	const body = new URLSearchParams({

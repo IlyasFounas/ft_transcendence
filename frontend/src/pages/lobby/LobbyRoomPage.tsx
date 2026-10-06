@@ -31,7 +31,7 @@ export default function LobbyRoomPage() {
   	}
 
 	return (
-		<div className="min-h-[calc(100vh-5rem)] w-full bg-[url(/backgrounds/earth_background.png)] lg:pr-[27rem]">
+		<div className="min-h-[calc(100vh-5rem)] w-full bg-cover bg-no-repeat bg-center bg-[url(/backgrounds/earth_background.png)] lg:pr-[27rem]">
 		<div className="mx-auto w-full max-w-[1400px] grid grid-cols-1 px-6 py-8 gap-6 lg:grid-cols-[minmax(0,1fr)_394px] lg:items-start lg:gap-8">
 			<div className="order-1 lg:col-start-2 lg:row-start-1">
 			<RoomCodeCard code={lobbyInfos?.join_code ?? ""} />

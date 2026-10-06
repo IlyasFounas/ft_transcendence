@@ -189,7 +189,20 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
 				const lastRoundData = rounds.reduce((prev, current) => 
 					(prev.round_nb > current.round_nb) ? prev : current
 				);
-
+				const finalRoundHistory = rounds.map((r: any) => {
+					const own = r.results.find((res: any) => res.user_id === user.ID);
+					return {
+						round: r.round_nb,
+						points: own?.round_infos?.score ?? 0,
+						distance: own?.round_infos?.distance ?? 0,
+						guessLocation: own?.has_guessed && own.round_infos ? {
+							latitude: own.round_infos.guess.lat,
+							longitude: own.round_infos.guess.long,
+						} : { latitude: 0, longitude: 0 }
+					};
+				});
+				setRoundHistory(finalRoundHistory);
+			   
 				setLastRoundResult({
 					isLastRound: true,
 					nextRoundAt: null,
