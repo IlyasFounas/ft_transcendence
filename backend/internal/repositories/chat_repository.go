@@ -3,7 +3,9 @@ package repositories
 import (
 	"backend/internal/models/chats"
 	"context"
-
+	"database/sql"
+	"errors"
+	"time"
 	"github.com/uptrace/bun"
 )
 
@@ -44,4 +46,24 @@ func (r *ChatRepository) Receive(ctx context.Context, userId int64,
 		return nil, err
 	}
 	return chatsMessage, nil
+}
+
+func (r *ChatRepository) LastFriendMessage(ctx context.Context, 
+	userId, friendId int64) (string, time.Time, error) {
+	var date time.Time
+	var lastMessage string
+	err := r.db.NewSelect().
+		Model((*chats.Chat)(nil)).
+		Column("message", "created_at").
+		Where("src_user_id = ? AND dst_user_id = ?", friendId, userId).
+		Order("id DESC").
+		Limit(1).
+		Scan(ctx, &lastMessage, &date)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return "", time.Now(), nil
+		}
+		return "", time.Now(), err
+	}
+	return lastMessage, date, nil
 }

@@ -36,3 +36,9 @@ type Lobby struct {
 
 	Game 		*Game 	`bun:"rel:has-one,join:game_id=id"`
 }
+
+type HistoricGames struct {
+		Id 	 int64 `bun:"id" json:"id"`
+		Xp 	 int64 `bun:"xp" json:"xp"`
+		Date time.Time `bun:"date" json:"date"`
+}

@@ -123,3 +123,13 @@ func (h *ChatHandler) GetUser(ctx context.Context,
 	}
 	return user, true
 }
+
+func (h *ChatHandler) LastFriendMessage(ctx context.Context,
+	userId, friendId int64) (string, time.Time) {
+	lastMessage, date, err := h.chatRepo.LastFriendMessage(ctx, userId, friendId)
+	if err != nil {
+		log.Printf("error : %s\n", err)
+		return "", date
+	}
+	return lastMessage, date
+}

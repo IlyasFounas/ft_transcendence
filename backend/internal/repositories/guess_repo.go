@@ -242,6 +242,26 @@ func (r *GuessRepository) GetByRoundID(ctx context.Context, round_id int64) ([]*
 	return guesses, nil
 }
 
+// GET - return the total xp of a game
+func (r *GuessRepository) AllRoundsTotalXp(ctx context.Context,
+	gameId, userId int64) (int64, error) {
+	var total int64
+	err := r.db.NewSelect().
+		Model((*guesses.Guess)(nil)).
+		Relation("Round", func(q *bun.SelectQuery) *bun.SelectQuery {
+			return q.ExcludeColumn("*")
+		}).
+		ColumnExpr("COALESCE(SUM(g.base_score), 0) AS total").
+		Where("round.game_id = ?", gameId).
+		Where("g.user_id = ?", userId).
+		Scan(ctx, &total)
+	if err != nil {
+		return 0,
+			fmt.Errorf("failed to get all the round game id %d: %w", gameId, err)
+	}
+	return total, nil
+}
+
 // DELETE - using guess ID
 func (r *GuessRepository) DeleteByID(ctx context.Context, guess_id int64) error {
 	res, err := r.db.NewDelete().Model((*guesses.Guess)(nil)).Where("guess_id = ?", guess_id).Exec(ctx)
