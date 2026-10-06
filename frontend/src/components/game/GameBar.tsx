@@ -12,9 +12,10 @@ type Props = {
 	round: number;
 	totalRounds: number;
 	onLeave: () => void;
+	onTuto: () => void;
 };
 
-export default function GameBar({countdown, totalTime, gameId, round, totalRounds, onLeave} : Props)
+export default function GameBar({countdown, totalTime, gameId, round, totalRounds, onLeave, onTuto} : Props)
 {
 	return (
 		<div className="
@@ -46,7 +47,8 @@ export default function GameBar({countdown, totalTime, gameId, round, totalRound
 						ease-out
 						hover:scale-[1.2]
 
-						active:scale-[0.9]">
+						active:scale-[0.9]"
+						onClick={onTuto}>
 						<CircleQuestionMark></CircleQuestionMark>
 					</button>
 					<button className="
@@ -64,8 +66,9 @@ export default function GameBar({countdown, totalTime, gameId, round, totalRound
 						onClick={onLeave}>
 						<LogOut></LogOut>
 					</button>
+
 				</div>
 			</div>
-			</div>
+		</div>
 	)
 }

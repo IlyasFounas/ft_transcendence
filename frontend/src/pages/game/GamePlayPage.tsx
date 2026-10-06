@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { mockGame } from "../../mocks/game.mock";
 import { useNavigate } from "react-router-dom";
+import { useLobbySocket } from "../../context/GameSocketContext";
 import PrimaryButton from "../../components/buttons/PrimaryButton";
 import GameBar from "../../components/game/GameBar";
 import Countdown from "../../components/game/Countdown";
 import LoadStreetView from "./StreetView/LoadStreetView";
 import Load2DMap from "./2DMap/Load2DMap";
 import Preview2DMap from "./2DMap/Preview2DMap";
-import { useLobbySocket } from "../../context/GameSocketContext";
+import TutorialCarousel from "../../components/carousels/TutorialCarousel";
 
 export default function GamePlayPage() {
 	const [countdown, setCountDown] = useState(0);
@@ -16,6 +17,7 @@ export default function GamePlayPage() {
 	const [guess, setGuess] = useState<{ lat: number; lng: number } | null>(null);
 	const navigate = useNavigate();
 	const [hasGuessed, setHasGuessed] = useState(false);
+	const [showTutorial, setShowTutorial] = useState(false);
 
 	useEffect(() => {
 		setHasGuessed(false);
@@ -84,6 +86,10 @@ export default function GamePlayPage() {
 		navigate("/"); 
 	}
 
+	const handleTuto = () => {
+		setShowTutorial(true);
+	}
+
 	if (!round) {
 		return <div className="h-screen w-full flex items-center justify-center text-white">Loading mission...</div>;
 	}
@@ -98,6 +104,7 @@ export default function GamePlayPage() {
 					round={round.round_nb}
 					countdown={countdown}
 					onLeave={handleLeave}
+					onTuto={handleTuto}
 				/>
 			</div>
 
@@ -216,6 +223,14 @@ export default function GamePlayPage() {
 					<Countdown countdown={countdown}/>
 				</div>
 			</div>
-		</div>
+			
+			{showTutorial && (
+				<div className= "fixed inset-0 z-[9999]">
+				<TutorialCarousel
+				mode="game"
+				onClose={() => setShowTutorial(false)}/>
+				</div>
+			)}
+			</div>
 	);
 }
