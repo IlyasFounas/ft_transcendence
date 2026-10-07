@@ -55,7 +55,8 @@ func (r *ChatRepository) LastFriendMessage(ctx context.Context,
 	err := r.db.NewSelect().
 		Model((*chats.Chat)(nil)).
 		Column("message", "created_at").
-		Where("src_user_id = ? AND dst_user_id = ?", friendId, userId).
+		Where("src_user_id = ? AND dst_user_id = ?", userId, friendId).
+    	WhereOr("src_user_id = ? AND dst_user_id = ?", friendId, userId).
 		Order("id DESC").
 		Limit(1).
 		Scan(ctx, &lastMessage, &date)
