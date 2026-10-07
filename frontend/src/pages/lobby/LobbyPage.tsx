@@ -49,6 +49,14 @@ export default function LobbyPage()
 		navigate("/lobbyroom");
 	}
 
+	useEffect(() => {
+		if (!errorMessage) return;
+
+		const timer = setTimeout(() => setErrorMessage(null), 4000);
+
+		return () => clearTimeout(timer);
+	}, [errorMessage]);
+
 	function triggerInvalidShake(message: string) {
 		setErrorMessage(message);
 		setIsShaking(true);
@@ -106,7 +114,7 @@ export default function LobbyPage()
 			</div>
 			<div className="
 						flex
-						h-50 lg:h-[300px]
+						h-75 lg:h-[300px]
 						w-[calc(100%-2rem)]
 						max-w-[500px]
 						mx-auto m-8
@@ -116,7 +124,7 @@ export default function LobbyPage()
 						bg-[#020B16]
 						opacity-90">
 					{mode === "create" ? (
-						<CreateOperationCard onRoundsChange={setRounds} onTimeChange={setTimeLimit} />
+						<CreateOperationCard onRoundsChange={setRounds} onTimeChange={setTimeLimit} errorMessage={errorMessage}/>
 					) : (
 						<JoinOperationCard onChange={(setCode)} code={code} onSubmit={handleJoinOperation} isChecking={isChecking} isShaking={isShaking} errorMessage={errorMessage}/>
 					)}

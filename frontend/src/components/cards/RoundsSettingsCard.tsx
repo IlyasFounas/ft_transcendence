@@ -26,7 +26,7 @@ export default function RoundsSettingsCard({min, max, interval, defaultValue, se
 
 	return (
 		<div>
-			<div className="flex items-center text-heading-small lg:text-heading-medium">
+			<div className="flex items-center text-heading-small lg:text-heading-medium uppercase">
 				<div className="w-[150px] lg:w-[200px]">
 					{settings}
 				</div>
