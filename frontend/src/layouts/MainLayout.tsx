@@ -35,7 +35,8 @@ export function MainLayout () {
             className={`
                 fixed
                 right-5
-                top-25
+                top-20
+                lg:top-30
                 bottom-5
                 left-5
                 z-50

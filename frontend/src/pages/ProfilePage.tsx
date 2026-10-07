@@ -5,17 +5,83 @@ import CalculateRank from "../utils/rank";
 import SecondaryButton from "../components/buttons/SecondaryButton";
 import StatCard from "../components/cards/StatCard";
 import OperationHistory from "../components/cards/OperationHistory";
-import { operations } from "../data/operations";
 import FriendListPanel from "../components/cards/FriendListPanel";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import EditProfileModal from "../components/cards/EditProfileModal";
+import type { UserStatistics } from "../types/statistics.type";
+import type { UserLeaderboard } from "../types/user.types";
+import type { Operation } from "../types/operation.types";
+import { formatOperationDate } from "../utils/formatDate";
+
+interface HistoricGameResponse {
+    id: number;
+    xp: number;
+    date: string;
+}
 
 export default function ProfilePage() {
 
-	const { user } = useAuth();
-    
-	const totalScore = 24658;
+	const { user, authFetch } = useAuth();
+    const [statistics, setStatistics] = useState<UserStatistics | null>(null);
+    const [leaderboard, setLeaderboard] = useState<UserLeaderboard[]>([]);
+    const [operations, setOperations] = useState<Operation[]>([]);
+
+	const totalScore = user?.XP ?? 0;
 	const rank = CalculateRank(totalScore);
+
+    useEffect(() => {
+
+        const getStatistics = async () => {
+            const result = await authFetch("api/user/statistics");
+            console.log(result?.data);
+            if (!result) {
+                return ;
+            }
+            
+            setStatistics(result.data.statistics);
+        };
+
+        const getLeaderboard = async () => {
+            const result = await authFetch("api/leaderboard/user");
+
+            console.log("leaderboard: ", result?.data);
+
+            if (!result) {
+                return ;
+            }
+            console.log(result.data.leaderboard);
+            setLeaderboard(result.data.leaderboard);
+            console.log("position: ",result?.data.leaderboard[0].position);
+        };
+
+        const getOperations = async () => {
+        if (!user?.ID) {
+            return;
+        }
+
+        const result = await authFetch(`api/game/historic/${user.ID}`);
+
+        if (!result || result.status !== 200) {
+            return;
+        }
+
+        const historicGames: HistoricGameResponse[] = result.data.historic_games;
+
+        setOperations(
+            historicGames.map((game) => ({
+                operationId: game.id.toString(),
+                points: game.xp,
+                dateTime: formatOperationDate(game.date),
+            }))
+        );
+    };
+
+        getStatistics();
+        getLeaderboard();
+        getOperations();
+    }, []);
+
+
     const [showEditProfile, setShowEditProfile] = useState(false);
 
     return (
@@ -81,7 +147,7 @@ export default function ProfilePage() {
                             Agent {user?.Username ?? "Player"}
                         </h1>
                         <p className="text-label-small md:text-heading-small lg:text-heading-medium text-primary uppercase">
-                            {rank.currentRank}
+                            {user?.Rank ?? "Junior Agent"}
                         </p>
                     </div>
 					<div className="w-full xl:max-w-xl">
@@ -113,12 +179,12 @@ export default function ProfilePage() {
 						</p>
 
 						<p className="text-heading-medium xl:text-hero text-primary font-bold">
-							#18
+							{leaderboard[0]?.position ?? ""}
 						</p>
 					</div>
 					<div className="xl:pt-5">
 						<SecondaryButton 
-                            className="scale-60 md:scale-70 xl:scale-100"
+                            className="text-heading-small md:text-heading-medium lg:text-heading-large scale-60! xs:hover:scale-60! md:scale-80 xl:scale-100 md:hover:scale-80 xl:hover:scale-100"
                             onClick={() => setShowEditProfile(true)}
                         >
 							<Pencil size={18} />
@@ -150,25 +216,29 @@ export default function ProfilePage() {
 
                     <StatCard
                         title="Operations"
-                        value="152"
+                        value={statistics?.finished_games?.toString() ?? "0"}
                         subtitle="Total Completed"
                         icon={<ClipboardList size={60} strokeWidth={1.5} />}
                     />
                     <StatCard
                         title="Accuracy"
-                        value="74%"
+                        value={`${statistics?.accuracy ?? 0}%`}
                         subtitle="Across All Operations"
                         icon={<Crosshair size={60} strokeWidth={1.5} className="text-status-green"/>}
                     />
                     <StatCard
                         title="Best Score"
-                        value="24,580"
-                        subtitle="Single Round Best"
+                        value={statistics?.best_score?.toLocaleString() ?? "0"}
+                        subtitle="Single Best Game"
                         icon={<Trophy size={60} strokeWidth={1.5} className="text-status-yellow"/>}
                     />
                     <StatCard
                         title="Closest Guess"
-                        value="1.2 KM"
+                        value={
+                            statistics?.closest_guess
+                                ? `${statistics.closest_guess.value} ${statistics.closest_guess.unit.toUpperCase()}`
+                                : "N/A"
+                        }
                         subtitle="Best Distance To Target"
 					icon={<MapPin size={60} strokeWidth={1.5} className="text-[#C87BFF]"/>}
                     />
@@ -185,8 +255,8 @@ export default function ProfilePage() {
                     xl:grid-cols-2
                     gap-2
                     xl:gap-8
-                    xl:h-112.5
-                    shrink-0
+                    xl:h-[calc(100vh-700px)]
+                    xl:min-h-100
                 "
             >
 				<OperationHistory operations={operations} />
@@ -222,4 +292,4 @@ export default function ProfilePage() {
             )}
       	</main>					    
   	);
-}		
+}

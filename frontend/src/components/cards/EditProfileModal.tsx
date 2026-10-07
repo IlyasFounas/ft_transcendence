@@ -32,7 +32,7 @@ export default function EditProfileModal({
         handleSubmit,
         formState: { isSubmitting, errors },
     } = useForm<EditProfileFormData>({
-        resolver: zodResolver(editProfileSchema),
+        resolver: zodResolver(editProfileSchema(username)),
         defaultValues: {
             username,
         },
@@ -60,19 +60,28 @@ export default function EditProfileModal({
     };
 
     const handleSave = async (data: EditProfileFormData) => {
-        const usernameBody = new URLSearchParams({
-            name: data.username,
-        });
+        const usernameChanged = data.username !== username;
+        const avatarChanged = avatarFile !== null || selectedAvatar !== avatar;
 
-        const usernameResult = await authFetch("api/user/name", {
-            method: "PATCH",
-            body: usernameBody,
-        });
-
-        if (!usernameResult){
+        if (!usernameChanged && !avatarChanged) {
+            onClose();
             return;
         }
 
+        if (usernameChanged) {
+            const usernameBody = new URLSearchParams({
+                name: data.username,
+            });
+        
+            const usernameResult = await authFetch("api/user/name", {
+                method: "PATCH",
+                body: usernameBody,
+            });
+
+            if (!usernameResult){
+                return;
+            }
+        }
         if (avatarFile) {
             const formData = new FormData();
             formData.append("avatar", avatarFile);
@@ -93,7 +102,7 @@ export default function EditProfileModal({
                 return;
             }
 
-        } else {
+        } else if (avatarChanged) {
             const avatarBody = new URLSearchParams({
                 avatar: selectedAvatar,
             });

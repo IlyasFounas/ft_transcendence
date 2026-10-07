@@ -1,3 +1,5 @@
+import { formatOperationId } from "../../utils/formatOperationId";
+
 interface OperationHistoryRowProps {
     operationId: string;
     dateTime: string;
@@ -28,7 +30,7 @@ export default function OperationHistoryRow({
             xl:text-heading-medium
             "
         >
-            <span className="text-left">{operationId}</span>
+            <span className="text-left">{formatOperationId(operationId)}</span>
             <span className="text-center">{dateTime}</span>
             <span className="text-right">
                 {points.toLocaleString()} <span>PTS</span>

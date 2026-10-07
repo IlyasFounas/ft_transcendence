@@ -35,7 +35,9 @@ export function ChatLayout () {
                 className={`
                     fixed
                     right-5
-                    top-25
+                    top-20
+                    lg:top-30
+                    mt-5
                     bottom-5
                     left-5
                     z-50

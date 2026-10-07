@@ -30,3 +30,10 @@ export interface User {
     CreatedAt: string;
     Lobby: unknown[] | null;
 }
+
+export interface UserLeaderboard {
+    position: number;
+    username: string;
+    rank: string;
+    total: number;
+}
