@@ -24,12 +24,12 @@ export default function ChatBoxCard({
 	const style = variants[variant];
 
 	return(
-		<div className={`w-full px-[5px] flex
+		<div className={`w-full px-1.25 flex
     		${style.wrapper}`}
 		>
-			<div className={`min-w-0 max-w-64 px-2.5 py-[5px] rounded-[10px] inline-flex flex-col ${style.bubble}`}>
+			<div className={`min-w-0 max-w-64 px-2.5 py-1.25 rounded-[10px] inline-flex flex-col ${style.bubble}`}>
 				<div className="min-w-0 max-w-full wrap-anywhere">
-					<div className="text-body-primary wrap-anywhere">{message}</div>
+					<div className="text-heading-small wrap-anywhere">{message}</div>
 				</div>
 				<div className="self-stretch flex justify-end">
 					<div className="text-label-small text-text-secondary ">{time}</div>

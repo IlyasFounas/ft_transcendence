@@ -79,12 +79,13 @@ export default function MessageInput({
                     className="
                         min-w-0
                         max-h-20
+                        min-h-8
                         flex-1
                         px-2.5
                         resize-none
                         overflow-y-auto
                         bg-surface-base
-                        text-body-primary
+                        text-heading-small
                         text-text-primary
                         outline-none
                         placeholder:text-text-secondary
