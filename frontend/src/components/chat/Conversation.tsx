@@ -127,7 +127,7 @@ export default function Conversation({
                             {friend.username}
                         </div>
                         <div className="text-label-small text-primary uppercase">
-                            {friend.role}
+                            {friend.rank}
                         </div>
                     </div>
                 </div>

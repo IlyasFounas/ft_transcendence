@@ -28,6 +28,7 @@ export default function ChatPanel() {
                     userId: friend.user_id,
                     username: friend.name,
                     avatar: friend.avatar || "/avatars/avatar1.png",
+                    rank: friend.rank,
                 })
             );
 
@@ -47,6 +48,7 @@ export default function ChatPanel() {
             online: chatFriend?.online ?? false,
             lastMessage: chatFriend?.last_message ?? "",
             timestamp: chatFriend?.date ?? "",
+            rank: friend.rank,
         };
     });
 
