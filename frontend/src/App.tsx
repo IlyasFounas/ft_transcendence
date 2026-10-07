@@ -10,6 +10,7 @@ import { MainLayout } from './layouts/MainLayout';
 import AuthenticationPage from './pages/AuthenticationPage';
 import ProtectedRoute from './components/routes/ProtectedRoute';
 import PublicRoute from './components/routes/PublicRoute';
+import NotFoundPage from './pages/errors/404';
 
 function App() {
     return (
@@ -17,6 +18,7 @@ function App() {
             <Routes>
                 <Route element={<PublicRoute />}>
                     <Route path="/" element={<LandingPage/>} />
+                    <Route path="*" element={<NotFoundPage />} />
                     <Route path="/login" element={<AuthenticationPage/>} />
                     <Route path="/components" element={<ComponentsPage/>} />
                 </Route>
