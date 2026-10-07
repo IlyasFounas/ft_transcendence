@@ -7,7 +7,6 @@ import SmallButton from '../components/buttons/SmallButton.tsx';
 import FriendRequestRow from '../components/rows/FriendRequestRow.tsx';
 import StatusBadge from '../components/primitives/StatusBadge.tsx';
 import UserStatus from '../components/user/UserStatus.tsx';
-import FriendListRow from '../components/rows/FriendListRow.tsx';
 import AuthenticationCard from '../components/cards/AuthenticationCard.tsx';
 import AuthenticationWelcome from '../components/authentication/AuthenticationWelcome.tsx';
 import AuthenticationSignUp from '../components/authentication/AuthenticationSignUp.tsx';
@@ -124,39 +123,6 @@ export default function ComponentPage() {
         <section className="mb-10">
           <h2 className="mb-4 text-xl font-bold">User Status — Offline</h2>
           <UserStatus status="offline" />
-        </section>
-  
-        <section className="mb-10">
-          <h2 className="mb-4 text-xl font-bold">Friend List Row — Online</h2>
-          <FriendListRow
-            username="agent tommy"
-            role="Field Analyst"
-            avatar="/avatars/avatar1.png"
-            status="online"
-            rank={233}
-          />
-        </section>
-  
-        <section className="mb-10">
-          <h2 className="mb-4 text-xl font-bold">Friend List Row — In Mission</h2>
-          <FriendListRow
-            username="agent tommy"
-            role="Field Analyst"
-            avatar="/avatars/avatar1.png"
-            status="in-mission"
-            rank={1212}
-          />
-        </section>
-  
-        <section className="mb-10">
-          <h2 className="mb-4 text-xl font-bold">Friend List Row — Offline</h2>
-          <FriendListRow
-            username="agent tommy"
-            role="Field Analyst"
-            avatar="/avatars/avatar1.png"
-            status="offline"
-            rank={33}
-          />
         </section>
   
         <section className="mb-10">

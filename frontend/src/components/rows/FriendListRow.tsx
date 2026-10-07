@@ -1,11 +1,8 @@
 import UserProfile from "../user/UserProfile";
 import SmallButton from "../buttons/SmallButton";
-import UserStatus from "../user/UserStatus";
-import type { UserProps, UserStatusType } from "../../types/user.types";
+import type { UserProps } from "../../types/user.types";
 
 interface FriendListRowProps extends UserProps {
-    status: UserStatusType;
-    rank: number;
     onRemove?: () => void;
 }
 
@@ -13,20 +10,31 @@ export default function FriendListRow({
     username,
     role,
     avatar,
-    status,
-    rank,
     onRemove,
 }: FriendListRowProps) {
     return (
+        // <div className="
+        //     grid
+        //     grid-cols-[1.5fr_1fr_1fr_auto]
+        //     items-center
+        //     bg-surface-base
+        //     border
+        //     border-border-default
+        //     px-4
+        //     h-16
+        //     "
+        // >
         <div className="
-            grid
-            grid-cols-[1.5fr_1fr_1fr_auto]
+            flex
             items-center
+            justify-between
             bg-surface-base
             border
             border-border-default
             px-4
             h-16
+            xl:h-20
+            xl:px-8
             "
         >
             <UserProfile 
@@ -34,15 +42,19 @@ export default function FriendListRow({
                 role={role}
                 avatar={avatar}
             />
-            <UserStatus status={status}/>
-            <div className="text-center">
-                <div className="text-heading-small text-text-primary">
+            {/* optional before link with websocket */}
+            {/* {status && <UserStatus status={status} />}
+            {rank !== undefined && (
+                <div className="text-center">
+                    <div className="text-heading-small text-text-primary">
                     #{rank}
-                </div>
-                <div className="text-caption-medium text-text-secondary uppercase">
+                    </div>
+
+                    <div className="text-caption-medium text-text-secondary uppercase">
                     Global Rank
+                    </div>
                 </div>
-            </div>
+            )} */}
             <SmallButton variant="danger" onClick={onRemove}>
                 Remove
             </SmallButton>

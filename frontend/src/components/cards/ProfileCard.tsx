@@ -83,7 +83,7 @@ export default function ProfileCard({
                     <span className="text-heading-small md:text-heading-medium text-text-primary">{accuracy}</span><span> %</span>
                 </div>
                 <div className="flex-1">
-                    <p className="text-label-small md:text-body-primary text-text-secondary">Highest Score</p>
+                    <p className="text-label-small md:text-body-primary text-text-secondary">Best Score</p>
                     <p className="text-heading-small md:text-heading-medium text-text-primary">{score}</p>
                 </div>
             </div>

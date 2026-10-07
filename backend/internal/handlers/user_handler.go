@@ -561,6 +561,7 @@ func (h *UserHandler) setGoogleId(c *gin.Context, userId int64, googleId *string
 		return true
 	}
 }
+
 func (h *UserHandler) SetLogin() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userId, ok := c.Get("userId")
@@ -582,6 +583,24 @@ func (h *UserHandler) SetLogin() gin.HandlerFunc {
 		}
 	}
 }
+
+func removeUploadedAvatar(avatar *string) {
+    if avatar == nil {
+        return
+    }
+
+    if !strings.HasPrefix(*avatar, "/api/uploads/avatars/") {
+        return
+    }
+
+    oldFilename := filepath.Base(*avatar)
+    oldPath := filepath.Join("uploads/avatars", oldFilename)
+
+    if err := os.Remove(oldPath); err != nil && !os.IsNotExist(err) {
+        log.Printf("failed to remove old avatar: %v", err)
+    }
+}
+
 func (h *UserHandler) SetAvatar() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userId, ok := c.Get("userId")
@@ -590,6 +609,18 @@ func (h *UserHandler) SetAvatar() gin.HandlerFunc {
 				gin.H{"message": "The user id is empty"})
 			return
 		}
+
+		oldUser, err := h.userRepo.User(
+			c.Request.Context(),
+			userId.(int64),
+		)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"message": "failed to fetch user",
+			})
+			return
+		}
+
 		state, err := h.userRepo.SetAvatar(c.Request.Context(), userId.(int64), c.PostForm("avatar"))
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"message": "failed"})
@@ -598,9 +629,11 @@ func (h *UserHandler) SetAvatar() gin.HandlerFunc {
 		if !state {
 			c.JSON(http.StatusOK, gin.H{"message": "The avatar has not been modified"})
 			return
-		} else {
-			 c.JSON(http.StatusOK, gin.H{"message": "success"})
 		}
+
+		removeUploadedAvatar(oldUser.Avatar)
+
+		c.JSON(http.StatusOK, gin.H{"message": "success"})
 	}
 }
 
@@ -651,11 +684,7 @@ func (h *UserHandler) UploadAvatar() gin.HandlerFunc {
 			return
 		}
 
-		if oldUser.Avatar != nil && strings.HasPrefix(*oldUser.Avatar, "/api/uploads/avatars/") {
-			oldFilename := filepath.Base(*oldUser.Avatar)
-			oldPath := filepath.Join("uploads/avatars", oldFilename)
-			os.Remove(oldPath)
-		}
+		removeUploadedAvatar(oldUser.Avatar)
 
 		c.JSON(http.StatusOK, gin.H{"message": "success", "avatar": avatarURL})
 	}

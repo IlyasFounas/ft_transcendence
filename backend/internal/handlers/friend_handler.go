@@ -250,6 +250,13 @@ func (h *FriendHandler) FriendStatus() gin.HandlerFunc {
 				gin.H{"message": "Failed to get friend status"})
 			return
 		}
+
+		if friendStatus.Status == "none" {
+            friendStatus.Name = user.Username
+            friendStatus.Avatar = user.Avatar
+			friendStatus.Rank = user.Rank
+        }
+
 		c.JSON(http.StatusOK,
 			gin.H{
 				"message": "success",
