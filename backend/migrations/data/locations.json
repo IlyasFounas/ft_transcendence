@@ -784,5 +784,23 @@
     "latitude": 23.6207031,
     "longitude": 58.5655778,
     "country_code": "OM"
+  },
+  {
+    "mapillary_id": 882381461363408,
+    "latitude": 32.985800086844,
+    "longitude": 10.544946224019,
+    "country_code": "TN"
+  },
+  {
+    "mapillary_id": 3416118221901915,
+    "latitude": 37.07859684362,
+    "longitude": 9.3782638736654,
+    "country_code": "TN"
+  },
+  {
+    "mapillary_id": 472418364013238,
+    "latitude": 33.370210499972,
+    "longitude": -7.375699,
+    "country_code": "MA"
   }
 ]
