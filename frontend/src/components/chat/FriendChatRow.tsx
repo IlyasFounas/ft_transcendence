@@ -48,8 +48,8 @@ export default function FriendChatRow ({
                 <Avatar avatar={avatar} size={50} />
                 <span className={`absolute w-2 h-2 rounded-full bottom-2.5 right-0 ${statusClasses[status]}`} />
             </div>
-            <div>
-                <div className="text-heading-small text-text-primary uppercase">
+            <div className="min-w-0">
+                <div className="text-heading-small text-text-primary uppercase truncate">
                     {username}
                 </div>
 

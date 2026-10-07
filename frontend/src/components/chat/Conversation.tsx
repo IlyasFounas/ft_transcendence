@@ -122,8 +122,8 @@ export default function Conversation({
                         />
                     </div>
 
-                    <div>
-                        <div className="text-heading-small text-text-primary uppercase">
+                    <div className="min-w-0">
+                        <div className="text-heading-small text-text-primary uppercase truncate">
                             {friend.username}
                         </div>
                         <div className="text-label-small text-primary uppercase">
