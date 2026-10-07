@@ -30,6 +30,7 @@ export default function EditProfileModal({
     const {
         register,
         handleSubmit,
+        setError,
         formState: { isSubmitting, errors },
     } = useForm<EditProfileFormData>({
         resolver: zodResolver(editProfileSchema(username)),
@@ -79,6 +80,14 @@ export default function EditProfileModal({
             });
 
             if (!usernameResult){
+                return;
+            }
+
+            if (usernameResult.status !== 200) {
+                setError("username", {
+                    type: "server",
+                    message: "Username is already taken.",
+                });
                 return;
             }
         }
