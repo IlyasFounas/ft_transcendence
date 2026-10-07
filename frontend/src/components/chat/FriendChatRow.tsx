@@ -49,11 +49,16 @@ export default function FriendChatRow ({
                 <span className={`absolute w-2 h-2 rounded-full bottom-2.5 right-0 ${statusClasses[status]}`} />
             </div>
             <div>
-                <div className="text-heading-small text-text-primary uppercase">{username}</div>
-                <div className="text-body-primary text-text-secondary truncate">{lastMessage}</div>
+                <div className="text-heading-small text-text-primary uppercase">
+                    {username}
+                </div>
+
+                <div className="text-body-primary text-text-secondary truncate">
+                    {lastMessage || "\u00A0"}
+                </div>
             </div>
             <div className="text-body-primary text-text-secondary self-start uppercase">
-                {timestamp}
+                {lastMessage && timestamp}
             </div>
         </div>
     );
