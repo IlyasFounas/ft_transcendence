@@ -14,7 +14,7 @@ import (
 	"math"
 	"time"
 
-	"github.com/sams96/rgeo"
+	"backend/internal/tools/rgeo"
 )
 
 type GuessWsHandler struct {

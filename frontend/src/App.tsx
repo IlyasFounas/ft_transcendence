@@ -10,6 +10,7 @@ import LobbyRoomPage from './pages/lobby/LobbyRoomPage';
 import AuthenticationPage from './pages/AuthenticationPage';
 import ProtectedRoute from './components/routes/ProtectedRoute';
 import PublicRoute from './components/routes/PublicRoute';
+import NotFoundPage from './pages/errors/404';
 import GamePlayPage from './pages/game/GamePlayPage';
 import { GameSocketProvider } from './context/GameSocketContext';
 import SoloResultPage from './pages/results/SoloResultsPage';
@@ -34,6 +35,7 @@ function App() {
 				<Routes>
 					<Route element={<PublicRoute />}>
 						<Route path="/" element={<LandingPage/>} />
+                    	<Route path="*" element={<NotFoundPage />} />
 						<Route path="/login" element={<AuthenticationPage/>} />
 						<Route path="/components" element={<ComponentsPage/>} />
 					</Route>

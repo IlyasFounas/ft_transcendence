@@ -7,7 +7,6 @@ import SmallButton from '../components/buttons/SmallButton.tsx';
 import FriendRequestRow from '../components/rows/FriendRequestRow.tsx';
 import StatusBadge from '../components/primitives/StatusBadge.tsx';
 import UserStatus from '../components/user/UserStatus.tsx';
-import FriendListRow from '../components/rows/FriendListRow.tsx';
 import AuthenticationCard from '../components/cards/AuthenticationCard.tsx';
 import AuthenticationWelcome from '../components/authentication/AuthenticationWelcome.tsx';
 import AuthenticationSignUp from '../components/authentication/AuthenticationSignUp.tsx';

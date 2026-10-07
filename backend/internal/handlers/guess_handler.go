@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/sams96/rgeo"
+	"backend/internal/tools/rgeo"
 )
 
 // GuessGetter — methods expected from the repository by the handler
@@ -92,14 +92,14 @@ func CalculateScore(createdGuess *guesses.Guess, totalTime time.Duration) {
 		return
 	}
 
-	if createdGuess.Distance > haversine.EarthDiameterMeters {
+		if createdGuess.Distance > haversine.MaxDistanceMeters {
 		log.Printf("Error: distance %d exceeds Earth's diameter for guess", createdGuess.Distance)
 		createdGuess.Score = 0
 		return
 	}
 
-	distance := haversine.EarthDiameterMeters - createdGuess.Distance
-	createdGuess.Score = distance * 1000 / haversine.EarthDiameterMeters //put score on base 1000 (ex: if the distance is 0, the score is 1000, if the distance is 12742176, the score is 0)
+	distance := haversine.MaxDistanceMeters - createdGuess.Distance
+	createdGuess.Score = distance * 1000 / haversine.MaxDistanceMeters //put score on base 1000 (ex: if the distance is 0, the score is 1000, if the distance is 12742176, the score is 0)
 	createdGuess.BaseScore = createdGuess.Score // store the base score before multipliers for XP calculation
 
 	// multiplier time left (0 to 1, based on time max being one, and time min being zero), and time left being the difference between the time the time at the moment of validating guess and the time max)

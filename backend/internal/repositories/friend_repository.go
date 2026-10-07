@@ -124,7 +124,7 @@ func (r *FriendRepository) Friends(ctx context.Context, userId int64) ([]*friend
                 ELSE f.requester_id
             END AS user_id
         `, userId).
-        Column("f.id", "u.name", "u.avatar").
+        Column("f.id", "u.name", "u.avatar", "u.rank").
 		Where("(f.requester_id = ? OR f.receiver_id = ?)", userId, userId).
 		Where("f.status = ?", "accepted").
         Order("f.created_at DESC").
@@ -142,7 +142,7 @@ func (r *FriendRepository) FriendStatus(ctx context.Context, userId int64, searc
 		TableExpr("friends AS f").
 		Join("JOIN users As u ON u.id = ?", searchUserID).
 		ColumnExpr("u.id AS user_id").
-		Column("u.name", "u.avatar", "f.status", "f.requester_id").
+		Column("u.name", "u.avatar", "u.rank", "f.status", "f.requester_id").
 		Where("(requester_id = ? AND receiver_id = ?)", userId, searchUserID).
 		WhereOr("(requester_id = ? AND receiver_id = ?)", searchUserID, userId).
         Scan(ctx, &friendStatus)
@@ -190,7 +190,7 @@ func (r *FriendRepository) FriendRequests(ctx context.Context, userId int64) ([]
 	err := r.db.NewSelect().
 		TableExpr("friends AS f").
         Join("JOIN users AS u ON u.id = f.requester_id").
-		Column("f.id", "u.name", "u.avatar", "f.created_at").
+		Column("f.id", "u.name", "u.avatar", "u.rank", "f.created_at").
 		ColumnExpr("f.requester_id AS user_id").
 		Where("f.receiver_id = ?", userId).
 		Where("f.status = ?", "pending").
@@ -208,7 +208,7 @@ func (r *FriendRepository) FriendPending(ctx context.Context, userId int64) ([]*
 	err := r.db.NewSelect().
 		TableExpr("friends AS f").
         Join("JOIN users AS u ON u.id = f.receiver_id").
-		Column("f.id", "u.name", "u.avatar", "f.created_at").
+		Column("f.id", "u.name", "u.avatar", "u.rank", "f.created_at").
 		ColumnExpr("f.receiver_id AS user_id").
 		Where("f.requester_id = ?", userId).
 		Where("f.status = ?", "pending").

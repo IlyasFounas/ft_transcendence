@@ -14,6 +14,7 @@ const (
 	EarthDiameterMeters = 12742176 // median diameter of the Earth in meters
 	EarthRadiusMeters = 6371088 // median radius of the Earth in meters
 	EarthRadiusFeet = 20902520 // 6371088 * 3.28084 > meters to feet conversion
+	MaxDistanceMeters = 40075017 // max distance between two points on Earth (Pi * max earth diameter) / 2 (max earth diamerter = 12756274)
 )
 
 // Converts from degrees to radians
