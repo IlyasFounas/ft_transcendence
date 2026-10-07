@@ -10,6 +10,8 @@ import { MainLayout } from './layouts/MainLayout';
 import AuthenticationPage from './pages/AuthenticationPage';
 import ProtectedRoute from './components/routes/ProtectedRoute';
 import PublicRoute from './components/routes/PublicRoute';
+import PrivacyPage from './pages/PrivacyPolicyAndTerms/PrivacyPage';
+import TermsPage from './pages/PrivacyPolicyAndTerms/TermsPage';
 
 function App() {
     return (
@@ -20,6 +22,8 @@ function App() {
                     <Route path="/login" element={<AuthenticationPage/>} />
                     <Route path="/components" element={<ComponentsPage/>} />
                 </Route>
+				<Route path="/privacy" element={<PrivacyPage />} />
+  				<Route path="/terms" element={<TermsPage />} />
                 <Route element={<ProtectedRoute />}>
                     <Route element={<ChatLayout />}>
                         <Route path="/home" element={<HomePage />} />

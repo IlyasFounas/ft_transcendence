@@ -3,6 +3,7 @@ import { Outlet } from "react-router-dom"
 import ChatPanel from "../components/chat/ChatPanel";
 import { Navbar } from "../components/navbar/Navbar";
 import { chatlists } from "../data/chatlists";
+import Footer from "../components/routes/Footer";
 
 export function ChatLayout () {
 
@@ -31,7 +32,7 @@ export function ChatLayout () {
                 />
                 
                 < Outlet />
-        
+				<Footer />
                 <div
                 className={`
                     fixed
