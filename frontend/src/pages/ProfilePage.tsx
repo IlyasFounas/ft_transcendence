@@ -60,7 +60,7 @@ export default function ProfilePage() {
             return;
         }
 
-        const historicGames: HistoricGameResponse[] = result.data.historic_games;
+        const historicGames: HistoricGameResponse[] = result.data.historic_games ?? [];
 
         setOperations(
             historicGames.map((game) => ({
