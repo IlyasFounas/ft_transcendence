@@ -15,7 +15,7 @@ export function MainLayout () {
                     fixed
                     inset-0
                     z-30
-                    bg-black/20
+                    bg-black/40
                     lg:hidden
                 "
                 onClick={() => setIsChatOpen(false)}
