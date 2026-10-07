@@ -4,10 +4,13 @@ import { useAuth } from "../context/AuthContext";
 import CalculateRank from "../utils/rank";
 import { useEffect, useState } from "react";
 import type { UserStatistics } from "../types/statistics.type";
+import { useNavigate } from "react-router-dom";
+import { useLobbySocket } from "../context/GameSocketContext";
 
 export default function HomePage() {
     const { user, authFetch } = useAuth();
     const [statistics, setStatistics] = useState<UserStatistics | null>(null);
+	const { connect } = useLobbySocket();
 
     const totalScore = user?.XP ?? 0;
     const rank = CalculateRank(totalScore);
@@ -25,6 +28,26 @@ export default function HomePage() {
 
         getStatistics();
     }, []);
+
+	const handlePlaySolo = async () => {
+	const body = new URLSearchParams({
+			timer: "120",
+			round_total: "5", 
+		});
+
+		const result = await authFetch("/api/lobby/create", {
+			method: "POST",
+			headers: { "Content-Type": "application/x-www-form-urlencoded" },
+			body: body.toString(),
+		});
+
+		if (result?.status === 200) {
+			connect();
+			navigate("/game/solo"); 
+		}
+	};
+
+	const navigate = useNavigate();
 
     return (
         <main
@@ -114,7 +137,7 @@ export default function HomePage() {
                     </PrimaryButton>
                 </div>    
                 <div className="w-full hidden lg:block">
-                    <PrimaryButton size="large" subtitle="Launch a new operation">
+                    <PrimaryButton size="large" subtitle="Launch a new operation" onClick={handlePlaySolo}>
                         Start Mission
                     </PrimaryButton>
                 </div>              

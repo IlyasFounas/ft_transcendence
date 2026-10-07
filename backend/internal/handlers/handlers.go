@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"backend/internal/repositories"
-	"github.com/sams96/rgeo"
+	"backend/internal/tools/rgeo"
 	"os"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
