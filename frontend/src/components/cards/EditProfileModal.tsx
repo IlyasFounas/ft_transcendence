@@ -272,6 +272,7 @@ export default function EditProfileModal({
                                 </div>
 
                                 <input
+                                    id="avatar-upload"
                                     type="file"
                                     accept="image/png,image/jpeg"
                                     onChange={handleUpload}
@@ -310,7 +311,9 @@ export default function EditProfileModal({
                         "
                     >
                         <input
+                            id="username"
                             type="text"
+                            autoComplete="off"
                             {...register("username")}
                             className="
                                 flex-1
@@ -329,7 +332,7 @@ export default function EditProfileModal({
                         />
                     </div>
                     {errors.username && (
-                        <p className="text-red-400 text-sm mt-2">
+                        <p className="text-red-400 text-body-primary text-center pt-2">
                             {errors.username.message}
                         </p>
                     )}

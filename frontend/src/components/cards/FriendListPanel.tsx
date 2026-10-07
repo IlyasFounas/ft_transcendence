@@ -338,7 +338,9 @@ export default function FriendListPanel() {
                 "
             >
                 <input
+                    id="search-friend"
                     type="text"
+                    autoComplete="off"
                     value={search}
                     onChange={(e) => {
                         setSearch(e.target.value);
