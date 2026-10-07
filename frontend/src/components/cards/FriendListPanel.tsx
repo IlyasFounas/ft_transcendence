@@ -334,6 +334,7 @@ export default function FriendListPanel() {
                 "
             >
                 <input
+                    id="friend-search"
                     type="text"
                     value={search}
                     onChange={(e) => {
