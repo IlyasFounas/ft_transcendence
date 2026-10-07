@@ -676,5 +676,113 @@
     "latitude": -20.893722222222,
     "longitude": 55.465461111111,
     "country_code": "RE"
+  },
+  {
+    "mapillary_id": 1337977201078633,
+    "latitude": -21.3472295,
+    "longitude": 55.4919871,
+    "country_code": "RE"
+  },
+  {
+    "mapillary_id": 739252840651067,
+    "latitude": -21.325706944444,
+    "longitude": 55.530765277778,
+    "country_code": "RE"
+  },
+  {
+    "mapillary_id": 891505300222856,
+    "latitude": -12.1460743,
+    "longitude": 44.4216967,
+    "country_code": "KM"
+  },
+  {
+    "mapillary_id": 1580258586438366,
+    "latitude": -12.2062551,
+    "longitude": 44.4673452,
+    "country_code": "KM"
+  },
+  {
+    "mapillary_id": 1411378573732040,
+    "latitude": -11.7398808,
+    "longitude": 43.2495805,
+    "country_code": "KM"
+  },
+  {
+    "mapillary_id": 1897681527497664,
+    "latitude": -11.7046106,
+    "longitude": 43.2506696,
+    "country_code": "KM"
+  },
+  {
+    "mapillary_id": 1662873931495724,
+    "latitude": -25.9639813,
+    "longitude": 32.5760299,
+    "country_code": "MZ"
+  },
+  {
+    "mapillary_id": 614094493386882,
+    "latitude": -25.9423942,
+    "longitude": 32.5579742,
+    "country_code": "MZ"
+  },
+  {
+    "mapillary_id": 562463322457620,
+    "latitude": -25.9473918,
+    "longitude": 32.5785182,
+    "country_code": "MZ"
+  },
+  {
+    "mapillary_id": 408905884940661,
+    "latitude": -16.3954699,
+    "longitude": 30.9994464,
+    "country_code": "ZW"
+  },
+  {
+    "mapillary_id": 24867604272896206,
+    "latitude": -16.1221739,
+    "longitude": 30.325023,
+    "country_code": "ZW"
+  },
+  {
+    "mapillary_id": 1191394855144452,
+    "latitude": 0.30642531096744,
+    "longitude": 32.56178731687,
+    "country_code": "UG"
+  },
+  {
+    "mapillary_id": 3017851491846440,
+    "latitude": 0.3365899689397,
+    "longitude": 32.583170569049,
+    "country_code": "UG"
+  },
+  {
+    "mapillary_id": 1239832374681025,
+    "latitude": -6.1551910831944,
+    "longitude": 23.687005659753,
+    "country_code": "CD"
+  },
+  {
+    "mapillary_id": 1502311161334315,
+    "latitude": -6.1486576115,
+    "longitude": 24.4643341799,
+    "country_code": "CD"
+  },
+  {
+    "mapillary_id": 492283453786091,
+    "latitude": 5.346957,
+    "longitude": 30.3184901,
+    "country_code": "SS"
+  },
+  {
+    "mapillary_id": 3584649608517877,
+    "latitude": 3.7958374,
+    "longitude": 11.4969433,
+    "country_code": "CM"
+  },
+  {
+    "mapillary_id": 658340736280989,
+    "latitude": 23.6207031,
+    "longitude": 58.5655778,
+    "country_code": "OM"
   }
 ]
