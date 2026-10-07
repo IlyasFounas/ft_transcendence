@@ -36,7 +36,7 @@ export function ChatLayout () {
                     fixed
                     right-5
                     top-20
-                    lg:top-30
+                    lg:top-25
                     mt-5
                     bottom-5
                     left-5
