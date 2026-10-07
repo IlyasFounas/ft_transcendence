@@ -207,8 +207,7 @@ export default function ProfilePage() {
                     Statistics
                 </h2>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
-
+                <div className="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-4 gap-6">
                     <StatCard
                         title="Operations"
                         value={statistics?.finished_games?.toString() ?? "0"}
