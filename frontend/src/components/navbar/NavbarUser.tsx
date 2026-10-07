@@ -52,10 +52,16 @@ export default function NavbarUser({
                     hover:brightness-125
                 "
             >
-                <div className="shrink-0">
+                <div className="shrink-0 lg:hidden">
                     <Avatar
                         avatar={avatar}
                         size={45}
+                    />
+                </div>
+                <div className="shrink-0 hidden lg:block">
+                    <Avatar
+                        avatar={avatar}
+                        size={55}
                     />
                 </div>
 
@@ -63,6 +69,7 @@ export default function NavbarUser({
                     <div className="
                         truncate
                         text-heading-small
+                        lg:text-heading-medium
                         text-text-primary
                         uppercase
                         "
@@ -73,6 +80,7 @@ export default function NavbarUser({
                     <div
                         className={`
                             text-body-primary
+                            lg:text-heading-small
                             uppercase
                             ${statusClasses[status]}
                         `}
