@@ -70,6 +70,8 @@ export default function MessageInput({
                 "
             >
                 <textarea
+                    id="message"
+                    name="message"
                     ref={textareaRef}
                     value={value}
                     onChange={handleChange}
