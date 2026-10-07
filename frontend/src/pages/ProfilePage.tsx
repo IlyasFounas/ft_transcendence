@@ -33,7 +33,6 @@ export default function ProfilePage() {
 
         const getStatistics = async () => {
             const result = await authFetch("api/user/statistics");
-            console.log(result?.data);
             if (!result) {
                 return ;
             }
@@ -44,14 +43,10 @@ export default function ProfilePage() {
         const getLeaderboard = async () => {
             const result = await authFetch("api/leaderboard/user");
 
-            console.log("leaderboard: ", result?.data);
-
             if (!result) {
                 return ;
             }
-            console.log(result.data.leaderboard);
             setLeaderboard(result.data.leaderboard);
-            console.log("position: ",result?.data.leaderboard[0].position);
         };
 
         const getOperations = async () => {

@@ -160,7 +160,6 @@ export default function Conversation({
                     ) {
                         prevScrollHeightRef.current = event.currentTarget.scrollHeight;
 
-                        console.log("Loading older message");
                         fetchMessages(friend.userId, messageEnd);
                     }
                 }}

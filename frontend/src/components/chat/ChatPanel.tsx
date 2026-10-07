@@ -10,7 +10,6 @@ export default function ChatPanel() {
     const { authFetch } = useAuth();
     
     const { chatFriends, fetchMessages, sendMessage, messages, messageEnd, loadingOlderMessages } = useChatWebSocket();
-    console.log("ChatPanel chatFriends:", chatFriends);
     
     const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
     const [friendList, setFriendList] = useState<Friend[]>([]);
@@ -76,8 +75,6 @@ export default function ChatPanel() {
             };
         });
     }, [chatFriends]);
-
-    console.log("Friends with WebSocket status:", friendsWithOnlineStatus);
 
     const handleSendMessage = (message: string) => {
         if (!selectedFriend) {

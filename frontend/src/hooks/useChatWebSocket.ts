@@ -22,14 +22,11 @@ export default function useChatWebSocket() {
     const [loadingOlderMessages, setLoadingOlderMessages] = useState(false);
 
     const fetchMessages = (targetId: number, end = 0) => {
-        console.log("fetchMessages called with:", targetId, end);
 
         if (!socketRef.current) {
-            console.log("WebSocket is not connected");
             return;
         }
 
-        console.log("Sending fetch_messages");
 
         if (end > 0) {
             
@@ -75,10 +72,6 @@ export default function useChatWebSocket() {
 
         socketRef.current = socket;
 
-        socket.onopen = () => {
-            console.log("Chat WebSocket connected");
-        };
-
         socket.onmessage = (event) => {
             const data = JSON.parse(event.data);
             
@@ -88,7 +81,6 @@ export default function useChatWebSocket() {
                     const payload = data.payload as ChatFriend[];
                     setChatFriends(payload);
 
-                    console.log("Initial friend list:", payload);
                 } else {
                     const payload = data.payload as ChatFriend;
 
@@ -99,14 +91,10 @@ export default function useChatWebSocket() {
                                 : friend
                         )
                     );
-
-                    console.log("Friend status update:", payload);
                 }
             }
 
             if (data.action === "chats") {
-                console.log("This is a chat history:", data.payload);
-                
                 const chats = data.payload.chats ?? [];
                 const end = data.payload.end ?? 0;
 
@@ -125,13 +113,8 @@ export default function useChatWebSocket() {
             }
 
             if (data.action === "new_message") {
-                console.log("This is a new message:", data.payload);
-
                 const newMessages = data.payload.chats ?? [];
                 const latestMessage = newMessages[newMessages.length - 1];
-
-                console.log("LATEST MESSAGE:", latestMessage);
-                console.log("CURRENT FRIENDS:", chatFriends);
 
                 setMessages(currentMessages => [
                     ...currentMessages,
@@ -155,12 +138,7 @@ export default function useChatWebSocket() {
             }
         }
         
-        socket.onerror = (error) => {
-            console.error("Chat WebSocket error:", error);
-        };
-
         return () => {
-            console.log("WebSocket cleanup");
             socket.close();
             socketRef.current = null;
         };
