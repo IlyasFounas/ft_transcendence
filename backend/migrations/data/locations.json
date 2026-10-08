@@ -946,5 +946,17 @@
     "latitude": 5.3301146480769,
     "longitude": -4.0030306592555,
     "country_code": "CI"
+  },
+  {
+    "mapillary_id": 1758690828492873,
+    "latitude": -6.3725628024341,
+    "longitude": 23.832835897099,
+    "country_code": "CD"
+  },
+  {
+    "mapillary_id": 945922533292234,
+    "latitude": -26.889432408342138,
+    "longitude": 20.733037096079215,
+    "country_code": "ZA"
   }
 ]
