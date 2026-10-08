@@ -4,7 +4,6 @@ import { useLobbySocket } from "../../context/GameSocketContext";
 import { useAuth } from "../../context/AuthContext";
 import PrimaryButton from "../../components/buttons/PrimaryButton";
 import GameBar from "../../components/game/GameBar";
-import Countdown from "../../components/game/Countdown";
 import LoadStreetView from "./StreetView/LoadStreetView";
 import Load2DMap from "./2DMap/Load2DMap";
 import Preview2DMap from "./2DMap/Preview2DMap";
@@ -106,7 +105,7 @@ export default function GamePlayPage() {
 
 	return (
 		<div className="flex flex-col h-screen">
-			<div className="hidden lg:flex">
+			<div >
 				<GameBar
 					gameId={gameId ?? 0}
 					totalRounds={lobbyInfos?.round_total ?? 5}
@@ -185,12 +184,16 @@ export default function GamePlayPage() {
 						)}
 					</div>
 					{isMapMain && (
-						<PrimaryButton 
-							size="small" 
-							disabled={!guess || hasGuessed} 
+						<PrimaryButton
+							size="small"
+							disabled={!guess || hasGuessed}
 							onClick={handleSubmit}
 						>
-							{hasGuessed ? "Waiting for other agents..." : "Submit"}
+							{hasGuessed
+								? players.length > 1
+									? "Waiting..."
+									: "Submitted"
+								: "Submit"}
 						</PrimaryButton>
 					)}
 				</div>
@@ -225,9 +228,6 @@ export default function GamePlayPage() {
 						</div>
 					</div>
 				)}
-				<div className="absolute left-1/2 -translate-x-1/2 top-15 lg:hidden z-1000">
-					<Countdown countdown={countdown}/>
-				</div>
 			</div>
 			
 			{showTutorial && (

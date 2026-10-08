@@ -6,8 +6,8 @@ import SignalIntegrityCard from './SignalIntegrityCard'
 import LogoIcon from "../primitives/LogoIcon"
 
 type Props = {
-    countdown: number;
-    totalTime: number;
+	countdown: number;
+	totalTime: number;
 	gameId: number;
 	round: number;
 	totalRounds: number;
@@ -18,57 +18,83 @@ type Props = {
 export default function GameBar({countdown, totalTime, gameId, round, totalRounds, onLeave, onTuto} : Props)
 {
 	return (
-		<div className="
-			grid
-			grid-cols-[1fr_auto_1fr]
-			w-full
-			h-[120px] md:[100px]
-			items-center
-			px-8
-			gap-8 md:gap-4
-		">
+	<>
+		<div
+			className="
+				hidden md:grid
+				grid-cols-[1fr_auto_1fr]
+				w-full
+				h-[100px]
+				items-center
+				px-8
+				gap-4
+			"
+		>
 			<div className="flex justify-start items-center gap-4">
-				<div>
-						<LogoHorizontal className="hidden xl:flex min-w-[100px] h-[100px] md:w-[50px]"></LogoHorizontal>
-						<LogoIcon className="flex xl:hidden w-[75px] h-[75px]"></LogoIcon>
-				</div>
-				<GameInfosCard round={round} totalRounds={totalRounds} id={gameId}></GameInfosCard>
+				<LogoHorizontal className="hidden xl:flex min-w-[100px] h-[100px]" />
+				<LogoIcon className="flex xl:hidden w-[75px] h-[75px]" />
+
+				<GameInfosCard
+					round={round}
+					totalRounds={totalRounds}
+					id={gameId}
+				/>
 			</div>
+
 			<div className="flex justify-center">
-				<Countdown countdown={countdown}/>
+				<Countdown countdown={countdown} />
 			</div>
+
 			<div className="flex justify-end gap-6">
-				<SignalIntegrityCard countdown={countdown} totalTime={totalTime}></SignalIntegrityCard>
+				<SignalIntegrityCard
+					countdown={countdown}
+					totalTime={totalTime}
+				/>
+
 				<div className="flex flex-row gap-6">
-					<button className="
-						cursor-pointer
-						transition-transform
-						duration-200
-						ease-out
-						hover:scale-[1.2]
-
-						active:scale-[0.9]"
-						onClick={onTuto}>
-						<CircleQuestionMark></CircleQuestionMark>
-					</button>
-					<button className="
-						cursor-pointer
-						transition-transform
-						duration-200
-						ease-out
-						transition-colors
-						hover:scale-[1.2]
-						hover:text-red-500
-						hover:brightness-100
-						
-						active:scale-[0.9]
-						"
-						onClick={onLeave}>
-						<LogOut></LogOut>
+					<button
+						className="cursor-pointer transition-transform duration-200 ease-out hover:scale-[1.2] active:scale-[0.9]"
+						onClick={onTuto}
+					>
+						<CircleQuestionMark />
 					</button>
 
+					<button
+						className="cursor-pointer transition-transform duration-200 ease-out hover:scale-[1.2] hover:text-red-500 active:scale-[0.9]"
+						onClick={onLeave}
+					>
+						<LogOut />
+					</button>
 				</div>
 			</div>
 		</div>
+
+		<div
+			className="
+				flex md:hidden
+				items-center
+				justify-between
+				w-full
+				px-4
+				py-3
+			"
+		>
+			<button
+				className="cursor-pointer transition-transform duration-200 ease-out hover:scale-[1.15] active:scale-[0.9]"
+				onClick={onTuto}
+			>
+				<CircleQuestionMark />
+			</button>
+
+			<Countdown countdown={countdown} />
+
+			<button
+				className="cursor-pointer transition-transform duration-200 ease-out hover:scale-[1.15] hover:text-red-500 active:scale-[0.9]"
+				onClick={onLeave}
+			>
+				<LogOut />
+			</button>
+		</div>
+	</>
 	)
 }

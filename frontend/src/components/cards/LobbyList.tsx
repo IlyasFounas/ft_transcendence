@@ -35,8 +35,10 @@ export default function LobbyList({listOfPlayers, onKick, isCurrentUserHost}: Lo
 					items-center 
 					justify-between 
 					border
-					border-border-default/30 
-                  	bg-surface-title px-4 py-3
+					border-border-default/30
+					bg-gradient-to-t from-black to-bg-surface-base 
+                  	bg-surface-title 
+					px-4 py-3
 					uppercase">
         				<span className="text-heading-small text-text-primary/70">
         					Agents

@@ -38,14 +38,16 @@ export default function LobbyRow({
 			? "outline-cyan-400/60 bg-gradient-to-r from-cyan-400/15 via-cyan-400/5 to-transparent shadow-[0_0_20px_rgba(53,223,255,0.25)]"
 			: "outline-cyan-800/30"
 		}`}>
-  			<div className="flex items-center gap-[12px]">
-			<Avatar size={45} avatar={avatar} borderColor={avatarBorder}/>
-			<div className="flex flex-col px-[10px]">
-				<span className={`text-heading-small ${rowColor}`}>
+  			<div className="flex items-center gap-[12px] min-w-0">
+			<div className="shrink-0">
+				<Avatar size={45} avatar={avatar} borderColor={avatarBorder}/>
+			</div>
+			<div className="flex flex-col px-[10px] min-w-0">
+				<span className={`truncate text-heading-small ${rowColor}`}>
 					{username}{isHost && " (host)"}
 				</span>
 			</div>
-  		</div>
+		</div>
  		{isCurrentUserHost && !isHost && 
 		<button onClick={onKick}>
 			<X className="
