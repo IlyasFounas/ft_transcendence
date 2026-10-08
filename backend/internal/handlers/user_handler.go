@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 	"errors"
 	"encoding/json"
@@ -760,5 +761,29 @@ func (h *UserHandler) SetRank(xp int64) gin.HandlerFunc {
 			return
 		}
 		c.JSON(http.StatusOK, gin.H{"message": "success"})
+	}
+}
+
+func (h *UserHandler) DeleteUser() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userId, err := strconv.ParseInt(c.Param("id"), 10, 64)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"message": "invalid user id"})
+			return
+		}
+		err = h.userRepo.DeleteUser(c.Request.Context(), userId)
+		switch {
+		case err == nil:
+			c.JSON(http.StatusOK, gin.H{"message": "success"})
+		case errors.Is(err, repositories.ErrUserNotFound):
+			c.JSON(http.StatusNotFound, gin.H{"message": "user not found"})
+		case errors.Is(err, repositories.ErrUserIsAdmin):
+			c.JSON(http.StatusForbidden, gin.H{"message": "an admin can't be deleted"})
+		case errors.Is(err, repositories.ErrUserInGame):
+			c.JSON(http.StatusConflict, gin.H{"message": "the user is in a lobby or a game, try again later"})
+		default:
+			log.Printf("error : %s\n", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "Something went wrong"})
+		}
 	}
 }
