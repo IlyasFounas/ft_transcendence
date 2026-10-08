@@ -86,7 +86,7 @@ export default function FriendListPanel() {
     }
 
     const searchUser = async () => {
-        const username = search.trim();
+        const username = search.trim().toLowerCase();
 
         if (username === "") {
             setSearchResult(null);
