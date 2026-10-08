@@ -46,7 +46,7 @@ export default function LobbyPage()
 		}
 
 		connect();
-		navigate("/lobbyroom");
+		navigate("/lobby");
 	}
 
 	useEffect(() => {
@@ -75,7 +75,7 @@ export default function LobbyPage()
 
 		if (result.status === "ok") {
 			connect();
-			navigate("/lobbyroom");
+			navigate("/lobby");
 			return;
 		}
 
@@ -89,7 +89,7 @@ export default function LobbyPage()
 
 	useEffect(() => {
 		if (lobbyInfos && !round) {
-			navigate("/lobbyroom");
+			navigate("/lobby");
 		}
 	}, [lobbyInfos, round, navigate]);
 

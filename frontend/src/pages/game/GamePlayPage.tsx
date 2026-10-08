@@ -56,7 +56,7 @@ export default function GamePlayPage() {
 		const isMultiplayer = players.length > 1;
 
 		if (isMultiplayer) {
-			navigate("/multiresults", {
+			navigate("/results/multiplayers", {
 				state: {
 					currentRound: round.round_nb,
 					totalRounds: lobbyInfos?.round_total ?? 5,
@@ -68,7 +68,7 @@ export default function GamePlayPage() {
 				}
 			});
 		} else {
-			navigate("/soloresults", {
+			navigate("/results/solo", {
 				state: {
 					currentRound: round.round_nb,
 					totalRounds: lobbyInfos?.round_total ?? 5,
