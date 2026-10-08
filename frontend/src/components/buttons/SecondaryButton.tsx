@@ -18,7 +18,7 @@ export default function SecondaryButton({ children, onClick, icon, active, class
 			
 			rounded-lg
 			border border-primary
-			outline -outline-offset-1 outline-primary
+			outline -outline-offset-1
 			
 			bg-surface-elevated
 			

@@ -119,7 +119,6 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
 
 		socket.onmessage = (event) => {
 			const message = JSON.parse(event.data);
-			console.log(message);
 			if (message.action === "lobby_players") {
 				const mappedPlayers: Player[] = message.payload.map((p: RawPlayer) => ({
 					id: p.id,

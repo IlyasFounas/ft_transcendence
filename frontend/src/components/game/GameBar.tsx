@@ -58,7 +58,7 @@ export default function GameBar({countdown, totalTime, gameId, round, totalRound
 						ease-out
 						transition-colors
 						hover:scale-[1.2]
-						hover:text-red-900
+						hover:text-red-500
 						hover:brightness-100
 						
 						active:scale-[0.9]

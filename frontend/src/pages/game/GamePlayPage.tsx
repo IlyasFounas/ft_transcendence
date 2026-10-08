@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLobbySocket } from "../../context/GameSocketContext";
+import { useAuth } from "../../context/AuthContext";
 import PrimaryButton from "../../components/buttons/PrimaryButton";
 import GameBar from "../../components/game/GameBar";
 import Countdown from "../../components/game/Countdown";
@@ -17,6 +18,8 @@ export default function GamePlayPage() {
 	const navigate = useNavigate();
 	const [hasGuessed, setHasGuessed] = useState(false);
 	const [showTutorial, setShowTutorial] = useState(false);
+	const [gameId, setGameId] = useState<number | null>(null);
+	const {authFetch} = useAuth();
 
 	useEffect(() => {
 		setHasGuessed(false);
@@ -38,6 +41,14 @@ export default function GamePlayPage() {
 
 		return () => clearInterval(timer);
 	}, [round]);
+
+	useEffect(() => {
+		authFetch("/api/lobby/current").then((res) => {
+			if (res.status === 200 && res.data?.game_id) {
+				setGameId(res.data.game_id);
+			}
+		});
+	}, []);
 
 	useEffect(() => {
 		if (!lastRoundResult || !round) return;
@@ -97,7 +108,7 @@ export default function GamePlayPage() {
 		<div className="flex flex-col h-screen">
 			<div className="hidden lg:flex">
 				<GameBar
-					gameId={42}
+					gameId={gameId ?? 0}
 					totalRounds={lobbyInfos?.round_total ?? 5}
 					totalTime={lobbyInfos?.timer ?? 120}
 					round={round.round_nb}

@@ -135,12 +135,12 @@ export default function HomePage() {
                     <p className="text-heading-small md:text-heading-medium lg:text-hero font-semibold text-text-primary">REPORT.</p>
                 </div>
                 <div className="w-full md:hidden">
-                    <PrimaryButton size="small" subtitle="Launch a new operation">
+                    <PrimaryButton size="small" subtitle="Launch a new operation" onClick={handlePlaySolo}>
                         Start Mission
                     </PrimaryButton>
                 </div>
                 <div className="w-full hidden md:block lg:hidden text-center">
-                    <PrimaryButton size="medium" subtitle="Launch a new operation">
+                    <PrimaryButton size="medium" subtitle="Launch a new operation" onClick={handlePlaySolo}>
                         Start Mission
                     </PrimaryButton>
                 </div>    
