@@ -612,3 +612,32 @@ func (r *UserRepository) SetRank(ctx context.Context, userId int64, rank string)
 	}
 	return true, nil
 }
+
+func (r *UserRepository) UpdateUser(ctx context.Context, userId int64, user *users.User) error {
+	result, err := r.db.NewUpdate().
+		Model(user).
+		Column(
+			"name",
+			"login",
+			"email",
+			"is_verified",
+			"avatar",
+			"xp",
+			"rank",
+		).
+		Where("id = ?", userId).
+		Exec(ctx)
+
+	if err != nil {
+		return err
+	}
+	affected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if affected == 0 {
+		return fmt.Errorf("user %d was not update", userId)
+	}
+	return err
+}

@@ -787,3 +787,65 @@ func (h *UserHandler) DeleteUser() gin.HandlerFunc {
 		}
 	}
 }
+
+func (h *UserHandler) UpdateUser() gin.HandlerFunc {
+    return func(c *gin.Context) {
+        username := c.Param("username")
+		user, err := h.userRepo.UserByName(c.Request.Context(), username)
+        if err != nil {
+            c.JSON(http.StatusNotFound, gin.H{
+                "error": "user not found",
+            })
+            return
+        }
+		if user.IsAdmin {
+			c.JSON(http.StatusForbidden, gin.H{"error": "cannot modify admin"})
+            return
+		}
+        newUsername := c.PostForm("username")
+		login := c.PostForm("login")
+        email := c.PostForm("email")
+        isVerifiedString := c.PostForm("is_verified")
+        avatar := c.PostForm("avatar")
+        xpString := c.PostForm("xp")
+        if newUsername == "" {
+            c.JSON(http.StatusBadRequest, gin.H{"error": "username is required"})
+            return
+        }
+		// check existing name
+		if login == ""{
+			c.JSON(http.StatusBadRequest, gin.H{"error": "login is required"})
+            return
+		}
+		// check existing name
+        isVerified, err := strconv.ParseBool(isVerifiedString)
+        if err != nil {
+            c.JSON(http.StatusBadRequest, gin.H{"error": "invalid is_verified"})
+            return
+        }
+        xp, err := strconv.ParseInt(xpString, 10, 64)
+        if err != nil {
+            c.JSON(http.StatusBadRequest, gin.H{"error": "invalid xp"})
+            return
+        }
+        if xp < 0 {
+            c.JSON(http.StatusBadRequest, gin.H{"error": "xp cannot be negative"})
+            return
+        }
+        rank := rank_calculation.CalculateRank(xp)
+		user.Username = newUsername
+		user.Login = &login
+		user.Email = email
+		user.Is_verified = isVerified
+		user.Avatar = &avatar
+		user.XP = xp
+		user.Rank = rank
+        err = h.userRepo.UpdateUser(c.Request.Context(), user.ID, user)
+        if err != nil {
+			fmt.Println("Update failed: ", err)
+            c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+            return
+        }
+        c.JSON(http.StatusOK, gin.H{"message": "user updated successfully"})
+    }
+}
