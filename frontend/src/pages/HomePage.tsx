@@ -30,10 +30,18 @@ export default function HomePage() {
     }, []);
 
 	const handlePlaySolo = async () => {
-	const body = new URLSearchParams({
-			timer: "120",
-			round_total: "5", 
-		});
+
+		const current = await authFetch("/api/lobby/current");
+		if (current?.status === 200 && current.data?.game_id) {
+			connect();
+			navigate(`/game/${current.data.game_id}`);
+			return;
+		}
+		
+		const body = new URLSearchParams({
+				timer: "120",
+				round_total: "5", 
+			});
 
 		const result = await authFetch("/api/lobby/create", {
 			method: "POST",
