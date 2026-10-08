@@ -802,5 +802,149 @@
     "latitude": 33.370210499972,
     "longitude": -7.375699,
     "country_code": "MA"
+  },
+  {
+    "mapillary_id": 4099731433427504,
+    "latitude": 33.589942499972,
+    "longitude": -7.6797126666667,
+    "country_code": "MA"
+  },
+  {
+    "mapillary_id": 694346838456773,
+    "latitude": 33.5989495,
+    "longitude": -7.6462665,
+    "country_code": "MA"
+  },
+  {
+    "mapillary_id": 139639061523187,
+    "latitude": 33.228302666667,
+    "longitude": -8.551038,
+    "country_code": "MA"
+  },
+  {
+    "mapillary_id": 534454124218988,
+    "latitude": 31.621049880556,
+    "longitude": -7.9880872083333,
+    "country_code": "MA"
+  },
+  {
+    "mapillary_id": 504944487305776,
+    "latitude": 31.635532377778,
+    "longitude": -8.0113143916667,
+    "country_code": "MA"
+  },
+  {
+    "mapillary_id": 3879737402152397,
+    "latitude": 31.645759580556,
+    "longitude": -8.0132913583333,
+    "country_code": "MA"
+  },
+  {
+    "mapillary_id": 918006968743390,
+    "latitude": 33.968364000278,
+    "longitude": -5.6863993683333,
+    "country_code": "MA"
+  },
+  {
+    "mapillary_id": 909122372130542,
+    "latitude": 13.397260586728,
+    "longitude": -16.705620479457,
+    "country_code": "GM"
+  },
+  {
+    "mapillary_id": 1935023650266850,
+    "latitude": 13.42537070964,
+    "longitude": -16.685310163877,
+    "country_code": "GM"
+  },
+  {
+    "mapillary_id": 1177205799431693,
+    "latitude": 13.454392924722,
+    "longitude": -16.676089893889,
+    "country_code": "GM"
+  },
+  {
+    "mapillary_id": 933460997220874,
+    "latitude": 13.465724671111,
+    "longitude": -16.674615433333,
+    "country_code": "GM"
+  },
+  {
+    "mapillary_id": 762984562692558,
+    "latitude": 13.480756,
+    "longitude": -16.671647436769,
+    "country_code": "GM"
+  },
+  {
+    "mapillary_id": 2135895893430384,
+    "latitude": 13.4512376096,
+    "longitude": -16.5730459264,
+    "country_code": "GM"
+  },
+  {
+    "mapillary_id": 802985127011537,
+    "latitude": 13.187646483889,
+    "longitude": -16.761805498889,
+    "country_code": "GM"
+  },
+  {
+    "mapillary_id": 841267598552231,
+    "latitude": 9.325255454248406,
+    "longitude": 2.655967637888466,
+    "country_code": "BJ"
+  },
+  {
+    "mapillary_id": 926929549855199,
+    "latitude": 9.2822164,
+    "longitude": 2.7331608,
+    "country_code": "BJ"
+  },
+  {
+    "mapillary_id": 827782739863516,
+    "latitude": 9.2909745,
+    "longitude": 2.7292642,
+    "country_code": "BJ"
+  },
+  {
+    "mapillary_id": 950557764007091,
+    "latitude": 5.44534601274,
+    "longitude": -2.90458686434,
+    "country_code": "CI"
+  },
+  {
+    "mapillary_id": 4706327379384498,
+    "latitude": 5.1970111337497,
+    "longitude": -3.7375866773804,
+    "country_code": "CI"
+  },
+  {
+    "mapillary_id": 1044828623117942,
+    "latitude": 5.2190276803692,
+    "longitude": -3.738285698592,
+    "country_code": "CI"
+  },
+  {
+    "mapillary_id": 286894373140619,
+    "latitude": 5.2366695718574,
+    "longitude": -3.8750285500102,
+    "country_code": "CI"
+  },
+  {
+    "mapillary_id": 788467328835144,
+    "latitude": 5.3018145669702,
+    "longitude": -3.9926135631793,
+    "country_code": "CI"
+  },
+  {
+    "mapillary_id": 210854800620444,
+    "latitude": 5.3669787903154,
+    "longitude": -4.1010845219927,
+    "country_code": "CI"
+  },
+  {
+    "mapillary_id": 463157588923225,
+    "latitude": 5.3301146480769,
+    "longitude": -4.0030306592555,
+    "country_code": "CI"
   }
 ]
