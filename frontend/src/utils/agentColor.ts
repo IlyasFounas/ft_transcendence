@@ -5,6 +5,10 @@ const AGENT_COLORS = [
   "#39FF6D",
   "#FFCC33",
   "#6756FF",
+  "#FF6B35",
+  "#00E5A0",
+  "#F43FFF",
+  "#B6FF00", 
 ] as const;
 
 export function getAgentColorByIndex(index: number) {
