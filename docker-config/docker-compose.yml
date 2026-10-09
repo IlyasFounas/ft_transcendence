@@ -33,6 +33,7 @@ services:
       target: ${ENV}
     working_dir: /app
     environment:
+      RESEND_API_KEY: ${RESEND_API_KEY}
       ACTIVATION_JWT_SECRET: ${ACTIVATION_JWT_SECRET}
       JWT_SECRET: ${JWT_SECRET}
       POSTGRES_USER: ${POSTGRES_USER}

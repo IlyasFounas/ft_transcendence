@@ -110,7 +110,7 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
 
 		const socket = new WebSocket(
 			// `${window.location.protocol}://${window.location.host}/api/ws/lobby/join?user_id=${user.ID}`
-			`ws://10.13.6.4:5130/api/ws/lobby/join?user_id=${user.ID}`
+			`ws://10.13.3.6:5130/api/ws/lobby/join?user_id=${user.ID}`
 		);
 		socketRef.current = socket;
 		setIsClosed(false);

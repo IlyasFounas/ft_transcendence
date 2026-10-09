@@ -1,4 +1,4 @@
-.PHONY: up data-races down restart logs logs-backend logs-frontend ps stop clean create_mig init_mig exec_mig rollback_mig status_mig in
+.PHONY: up data-races down restart logs logs-backend logs-frontend ps stop clean create_mig init_mig exec_mig rollback_mig status_mig in re
 
 DOCKER_COMPOSE_OVERRIDE = docker-config/docker-compose.override.yml
 DOCKER_COMPOSE_PROD = docker-config/docker-compose.prod.yml
@@ -38,6 +38,9 @@ clean-caches: clean clean-images
 	go clean -cache -modcache
 	@echo "Cleaning NPM cache..."
 	npm cache clean --force
+
+re: fclean
+	make up
 
 # --- Logs section ---
 # Here you can call the service you want to see the logs of
