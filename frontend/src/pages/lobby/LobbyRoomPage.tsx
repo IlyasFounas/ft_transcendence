@@ -54,9 +54,7 @@ export default function LobbyRoomPage() {
 			</SecondaryButton>
 			
 			{gameStartAt ? (
-				<div className="w-full bg-sky-950/40 rounded-[10px] outline outline-1 outline-sky-950 overflow-hidden">
-					<NextRoundTimer targetTime={gameStartAt}>Mission starts in</NextRoundTimer>
-				</div>
+				<NextRoundTimer targetTime={gameStartAt}>Mission starts in</NextRoundTimer>
 			) : isCurrentUserHost ? (
 				<PrimaryButton size="medium" onClick={startGame} disabled={players.length < 2}>
 					Start Mission
