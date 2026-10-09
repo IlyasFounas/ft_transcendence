@@ -28,21 +28,32 @@ export default function LobbyPage()
 		body.append("round_total", rounds.toString());
 
 		setIsChecking(true);
-		const result = await authFetch("/api/lobby/create", {
-		method: "POST",
-		headers: { "Content-Type": "application/x-www-form-urlencoded" },
-		body: body.toString(),
-		});
-		setIsChecking(false);
+			const result = await authFetch("/api/lobby/create", {
+				method: "POST",
+				headers: { "Content-Type": "application/x-www-form-urlencoded" },
+				body: body.toString(),
+				});
+				setIsChecking(false);
 
-		if (result === null) {
-			setErrorMessage("Network error, please try again");
-			return;
+				if (result === null) {
+					setErrorMessage("Network error, please try again");
+					return;
+				}
+
+				if (result.status !== 200) {
+		setErrorMessage(result.data.message);
+		return;
 		}
 
-		if (result.status !== 200) {
-			setErrorMessage(result.data.message);
-			return;
+		const cur = await authFetch("/api/lobby/current");
+		console.log("current après create :", cur?.data);
+		const gameId = cur?.data?.game_id;
+		if (gameId) {
+			await authFetch(`/api/game/${gameId}/mode`, {
+				method: "PATCH",
+				headers: { "Content-Type": "application/x-www-form-urlencoded" },
+				body: new URLSearchParams({ mode: "multi" }).toString(),
+			});
 		}
 
 		connect();

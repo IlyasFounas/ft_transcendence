@@ -19,6 +19,7 @@ export default function GamePlayPage() {
 	const [showTutorial, setShowTutorial] = useState(false);
 	const [gameId, setGameId] = useState<number | null>(null);
 	const {authFetch} = useAuth();
+	const [mode, setMode] = useState<"solo" | "multi" | null>(null);
 
 	useEffect(() => {
 		setHasGuessed(false);
@@ -50,9 +51,18 @@ export default function GamePlayPage() {
 	}, []);
 
 	useEffect(() => {
-		if (!lastRoundResult || !round) return;
+		if (!gameId) return;
+		authFetch(`/api/game/${gameId}/mode`).then((res) => {
+			if (res?.status === 200 && res.data?.mode) {
+				setMode(res.data.mode);
+			}
+		});
+	}, [gameId]);
+
+	useEffect(() => {
+		if (!lastRoundResult || !round || !mode) return;
 		
-		const isMultiplayer = players.length > 1;
+		const isMultiplayer = mode === "multi";
 
 		if (isMultiplayer) {
 			navigate("/results/multiplayers", {
@@ -76,7 +86,7 @@ export default function GamePlayPage() {
 				}
 			});
 		}
-	}, [lastRoundResult, round, roundHistory, navigate, players.length, lobbyInfos?.round_total]);
+	}, [lastRoundResult, round, roundHistory, navigate, mode, lobbyInfos?.round_total]);
 
 	useEffect(() => {
 		if (lobbyInfos && !round) startGame();

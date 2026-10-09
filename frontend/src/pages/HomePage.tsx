@@ -50,8 +50,17 @@ export default function HomePage() {
 		});
 
 		if (result?.status === 200) {
+			const cur = await authFetch("/api/lobby/current");
+			const gameId = cur?.data?.game_id;
+			if (gameId) {
+				await authFetch(`/api/game/${gameId}/mode`, {
+					method: "PATCH",
+					headers: { "Content-Type": "application/x-www-form-urlencoded" },
+					body: new URLSearchParams({ mode: "solo" }).toString(),
+				});
+			}
 			connect();
-			navigate("/game/solo"); 
+			navigate("/game/solo");
 		}
 	};
 
