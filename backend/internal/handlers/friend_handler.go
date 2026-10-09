@@ -239,8 +239,16 @@ func (h *FriendHandler) FriendStatus() gin.HandlerFunc {
 		}
 		user, err := h.userRepo.UserByName(c.Request.Context(), username)
 		if err != nil {
-			c.JSON(http.StatusBadRequest,
-				gin.H{"message": "user not found"})
+			if errors.Is(err, sql.ErrNoRows) {
+				c.JSON(http.StatusOK, gin.H{
+					"message":      "user not found",
+					"friendStatus": nil,
+				})
+				return
+			}
+
+			c.JSON(http.StatusInternalServerError,
+				gin.H{"message": "Failed to find user"})
 			return
 		}
 		searchUserID := user.ID

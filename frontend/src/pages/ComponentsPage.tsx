@@ -41,7 +41,7 @@ export default function ComponentPage() {
   
         <section className="mb-10">
           <h2 className="mb-4 text-xl font-bold">Small Button — Default</h2>
-          <SmallButton onClick={() => console.log("clicked")}>
+          <SmallButton >
             Add Friend
           </SmallButton>
         </section>

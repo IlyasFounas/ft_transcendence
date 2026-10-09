@@ -6,12 +6,24 @@ interface FriendsListProps {
     onOpenChat: (friend: Friend) => void;
 }
 
+const formatTime = (date: string) => {
+    if (!date) {
+        return "";
+    }
+
+    return new Date(date).toLocaleTimeString([], {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+    });
+};
+
 export default function FriendsList({
     friends,
     onOpenChat,
 }: FriendsListProps) {
 
-    const onlineCount = friends.filter((friend) => friend.status === "online").length;
+    const onlineCount = friends.filter((friend) => friend.online).length;
 
     return (
         <div
@@ -50,9 +62,9 @@ export default function FriendsList({
                         <FriendChatRow
                             username={friend.username}
                             avatar={friend.avatar}
-                            status={friend.status}
+                            status={friend.online ? "online" : "offline"}
                             lastMessage={friend.lastMessage}
-                            timestamp={friend.timestamp}
+                            timestamp={formatTime(friend.timestamp)}
                             onOpenChat={() => onOpenChat(friend)}
                         />
                     </div>
