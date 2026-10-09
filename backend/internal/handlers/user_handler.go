@@ -788,64 +788,109 @@ func (h *UserHandler) DeleteUser() gin.HandlerFunc {
 	}
 }
 
+type UpdateUserValidation struct {
+	Email   	string `validate:"required,max=254,email"`
+	Login	  	string `validate:"required,min=3,max=30,acceptChar"`
+	Username	string `validate:"required,min=3,max=30,acceptChar"`
+	Password	string `validate:"required,strongpwd"`
+}
+
 func (h *UserHandler) UpdateUser() gin.HandlerFunc {
     return func(c *gin.Context) {
+        input := UpdateUserValidation{
+            Email:    strings.ToLower(strings.TrimSpace(c.PostForm("email"))),
+            Login:    strings.ToLower(strings.TrimSpace(c.PostForm("login"))),
+            Username: strings.ToLower(strings.TrimSpace(c.PostForm("username"))),
+            Password: c.PostForm("password"),
+        }
+        err := h.validate.Struct(input)
+		if err != nil {
+            c.JSON(http.StatusBadRequest,
+				gin.H{"message": validation.FormatErrors(err),})
+            return
+        }
+        isVerified, err := strconv.ParseBool(c.PostForm("is_verified"))
+        if err != nil {
+            c.JSON(http.StatusBadRequest,
+				gin.H{"message": "invalid is_verified."})
+            return
+        }
+        xp, err := strconv.ParseInt(c.PostForm("xp"), 10, 64)
+        if err != nil || xp < 0 {
+            c.JSON(http.StatusBadRequest, 
+				gin.H{"message": "invalid xp."})
+            return
+        }
         username := c.Param("username")
-		user, err := h.userRepo.UserByName(c.Request.Context(), username)
+        user, err := h.userRepo.UserByName(c.Request.Context(), username)
         if err != nil {
-            c.JSON(http.StatusNotFound, gin.H{
-                "error": "user not found",
-            })
+            c.JSON(http.StatusInternalServerError, 
+				gin.H{"message": "Something went wrong. Please try again."})
             return
         }
-		if user.IsAdmin {
-			c.JSON(http.StatusForbidden, gin.H{"error": "cannot modify admin"})
-            return
-		}
-        newUsername := c.PostForm("username")
-		login := c.PostForm("login")
-        email := c.PostForm("email")
-        isVerifiedString := c.PostForm("is_verified")
-        avatar := c.PostForm("avatar")
-        xpString := c.PostForm("xp")
-        if newUsername == "" {
-            c.JSON(http.StatusBadRequest, gin.H{"error": "username is required"})
+        if user == nil {
+            c.JSON(http.StatusNotFound, 
+				gin.H{"message": "user not found."})
             return
         }
-		// check existing name
-		if login == ""{
-			c.JSON(http.StatusBadRequest, gin.H{"error": "login is required"})
+        if user.IsAdmin {
+            c.JSON(http.StatusForbidden, 
+				gin.H{"message": "cannot modify admin."})
             return
-		}
-		// check existing name
-        isVerified, err := strconv.ParseBool(isVerifiedString)
+        }
+        hashPassword, err := encryption.HashPassword(input.Password)
         if err != nil {
-            c.JSON(http.StatusBadRequest, gin.H{"error": "invalid is_verified"})
+            c.JSON(http.StatusInternalServerError, 
+				gin.H{"message": "Something went wrong. Please try again."})
             return
         }
-        xp, err := strconv.ParseInt(xpString, 10, 64)
+        existingLogin, err := h.userRepo.ExistingLogin(c.Request.Context(), input.Login)
         if err != nil {
-            c.JSON(http.StatusBadRequest, gin.H{"error": "invalid xp"})
+            c.JSON(http.StatusInternalServerError, 
+				gin.H{"message": "Something went wrong. Please try again."})
             return
         }
-        if xp < 0 {
-            c.JSON(http.StatusBadRequest, gin.H{"error": "xp cannot be negative"})
+        if existingLogin != nil && *existingLogin != "" {
+            c.JSON(http.StatusBadRequest, 
+				gin.H{"message": "This login is unavailable. Please try another one."})
             return
         }
+        existingUsername, err := h.userRepo.ExistingName(c.Request.Context(), input.Username)
+        if err != nil {
+            c.JSON(http.StatusInternalServerError, 
+				gin.H{"message": "Something went wrong. Please try again."})
+            return
+        }
+        if existingUsername {
+            c.JSON(http.StatusBadRequest, 
+				gin.H{"message": "This username is unavailable. Please try another one."})
+            return
+        }
+        // presetAvatar := strings.TrimSpace(c.PostForm("avatar"))
+        // fileHeader, fileErr := c.FormFile("avatar_file")
+        // hasUpload := fileErr == nil
+        // if hasUpload && presetAvatar != "" {
+        //     c.JSON(http.StatusBadRequest, 
+		// 		gin.H{"message": "Choose a preset or upload a file not both."})
+        //     return
+        // }
+        // Check avatar 
         rank := rank_calculation.CalculateRank(xp)
-		user.Username = newUsername
-		user.Login = &login
-		user.Email = email
-		user.Is_verified = isVerified
-		user.Avatar = &avatar
-		user.XP = xp
-		user.Rank = rank
+        user.Username = input.Username
+        user.Login = &input.Login
+        user.Email = input.Email
+        user.Password = &hashPassword
+        user.Is_verified = isVerified
+        user.XP = xp
+        user.Rank = rank
         err = h.userRepo.UpdateUser(c.Request.Context(), user.ID, user)
-        if err != nil {
-			fmt.Println("Update failed: ", err)
-            c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		if err != nil {
+            c.JSON(http.StatusInternalServerError, 
+				gin.H{"message": "Something went wrong. Please try again."})
             return
         }
-        c.JSON(http.StatusOK, gin.H{"message": "user updated successfully"})
+        // Delete the previous uploaded avatar
+        c.JSON(http.StatusOK, 
+			gin.H{"message": "user updated successfully."})
     }
 }

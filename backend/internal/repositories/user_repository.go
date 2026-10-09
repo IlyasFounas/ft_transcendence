@@ -620,6 +620,7 @@ func (r *UserRepository) UpdateUser(ctx context.Context, userId int64, user *use
 			"name",
 			"login",
 			"email",
+			"password",
 			"is_verified",
 			"avatar",
 			"xp",
