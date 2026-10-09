@@ -45,15 +45,16 @@ export default function RankResultRow({
             style={{ color: agentColor }}
         >
             <div className="text-center flex  text-heading-medium">{rank}</div>
-
-            <div className="flex items-center gap-[12px] min-w-0">
-                <Avatar avatar={player.avatar} borderColor={agentColor} size={45} />
-                <div className="flex flex-col min-w-0">
-                    <span className="text-heading-small truncate text-white">
-                        {player.username}
-                    </span>
-                </div>
-            </div>
+			<div className="flex items-center gap-[12px] min-w-0">
+				<div className="shrink-0">
+					<Avatar size={45} avatar={player.avatar} borderColor={agentColor}/>
+				</div>
+				<div className="flex flex-col px-[10px] min-w-0">
+					<span className={`truncate text-heading-small`}>
+						{player.username}
+					</span>
+				</div>
+			</div>
 
             <div className="flex items-center justify-end gap-[10px]">
                 <span className="text-heading-small">{totalPoints}</span>

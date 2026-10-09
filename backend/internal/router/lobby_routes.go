@@ -17,6 +17,7 @@ func registerLobbyRoutes(ctx context.Context, r *gin.Engine, h *handlers.GameHan
 		private.POST("/lobby/create", h.CreateLobby())
 		private.POST("/lobby/join", hl.JoinLobby())
 		private.GET("/ws/lobby/join", lobby_ws.JoinLobby(ctx, hub, wg))
+		private.GET("/lobby/current", hl.CurrentLobby())
 		private.DELETE("/lobby/leave", hl.LeaveLobby())
 		private.DELETE("/lobby/remove/:username", hl.RemovePlayer())
 		private.GET("/game/historic/:userid", hl.Historic())

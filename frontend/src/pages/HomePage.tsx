@@ -30,10 +30,18 @@ export default function HomePage() {
     }, []);
 
 	const handlePlaySolo = async () => {
-	const body = new URLSearchParams({
-			timer: "120",
-			round_total: "5", 
-		});
+
+		const current = await authFetch("/api/lobby/current");
+		if (current?.status === 200 && current.data?.game_id) {
+			connect();
+			navigate(`/game/${current.data.game_id}`);
+			return;
+		}
+		
+		const body = new URLSearchParams({
+				timer: "120",
+				round_total: "5", 
+			});
 
 		const result = await authFetch("/api/lobby/create", {
 			method: "POST",
@@ -42,8 +50,17 @@ export default function HomePage() {
 		});
 
 		if (result?.status === 200) {
+			const cur = await authFetch("/api/lobby/current");
+			const gameId = cur?.data?.game_id;
+			if (gameId) {
+				await authFetch(`/api/game/${gameId}/mode`, {
+					method: "PATCH",
+					headers: { "Content-Type": "application/x-www-form-urlencoded" },
+					body: new URLSearchParams({ mode: "solo" }).toString(),
+				});
+			}
 			connect();
-			navigate("/game/solo"); 
+			navigate("/game/solo");
 		}
 	};
 
@@ -127,12 +144,12 @@ export default function HomePage() {
                     <p className="text-heading-small md:text-heading-medium lg:text-hero font-semibold text-text-primary">REPORT.</p>
                 </div>
                 <div className="w-full md:hidden">
-                    <PrimaryButton size="small" subtitle="Launch a new operation">
+                    <PrimaryButton size="small" subtitle="Launch a new operation" onClick={handlePlaySolo}>
                         Start Mission
                     </PrimaryButton>
                 </div>
                 <div className="w-full hidden md:block lg:hidden text-center">
-                    <PrimaryButton size="medium" subtitle="Launch a new operation">
+                    <PrimaryButton size="medium" subtitle="Launch a new operation" onClick={handlePlaySolo}>
                         Start Mission
                     </PrimaryButton>
                 </div>    

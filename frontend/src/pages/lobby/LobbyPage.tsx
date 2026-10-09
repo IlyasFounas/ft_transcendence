@@ -28,25 +28,36 @@ export default function LobbyPage()
 		body.append("round_total", rounds.toString());
 
 		setIsChecking(true);
-		const result = await authFetch("/api/lobby/create", {
-		method: "POST",
-		headers: { "Content-Type": "application/x-www-form-urlencoded" },
-		body: body.toString(),
-		});
-		setIsChecking(false);
+			const result = await authFetch("/api/lobby/create", {
+				method: "POST",
+				headers: { "Content-Type": "application/x-www-form-urlencoded" },
+				body: body.toString(),
+				});
+				setIsChecking(false);
 
-		if (result === null) {
-			setErrorMessage("Network error, please try again");
-			return;
+				if (result === null) {
+					setErrorMessage("Network error, please try again");
+					return;
+				}
+
+				if (result.status !== 200) {
+		setErrorMessage(result.data.message);
+		return;
 		}
 
-		if (result.status !== 200) {
-			setErrorMessage(result.data.message);
-			return;
+		const cur = await authFetch("/api/lobby/current");
+		console.log("current après create :", cur?.data);
+		const gameId = cur?.data?.game_id;
+		if (gameId) {
+			await authFetch(`/api/game/${gameId}/mode`, {
+				method: "PATCH",
+				headers: { "Content-Type": "application/x-www-form-urlencoded" },
+				body: new URLSearchParams({ mode: "multi" }).toString(),
+			});
 		}
 
 		connect();
-		navigate("/lobbyroom");
+		navigate("/lobby");
 	}
 
 	useEffect(() => {
@@ -75,7 +86,7 @@ export default function LobbyPage()
 
 		if (result.status === "ok") {
 			connect();
-			navigate("/lobbyroom");
+			navigate("/lobby");
 			return;
 		}
 
@@ -89,13 +100,13 @@ export default function LobbyPage()
 
 	useEffect(() => {
 		if (lobbyInfos && !round) {
-			navigate("/lobbyroom");
+			navigate("/lobby");
 		}
 	}, [lobbyInfos, round, navigate]);
 
 	return (
 		<div className="min-h-[calc(100vh-5rem)] w-full bg-cover bg-no-repeat bg-center bg-[url(/backgrounds/earth_background.png)] py-24 lg:pr-[27rem] flex flex-col justify-center">
-			<div className="flex min-h-[50px] items-center justify-center gap-8">
+			<div className="flex min-h-[50px] items-center justify-center gap-4 lg:gap-12">
 				<SecondaryButton
 					active={mode === "create"}
 					className="px-[12px] text-heading-small lg:text-heading-large"
@@ -114,7 +125,7 @@ export default function LobbyPage()
 			</div>
 			<div className="
 						flex
-						h-75 lg:h-[300px]
+						h-50 lg:h-[300px]
 						w-[calc(100%-2rem)]
 						max-w-[500px]
 						mx-auto m-8
