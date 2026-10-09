@@ -49,7 +49,7 @@ export function ChatLayout () {
         
                     md:left-auto
                     md:right-5
-                    md:bottom-5
+                    md:bottom-10
                     md:w-2/5
                     lg:w-100
         
