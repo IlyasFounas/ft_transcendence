@@ -33,7 +33,6 @@ export default function ProfilePage() {
 
         const getStatistics = async () => {
             const result = await authFetch("api/user/statistics");
-            console.log(result?.data);
             if (!result) {
                 return ;
             }
@@ -44,14 +43,10 @@ export default function ProfilePage() {
         const getLeaderboard = async () => {
             const result = await authFetch("api/leaderboard/user");
 
-            console.log("leaderboard: ", result?.data);
-
             if (!result) {
                 return ;
             }
-            console.log(result.data.leaderboard);
             setLeaderboard(result.data.leaderboard);
-            console.log("position: ",result?.data.leaderboard[0].position);
         };
 
         const getOperations = async () => {
@@ -65,7 +60,7 @@ export default function ProfilePage() {
             return;
         }
 
-        const historicGames: HistoricGameResponse[] = result.data.historic_games;
+        const historicGames: HistoricGameResponse[] = result.data.historic_games ?? [];
 
         setOperations(
             historicGames.map((game) => ({
@@ -140,10 +135,10 @@ export default function ProfilePage() {
                     />
                 </div>
 
-				<div className="flex-1 w-full flex flex-col gap-3 xl:gap-8 text-center xl:text-left xl:mt-5">
+				<div className="flex-1 w-full min-w-0 flex flex-col gap-3 xl:gap-8 text-center xl:text-left xl:mt-5">
 
 					<div>
-                        <h1 className="text-heading-medium md:text-heading-large xl:text-hero font-semibold text-text-primary uppercase">
+                        <h1 className="w-full min-w-0 truncate text-heading-medium md:text-heading-large xl:text-hero font-semibold text-text-primary uppercase">
                             Agent {user?.Username ?? "Player"}
                         </h1>
                         <p className="text-label-small md:text-heading-small lg:text-heading-medium text-primary uppercase">

@@ -30,7 +30,7 @@ export function Navbar({
             className="
                 w-full
                 h-20
-                lg:h-30
+                lg:h-25
                 shrink-0
                 bg-surface-base
                 border

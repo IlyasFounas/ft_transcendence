@@ -79,7 +79,6 @@ export default function HomePage() {
                 bg-no-repeat
                 flex
                 flex-col
-                
                 items-center
                 justify-start
                 lg:items-start

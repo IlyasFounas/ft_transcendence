@@ -38,7 +38,6 @@ export default function FriendListPanel() {
             if (!result) {
                 return;
             }
-            console.log(result.data);
             const formattedFriends: Friend[] = (result.data.friends ?? []).map(
                 (friend: FriendResponse) => ({
                     userId: friend.user_id,
@@ -57,7 +56,6 @@ export default function FriendListPanel() {
         if (!result) {
             return;
         }
-        console.log(result.data);
         const formattedRequests: Friend[] = (result.data.friendRequests ?? []).map(
             (request: FriendResponse) => ({
                 userId: request.user_id,
@@ -75,7 +73,6 @@ export default function FriendListPanel() {
         if (!result) {
             return;
         }
-        console.log(result.data);
         const formattedPending: Friend[] = (result.data.friendPending ?? []).map(
             (pending: FriendResponse) => ({
                 userId: pending.user_id,
@@ -89,7 +86,7 @@ export default function FriendListPanel() {
     }
 
     const searchUser = async () => {
-        const username = search.trim();
+        const username = search.trim().toLowerCase();
 
         if (username === "") {
             setSearchResult(null);
@@ -118,7 +115,6 @@ export default function FriendListPanel() {
             setSearchNotFound(true);
             return;
         }
-        console.log("f status: ", result.data.friendStatus);
         setSearchResult({
             userId: searchedUser.user_id,
             username: searchedUser.name,
@@ -338,7 +334,7 @@ export default function FriendListPanel() {
                 "
             >
                 <input
-                    id="search-friend"
+                    id="friend-search"
                     type="text"
                     autoComplete="off"
                     value={search}

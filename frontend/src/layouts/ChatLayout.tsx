@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Outlet } from "react-router-dom"
 import ChatPanel from "../components/chat/ChatPanel";
 import { Navbar } from "../components/navbar/Navbar";
-import { chatlists } from "../data/chatlists";
 
 export function ChatLayout () {
 
@@ -16,7 +15,7 @@ export function ChatLayout () {
                         fixed
                         inset-0
                         z-30
-                        bg-black/20
+                        bg-black/40
                         lg:hidden
                     "
                     onClick={() => setIsChatOpen(false)}
@@ -37,7 +36,7 @@ export function ChatLayout () {
                     fixed
                     right-5
                     top-20
-                    lg:top-30
+                    lg:top-25
                     mt-5
                     bottom-5
                     left-5
@@ -59,7 +58,7 @@ export function ChatLayout () {
                     lg:block
                     `}
                 >
-                    <ChatPanel friends={chatlists} />
+                    <ChatPanel />
                 </div>
             </div>
         </>
