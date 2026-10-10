@@ -33,8 +33,13 @@ export default function HomePage() {
 
 		const current = await authFetch("/api/lobby/current");
 		if (current?.status === 200 && current.data?.game_id) {
+			const modeRes = await authFetch(`/api/game/${current.data.game_id}/mode`);
 			connect();
-			navigate(`/game/${current.data.game_id}`);
+			if (modeRes?.data?.mode === "multi") {
+				navigate("/lobby");
+			} else {
+				navigate(`/game/${current.data.game_id}`);
+			}
 			return;
 		}
 		
