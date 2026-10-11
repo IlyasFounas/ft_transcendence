@@ -2,7 +2,8 @@
 set -e
 IP=$(ip route get 1.1.1.1 | awk '{for(i=1;i<=NF;i++) if($i=="src"){print $(i+1); exit}}')
 [ -z "$IP" ] && { echo "IP introuvable" >&2; exit 1; }
-SECRET_SCALEWAY_API_KEY=$(grep '^SECRET_SCALEWAY_API_KEY=' ./docker-config/.env | cut -d= -f2-)
+ENV_FILE="${1:-./docker-config/.env}"
+SECRET_SCALEWAY_API_KEY=$(grep '^SECRET_SCALEWAY_API_KEY=' "$ENV_FILE" | cut -d= -f2-)
 [ -z "$SECRET_SCALEWAY_API_KEY" ] && { echo "clé API manquante" >&2; exit 1; }
 curl -sS -f https://api.scaleway.com/domain/v2beta1/dns-zones/ocefunding.com/records \
   -X PATCH \

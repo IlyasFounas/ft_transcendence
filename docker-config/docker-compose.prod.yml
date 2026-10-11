@@ -20,7 +20,7 @@ services:
   nginx:
     ports:
       - "5130:5130"
-      - "80:80"
+      # - "80:80"
     networks:
       - app
 

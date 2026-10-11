@@ -6,7 +6,7 @@ DOCKER_COMPOSE = docker-config/docker-compose.yml
 ENV_PROD = docker-config/.env.prod
 
 up:
-	./docker-config/update_ip.sh
+	./docker-config/update_ip.sh docker-config/.env
 	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_DEV) up -d
 	make print_posgres_ip
 
@@ -16,7 +16,7 @@ data-races:
 	make print_posgres_ip
 
 prod:
-	./docker-config/update_ip.sh
+	./docker-config/update_ip.sh $(ENV_PROD)
 	docker compose --env-file $(ENV_PROD) -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_PROD) up -d
 
 down:
