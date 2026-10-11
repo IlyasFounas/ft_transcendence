@@ -1,32 +1,35 @@
 .PHONY: up data-races down restart logs logs-backend logs-frontend ps stop clean create_mig init_mig exec_mig rollback_mig status_mig in re
 
-DOCKER_COMPOSE_OVERRIDE = docker-config/docker-compose.override.yml
+DOCKER_COMPOSE_DEV = docker-config/docker-compose.dev.yml
 DOCKER_COMPOSE_PROD = docker-config/docker-compose.prod.yml
 DOCKER_COMPOSE = docker-config/docker-compose.yml
 ENV_PROD = docker-config/.env.prod
 
 up:
-	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_OVERRIDE) up -d
+	./docker-config/update_ip.sh
+	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_DEV) up -d
 	make print_posgres_ip
 
 data-races:
-	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_OVERRIDE) up -d
+	./docker-config/update_ip.sh
+	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_DEV) up -d
 	make print_posgres_ip
 
 prod:
+	./docker-config/update_ip.sh
 	docker compose --env-file $(ENV_PROD) -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_PROD) up -d
 
 down:
-	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_OVERRIDE) down
+	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_DEV) down
 
 stop:
-	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_OVERRIDE) stop
+	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_DEV) stop
 
 fclean:
-	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_OVERRIDE) down -v --rmi all
+	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_DEV) down -v --rmi all
 
 restart:
-	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_OVERRIDE) restart
+	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_DEV) restart
 	make print_posgres_ip
 
 clean-images: clean
@@ -48,10 +51,10 @@ re: fclean
 # to use it, you have to : 
 # make logs-golang or make logs-react, ect... 
 logs-%:
-	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_OVERRIDE) logs -f  $*
+	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_DEV) logs -f  $*
 
 ps:
-	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_OVERRIDE) ps
+	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_DEV) ps
 
 print_posgres_ip:
 	docker inspect postgres_container | grep IPAddress
@@ -67,16 +70,16 @@ in-%:
 #   make rollback_mig      → Undo the last migration
 #   make status_mig        → Show applied/pending migrations
 create_mig:
-	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_OVERRIDE) exec golang go run cmd/bun/main.go create_go ${NAME}
+	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_DEV) exec golang go run cmd/bun/main.go create_go ${NAME}
 
 init_mig:
-	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_OVERRIDE) exec golang go run cmd/bun/main.go init
+	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_DEV) exec golang go run cmd/bun/main.go init
 
 exec_mig:
-	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_OVERRIDE) exec golang go run cmd/bun/main.go migrate
+	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_DEV) exec golang go run cmd/bun/main.go migrate
 
 rollback_mig:
-	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_OVERRIDE) exec golang go run cmd/bun/main.go rollback
+	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_DEV) exec golang go run cmd/bun/main.go rollback
 
 status_mig:
-	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_OVERRIDE) exec golang go run cmd/bun/main.go status
+	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_DEV) exec golang go run cmd/bun/main.go status

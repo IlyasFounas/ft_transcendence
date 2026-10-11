@@ -19,7 +19,7 @@ services:
 
   nginx:
     ports:
-      - "443:443"
+      - "5130:5130"
       - "80:80"
     networks:
       - app
