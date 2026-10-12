@@ -21,6 +21,7 @@ services:
       - app
 
   nginx:
+    container_name: nginx_container
     ports:
       - "5130:5130"
       # - "80:80"
