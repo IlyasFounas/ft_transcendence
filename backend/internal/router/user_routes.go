@@ -57,5 +57,6 @@ func registerUserRoutes(r *gin.Engine, h *handlers.UserHandler, ht *handlers.Tok
 	admin.Use(middleware.AuthMiddleWare(), middleware.AdminMiddleWare())
 	{
 		admin.GET("/admin/user/:username", h.UserByName())
+		admin.DELETE("/admin/user/:id", h.DeleteUser())
 	}
 }

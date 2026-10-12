@@ -2,9 +2,13 @@ package repositories
 
 import (
 	"database/sql"
+	"backend/internal/models/chats"
+	"backend/internal/models/friends"
 	"backend/internal/models/games"
 	"backend/internal/models/guesses"
+	"backend/internal/models/rounds"
 	"backend/internal/models/users"
+	"backend/internal/models/users/tokens"
 	"backend/internal/tools/encryption"
 	"backend/internal/tools/rank_calculation"
 	"context"
@@ -31,6 +35,13 @@ type Leaderboard struct {
 	Avatar		string	`json:"avatar"`
 	Total		int64	`json:"total"`
 }
+
+// Why DeleteUser can refuse to delete a user
+var (
+	ErrUserNotFound = errors.New("user not found")
+	ErrUserIsAdmin  = errors.New("an admin can't be deleted")
+	ErrUserInGame   = errors.New("the user is in a lobby or a game")
+)
 
 type UserRepository struct {
 	db *bun.DB
@@ -413,6 +424,136 @@ func (r *UserRepository) UpdateAllPlayers(ctx context.Context, statsRepo *Statis
 		errs = append(errs, fmt.Errorf("statistics: %w", err))
 	}
 	return errors.Join(errs...)
+}
+
+// Deletes a user and everything related to them, in one transaction (= means either everything is deleted or nothing)
+//	- its guesses
+//	- the games with its rounds :
+// 		-> solo games
+// 		-> multi games where nobody joined this user (even though it should not happen)
+// 		-> multi games whose other players have all been deleted already
+//	- its places in the lobbies (each deletion removes thr lobby rows of the player, so the last one deletes the game)
+// 	- its statistics
+// 	- its friendships (sent and received)
+// 	- the chat messages the user sent or received
+//	- its activation and refresh tokens
+// 	- then the user itself
+// The games other players are still linked to (even if they left or were kicked out) are kept, with their rounds and
+// the guesses of the others: deleting them would change the history and the statistics of other players
+func (r *UserRepository) DeleteUser(ctx context.Context, userId int64) error {
+	return r.db.RunInTx(ctx, nil, func(ctx context.Context, tx bun.Tx) error {
+		user := new(users.User)
+		err := tx.NewSelect().
+			Model(user).
+			Column("id", "is_admin").
+			Where("id = ?", userId).
+			Scan(ctx)
+		if errors.Is(err, sql.ErrNoRows) {
+			return ErrUserNotFound
+		}
+		if err != nil {
+			return err
+		}
+		if user.IsAdmin {
+			return ErrUserIsAdmin
+		}
+		inGame, err := tx.NewSelect().
+			Model((*games.Lobby)(nil)).
+			Where("user_id = ?", userId).
+			Where("left_at IS NULL").
+			Exists(ctx)
+		if err != nil {
+			return err
+		}
+		if inGame {
+			return ErrUserInGame
+		}
+
+		// retrieves all the games no other player is still linked to
+		var ownGameIds []int64
+		err = tx.NewSelect().
+			Model((*games.Lobby)(nil)).
+			Column("lo.game_id").
+			Group("lo.game_id").
+			Having("bool_and(lo.user_id = ?)", userId).
+			Scan(ctx, &ownGameIds)
+		if err != nil {
+			return err
+		}
+
+		// delete guesses
+		if _, err := tx.NewDelete().
+			Model((*guesses.Guess)(nil)).
+			Where("user_id = ?", userId).
+			Exec(ctx); err != nil {
+			return err
+		}
+		// delete rounds
+		if len(ownGameIds) > 0 {
+			if _, err := tx.NewDelete().
+				Model((*rounds.Round)(nil)).
+				Where("game_id IN ?", bun.Tuple(ownGameIds)).
+				Exec(ctx); err != nil {
+				return err
+			}
+		}
+		// delete its place in every lobby
+		if _, err := tx.NewDelete().
+			Model((*games.Lobby)(nil)).
+			Where("user_id = ?", userId).
+			Exec(ctx); err != nil {
+			return err
+		}
+		// delete its games
+		if len(ownGameIds) > 0 {
+			if _, err := tx.NewDelete().
+				Model((*games.Game)(nil)).
+				Where("id IN ?", bun.Tuple(ownGameIds)).
+				Exec(ctx); err != nil {
+				return err
+			}
+		}
+		// delete its statistics
+		if _, err := tx.NewDelete().
+			Model((*users.Statistics)(nil)).
+			Where("user_id = ?", userId).
+			Exec(ctx); err != nil {
+			return err
+		}
+		// delete its friendships
+		if _, err := tx.NewDelete().
+			Model((*friends.Friend)(nil)).
+			Where("requester_id = ? OR receiver_id = ?", userId, userId).
+			Exec(ctx); err != nil {
+			return err
+		}
+		// delete the chat messages
+		if _, err := tx.NewDelete().
+			Model((*chats.Chat)(nil)).
+			Where("src_user_id = ? OR dst_user_id = ?", userId, userId).
+			Exec(ctx); err != nil {
+			return err
+		}
+		// delete its tokens
+		if _, err := tx.NewDelete().
+			Model((*tokens.ActivationToken)(nil)).
+			Where("user_id = ?", userId).
+			Exec(ctx); err != nil {
+			return err
+		}
+		if _, err := tx.NewDelete().
+			Model((*tokens.RefreshToken)(nil)).
+			Where("user_id = ?", userId).
+			Exec(ctx); err != nil {
+			return err
+		}
+		// delete the user at last
+		_, err = tx.NewDelete().
+			Model((*users.User)(nil)).
+			Where("id = ?", userId).
+			Exec(ctx)
+		return err
+	})
 }
 
 // Leaderboard returns the 100 first players ranked by xp
