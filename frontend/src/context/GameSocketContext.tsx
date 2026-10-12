@@ -123,7 +123,6 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
 
 		socket.onmessage = (event) => {
 			const message = JSON.parse(event.data);
-			console.log(message);
 			if (message.action === "lobby_players") {
 				const mappedPlayers: Player[] = message.payload.map((p: RawPlayer) => ({
 					id: p.id,
@@ -187,6 +186,11 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
 					allResults: data.results,
 				});
 			}
+			else if (message.action === "error") {
+				if (message.payload?.message === "the game has already started") {
+					socket.send(JSON.stringify({ action: "start_round", payload: "" }));
+				}
+			}
 			else if (message.action === "game_results") {
 				const rounds = message.payload.rounds;
 				
@@ -216,8 +220,10 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
 					},
 					allResults: lastRoundData.results,
 					fullHistory: rounds,
-			});
-}
+				}
+			);
+		}	
+	}
 
 		socket.onerror = (err) => console.log("WS error:", err);
 
@@ -226,7 +232,6 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
 			setIsClosed(true);
 			socketRef.current = null;
 		};
-		}
 	}
 
 	useEffect(() => {

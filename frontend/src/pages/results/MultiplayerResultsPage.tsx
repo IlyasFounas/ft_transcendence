@@ -44,7 +44,7 @@ export default function MultiplayerResultsPage() {
 	}, [round, currentRound, navigate]);
 
    const goToSummary = () => {
-		navigate("/summaryresults", { 
+		navigate("/results/summary", { 
 			state: { fullHistory, totalRounds, players } 
 		});
 	}

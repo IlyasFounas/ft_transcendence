@@ -8,25 +8,25 @@ export default function GameGuard() {
     const navigate = useNavigate();
 
     useEffect(() => {
-       	const isPlaying = location.pathname.includes("/game/") || location.pathname.includes("multiresults") || location.pathname.includes("soloresults") || location.pathname.includes("summaryresults");
-        const isLobby = location.pathname === "/lobbyroom";
+       	const isPlaying = location.pathname.includes("/game/") || location.pathname.includes("/results/") || location.pathname.includes("summary");
+        const isLobby = location.pathname === "/lobby";
         const isMultiMenu = location.pathname === "/multiplayer";
 
         if (round && !isPlaying) {
-            navigate("/game/"); 
+            navigate("/game"); 
         }
         else if (gameStartAt && !isLobby && !isPlaying) {
-            navigate("/lobbyroom");
+            navigate("/lobby");
         }
         else if (lobbyInfos && isMultiMenu && !round) {
-            navigate("/lobbyroom");
+            navigate("/lobby");
         }
     }, [round, gameStartAt, lobbyInfos, location.pathname, navigate]);
 
 	useEffect(() => {
 		const onGamePage = location.pathname.startsWith("/game/");
-		const onLobbyRoom = location.pathname === "/lobbyroom";
-		const missingState = (onGamePage && !round && !gameStartAt) || (onLobbyRoom && !lobbyInfos);
+		const onlobby = location.pathname === "/lobby";
+		const missingState = (onGamePage && !round && !gameStartAt) || (onlobby && !lobbyInfos);
 		if (!missingState) return;
 
 		const timeout = setTimeout(() => {

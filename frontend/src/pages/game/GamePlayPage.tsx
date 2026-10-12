@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLobbySocket } from "../../context/GameSocketContext";
+import { useAuth } from "../../context/AuthContext";
 import PrimaryButton from "../../components/buttons/PrimaryButton";
 import GameBar from "../../components/game/GameBar";
-import Countdown from "../../components/game/Countdown";
 import LoadStreetView from "./StreetView/LoadStreetView";
 import Load2DMap from "./2DMap/Load2DMap";
 import Preview2DMap from "./2DMap/Preview2DMap";
@@ -17,6 +17,9 @@ export default function GamePlayPage() {
 	const navigate = useNavigate();
 	const [hasGuessed, setHasGuessed] = useState(false);
 	const [showTutorial, setShowTutorial] = useState(false);
+	const [gameId, setGameId] = useState<number | null>(null);
+	const {authFetch} = useAuth();
+	const [mode, setMode] = useState<"solo" | "multi" | null>(null);
 
 	useEffect(() => {
 		setHasGuessed(false);
@@ -40,12 +43,29 @@ export default function GamePlayPage() {
 	}, [round]);
 
 	useEffect(() => {
-		if (!lastRoundResult || !round) return;
+		authFetch("/api/lobby/current").then((res) => {
+			if (res.status === 200 && res.data?.game_id) {
+				setGameId(res.data.game_id);
+			}
+		});
+	}, []);
+
+	useEffect(() => {
+		if (!gameId) return;
+		authFetch(`/api/game/${gameId}/mode`).then((res) => {
+			if (res?.status === 200 && res.data?.mode) {
+				setMode(res.data.mode);
+			}
+		});
+	}, [gameId]);
+
+	useEffect(() => {
+		if (!lastRoundResult || !round || !mode) return;
 		
-		const isMultiplayer = players.length > 1;
+		const isMultiplayer = mode === "multi";
 
 		if (isMultiplayer) {
-			navigate("/multiresults", {
+			navigate("/results/multiplayers", {
 				state: {
 					currentRound: round.round_nb,
 					totalRounds: lobbyInfos?.round_total ?? 5,
@@ -57,7 +77,7 @@ export default function GamePlayPage() {
 				}
 			});
 		} else {
-			navigate("/soloresults", {
+			navigate("/results/solo", {
 				state: {
 					currentRound: round.round_nb,
 					totalRounds: lobbyInfos?.round_total ?? 5,
@@ -66,7 +86,7 @@ export default function GamePlayPage() {
 				}
 			});
 		}
-	}, [lastRoundResult, round, roundHistory, navigate, players.length, lobbyInfos?.round_total]);
+	}, [lastRoundResult, round, roundHistory, navigate, mode, lobbyInfos?.round_total]);
 
 	useEffect(() => {
 		if (lobbyInfos && !round) startGame();
@@ -95,9 +115,9 @@ export default function GamePlayPage() {
 
 	return (
 		<div className="flex flex-col h-screen">
-			<div className="hidden lg:flex">
+			<div >
 				<GameBar
-					gameId={42}
+					gameId={gameId ?? 0}
 					totalRounds={lobbyInfos?.round_total ?? 5}
 					totalTime={lobbyInfos?.timer ?? 120}
 					round={round.round_nb}
@@ -174,12 +194,16 @@ export default function GamePlayPage() {
 						)}
 					</div>
 					{isMapMain && (
-						<PrimaryButton 
-							size="small" 
-							disabled={!guess || hasGuessed} 
+						<PrimaryButton
+							size="small"
+							disabled={!guess || hasGuessed}
 							onClick={handleSubmit}
 						>
-							{hasGuessed ? "Waiting for other agents..." : "Submit"}
+							{hasGuessed
+								? players.length > 1
+									? "Waiting..."
+									: "Submitted"
+								: "Submit"}
 						</PrimaryButton>
 					)}
 				</div>
@@ -214,9 +238,6 @@ export default function GamePlayPage() {
 						</div>
 					</div>
 				)}
-				<div className="absolute left-1/2 -translate-x-1/2 top-15 lg:hidden z-1000">
-					<Countdown countdown={countdown}/>
-				</div>
 			</div>
 			
 			{showTutorial && (
