@@ -30,7 +30,7 @@ export default function NextRoundTimer({ targetTime, children }: NextRoundTimerP
 	return (
 		<PrimaryButton>
 			<div className="flex flex-row justify-between items-center">
-				<h1 className="text-heading-medium uppercase text-primary">
+				<h1 className=" text-heading-small lg:text-heading-medium uppercase text-primary">
 					{children}
 				</h1>
 				<CountdownRing countdown={countdown}></CountdownRing>
