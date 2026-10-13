@@ -1,6 +1,7 @@
 package chat_ws
 
 import (
+	"os"
 	"backend/internal/models/chats"
 	"backend/internal/models/friends"
 	"backend/internal/models/users"
@@ -22,7 +23,12 @@ import (
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
-	CheckOrigin:     func(r *http.Request) bool { return true }, //TODO change this for the PROD
+    CheckOrigin: func(r *http.Request) bool {
+		if r.Header.Get("Origin") != os.Getenv("PUBLIC_ENV") {
+			return false
+		}
+		return true
+	},
 }
 
 type Chat struct {
