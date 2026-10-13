@@ -109,7 +109,7 @@ export default function Podium({
             {username}
           </span>
 
-          <span style={bodyStyle} className="truncate max-w-full">
+          <span style={bodyStyle} className="hidden md:block truncate max-w-full">
             {rank}
           </span>
 

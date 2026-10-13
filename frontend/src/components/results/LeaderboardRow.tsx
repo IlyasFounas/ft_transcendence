@@ -54,7 +54,7 @@ export default function LeaderboardRow({
 		  <span className={`text-heading-small truncate text-white`}>
 			{username}
 		  </span>
-		  <span className="text-body-primary truncate">
+		  <span className="text-body-primary truncate hidden md:block">
 			{rank}
 		  </span>
 		</div>
