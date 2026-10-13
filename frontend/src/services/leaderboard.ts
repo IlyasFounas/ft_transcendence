@@ -1,6 +1,6 @@
 import { mockLeaderboard } from "../mocks/mock.leaderboard";
 
-const USE_MOCK = true;
+const USE_MOCK = false;
 
 export type LeaderboardEntry = {
 	position: number;
