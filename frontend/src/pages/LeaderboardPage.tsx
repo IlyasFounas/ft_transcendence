@@ -2,7 +2,7 @@ import { useState, useEffect } from "react"
 import SecondaryButton from "../components/buttons/SecondaryButton";
 import { Users, Globe } from "lucide-react"
 import Podium from "../components/cards/podium/Podium";
-import LeaderBoardList from "../components/results/LeaderboardList";
+import LeaderBoardList from "../components/leaderboard/LeaderboardList";
 import { apiFetch } from "../api/apiFetch";
 import { getGlobalLeaderboard, type LeaderboardEntry } from "../services/leaderboard";
 import { getFriends, type FriendsEntry } from "../services/friends";
