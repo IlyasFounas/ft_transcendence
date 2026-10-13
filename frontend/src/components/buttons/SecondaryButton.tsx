@@ -4,9 +4,10 @@ interface SecondaryButtonProps extends BaseButtonProps {
 	active?: boolean;
 	icon?: React.ReactNode;
 	className?: string;
+	variant?: "classic" | "danger"
 }
 
-export default function SecondaryButton({ children, onClick, icon, active, className }: SecondaryButtonProps) {
+export default function SecondaryButton({ children, onClick, icon, active, className, variant="classic", }: SecondaryButtonProps) {
   return (
 	<button 
 		onClick={onClick}
@@ -17,12 +18,13 @@ export default function SecondaryButton({ children, onClick, icon, active, class
 			
 			rounded-lg
 			border border-primary
-			outline -outline-offset-1 outline-primary
+			outline -outline-offset-1
 			
 			bg-surface-elevated
 			
-			text-heading-medium
-			
+			lg:text-heading-medium
+			text-body-primary
+
 			shadow-[0_0_6px_rgba(53,223,255,0.5)]
 			
 			uppercase
@@ -40,15 +42,26 @@ export default function SecondaryButton({ children, onClick, icon, active, class
 			active:drop-shadow-none
 			active:opacity-75
 			
+			${variant === "danger"
+  ? `
+            hover:border-red-500
+            hover:outline-red-500
+            hover:text-red-500
+            hover:drop-shadow-[0_0_10px_rgba(255,59,59,0.6)]
+        `
+  : `
+            hover:brightness-110
+            hover:drop-shadow-[0_0_10px_rgba(40,215,255,0.5)]
+        `}
 			${active
 		? `
 			text-text-primary
 			border-border-active
-			outline-border-active
+			outline-primary
 			shadow-[0px_0px_16px_0px_rgba(40,215,255,0.5)]
 		`
 		: `
-			border-border-default
+			border-surface-elevated
 			outline-border-default
 			text-text-secondary
 			shadow-[0px_0px_16px_0px_rgba(30,77,120,0.15)]
