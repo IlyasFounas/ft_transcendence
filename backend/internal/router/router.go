@@ -1,26 +1,31 @@
 package router
 
 import (
-	"os"
+	"backend/internal/handlers"
+	"backend/internal/websockets/chat"
+	"backend/internal/websockets/lobby"
 	"context"
+	"net/http"
+	"os"
 	"sync"
+
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"backend/internal/handlers"
-	"backend/internal/websockets/lobby"
-	"backend/internal/websockets/chat"
 )
 
 func NewRouter(ctx context.Context, h *handlers.Handlers, hub *lobby_ws.Hub, 
 	chat *chat_ws.Chat, wg *sync.WaitGroup) *gin.Engine {
 	r := gin.Default()    //when you first create a var :=
 	if os.Getenv("ENV") == "prod" {
-		allowOrigins := []string{os.Getenv("PUBLIC_URL")}
-		allowMethods := []string{"GET", "POST", "DELETE", "PATCH", "PUT"}
 		config := cors.Config{
-				AllowOrigins: allowOrigins,
+				AllowOrigins: []string{os.Getenv("PUBLIC_URL")},
 				AllowCredentials: true,
-				AllowMethods: allowMethods}
+				AllowMethods: []string{
+					http.MethodGet,
+					http.MethodPost,
+					http.MethodDelete,
+					http.MethodPatch,
+					http.MethodPut}}
 		r.Use(cors.New(config))
 	} else {
 		r.Use(cors.Default())
