@@ -9,7 +9,7 @@ import { getFriends, type FriendsEntry } from "../services/friends";
 import { useAuth } from "../context/AuthContext";
 
 export default function LeaderboardPage() {
-	const [mode, setMode] = useState<"global" | "friends">("friends");
+	const [mode, setMode] = useState<"global" | "friends">("global");
 	const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
 	const [friends, setFriends] = useState<FriendsEntry[]>([]);
 	const { user, authFetch } = useAuth();
@@ -89,7 +89,7 @@ export default function LeaderboardPage() {
 		</div>
 		<div className="flex lg:flex-row flex-col justify-center ">
 			<div className="grid grid-cols-2 sm:grid-cols-[1fr_1.1fr_1fr] gap-0 lg:w-1/2 items-start">
-			<div className="col-span-2 w-[120px] sm:w-full mx-auto flex justify-center sm:col-span-1 sm:order-2">
+			<div className="col-span-2 w-[160px] sm:w-full mx-auto flex justify-center sm:col-span-1 sm:order-2">
 				<Podium
 				color="gold"
 				username={topthree[0]?.username ?? ""}
@@ -98,7 +98,7 @@ export default function LeaderboardPage() {
 				points={topthree[0]?.total ?? 0}
 				/>
 			</div>
-			<div className="ml-auto sm:order-1 w-[120px] sm:w-full sm:mt-40">
+			<div className="ml-auto sm:order-1 w-[160px] sm:w-full sm:mt-40">
 				<Podium
 				color="silver"
 				username={topthree[1]?.username ?? ""}
@@ -107,7 +107,7 @@ export default function LeaderboardPage() {
 				points={topthree[1]?.total ?? 0}
 				/>
 			</div>
-			<div className="sm:order-3 mr-auto w-[120px] sm:w-full sm:mt-40">
+			<div className="sm:order-3 mr-auto w-[160px] sm:w-full sm:mt-40">
 				<Podium
 				color="bronze"
 				username={topthree[2]?.username ?? ""}

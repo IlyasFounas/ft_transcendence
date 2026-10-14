@@ -25,7 +25,7 @@ export default function LeaderBoardList({ players, currentPlayerResult, currentU
 			<h1 className="px-8">Agent</h1>
 			<h1 className="text-center"> Score</h1>
 		  </div>
-		  <div className=" h-[250px] md:h-[455px] overflow-y-auto [scrollbar-gutter:stable] bg-surface-base">
+		  <div className=" h-[250px] md:h-[455px] overflow-y-auto custom-scrollbar bg-surface-base">
 
 			{Array.from({ length: rowCount }).map((_, index) => {
 				const player = players[index];

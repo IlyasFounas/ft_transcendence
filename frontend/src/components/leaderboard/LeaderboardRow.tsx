@@ -49,12 +49,14 @@ export default function LeaderboardRow({
 	>
 	  <div className="text-center text-heading-medium">{position}</div>
 	  <div className="flex items-center gap-[12px]">
-		<Avatar avatar={avatar} borderColor={agentColor} size={45} />
+		<div className="shrink-0">
+			<Avatar avatar={avatar} borderColor={agentColor} size={45} />
+		</div>
 		<div className="flex flex-col min-w-0">
-		  <span className={`text-heading-small truncate text-white`}>
+		  <span className="text-body-primary md:text-heading-small truncate text-white">
 			{username}
 		  </span>
-		  <span className="text-body-primary truncate hidden md:block">
+		  <span className="text-label-small md:text-body-primary truncate">
 			{rank}
 		  </span>
 		</div>
