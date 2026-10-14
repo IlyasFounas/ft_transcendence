@@ -91,6 +91,7 @@ export default function MultiplayerResultsPage() {
 		scoreJustFinished,
 		animatedDistance,
 		distanceJustFinished,
+		distanceUnit
 	} = useCurrentRoundStats(gameResult);
 
 	const guesses = useRoundGuesses(gameResult);
@@ -126,7 +127,7 @@ export default function MultiplayerResultsPage() {
 						title="Distance"
 						infos={String(animatedDistance)}
 						variant="secondary"
-						suffix="km"
+						suffix={distanceUnit}
 						animate={distanceJustFinished}
 					/>
 				</div>
