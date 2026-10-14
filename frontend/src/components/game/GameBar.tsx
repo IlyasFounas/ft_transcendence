@@ -21,7 +21,7 @@ export default function GameBar({countdown, totalTime, gameId, round, totalRound
 	<>
 		<div
 			className="
-				hidden md:grid
+				hidden lg:grid
 				grid-cols-[1fr_auto_1fr]
 				w-full
 				h-[100px]
@@ -71,7 +71,7 @@ export default function GameBar({countdown, totalTime, gameId, round, totalRound
 
 		<div
 			className="
-				flex md:hidden
+				flex lg:hidden
 				items-center
 				justify-between
 				w-full

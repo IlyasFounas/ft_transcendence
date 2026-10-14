@@ -21,15 +21,15 @@ export function ChatLayout () {
                     onClick={() => setIsChatOpen(false)}
                 />
             )}
-            <div className="h-dvh flex flex-col">
+            <div className="min-h-dvh flex flex-col">
                 <Navbar
                     status="online"
                     isChatOpen={isChatOpen}
                     onToggleChat={() => setIsChatOpen((current) => !current)}
                     showChat={true}
                 />
-
-  				<Outlet />
+                
+                < Outlet />
         
                 <div
                 className={`

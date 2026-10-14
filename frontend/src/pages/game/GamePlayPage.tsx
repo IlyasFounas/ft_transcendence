@@ -12,19 +12,23 @@ import TutorialCarousel from "../../components/carousels/TutorialCarousel";
 export default function GamePlayPage() {
 	const [countdown, setCountDown] = useState(0);
 	const [isMapMain, setIsMapMain] = useState(false);
-	const { round, roundHistory, lastRoundResult, sendGuess, startGame, leaveGame, resetGame, lobbyInfos, players } = useLobbySocket();
+	const { round, roundHistory, lastRoundResult, sendGuess, startGame, leaveGame, resetGame, lobbyInfos, players, isConnected, connect } = useLobbySocket();
 	const [guess, setGuess] = useState<{ lat: number; lng: number } | null>(null);
 	const navigate = useNavigate();
 	const [hasGuessed, setHasGuessed] = useState(false);
 	const [showTutorial, setShowTutorial] = useState(false);
 	const [gameId, setGameId] = useState<number | null>(null);
-	const {authFetch} = useAuth();
+	const {authFetch, user} = useAuth();
 	const [mode, setMode] = useState<"solo" | "multi" | null>(null);
 
 	useEffect(() => {
 		setHasGuessed(false);
 		setGuess(null);
 	}, [round?.round_nb]);
+
+	useEffect(() => {
+		if (!isConnected) connect();
+	}, [isConnected, user?.ID]);
 
 	useEffect(() => {
 		if (!round) return;
@@ -89,7 +93,8 @@ export default function GamePlayPage() {
 	}, [lastRoundResult, round, roundHistory, navigate, mode, lobbyInfos?.round_total]);
 
 	useEffect(() => {
-		if (lobbyInfos && !round) startGame();
+		if (lobbyInfos && !round) 
+			startGame();
 	}, [lobbyInfos, round, startGame]);
 	
 	const handleSubmit = () => {
