@@ -104,6 +104,34 @@ func (h *LobbyHandler) JoinLobby() gin.HandlerFunc {
 	}
 }
 
+// CurrentLobby returns the game_id of the lobby the user is currently in
+// game_id is null if the user isn't in any lobby
+func (h *LobbyHandler) CurrentLobby() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		userId, ok := c.Get("userId")
+		if !ok {
+			c.JSON(http.StatusUnauthorized,
+				gin.H{"message": "The userId is empty"})
+			return
+		}
+		lobby, err := h.lobbyRepo.ActualLobby(c.Request.Context(),
+			userId.(int64))
+		if err != nil {
+			log.Printf("error : %s\n", err)
+			c.JSON(http.StatusInternalServerError,
+				gin.H{"message": "Something went wrong"})
+			return
+		}
+		if lobby == nil {
+			c.JSON(http.StatusOK,
+				gin.H{"message": "success", "game_id": nil})
+			return
+		}
+		c.JSON(http.StatusOK,
+			gin.H{"message": "success", "game_id": lobby.GameId})
+	}
+}
+
 func (h *LobbyHandler) LeaveLobby() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userId, ok := c.Get("userId")
@@ -180,10 +208,10 @@ func (h *LobbyHandler) RemovePlayer() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userId, ok := c.Get("userId")
 		if !ok {
-            c.JSON(http.StatusUnauthorized,
-                gin.H{"message": "The userId is empty"})
-            return
-        }
+			c.JSON(http.StatusUnauthorized,
+				gin.H{"message": "The userId is empty"})
+			return
+		}
 		username := c.Param("username")
 		user, err := h.userRepo.UserByName(c.Request.Context(), username)
 		if err != nil {
@@ -235,10 +263,10 @@ func (h *LobbyHandler) AllPlayers() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userId, ok := c.Get("userId")
 		if !ok {
-            c.JSON(http.StatusUnauthorized,
-                gin.H{"message": "The userId is empty"})
-            return
-        }
+			c.JSON(http.StatusUnauthorized,
+				gin.H{"message": "The userId is empty"})
+			return
+		}
 		lobby, err := h.lobbyRepo.ActualLobby(c.Request.Context(),
 			userId.(int64))
 		if err != nil || lobby == nil {

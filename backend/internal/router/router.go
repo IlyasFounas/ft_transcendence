@@ -13,7 +13,7 @@ import (
 func NewRouter(ctx context.Context, h *handlers.Handlers, hub *lobby_ws.Hub, 
 	chat *chat_ws.Chat, wg *sync.WaitGroup) *gin.Engine {
 	r := gin.Default()    //when you first create a var :=
-	r.Use(cors.Default()) // TODO: global middleware now but accept only localhost:3000 request
+	r.Use(cors.Default())
 
 	// Splitting routes
 	registerUserRoutes(r, h.User, h.Token)

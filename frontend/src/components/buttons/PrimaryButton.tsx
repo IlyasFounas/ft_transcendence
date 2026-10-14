@@ -66,7 +66,7 @@ export default function PrimaryButton({ children, onClick, subtitle, disabled, s
 			enabled:active:[--button-gradient-end:#07192E]
 
 			disabled:cursor-default
-    		disabled:opacity-40
+    		disabled:opacity-80
 			${styles.container}
 			${className}
 		`}

@@ -4,10 +4,13 @@ import { useAuth } from "../context/AuthContext";
 import CalculateRank from "../utils/rank";
 import { useEffect, useState } from "react";
 import type { UserStatistics } from "../types/statistics.type";
+import { useNavigate } from "react-router-dom";
+import { useLobbySocket } from "../context/GameSocketContext";
 
 export default function HomePage() {
     const { user, authFetch } = useAuth();
     const [statistics, setStatistics] = useState<UserStatistics | null>(null);
+	const { connect } = useLobbySocket();
 
     const totalScore = user?.XP ?? 0;
     const rank = CalculateRank(totalScore);
@@ -25,6 +28,48 @@ export default function HomePage() {
 
         getStatistics();
     }, []);
+
+	const handlePlaySolo = async () => {
+
+		const current = await authFetch("/api/lobby/current");
+		if (current?.status === 200 && current.data?.game_id) {
+			const modeRes = await authFetch(`/api/game/${current.data.game_id}/mode`);
+			connect();
+			if (modeRes?.data?.mode === "multi") {
+				navigate("/lobby");
+			} else {
+				navigate(`/game/${current.data.game_id}`);
+			}
+			return;
+		}
+		
+		const body = new URLSearchParams({
+				timer: "120",
+				round_total: "5", 
+			});
+
+		const result = await authFetch("/api/lobby/create", {
+			method: "POST",
+			headers: { "Content-Type": "application/x-www-form-urlencoded" },
+			body: body.toString(),
+		});
+
+		if (result?.status === 200) {
+			const cur = await authFetch("/api/lobby/current");
+			const gameId = cur?.data?.game_id;
+			if (gameId) {
+				await authFetch(`/api/game/${gameId}/mode`, {
+					method: "PATCH",
+					headers: { "Content-Type": "application/x-www-form-urlencoded" },
+					body: new URLSearchParams({ mode: "solo" }).toString(),
+				});
+			}
+			connect();
+			navigate("/game/solo");
+		}
+	};
+
+	const navigate = useNavigate();
 
     return (
         <main
@@ -103,17 +148,17 @@ export default function HomePage() {
                     <p className="text-heading-small md:text-heading-medium lg:text-hero font-semibold text-text-primary">REPORT.</p>
                 </div>
                 <div className="w-full md:hidden">
-                    <PrimaryButton size="small" subtitle="Launch a new operation">
+                    <PrimaryButton size="small" subtitle="Launch a new operation" onClick={handlePlaySolo}>
                         Start Mission
                     </PrimaryButton>
                 </div>
                 <div className="w-full hidden md:block lg:hidden text-center">
-                    <PrimaryButton size="medium" subtitle="Launch a new operation">
+                    <PrimaryButton size="medium" subtitle="Launch a new operation" onClick={handlePlaySolo}>
                         Start Mission
                     </PrimaryButton>
                 </div>    
                 <div className="w-full hidden lg:block">
-                    <PrimaryButton size="large" subtitle="Launch a new operation">
+                    <PrimaryButton size="large" subtitle="Launch a new operation" onClick={handlePlaySolo}>
                         Start Mission
                     </PrimaryButton>
                 </div>              

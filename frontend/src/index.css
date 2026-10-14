@@ -64,6 +64,10 @@
 		--text-label-small--line-height: 14px;
 		--text-label-small--font-weight: 600;
 		--text-label-small--letter-spacing: 0.04em;
+
+	/* --- ANIMATIONS --- */
+ 		--animate-shake: shake 0.4s ease-in-out;
+
 }
 
 @layer base {
@@ -136,4 +140,70 @@ input:-webkit-autofill:active {
   --button-gradient-pressed-start: #030B17;
   --button-gradient-pressed-middle: #082743;
   --button-gradient-pressed-end: #030B17;
+}
+
+.custom-tooltip {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+.custom-tooltip::before {
+  display: none !important;
+}
+
+@keyframes scale-pop {
+  0% { transform: scale(1); }
+  60% { transform: scale(1.5); }
+  100% { transform: scale(1); }
+}
+
+.animate-scale-pop {
+  animation: scale-pop 200ms ease-out;
+}
+
+.leaflet-tooltip {
+	background: #020A14;
+	border: rgb(30 77 120 / 30%);
+	border-radius: 8px;
+	padding: 6px 10px;
+
+}
+
+.leaflet-tooltip.player-tooltip {
+  background: #18181b;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 10px;
+  color: white;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  font-family: "Rajdhani", sans-serif;
+  text-transform: uppercase;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-6px); }
+  80% { transform: translateX(6px); }
+}
+
+.marker-highlighted {
+  transform: scale(1.4);
+  filter: drop-shadow(0 0 8px currentColor);
+  transition: transform 0.15s ease;
+}
+
+.leaflet-control-attribution a {
+	pointer-events: none;
+}
+
+@keyframes blink {
+	0%, 49% { opacity: 1; }
+	50%, 100% { opacity: 0; }
+}
+
+.animate-blink {
+	animation: blink 1s step-end infinite;
 }

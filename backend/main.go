@@ -13,6 +13,7 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"os/signal"
 	"sync"
@@ -32,7 +33,15 @@ import (
  * deferred cleanup and graceful shutdown would be skipped.
  */
 func main() {
-    env := os.Getenv("ENV")
+	_, err := url.Parse(os.Getenv("PUBLIC_URL"))
+	if err != nil {
+		log.Printf("error : %v", err)
+		return
+	}
+	if os.Getenv("PUBLIC_URL") == "" {
+		log.Fatalf("error : %v", err)
+	}
+	env := os.Getenv("ENV")
     if (len(env) != 0 && env == "prod") {
         gin.SetMode(gin.ReleaseMode)
     }
