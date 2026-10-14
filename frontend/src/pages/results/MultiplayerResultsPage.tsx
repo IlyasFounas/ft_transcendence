@@ -16,7 +16,7 @@ export default function MultiplayerResultsPage() {
 	const location = useLocation();
 	const navigate = useNavigate();
 	const { user } = useAuth();
-	const { round, players } = useLobbySocket();
+	const { round, players, isConnected, connect } = useLobbySocket();
 	const [hoveredPlayerId, setHoveredPlayerId] = useState<string | null>(null);
 
 	const { 
@@ -42,6 +42,10 @@ export default function MultiplayerResultsPage() {
 			navigate("/game/multi");
 		}
 	}, [round, currentRound, navigate]);
+
+	useEffect(() => {
+		if (!isConnected) connect();
+	}, [isConnected, user?.ID]);
 
    const goToSummary = () => {
 		navigate("/results/summary", { 
@@ -87,6 +91,7 @@ export default function MultiplayerResultsPage() {
 		scoreJustFinished,
 		animatedDistance,
 		distanceJustFinished,
+		distanceUnit
 	} = useCurrentRoundStats(gameResult);
 
 	const guesses = useRoundGuesses(gameResult);
@@ -122,7 +127,7 @@ export default function MultiplayerResultsPage() {
 						title="Distance"
 						infos={String(animatedDistance)}
 						variant="secondary"
-						suffix="km"
+						suffix={distanceUnit}
 						animate={distanceJustFinished}
 					/>
 				</div>

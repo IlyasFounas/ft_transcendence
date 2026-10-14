@@ -21,7 +21,8 @@ export default function LobbyRow({
 
 		const isCurrentPlayer = username === currentUsername;
 	 	const rowColor = isCurrentPlayer ? "text-cyan-400" : "text-(--color-text-secondary)";
-  		const avatarBorder = isCurrentPlayer ? "#35DFFF" : "var(--color-text-secondary)";
+  		const avatarBorder = isCurrentPlayer ? "#35DFFF" : "#6E8AA5";
+		
 
 	return (
 		<div className={`
