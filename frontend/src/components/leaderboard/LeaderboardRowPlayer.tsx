@@ -35,7 +35,9 @@ export default function LeaderboardRowPlayer({
 	>
 	  <div className="text-center text-heading-medium">{position}</div>
 	  <div className="flex items-center gap-[12px] @[640px]:px-[30px] min-w-0">
-		<Avatar avatar={avatar} size={45} />
+		<div className="shrink-0">
+			<Avatar avatar={avatar} size={45} />
+		</div>
 		<div className="flex flex-col min-w-0">
 		  <span className="text-heading-small truncate text-text-primary">
 			{username}
