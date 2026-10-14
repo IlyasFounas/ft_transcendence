@@ -1,5 +1,4 @@
 import { BrowserRouter as Router, Routes, Route} from 'react-router-dom'
-import ComponentsPage from './pages/ComponentsPage';
 import LandingPage from './pages/LandingPage';
 import HomePage from './pages/HomePage';
 import ProfilePage from './pages/ProfilePage';
@@ -28,7 +27,6 @@ function App() {
 						<Route path="/" element={<LandingPage/>} />
                     	<Route path="*" element={<NotFoundPage />} />
 						<Route path="/login" element={<AuthenticationPage/>} />
-						<Route path="/components" element={<ComponentsPage/>} />
 					</Route>
 					<Route element={<ProtectedRoute />}>
 						<Route element={<GameSessionLayout />}>
