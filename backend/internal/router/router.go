@@ -1,6 +1,7 @@
 package router
 
 import (
+	"os"
 	"context"
 	"sync"
 	"github.com/gin-contrib/cors"
@@ -13,7 +14,17 @@ import (
 func NewRouter(ctx context.Context, h *handlers.Handlers, hub *lobby_ws.Hub, 
 	chat *chat_ws.Chat, wg *sync.WaitGroup) *gin.Engine {
 	r := gin.Default()    //when you first create a var :=
-	r.Use(cors.Default())
+	if os.Getenv("ENV") == "prod" {
+		allowOrigins := []string{os.Getenv("PUBLIC_URL")}
+		allowMethods := []string{"GET", "POST", "DELETE", "PATCH", "PUT"}
+		config := cors.Config{
+				AllowOrigins: allowOrigins,
+				AllowCredentials: true,
+				AllowMethods: allowMethods}
+		r.Use(cors.New(config))
+	} else {
+		r.Use(cors.Default())
+	}
 
 	// Splitting routes
 	registerUserRoutes(r, h.User, h.Token)
