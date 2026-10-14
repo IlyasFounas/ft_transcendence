@@ -25,7 +25,7 @@ RUN go build -o /bun_migrator ./cmd/bun
 
 FROM golang:1.25-alpine AS prod
 WORKDIR /app
-EXPOSE 5130
+EXPOSE 8080
 COPY --from=build /golang_api .
 COPY --from=build /bun_migrator .
 COPY --from=build /app/entrypoint.sh .

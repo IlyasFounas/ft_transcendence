@@ -67,3 +67,29 @@ export interface Lobby {
     isCreator: boolean;
     leftAt: string | null;
 }
+
+export interface LocationInfo {
+	lat: number;
+	long: number;
+	country_code: string;
+}
+
+export interface RoundInfos {
+	distance: number;
+	score: number;
+	base_score: number;
+	country_found: boolean;
+	base: LocationInfo;
+	guess: LocationInfo;
+	streak: number;
+	time_left_seconds: number;
+}
+
+export interface PlayerRoundResult {
+	user_id: number;
+	username: string;
+	round_nb: number;
+	has_guessed: boolean;
+	round_infos: RoundInfos | null;
+	total_score: number;
+}

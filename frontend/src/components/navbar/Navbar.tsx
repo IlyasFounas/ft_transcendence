@@ -40,7 +40,7 @@ export function Navbar({
             {/* Navbar for desktop */}
             <div className="
                 hidden
-                lg:flex
+                xl:flex
                 h-full
                 items-center
                 px-8
@@ -134,7 +134,7 @@ export function Navbar({
             {/* Navbar for tablet and phone */}
             <div className="
                 flex
-                lg:hidden
+                xl:hidden
                 h-full
                 items-center
                 px-6

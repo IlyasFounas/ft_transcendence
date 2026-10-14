@@ -17,6 +17,7 @@ import (
 	"golang.org/x/oauth2"
 	"path/filepath"
 	"github.com/go-playground/validator/v10"
+	"database/sql"
 
 	"backend/internal/models/users"
 	"backend/internal/repositories"
@@ -347,42 +348,44 @@ func (h *UserHandler) GoogleCallback() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		googleState := c.Query("state")
 		userState, err := c.Cookie("oauth_state")
-		queryError := c.Query("error") 
+		queryError := c.Query("error")
+		loginUrl := fmt.Sprintf("%s/login", os.Getenv("PUBLIC_URL"))
+		homeUrl := fmt.Sprintf("%s/home", os.Getenv("PUBLIC_URL"))
 		if err != nil || queryError != "" {
 			if err != nil {
 				log.Printf("error : %s\n", err)
 			} else if queryError != "" {
 				log.Printf("error : %s\n", queryError)
 			}
-			c.Redirect(http.StatusFound, "http://localhost:5130/login")
+			c.Redirect(http.StatusFound, loginUrl)
 			return
 		}
 		if subtle.ConstantTimeCompare([]byte(userState), []byte(googleState)) != 1 {
-			c.Redirect(http.StatusFound, "http://localhost:5130/login")
+			c.Redirect(http.StatusFound, loginUrl)
 			return
 		}
 		cookie.Clear(c, "/api/auth/google", "oauth_state")
 
 		userInfo, err := h.fetchGoogleUser(c, c.Query("code"))
 		if err != nil {
-			c.Redirect(http.StatusFound, "http://localhost:5130/login")
+			c.Redirect(http.StatusFound, loginUrl)
 			return 
 		}
 		if !userInfo.EmailVerified {
-			c.Redirect(http.StatusFound, "http://localhost:5130/login")
+			c.Redirect(http.StatusFound, loginUrl)
 			return
 		}
 		user, err := h.resolveGoogleUser(c, userInfo)
 		if err != nil {
-			c.Redirect(http.StatusFound, "http://localhost:5130/login")
+			c.Redirect(http.StatusFound, loginUrl)
 			return
 		}
 		_, ok := h.jwtGeneration(c, user.ID)
 		if !ok {
-			c.Redirect(http.StatusFound, "http://localhost:5130/login")
+			c.Redirect(http.StatusFound, loginUrl)
 			return
 		}
-		c.Redirect(http.StatusFound, "http://localhost:5130/home")
+		c.Redirect(http.StatusFound, homeUrl)
 	}
 }
 
@@ -786,4 +789,177 @@ func (h *UserHandler) DeleteUser() gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"message": "Something went wrong"})
 		}
 	}
+}
+
+type UpdateUserValidation struct {
+	Email   	string `validate:"required,max=254,email"`
+	Login	  	string `validate:"required,min=3,max=30,acceptChar"`
+	Username	string `validate:"required,min=3,max=30,acceptChar"`
+	Password	string `validate:"required,strongpwd"`
+}
+
+func isPresetAvatar(filename string) bool {
+    if filepath.Base(filename) != filename {
+        return false
+    }
+    if !strings.HasPrefix(filename, "avatar") || !strings.HasSuffix(filename, ".png") {
+        return false
+    }
+    numberStr := strings.TrimSuffix(strings.TrimPrefix(filename, "avatar"),".png")
+    number, err := strconv.Atoi(numberStr)
+    return err == nil && number >= 1 && number <= 18
+}
+
+func (h *UserHandler) UpdateUser() gin.HandlerFunc {
+    return func(c *gin.Context) {
+		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 5<<20)
+        input := UpdateUserValidation{
+            Email:    strings.ToLower(strings.TrimSpace(c.PostForm("email"))),
+            Login:    strings.ToLower(strings.TrimSpace(c.PostForm("login"))),
+            Username: strings.ToLower(strings.TrimSpace(c.PostForm("username"))),
+            Password: c.PostForm("password"),
+        }
+        err := h.validate.Struct(input)
+		if err != nil {
+            c.JSON(http.StatusBadRequest,
+				gin.H{"message": validation.FormatErrors(err),})
+            return
+        }
+        isVerified, err := strconv.ParseBool(c.PostForm("is_verified"))
+        if err != nil {
+            c.JSON(http.StatusBadRequest,
+				gin.H{"message": "invalid is_verified."})
+            return
+        }
+        xp, err := strconv.ParseInt(c.PostForm("xp"), 10, 64)
+        if err != nil || xp < 0 {
+            c.JSON(http.StatusBadRequest, 
+				gin.H{"message": "invalid xp."})
+            return
+        }
+        username := c.Param("username")
+        user, err := h.userRepo.UserByName(c.Request.Context(), username)
+		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				c.JSON(http.StatusNotFound, 
+					gin.H{"message": "User not found."})
+				return
+			}
+
+			c.JSON(http.StatusInternalServerError, 
+				gin.H{"message": "Something went wrong. Please try again."})
+			return
+		}
+        if user.IsAdmin {
+            c.JSON(http.StatusForbidden, 
+				gin.H{"message": "Cannot modify admin."})
+            return
+        }
+        existingLogin, err := h.userRepo.ExistingLogin(c.Request.Context(), input.Login)
+        if err != nil {
+            c.JSON(http.StatusInternalServerError, 
+				gin.H{"message": "Something went wrong. Please try again."})
+            return
+        }
+        if existingLogin != nil && *existingLogin != "" {
+            c.JSON(http.StatusBadRequest, 
+				gin.H{"message": "This login is unavailable. Please try another one."})
+            return
+        }
+        existingUsername, err := h.userRepo.ExistingName(c.Request.Context(), input.Username)
+        if err != nil {
+            c.JSON(http.StatusInternalServerError, 
+				gin.H{"message": "Something went wrong. Please try again."})
+            return
+        }
+        if existingUsername {
+            c.JSON(http.StatusBadRequest, 
+				gin.H{"message": "This username is unavailable. Please try another one."})
+            return
+        }
+        oldAvatar := user.Avatar
+		preset := strings.TrimSpace(c.PostForm("avatar"))
+		savedAvatarPath := ""
+		// upload avatar
+		file, fileErr := c.FormFile("avatar_file")
+		if fileErr != nil {
+			if fileErr.Error() == "http: request body too large" {
+				c.JSON(http.StatusRequestEntityTooLarge, gin.H{"message": "File too large (max 5MB)."})
+				return
+			}
+			c.JSON(http.StatusBadRequest, gin.H{"message": "No file provided."})
+			return
+		}
+		// put both avatar input
+		if preset != "" && fileErr == nil {
+			c.JSON(http.StatusBadRequest, 
+				gin.H{"message": "Choose a preset or upload a file."})
+			return
+		}
+		if preset != "" {
+			// select a preset avatar
+			if !isPresetAvatar(preset) {
+				c.JSON(http.StatusBadRequest, 
+					gin.H{"message": "Invalid preset avatar."})
+				return
+			}
+			avatarURL := "/avatars/" + preset
+			user.Avatar = &avatarURL
+			
+		} else if fileErr == nil {
+			ext := strings.ToLower(filepath.Ext(file.Filename))
+			if ext != ".jpg" && ext != ".jpeg" && ext != ".png" {
+				c.JSON(http.StatusBadRequest, 
+					gin.H{"message": "Invalid file type."})
+				return
+			}
+			filename := uuid.New().String() + ext
+			savedAvatarPath = filepath.Join("uploads/avatars", filename)
+			avatarURL := "/api/uploads/avatars/" + filename
+
+			err := c.SaveUploadedFile(file, savedAvatarPath)
+			if  err != nil {
+				c.JSON(http.StatusInternalServerError, 
+					gin.H{"message": "Failed to save file."})
+				return
+			}
+			user.Avatar = &avatarURL
+		}
+		hashPassword, err := encryption.HashPassword(input.Password)
+		if err != nil {
+			if savedAvatarPath != "" {
+				_ = os.Remove(savedAvatarPath)
+			}
+			c.JSON(http.StatusInternalServerError, 
+				gin.H{"message": "Something went wrong. Please try again."})
+			return
+		}
+        rank := rank_calculation.CalculateRank(xp)
+        user.Username = input.Username
+        user.Login = &input.Login
+        user.Email = input.Email
+        user.Password = &hashPassword
+        user.Is_verified = isVerified
+        user.XP = xp
+        user.Rank = rank
+        err = h.userRepo.UpdateUser(c.Request.Context(), user.ID, user)
+		if err != nil {
+			// delete the new upload if the database update failed
+			if savedAvatarPath != "" {
+				_ = os.Remove(savedAvatarPath)
+			}
+			c.JSON(http.StatusInternalServerError,
+				gin.H{"message": "Something went wrong. Please try again."})
+			return
+		}
+		// delete the previous uploaded avatar after the DB update success
+		if (preset != "" || savedAvatarPath != "") &&
+			oldAvatar != nil &&
+			user.Avatar != nil &&
+			*oldAvatar != *user.Avatar {
+			removeUploadedAvatar(oldAvatar)
+		}
+		c.JSON(http.StatusOK,
+			gin.H{"message": "user updated successfully"})
+    }
 }

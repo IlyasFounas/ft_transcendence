@@ -48,6 +48,7 @@ services:
       ADMIN_USERNAME: ${ADMIN_USERNAME}
       ADMIN_EMAIL: ${ADMIN_EMAIL}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      PUBLIC_URL: ${PUBLIC_URL}
     depends_on:
       postgres:
         condition: service_healthy
@@ -64,6 +65,7 @@ services:
     working_dir: /app
     environment:
       ENV: ${ENV}
+      VITE_MAPILLARY_ACCESS_TOKEN: ${VITE_MAPILLARY_ACCESS_TOKEN}
     depends_on:
       - golang
     stdin_open: true
