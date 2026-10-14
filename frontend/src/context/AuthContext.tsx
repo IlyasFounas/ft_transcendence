@@ -82,23 +82,28 @@ function AuthProvider({children}: {children: ReactNode}) {
         return await apiFetch(url, options);
     }
 
-    const getUser = async () => {
-        const result = await authFetch("/api/user");
-        
+    const getUser = async (): Promise<boolean> => {
+        const result = await apiFetch("/api/user");
+
         if (result === null) {
+            setUser(null);
             return false;
         }
 
-        if (result.status === 200)
-        {
+        if (result.status === 200) {
             setUser(result.data.user);
             return true;
         }
-    
+
+        if (result.status === 401) {
+            setUser(null);
+            return false;
+        }
+
         setUser(null);
         return false;
-        
-    }
+    };
+
     
     const login = async () => {
         await getUser();
@@ -118,12 +123,21 @@ function AuthProvider({children}: {children: ReactNode}) {
         }
     };
 
+    const authCheckStarted = useRef(false);
+
     useEffect(() => {
+        if (authCheckStarted.current) return;
+        authCheckStarted.current = true;
+
         const checkAuth = async () => {
-            await getUser();
-            setIsAuthLoading(false);
+            try {
+                await getUser();
+            } finally {
+                setIsAuthLoading(false);
+            }
         };
-        checkAuth();
+
+        void checkAuth();
     }, []);
     
     return (
