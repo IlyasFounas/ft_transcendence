@@ -8,7 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { useLobbySocket } from "../context/GameSocketContext";
 
 export default function HomePage() {
-    const { user, authFetch } = useAuth();
+    const { user, authFetch, getUser } = useAuth();
     const [statistics, setStatistics] = useState<UserStatistics | null>(null);
 	const { connect } = useLobbySocket();
 
@@ -16,6 +16,10 @@ export default function HomePage() {
     const rank = CalculateRank(totalScore);
     
     useEffect(() => {
+        const refreshUser = async () => {
+            await getUser();
+        };
+
         const getStatistics = async () => {
             const result = await authFetch("api/user/statistics");
 
@@ -25,7 +29,8 @@ export default function HomePage() {
             
             setStatistics(result.data.statistics);
         };
-
+        
+        refreshUser();
         getStatistics();
     }, []);
 
