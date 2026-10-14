@@ -123,21 +123,12 @@ function AuthProvider({children}: {children: ReactNode}) {
         }
     };
 
-    const authCheckStarted = useRef(false);
-
     useEffect(() => {
-        if (authCheckStarted.current) return;
-        authCheckStarted.current = true;
-
         const checkAuth = async () => {
-            try {
-                await getUser();
-            } finally {
-                setIsAuthLoading(false);
-            }
+            await getUser();
+            setIsAuthLoading(false);
         };
-
-        void checkAuth();
+        checkAuth();
     }, []);
     
     return (
