@@ -348,42 +348,44 @@ func (h *UserHandler) GoogleCallback() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		googleState := c.Query("state")
 		userState, err := c.Cookie("oauth_state")
-		queryError := c.Query("error") 
+		queryError := c.Query("error")
+		loginUrl := fmt.Sprintf("%s/login", os.Getenv("PUBLIC_URL"))
+		homeUrl := fmt.Sprintf("%s/home", os.Getenv("PUBLIC_URL"))
 		if err != nil || queryError != "" {
 			if err != nil {
 				log.Printf("error : %s\n", err)
 			} else if queryError != "" {
 				log.Printf("error : %s\n", queryError)
 			}
-			c.Redirect(http.StatusFound, "http://localhost:5130/login")
+			c.Redirect(http.StatusFound, loginUrl)
 			return
 		}
 		if subtle.ConstantTimeCompare([]byte(userState), []byte(googleState)) != 1 {
-			c.Redirect(http.StatusFound, "http://localhost:5130/login")
+			c.Redirect(http.StatusFound, loginUrl)
 			return
 		}
 		cookie.Clear(c, "/api/auth/google", "oauth_state")
 
 		userInfo, err := h.fetchGoogleUser(c, c.Query("code"))
 		if err != nil {
-			c.Redirect(http.StatusFound, "http://localhost:5130/login")
+			c.Redirect(http.StatusFound, loginUrl)
 			return 
 		}
 		if !userInfo.EmailVerified {
-			c.Redirect(http.StatusFound, "http://localhost:5130/login")
+			c.Redirect(http.StatusFound, loginUrl)
 			return
 		}
 		user, err := h.resolveGoogleUser(c, userInfo)
 		if err != nil {
-			c.Redirect(http.StatusFound, "http://localhost:5130/login")
+			c.Redirect(http.StatusFound, loginUrl)
 			return
 		}
 		_, ok := h.jwtGeneration(c, user.ID)
 		if !ok {
-			c.Redirect(http.StatusFound, "http://localhost:5130/login")
+			c.Redirect(http.StatusFound, loginUrl)
 			return
 		}
-		c.Redirect(http.StatusFound, "http://localhost:5130/home")
+		c.Redirect(http.StatusFound, homeUrl)
 	}
 }
 

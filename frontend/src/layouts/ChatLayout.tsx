@@ -16,12 +16,12 @@ export function ChatLayout () {
                         inset-0
                         z-30
                         bg-black/40
-                        lg:hidden
+                        xl:hidden
                     "
                     onClick={() => setIsChatOpen(false)}
                 />
             )}
-            <div className="h-dvh flex flex-col overflow-hidden">
+            <div className="min-h-dvh flex flex-col">
                 <Navbar
                     status="online"
                     isChatOpen={isChatOpen}
@@ -51,11 +51,11 @@ export function ChatLayout () {
                     md:right-5
                     md:bottom-5
                     md:w-2/5
-                    lg:w-100
+                    xl:w-100
         
                     ${isChatOpen ? "block" : "hidden"}
         
-                    lg:block
+                    xl:block
                     `}
                 >
                     <ChatPanel />

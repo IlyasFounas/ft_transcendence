@@ -24,7 +24,7 @@ export default function NavbarMobileMenu({
                         inset-0
                         z-30
                         bg-black/20
-                        lg:hidden
+                        xl:hidden
                     "
                     onClick={onClose}
                 />
@@ -38,7 +38,7 @@ export default function NavbarMobileMenu({
                     top-20
                     bottom-0
                     z-50
-                    lg:hidden
+                    xl:hidden
                     w-full
                     md:w-72
                     bg-[linear-gradient(90deg,#133867_0%,#020A14_100%)]
