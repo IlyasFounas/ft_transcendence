@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { Message } from "../types/message.type";
+import { useAuth } from "../context/AuthContext";
 
 interface ChatFriend {
     id: number;
@@ -15,6 +16,8 @@ export default function useChatWebSocket() {
     
     const socketRef = useRef<WebSocket | null>(null);
     const loadingOlderRef = useRef(false);
+    const socketTargetIdRef = useRef<number | null>(null);
+    const { user } = useAuth();
 
     const [chatFriends, setChatFriends] = useState<ChatFriend[]>([]);
     const [messages, setMessages] = useState<Message[]>([]);
@@ -27,9 +30,11 @@ export default function useChatWebSocket() {
             return;
         }
 
+        if (end === 0) {
+            socketTargetIdRef.current = targetId;
+        }
 
         if (end > 0) {
-            
             if (loadingOlderRef.current) {
                 return;
             }
@@ -116,24 +121,32 @@ export default function useChatWebSocket() {
                 const newMessages = data.payload.chats ?? [];
                 const latestMessage = newMessages[newMessages.length - 1];
 
-                setMessages(currentMessages => [
-                    ...currentMessages,
-                    ...newMessages,
-                ]);
+                if (!latestMessage) {
+                    return;
+                }
 
-                if (latestMessage) {
-                    setChatFriends(currentFriends =>
-                        currentFriends.map(friend =>
-                            friend.user_id === latestMessage.user_id ||
-                            friend.user_id === latestMessage.friend_id
-                                ? {
-                                    ...friend,
-                                    last_message: latestMessage.message,
-                                    date: latestMessage.date,
-                                }
-                                : friend
-                        )
-                    );
+                const friendId = 
+                    latestMessage.user_id === user?.ID 
+                        ? latestMessage.friend_id
+                        : latestMessage.user_id;
+
+                setChatFriends(currentFriends =>
+                    currentFriends.map(friend =>
+                        friend.user_id === friendId
+                            ? {
+                                ...friend,
+                                last_message: latestMessage.message,
+                                date: latestMessage.date,
+                            }
+                            : friend
+                    )
+                );
+
+                if (socketTargetIdRef.current === friendId) {
+                    setMessages(currentMessages => [
+                        ...currentMessages,
+                        ...newMessages,
+                    ]);
                 }
             }
         }
