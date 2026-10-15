@@ -85,21 +85,11 @@ function AuthProvider({children}: {children: ReactNode}) {
     const getUser = async (): Promise<boolean> => {
         const result = await apiFetch("/api/user");
 
-        if (result === null) {
-            setUser(null);
-            return false;
-        }
-
-        if (result.status === 200) {
+        if (result?.status === 200) {
             setUser(result.data.user);
             return true;
         }
-
-        if (result.status === 401) {
-            setUser(null);
-            return false;
-        }
-
+        
         setUser(null);
         return false;
     };
