@@ -108,7 +108,7 @@ func (r *FriendRepository) RemoveFriend(ctx context.Context, userId int64, remov
 }
 
 func (r *FriendRepository) Friends(ctx context.Context, userId int64) ([]*friends.FriendResponse, error) {
-    var friendList []*friends.FriendResponse
+    friendList := make([]*friends.FriendResponse, 0)
     err := r.db.NewSelect().
         TableExpr("friends AS f").
         Join(`
@@ -179,14 +179,12 @@ func (r *FriendRepository) FriendshipExists(ctx context.Context, userId int64, s
 	if err != nil {
 		return false, err
 	}
-	if !exist {
-		return false, nil
-	}
-	return true, nil
+	
+	return exist, nil
 }
 
 func (r *FriendRepository) FriendRequests(ctx context.Context, userId int64) ([]*friends.FriendResponse, error) {
-	var friendRequests []*friends.FriendResponse
+	friendRequests := make([]*friends.FriendResponse, 0)
 	err := r.db.NewSelect().
 		TableExpr("friends AS f").
         Join("JOIN users AS u ON u.id = f.requester_id").
@@ -204,7 +202,7 @@ func (r *FriendRepository) FriendRequests(ctx context.Context, userId int64) ([]
 }
 
 func (r *FriendRepository) FriendPending(ctx context.Context, userId int64) ([]*friends.FriendResponse, error) {
-	var friendPending []*friends.FriendResponse
+	friendPending := make([]*friends.FriendResponse, 0)
 	err := r.db.NewSelect().
 		TableExpr("friends AS f").
         Join("JOIN users AS u ON u.id = f.receiver_id").
