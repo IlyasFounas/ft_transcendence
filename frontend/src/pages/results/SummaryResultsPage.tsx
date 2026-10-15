@@ -84,6 +84,25 @@ export default function SummaryResultsPage()
 		return locations;
 	}, [fullHistory]);
 
+	const roundRanking = useMemo(() => {
+		if (!gameResult) return null;
+
+		const pointsForRound = gameResult.players
+			.map((p) => ({
+				username: p.player.username,
+				points: p.rounds.find((r) => r.round === roundSelected)?.points ?? 0,
+			}))
+			.sort((a, b) => b.points - a.points);
+
+		const position = pointsForRound.findIndex(
+			(p) => p.username === gameResult.currentUsername
+		);
+
+		return position === -1 ? null : position + 1;
+	}, [gameResult, roundSelected]);
+
+	const guesses = useRoundGuesses(gameResult, roundSelected);
+
 	const handleReturnHome = () => {
 		leaveLobby();
 		resetGame();
@@ -100,7 +119,6 @@ export default function SummaryResultsPage()
 
 	const playerCount = gameResult.players.length;
 	const columns = playerCount > 5 ? 2 : 1;
-	const guesses = useRoundGuesses(gameResult);
 
 	const currentPlayerResult = gameResult.players.find(
 		(p) => p.player.username === gameResult.currentUsername
@@ -112,22 +130,6 @@ export default function SummaryResultsPage()
 	const formattedDistance = selectedRoundData
 	? formatDistance(selectedRoundData.distance)
 	: null;
-
-	const roundRanking = useMemo(() => {
-		const pointsForRound = gameResult.players
-			.map((p) => ({
-				username: p.player.username,
-				points: p.rounds.find((r) => r.round === roundSelected)?.points ?? 0,
-			}))
-			.sort((a, b) => b.points - a.points);
-
-		const position = pointsForRound.findIndex(
-			(p) => p.username === gameResult.currentUsername
-		);
-
-		return position === -1 ? null : position + 1;
-	}, [gameResult.players, gameResult.currentUsername, roundSelected]);
-
 
 	return (
 		<div className="w-full h-screen p-5 flex flex-col gap-5
