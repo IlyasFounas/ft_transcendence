@@ -91,12 +91,12 @@ export default function HomePage() {
                 flex-col
                 items-center
                 justify-start
-                lg:items-start
+                xl:items-start
 
                 px-5
                 py-12
                 md:py-20
-                lg:px-20
+                xl:px-20
 
                 gap-6
                 md:gap-20
@@ -121,13 +121,12 @@ export default function HomePage() {
                 mt-auto
                 
                 items-center
-                lg:self-center
+                xl:self-center
 
                 space-y-2
                 lg:space-y-6
                 lg:px-20
                 lg:pb-12
-                lg:pr-100
                 xl:pr-0
                 "
             >

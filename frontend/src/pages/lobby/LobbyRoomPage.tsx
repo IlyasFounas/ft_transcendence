@@ -31,21 +31,21 @@ export default function LobbyRoomPage() {
   	}
 
 	return (
-		<div className="shrink-0 min-h-[calc(100vh-5rem)] w-full bg-cover bg-no-repeat bg-center bg-[url(/backgrounds/earth_background.png)] lg:pr-[27rem]">
-		<div className="mx-auto w-full max-w-[1400px] grid grid-cols-1 px-6 py-8 gap-6 lg:grid-cols-[minmax(0,1fr)_394px] lg:items-start lg:gap-8">
-			<div className="order-1 lg:col-start-2 lg:row-start-1">
+		<div className="shrink-0 min-h-[calc(100vh-5rem)] w-full bg-cover bg-no-repeat bg-center bg-[url(/backgrounds/earth_background.png)] xl:pr-[27rem]">
+		<div className="mx-auto w-full max-w-[1400px] grid grid-cols-1 px-6 py-8 gap-6 xl:grid-cols-[minmax(0,1fr)_394px] xl:items-start xl:gap-8">
+			<div className="order-1 xl:col-start-2 xl:row-start-1">
 			<RoomCodeCard code={lobbyInfos?.join_code ?? ""} />
 			</div>
 
-			<div className="order-2 lg:col-start-2 lg:row-start-2">
+			<div className="order-2 xl:col-start-2 xl:row-start-2">
 			<MissionSettingsCard timeLimit={lobbyInfos?.timer ?? 0} rounds={lobbyInfos?.round_total ?? 0} />
 			</div>
 
-			<div className="order-3 lg:col-start-1 lg:row-span-3">
+			<div className="order-3 xl:col-start-1 xl:row-span-3">
 			<LobbyList numberOfPlayers={players.length} listOfPlayers={players} onKick={kickPlayer} isCurrentUserHost={isCurrentUserHost && !gameStartAt}/>
 			</div>
 
-			<div className="order-4 flex w-full flex-col items-center gap-4 lg:col-start-2 lg:row-start-3 lg:max-w-none">
+			<div className="order-4 flex w-full flex-col items-center gap-4 xl:col-start-2 xl:row-start-3 xl:max-w-none">
 			<SecondaryButton 
 				variant="danger" 
 				className={`w-full ${gameStartAt ? "opacity-50 pointer-events-none" : ""}`}
