@@ -60,7 +60,7 @@ export default function useChatWebSocket() {
             return ;
         }
 
-        if (message.length > 2000) {
+        if ([...message].length > 1000) {
             setMessageError("Message is too long. Maximum 2000 characters.");
             return;
         }
