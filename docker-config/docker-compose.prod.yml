@@ -7,6 +7,8 @@ services:
   # For Golang and React, volumes mount the code directories (backend and frontend)
   # since the containers execute the code
   golang:
+    environment:
+      RESEND_API_KEY: ${RESEND_API_KEY}
     container_name: golang_container
     networks:
       - app

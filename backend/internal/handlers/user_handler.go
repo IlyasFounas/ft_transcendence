@@ -177,7 +177,7 @@ func (h *UserHandler) CreateUser() gin.HandlerFunc {
 			return
 		}
 		if existingLogin != nil && *existingLogin != "" {
-            c.JSON(http.StatusBadRequest,
+            c.JSON(http.StatusConflict,
                 gin.H{"message": "This login or this username are unavailable. Please try another one."})
 			return
 		}
@@ -188,7 +188,7 @@ func (h *UserHandler) CreateUser() gin.HandlerFunc {
 			return
 		}
 		if existingUsername {
-            c.JSON(http.StatusBadRequest,
+            c.JSON(http.StatusConflict,
                 gin.H{"message": "This username is unavailable. Please try another one."})
 			return
 		}		 

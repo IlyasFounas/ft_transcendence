@@ -72,7 +72,7 @@ func run() error {
 	// 6. Router setup
 	r := router.NewRouter(signalCtx, h, hub, chat, &wg)
 	srv := &http.Server{
-		Addr:         ":8080",
+		Addr:         os.Getenv("LISTEN_PORT_API"),
 		Handler:      r,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 15 * time.Second,
