@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLobbySocket } from "../../context/GameSocketContext";
 import { useAuth } from "../../context/AuthContext";
@@ -20,6 +20,7 @@ export default function GamePlayPage() {
 	const [gameId, setGameId] = useState<number | null>(null);
 	const {authFetch, user} = useAuth();
 	const [mode, setMode] = useState<"solo" | "multi" | null>(null);
+	const isLeavingRef = useRef(false);
 
 	useEffect(() => {
 		setHasGuessed(false);
@@ -27,6 +28,7 @@ export default function GamePlayPage() {
 	}, [round?.round_nb]);
 
 	useEffect(() => {
+		if (isLeavingRef.current) return;
 		if (!isConnected) connect();
 	}, [isConnected, user?.ID]);
 
@@ -105,9 +107,10 @@ export default function GamePlayPage() {
 	};
 
 	const handleLeave = () => {
+		isLeavingRef.current = true;
 		leaveGame();
 		resetGame();
-		navigate("/"); 
+		navigate("/");
 	}
 
 	const handleTuto = () => {
