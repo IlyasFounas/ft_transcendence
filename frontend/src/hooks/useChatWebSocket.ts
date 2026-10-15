@@ -23,6 +23,7 @@ export default function useChatWebSocket() {
     const [messages, setMessages] = useState<Message[]>([]);
     const [messageEnd, setMessageEnd] = useState(0);
     const [loadingOlderMessages, setLoadingOlderMessages] = useState(false);
+    const [messageError, setMessageError] = useState("");
 
     const fetchMessages = (targetId: number, end = 0) => {
 
@@ -58,6 +59,13 @@ export default function useChatWebSocket() {
         if (!socketRef.current) {
             return ;
         }
+
+        if (message.length > 2000) {
+            setMessageError("Message is too long. Maximum 2000 characters.");
+            return;
+        }
+
+        setMessageError("");
 
         socketRef.current.send(
             JSON.stringify({
@@ -150,7 +158,7 @@ export default function useChatWebSocket() {
                 }
             }
         }
-        
+
         return () => {
             socket.close();
             socketRef.current = null;
@@ -163,5 +171,7 @@ export default function useChatWebSocket() {
         sendMessage,
         messageEnd,
         loadingOlderMessages,
+        setMessageError,
+        messageError,
     }
 }
