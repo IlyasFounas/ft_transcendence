@@ -85,7 +85,7 @@ export default function HomePage() {
                 bg-surface-base
                 bg-cover
                 bg-center
-                bg-[url('/images/global-bg.png')]
+                bg-[url(/backgrounds/home_background.png)]
                 bg-no-repeat
                 flex
                 flex-col
