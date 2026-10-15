@@ -50,7 +50,7 @@ export default function GamePlayPage() {
 
 	useEffect(() => {
 		authFetch("/api/lobby/current").then((res) => {
-			if (res.status === 200 && res.data?.game_id) {
+			if (res?.status === 200 && res.data?.game_id) {
 				setGameId(res.data.game_id);
 			}
 		});

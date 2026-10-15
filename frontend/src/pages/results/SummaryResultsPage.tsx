@@ -10,6 +10,23 @@ import { useAuth } from "../../context/AuthContext";
 import { useLobbySocket } from "../../context/GameSocketContext";
 import { formatDistance } from "../../utils/formatDistance";
 
+interface PlayerRound {
+	round: number;
+	points: number;
+	distance: number;
+	guessLocation: { latitude: number; longitude: number };
+}
+
+interface FormattedPlayer {
+	player: {
+		username: string;
+		role: string;
+		avatar: string;
+		id: string;
+	};
+	rounds: PlayerRound[];
+}
+
 export default function SummaryResultsPage()
 {
 	const location = useLocation();
@@ -34,7 +51,7 @@ export default function SummaryResultsPage()
 				isHost: false
 			}));
 
-		const formattedPlayers = safePlayers.map((p: any) => {
+		const formattedPlayers: FormattedPlayer[] = safePlayers.map((p: any) => {
 			const playerRounds = fullHistory.map((round: any) => {
 				const result = round.results.find((r: any) => r.user_id === p.id);
 				return {
@@ -73,9 +90,9 @@ export default function SummaryResultsPage()
 	}, [fullHistory, players, totalRounds, user]);
 
 	const roundLocations = useMemo(() => {
-		if (!fullHistory) return {};
-		const locations = {};
-		fullHistory.forEach(round => {
+		const locations: Record<number, { latitude: number; longitude: number }> = {};
+		if (!fullHistory) return locations;
+		fullHistory.forEach((round: any) => {
 			locations[round.round_nb] = {
 				latitude: round.base.lat,
 				longitude: round.base.long
