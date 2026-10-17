@@ -108,10 +108,6 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
 		if (isAuthLoading || !user) return;
 		if (socketRef.current) return;
 
-		// const socket = new WebSocket(
-		// 	// `${window.location.protocol}://${window.location.host}/api/ws/lobby/join?user_id=${user.ID}`
-		// 	`ws://campus.ocefunding.com:5130/api/ws/lobby/join?user_id=${user.ID}`
-		// );
 		const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
 		const socket = new WebSocket(
 			`${proto}//${window.location.host}/api/ws/lobby/join?user_id=${user.ID}`
