@@ -31,8 +31,8 @@ services:
     build:
       context: ../backend
       target: ${ENV}
-    working_dir: /app
     environment:
+      RESEND_API_KEY: ${RESEND_API_KEY}
       ACTIVATION_JWT_SECRET: ${ACTIVATION_JWT_SECRET}
       JWT_SECRET: ${JWT_SECRET}
       POSTGRES_USER: ${POSTGRES_USER}
@@ -62,14 +62,11 @@ services:
     build:
       context: ../frontend 
       target: ${ENV}
-    working_dir: /app
     environment:
       ENV: ${ENV}
       VITE_MAPILLARY_ACCESS_TOKEN: ${VITE_MAPILLARY_ACCESS_TOKEN}
     depends_on:
       - golang
-    stdin_open: true
-    tty: true
 
   # Nginx acts as a reverse proxy
   # It routes requests from clients or frontend to the appropriate containers

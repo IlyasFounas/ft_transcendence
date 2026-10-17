@@ -49,7 +49,7 @@ export default function EditProfileModal({
         }
 
         const maxSize = 5 * 1024 * 1024;
-
+        
         if (file.size > maxSize) {
             setUploadError("Image must be smaller than 5MB.");
             return;

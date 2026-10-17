@@ -46,6 +46,11 @@ func (h *FriendHandler) AddFriend() gin.HandlerFunc {
 		}
 		exists, err := h.friendRepo.FriendshipExists(c.Request.Context(), RequesterID, user.ID)
 		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				c.JSON(http.StatusNotFound,
+					gin.H{"message": "Friendship not found"})
+				return
+			}
 			c.JSON(http.StatusInternalServerError,
 				gin.H{"message": "Failed to get friendship"})
 			return

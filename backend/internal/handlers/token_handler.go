@@ -42,20 +42,23 @@ func (h *TokenHandler) ActivationToken() gin.HandlerFunc {
 			log.Printf("error : %s\n", err)
 			c.JSON(http.StatusUnauthorized,
 				gin.H{"message": "account activation went wrong"})
+			c.Redirect(http.StatusPermanentRedirect, os.Getenv("PUBLIC_URL"))
 			return
 		}
 		if err := h.aTokenRepo.SetUsedAt(c.Request.Context(), aToken.UserID); err != nil {
 			c.JSON(http.StatusInternalServerError,
 				gin.H{"message": "you already used this link"})
+			c.Redirect(http.StatusPermanentRedirect, os.Getenv("PUBLIC_URL"))
 			return
 		}
 		if err := h.userRepo.SetIsVerified(c.Request.Context(), aToken.UserID); err != nil {
 			c.JSON(http.StatusInternalServerError,
 				gin.H{"message": "user activation failed, contact the support"})
+			c.Redirect(http.StatusPermanentRedirect, os.Getenv("PUBLIC_URL"))
 			return
 		}
-        c.JSON(http.StatusOK,
-			gin.H{"message": "your account has been activated"})
+		loginPage := fmt.Sprintf("%s/login", os.Getenv("PUBLIC_URL"))
+		c.Redirect(http.StatusPermanentRedirect, loginPage)
 	}
 }
 

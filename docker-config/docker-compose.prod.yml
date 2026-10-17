@@ -11,18 +11,20 @@ services:
     networks:
       - app
       - database
-    environment:
-      RESEND_API_KEY: ${RESEND_API_KEY}
 
   react:
+    build:
+      args:
+        VITE_MAPILLARY_ACCESS_TOKEN: ${VITE_MAPILLARY_ACCESS_TOKEN}
     container_name: react_container
     networks:
       - app
 
   nginx:
+    container_name: nginx_container
     ports:
-      - "443:443"
-      - "80:80"
+      - "5130:5130"
+      # - "80:80"
     networks:
       - app
 
