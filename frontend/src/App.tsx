@@ -17,6 +17,7 @@ import SoloResultPage from './pages/results/SoloResultsPage';
 import MultiplayerResultsPage from './pages/results/MultiplayerResultsPage';
 import SummaryResultsPage from './pages/results/SummaryResultsPage';
 import LeaderboardPage from './pages/LeaderboardPage';
+import { ProtectedChatLayout } from "./layouts/ProtectedChatLayout";
 
 function App() {
 	return (
@@ -29,20 +30,22 @@ function App() {
 						<Route path="/login" element={<AuthenticationPage/>} />
 					</Route>
 					<Route element={<ProtectedRoute />}>
-						<Route element={<GameSessionLayout />}>
-							<Route element={<ChatLayout />}>
-								<Route path="/home" element={<HomePage />} />
-								<Route path="/multiplayer" element={<LobbyPage />} />
-								<Route path="/lobby" element={<LobbyRoomPage />} />
+						<Route element={<ProtectedChatLayout />}>
+							<Route element={<GameSessionLayout />}>
+								<Route element={<ChatLayout />}>
+									<Route path="/home" element={<HomePage />} />
+									<Route path="/multiplayer" element={<LobbyPage />} />
+									<Route path="/lobby" element={<LobbyRoomPage />} />
+								</Route>
+								<Route element={<MainLayout />}>
+									<Route path="/profile" element={<ProfilePage />} />
+									<Route path="/leaderboard" element={<LeaderboardPage />} />
+								</Route>
+								<Route path="/game/:gameId" element={<GamePlayPage />} />
+								<Route path="/results/solo" element={<SoloResultPage />} />
+								<Route path="/results/multiplayers" element={<MultiplayerResultsPage />} />
+								<Route path="/results/summary" element={<SummaryResultsPage />} />
 							</Route>
-							<Route element={<MainLayout />}>
-								<Route path="/profile" element={<ProfilePage />} />
-								<Route path="/leaderboard" element={<LeaderboardPage />} />
-							</Route>
-							<Route path="/game/:gameId" element={<GamePlayPage />} />
-							<Route path="/results/solo" element={<SoloResultPage />} />
-							<Route path="/results/multiplayers" element={<MultiplayerResultsPage />} />
-							<Route path="/results/summary" element={<SummaryResultsPage />} />
 						</Route>
 					</Route>
 				</Routes>
