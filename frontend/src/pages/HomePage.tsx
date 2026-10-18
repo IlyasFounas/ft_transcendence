@@ -77,11 +77,12 @@ export default function HomePage() {
 	const navigate = useNavigate();
 
     return (
+        
         <main
             className="
                 flex-1
-                min-h-0
                 w-full
+                min-w-0
                 bg-surface-base
                 bg-cover
                 bg-center
@@ -92,15 +93,13 @@ export default function HomePage() {
                 items-center
                 justify-start
                 xl:items-start
-
                 px-5
-                py-12
-                md:py-20
+                py-6
+                md:py-8
                 xl:px-20
-
                 gap-6
-                md:gap-20
-            "
+                md:gap-10
+                "
         >
             <div>
                 <ProfileCard 
