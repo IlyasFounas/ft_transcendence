@@ -88,7 +88,6 @@ func main() {
 	go chat.Run(signalCtx, &wg)
 
 	// 6. Router setup
-
 	r := router.NewRouter(signalCtx, h, hub, chat, &wg)
 	srv := &http.Server{
 		Addr:         ":8080",

@@ -29,8 +29,11 @@ services:
       - ft_transcendence
     environment:
       - CHOKIDAR_USEPOLLING=true
+    stdin_open: true
+    tty: true
 
   nginx:
+    container_name: nginx_container
     ports:
       - "5130:5130"
     networks:

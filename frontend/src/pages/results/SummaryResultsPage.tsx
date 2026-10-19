@@ -74,8 +74,8 @@ export default function SummaryResultsPage()
 
 	const roundLocations = useMemo(() => {
 		if (!fullHistory) return {};
-		const locations = {};
-		fullHistory.forEach(round => {
+		const locations: Record<number, { latitude: number; longitude: number }> = {};
+		fullHistory.forEach((round: any) => {
 			locations[round.round_nb] = {
 				latitude: round.base.lat,
 				longitude: round.base.long
