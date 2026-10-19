@@ -11,7 +11,7 @@ func SendEmailProd(toEmail string, subject string, html string) error {
     client := resend.NewClient(os.Getenv("RESEND_API_KEY"))
 
     params := &resend.SendEmailRequest{
-        From:    "Acme <atlas-no-reply@ocefunding.com>",
+        From:    "Atlas <atlas-no-reply@ocefunding.com>",
         To:      []string{toEmail},
         Html:    html,
         Subject: subject,
@@ -22,6 +22,15 @@ func SendEmailProd(toEmail string, subject string, html string) error {
         return err
     }
 	return nil
+}
+
+func returnActivationLink(activationJWT string) string {
+    return fmt.Sprintf(
+        "<div>This is your activation link: <a href='%s/api/user/activation?token=%s'>Activation link</a><br />%s</div>",
+		os.Getenv("PUBLIC_URL"),
+        activationJWT,
+		"This link expires in 24 hours. If it does, you can request a new one from the login page.",
+	)
 }
 
 func SendEmail(toEmail string, message *mail.Msg) error {
@@ -40,21 +49,12 @@ func SendEmail(toEmail string, message *mail.Msg) error {
 	return nil
 }
 
-func returnActivationLink(activationJWT string) string {
-    return fmt.Sprintf(
-        "This is your activation link: %s/api/user/activation?token=%s\n%s",
-		os.Getenv("PUBLIC_URL"),
-        activationJWT,
-		"you have 24 hours to activate your account before it gets deleted",
-	)
-}
-
 func SendActivationEmail(toEmail string, activationJWT string) error {
 	// create the message
 	env := os.Getenv("ENV")
 	subject := "Atlas: verification code"
 	html := returnActivationLink(activationJWT)
-	if len(env) != 0 && env == "prod" {
+	if env == "prod" {
 		if err := SendEmailProd(toEmail, subject, html); err != nil {
 			return err
 		}
@@ -67,7 +67,7 @@ func SendActivationEmail(toEmail string, activationJWT string) error {
 			return err
 		}
 		message.Subject(subject)
-		message.SetBodyString(mail.TypeTextPlain, html)
+		message.SetBodyString(mail.TypeTextHTML, html)
 		if err := SendEmail(toEmail, message); err != nil {
 			return err
 		}

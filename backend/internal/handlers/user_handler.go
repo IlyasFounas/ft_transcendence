@@ -1,17 +1,18 @@
 package handlers
 
 import (
-	"strings"
 	"crypto/sha256"
-	"log"
+	"crypto/subtle"
+	"encoding/json"
+	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
-	"errors"
-	"encoding/json"
-	"crypto/subtle"
+
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"golang.org/x/oauth2"
@@ -20,14 +21,14 @@ import (
 	"database/sql"
 
 	"backend/internal/models/users"
+	"backend/internal/models/users/tokens"
 	"backend/internal/repositories"
 	"backend/internal/tools/code_generation"
 	"backend/internal/tools/cookie"
 	"backend/internal/tools/encryption"
 	"backend/internal/tools/mailing"
-	"backend/internal/tools/token_generation"
-	"backend/internal/models/users/tokens"
 	"backend/internal/tools/rank_calculation"
+	"backend/internal/tools/token_generation"
 	"backend/internal/tools/validation"
 )
 
@@ -95,9 +96,12 @@ func (h *UserHandler) createActivationToken(c *gin.Context, expiresAt time.Time,
 	email := c.PostForm("email")
 	if len(email) == 0 {
 		emailString, err := h.userRepo.Email(c.Request.Context(), userId)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError,
-				gin.H{"message": "Can't find your email. Please try again."})
+		if err != nil{
+			code := http.StatusNotFound
+			if err != sql.ErrNoRows {
+				code = http.StatusInternalServerError
+			}
+			c.JSON(code, gin.H{"message": "Can't find your email. Please try again."})
 			return err
 		}
 		err = mailing.SendActivationEmail(*emailString, tokenObj.Token);

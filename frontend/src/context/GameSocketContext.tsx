@@ -104,13 +104,13 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
 	const [gameStartAt, setGameStartAt] = useState<string | null>(null);
 
 	const isCurrentUserHost = players.find((p) => p.id == user?.ID)?.isHost ?? false;
-
 	function connect(){
 		if (isAuthLoading || !user) return;
 		if (socketRef.current) return;
 
+		const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
 		const socket = new WebSocket(
-			`ws://localhost:5130/api/ws/lobby/join?user_id=${user.ID}`
+			`${proto}//${window.location.host}/api/ws/lobby/join?user_id=${user.ID}`
 		);
 		socketRef.current = socket;
 		setIsClosed(false);
