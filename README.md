@@ -526,9 +526,10 @@ This integration improves responsiveness and provides a more interactive experie
 
 **Contributors:**
 
-- **`ifounas`:** Backend WebSocket implementation for the game lobby, real-time chat, and friend status.
-- **`spunyapr`:** Frontend WebSocket integration for real-time chat and friend status.
-- **`lserodon`:** Frontend WebSocket integration for the game lobby.
+- **`ifounas`**: Implemented the backend WebSocket architecture for chat and lobby, including connection management, client registration, event handling, and real-time friend presence updates.
+- **`eelissal`**: Implemented the backend WebSocket handlers for lobby actions.
+- **`spunyapr`**: Implemented the frontend WebSocket integration for chat and friend status using a custom React hook and shared context to manage messages, friend presence, and real-time updates.
+- **`lserodon`**: Implemented the frontend WebSocket client for the game lobby, handling lobby updates, game and round events, player actions, and connection cleanup.
 
 ### 3. User Interaction
 
@@ -549,8 +550,9 @@ The application implements the core components required for user interaction:
 
 **Contributors:**
 
-- **`ifounas`**: Implemented the user database model and WebSocket backend for real-time chat and friend status.
-- **`spunyapr`**: Developed the chat and profile interfaces, friends system (frontend and backend), and WebSocket frontend integration for chat and friend status.
+- **`ifounas`**: Implemented the user database model, chat WebSocket backend, and presence mechanism to broadcast online/offline status to friends through persistent WebSocket connections.
+- **`spunyapr`**: Developed the chat and profile interfaces, implemented the friends system (frontend and backend), and integrated WebSockets into the frontend for real-time chat and friend status updates.
+- **`eelissal`**: Implemented repository functions to delete chat messages, friend records, and user profile data when an administrator deletes a user account.
 
 ### 4. Use an ORM for the Database
 
@@ -566,9 +568,9 @@ Bun ORM is used in the Go backend to interact with the PostgreSQL database. Data
 
 **Contributors:**
 
-- **`ifounas`**: Set up Bun ORM and implemented its use for user , .... database models and operations.
-- **`eelissal`**: Used Bun ORM to implement game, .... database models and operations.
-- **`spunyapr`**: Used Bun ORM to implement friend database models and operations.
+- **`ifounas`**: Initialized Bun ORM and its PostgreSQL driver, defined approximately half of the database models with their struct tags and relationships, and implemented the repository layer used by the handlers.
+- **`eelissal`**: Used Bun ORM to implement game-related database models and repository functions.
+- **`spunyapr`**: Used Bun ORM to implement the friends database model and related repository functions.
 
 ### 5. Custom-Made Design System with Reusable Components
 
