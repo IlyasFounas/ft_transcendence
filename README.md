@@ -466,5 +466,108 @@ Bun uses these tables to manage database schema changes.
 
 ## Modules
 
+### 1. Frontend and Backend Frameworks
+
+**Major · 2 Points**
+
+**Justification:** Using frameworks for both the frontend and backend provides a structured, maintainable architecture and simplifies the development of a full-stack web application.
+
+**Implementation:** The frontend is built with React and TypeScript, with Tailwind CSS for styling and Vite for development and builds. The backend uses Go and the Gin framework to handle HTTP requests, application logic, and API endpoints.
+
+**Contributors:**
+- **`lserodon`**: Frontend architecture and development.
+- **`spunyapr`**: Frontend architecture and full-stack development.
+- **`ifounas`**: Backend architecture and development.
+- **`eelissal`**: Backend development and game logic.
+
+### 2. Real-Time Features
+
+**Major · 2 Points**
+
+**Justification:** Real-time communication allows users to interact and receive updates without repeatedly refreshing the application. It is essential for keeping multiplayer lobbies synchronized, enabling live chat, and displaying up-to-date friend statuses.
+
+**Implementation:** WebSockets are implemented to support real-time communication between the server and connected clients across three main features:
+
+- **Game Lobby:** Support real-time communication for lobby interactions and updates.
+- **Real-Time Chat:** Allow users to send and receive messages without refreshing the page.
+- **Friend Status:** Provide real-time updates on friends' online/offline status.
+
+This integration improves responsiveness and provides a more interactive experience across the application.
+
+**Contributors:**
+
+- **`ifounas`:** Backend WebSocket implementation for the game lobby, real-time chat, and friend status.
+- **`spunyapr`:** Frontend WebSocket integration for real-time chat and friend status.
+- **`lserodon`:** Frontend WebSocket integration for the game lobby.
+
+### 3. User Interaction
+
+**Major · 2 Points**
+
+**Justification:** Social interaction makes the application more engaging by allowing users to communicate, view each other's profiles, build connections, and see which friends are currently online.
+
+**Implementation:** The application implements the core components required for user interaction:
+
+- **Chat System:** Users can send and receive messages through a chat interface. The backend manages chat data, while WebSockets enable real-time message exchange.
+- **User Profiles:** Users can view thier profile information.
+- **Friends System:** Users can send and manage friend requests, add or remove friends, and access their friends list.
+- **Friend Status:** Users can see their friends' online/offline status with WebSockets providing real-time status updates.
+
+**Contributors:**
+
+- **`ifounas`**: Implemented the user database model and WebSocket backend for real-time chat and friend status.
+- **`spunyapr`**: Developed the chat and profile interfaces, friends system (frontend and backend), and WebSocket frontend integration for chat and friend status.
+
+### 4. Use an ORM for the Database
+
+**Minor · 1 Point**
+
+**Justification:** An Object-Relational Mapping (ORM) simplifies database interactions by mapping database tables to application models. It reduces repetitive SQL code and makes database operations easier to maintain.
+
+**Implementation:** Bun ORM is used in the Go backend to interact with the PostgreSQL database. Database models represent entities such as users, games, lobbies, rounds, guesses, locations, and statistics. Bun ORM handles database queries and CRUD operations between the application and the database.
+
+**Contributors:**
+
+- **`ifounas`**: Set up Bun ORM and implemented its use for user , .... database models and operations.
+- **`eelissal`**: Used Bun ORM to implement game, .... database models and operations.
+- **`spunyapr`**: Used Bun ORM to implement friend database models and operations.
+
+### 5. Standard User Management and Authentication
+
+**Major · 2 Points**
+
+**Justification:** User management allows users to maintain their personal information, customize their profiles, and connect with other players. It provides a personalized experience and supports social interaction within the application.
+
+**Implementation:**
+
+- **Profile Management:** Users can view and update their profile information.
+- **Avatar Management:** Users can upload a custom avatar, with a default avatar provided when none is uploaded.
+- **Friends System:** Users can add and manage friends and view their online status.
+- **Profile Page:** Each user has a profile page displaying their information.
+
+**Contributors:**
+
+- **`ifounas`**: Implemented the user database model and backend Websocket for friend status.
+- **`spunyapr`**: Developed the profile interface, profile update functionality, and friends system (frontend and backend).
+- **`lserodon`**: Implemented the backend functionality for avatar uploads.
+
+### 6. Custom-Made Design System with Reusable Components
+
+**Minor · Points: confirm from subject**
+
+**Justification:**
+
+A custom design system ensures a consistent visual identity across the application. Reusable components improve maintainability, reduce duplicated code, and provide a cohesive user experience.
+
+**Implementation:**
+
+The process began by establishing the project's visual guidelines, including the color palette, typography, and icons, followed by designing the user interfaces in Figma. Reusable UI elements were selected to be shared across different pages.
+
+Development tasks were then divided to create reusable React components using React and Tailwind CSS. Once these components were ready, they served as building blocks for page development. This component-first approach ensured consistent styling across the application and reduced code duplication.
+
+The module requires at least **10 reusable components**.
+
+**Contributors:**
+
 
 ## Individual Contributions
