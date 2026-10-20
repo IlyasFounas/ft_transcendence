@@ -145,7 +145,7 @@ List of classic references related to the topic (documentation, articles, tutori
 
 ### AI Use
 
-// list of each person 
+eelissal - AI was used for research and rephrasing purposes: to retrieve simpler explanations of complicated subjects and to design plans to tackle new concepts or langages. It was also used for writing some functions briefs and some rephrasing of the documentation.
 
 
 ## Team Information
@@ -466,5 +466,25 @@ Bun uses these tables to manage database schema changes.
 
 ## Modules
 
+eelissal:
+Frontend and backend frameworks - used Go with Gin framework to create/modify models, repositories, handlers, and routes functions for location, guess, round, game and statistics tables. Used React for implementating game logic and loading 2D and 3D maps using Mapillary and Leaflet APIs.
+Real-time WebSockets - implemented functions that handles actions in the websockets
+Chat, profiles and friends - implemented delete repositories functions of the chat, friends and user profile for when admin deletes a user
+Public API - created HTTP public routes (GET, POST, PUT, DELETE) that can be accessed as a user or an admin, with proper routes, middleware, handlers and repositories.
+ORM - used Bun ORM to interact with the database especially in models and repositories functions.
+Game statistics and match history - created game statistics table in the database and routes and actions, as well as handlers and repositories functions
+Advanced permissions - implemented admin middleware and CRUD to view and edit users as an admin, which gives a larger view over the data and more possible actions to the admin
+Complete web-based game - created this open-source game logic based on Mapillary (street view - 3D) and Leaflet (2D) APIs. Created scoring logic and rules. 
+Remote players - Handled user reconnection and kicked player' actions before, during and after a game. Used go routines to provide a smooth user experience for remote gameplay
+Multiplayer game - implemented proper time synchronisation between all players
+Gamification - Created backend functions and rules for scoring, XP and leaderboards
 
 ## Individual Contributions
+
+eelissal:
+My main tasks and responsabilities were game feature prioritization, game logic and backend development. 
+Firstly, the goal of feature prioritization was to choose which feature to create and implement first to provide a smoother tackling of both the modules and the game's development. 
+Secondly, the objective regarding game logic was to define the rules for both solo and multiplayer modes, which were very similar to the base Geoguessr game, but with a few twists, followed by the scoring rules. I also tackled the 2D and 3D map loading on both the frontend and backend.
+Lastly, to implement this game and scoring logic, I created all the tables and functions for locations, guesses, rounds, and games (modifying the model and adding various CRUD functions with related repository functions linked to the timer and random locations for each game), as well as statistics tables. I also implemented admin routes and actions using middleware, handlers, and repository functions (for GET and DELETE). Since the tables are highly interconnected, I also had a significant impact on the user table and its functions (for actions related to XP and leaderboards).
+The main challenges I faced during this project were learning new languages (Go, TypeScript) and deepening my knowledge of technologies I had rarely used (SQL, HTML, CSS). I also had to adapt to new frameworks (Gin, React). Furthermore, working with such an interconnected database was a major challenge: the table relationships were complex (guesses, rounds, games, locations, statistics, and users were all linked to one another in the backend tasks I handled).
+As for the problems I faced, one was linked to our decision to use open-source data instead of paying for Google APIs. This decision introduced another problem: the quality of the data we could retrieve. On Mapillary, any user can upload their own street-view images, so the quality can be very poor. Many are simple photos rather than true 360° views, and finding a random, high-quality 360° image through a script was mostly a matter of luck (otherwise, it would mean very long loading times to find just one, or a much less random search). Additionally, most of the data retrieved was from European countries or the US, where coverage is much higher. Therefore, we decided to find a more balanced set of high-quality locations by ourselves and store them in a database table instead of making live APIs calls to get a random one. As a result, we now have locations that are much more geographically balanced and of significantly higher quality (recent 360° images). Furthermore, there is no longer a need to wait to retrieve and check each random game location—only a single database query is required.
