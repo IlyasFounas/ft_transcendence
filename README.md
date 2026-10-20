@@ -161,22 +161,22 @@ List of classic references related to the topic (documentation, articles, tutori
 
 ### AI Use
 
-**`eelissal`** - AI was used for research and rephrasing purposes: to retrieve simpler explanations of complicated subjects and to design plans to tackle new concepts or langages. It was also used for writing some functions briefs and some rephrasing of the documentation.
+- **`eelissal`** - AI was used for research and rephrasing purposes: to retrieve simpler explanations of complicated subjects and to design plans to tackle new concepts or langages. It was also used for writing some functions briefs and some rephrasing of the documentation.
 
-**`ifounas`** - AI was used as a learning and debugging assistant to understand technical issues, explore unfamiliar concepts and libraries, review code for potential design and security problems, and assist with Docker configuration, shell scripts, and documentation. The main approach was to request explanations and official documentation rather than ready-made code. Project code was written independently, with a focus on understanding the implementation well enough to explain, debug, and maintain it.
+- **`ifounas`** - AI was used as a learning and debugging assistant to understand technical issues, explore unfamiliar concepts and libraries, review code for potential design and security problems, and assist with Docker configuration, shell scripts, and documentation. The main approach was to request explanations and official documentation rather than ready-made code. Project code was written independently, with a focus on understanding the implementation well enough to explain, debug, and maintain it.
 
-**`lserodon`** - AI was used as a development aid to understand new frameworks and languages, troubleshoot debugging issues, and explore ways to structure code. In some cases, it helped to provide guidance on code organization and implementation approaches but did not generate code. All code was written independently, with design decisions and project integration handled by the developer.
+- **`lserodon`** - AI was used as a development aid to understand new frameworks and languages, troubleshoot debugging issues, and explore ways to structure code. In some cases, it helped to provide guidance on code organization and implementation approaches but did not generate code. All code was written independently, with design decisions and project integration handled by the developer.
 
-**`spunyapr`** - AI was used as a learning tool to study unfamiliar programming languages and frameworks through practical exercises and guided lessons. It also helped simplify complex technical concepts and provided additional resources for further learning. As a design assistant, AI generated visual concepts based on the project's initial concept, which served as references for creating the original UI designs in Figma. AI also helped improve the wording and organize project documentation.
+- **`spunyapr`** - AI was used as a learning tool to study unfamiliar programming languages and frameworks through practical exercises and guided lessons. It also helped simplify complex technical concepts and provided additional resources for further learning. As a design assistant, AI generated visual concepts based on the project's initial concept, which served as references for creating the original UI designs in Figma. AI also helped improve the wording and organize project documentation.
 
 ## Team Information
 
 | Member | Role | Responsibilities |
 |---|---|---|
-| **eelissal** | Product Owner | Feature prioritization, game logic, and backend development |
-| **spunyapr** | Project Manager | Project coordination, Frontend/Backend development, Design System |
+| **eelissal** | Product Owner | Feature prioritization, Game logic, and Backend development |
+| **spunyapr** | Project Manager | Project coordination, Frontend/Backend development, and Design system |
 | **ifounas** | Backend / DevOps Tech Lead | Technical direction, Project setup, Backend development, and Production deployment |
-| **lserodon** | Frontend Tech Lead | Frontend architecture/development, and reusable components |
+| **lserodon** | Frontend Tech Lead | Frontend architecture/development, and Reusable components |
 
 All team members contribute to development, testing, and code review.
 
