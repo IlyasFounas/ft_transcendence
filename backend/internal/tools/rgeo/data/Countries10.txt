@@ -1,1 +1,0 @@
-Countries10 uses data from ne_10m_admin_0_countries.geojson
