@@ -14,6 +14,7 @@ func init() {
 		_, err := db.NewCreateTable().
 			IfNotExists().
 			Model((*rounds.Round)(nil)).
+			ForeignKey(`("loc_id") REFERENCES "locations" ("location_id")`).
 			Exec(ctx)
 		if err != nil {
 			return err
