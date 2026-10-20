@@ -14,7 +14,7 @@ type Round struct {
 	RoundNb		int64					`bun:"round_nb,notnull" json:"round_nb"`
 	GameId		int64					`bun:"game_id,notnull" json:"game_id"`
 	Game		*games.Game				`bun:"rel:belongs-to,join:game_id=id"`
-	LocationId	int64					`bun:"loc_id,notnull"` // TODO join + unique ,unique:idx_loc_game
+	LocationId	int64					`bun:"loc_id,notnull"`
 	Location	*locations.Location		`bun:"rel:belongs-to,join:loc_id=location_id"`
 	StartedAt	time.Time				`bun:"started_at,notnull"`
 }

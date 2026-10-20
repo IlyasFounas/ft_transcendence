@@ -78,7 +78,7 @@ func NewGuessHandler(guessRepo GuessGetter, roundRepo RoundGetter, lobbyRepo *re
 func CalculateDistance(location, guessCoords haversine.Coordinates) int64 {
 	m, ft := haversine.Distance(location, guessCoords)
 	_ = ft // currently not used, but can be returned if needed
-	//TODO add an option to choose between m and ft in the request body
+	// an option can be added to choose between m and ft in the request body
 
 	dist := int64(m) // convert to int64 for storage
 	return dist

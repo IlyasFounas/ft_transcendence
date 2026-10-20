@@ -24,12 +24,11 @@ var upgrader = websocket.Upgrader {
     CheckOrigin: func(r *http.Request) bool {return true},
 }
 
-// multiplayer only: pause before EVERY round, the first one included (to get ready before round 1, then to look at
-// the results between two rounds). No pause after the last round, and none at all in solo (see handleStartGame).
+// multiplayer only: pause before EVERY round
 const preRoundPause = 10 * time.Second
 
-// when the database fails at the end of a round, EndRound tries again every endRoundRetryDelay, at most
-// endRoundMaxRetries times (about a minute): after that the game is stopped (see abortGame)
+// when the database fails at the end of a round, EndRound tries again every endRoundRetryDelay
+// at most endRoundMaxRetries times (about a minute), after that the game is stopped
 const endRoundRetryDelay = 2 * time.Second
 const endRoundMaxRetries = 30
 
@@ -51,24 +50,20 @@ type ClientHub struct {
 	GameId  int64
 }
 
-// internalRoundEvent carries the game_id/round_nb for events the HUB ITSELF generates
-// like : round_timeout firing, automatic start of the next round at the end of a multiplayer pause
-// -> these events never come from a client — they're sent on h.action from a timer callback (Client is nil in that case)
+// Carries the game_id/round_nb for events the hub itself generates
 type internalRoundEvent struct {
 	GameId  int64 `json:"game_id"`
 	RoundNb int64 `json:"round_nb"`
 }
 
-// Sent to all clients when the host starts the game, and resent to a client that (re)connects during the countdown before round 1.
-
+// Sent to all clients when the host starts the game
+// Resent to a client that reconnects during the countdown before round 1
 type GameStartedBroadcast struct {
 	RoundNb     int64      `json:"round_nb"`
 	NextRoundAt *time.Time `json:"next_round_at,omitempty"`
 }
 
-// It will be sent to all clients when a round starts, with the round number and the absolute end time of the round
-// (not a relative duration). Each client will calculate its own countdown using (RoundEndsAt - now), so all clients
-// will converge to the same final instant regardless of their network latency at the time of reception.
+// Sent to all clients when a round starts
 type RoundStartedBroadcast struct {
 	RoundNb     int64		`json:"round_nb"`
 	RoundEndsAt time.Time	`json:"round_ends_at"`
@@ -89,13 +84,13 @@ type WsMessage struct {
 	Payload interface{} `json:"payload"`
 }
 
-// roundPhase describes what h.roundState[gameId] currently represents
+// Describes what h.roundState[gameId] currently represents
 // so a reconnecting player gets the right kind of message (a running round vs the pause between rounds)
 type roundPhase string
 
 const (
-	phasePlaying roundPhase = "playing" // a round is currently running: look at RoundEndsAt
-	phasePause   roundPhase = "pause"   // before a round: look at NextRoundAt (multiplayer), and at GameResults after round 1
+	phasePlaying roundPhase = "playing"
+	phasePause   roundPhase = "pause"
 )
 
 // to be checked when a client reconnects mid-game - refresh, dropped wifi, joining a game already in progress
@@ -105,18 +100,18 @@ type gameRoundState struct {
 	Solo		bool // decided once by start_game (only one player connected to the WS), carried over by every state change
 	RoundNb		int64 // round running (Playing) or last round ended (Pause, game over); 0 in the pause before round 1
 	RoundEndsAt	time.Time // valid when Phase == Playing
-	EndRetries	int // failed attempts to end the running round so far (see EndRound)
+	EndRetries	int // failed attempts to end the running round so far
 	NextRoundAt	time.Time // multiplayer only, valid when Phase == Pause: when the next round starts (zero otherwise)
 	GameResults	[]ws_handlers.RoundResult // results of every round played so far, newest first
 	MID			int64 // the Mapillary ID of the location for the current round, valid when Phase == Playing
 }
 
-// DataInfos carries one action through the hubw
+// Carries one action through the hubw
 // it can comes from a real client or be generated internally by a timer callback
+// Client is nil for events generated internally by the hub
 type DataInfos struct {
 	Action	string
 	Payload json.RawMessage
-	// Client is nil for events generated internally by the hub
 	Client *ClientHub
 }
 
@@ -125,9 +120,6 @@ type Hub struct {
 	Register		chan *ClientHub
 	Unregister		chan *ClientHub
 	Action			chan *DataInfos
-	// ONE single timer per game (map[gameId]): the round timeout while a round runs, or the automatic start of the next
-	// round during a multiplayer pause. It is only a trigger: deadlines always come from rounds.started_at + game.timer,
-	// and the last round from game.round_total
 	GameTimers		map[int64]*time.Timer
 	RoundState		map[int64]*gameRoundState // means map[gameId]currentState, used to resync reconnecting players
 	LocationRepo	*repositories.LocationRepository
@@ -338,7 +330,7 @@ func (h *Hub) isStarted(ctx context.Context, gameId int64) bool {
 	if err != nil {
 		log.Printf("error : %s\n", err)
 	}
-	// round 1 exists, or the database couldn't tell: refuse rather than risk starting the game twice
+	// round 1 exists, so we do not start the game twice
 	return true
 }
 
@@ -366,15 +358,15 @@ func (h *Hub) handleAction(ctx context.Context, data *DataInfos) {
 	switch data.Action {
 	case "leave":
 		if h.inProgress(data.Client.GameId) {
-			// during a game, a lost connection keeps the player in it (he can reconnect):
-			// leaving on purpose must remove him right away
+			// during a game, a lost connection keeps the player in it (reconnections allowed):
+			// leaving on purpose removes the player right away (reconnections not allowed)
 			if !h.LobbyWsHandler.LeaveLobby(ctx, data.Client.UserId) {
 				log.Println("error : the client can't leave the lobby in the database")
 			}
 			h.clientLobbyBroadcast(data.Client.GameId, ctx)
 			h.dropIfAbandoned(ctx, data.Client.GameId)
 		}
-		// close every connection of the player (he may have several tabs open)
+		// close every connection of the player (all tabs opened)
 		for client := range h.Clients[data.Client.GameId] {
 			if client.UserId == data.Client.UserId {
 				client.Connx.Conn.Close()
@@ -391,7 +383,7 @@ func (h *Hub) handleAction(ctx context.Context, data *DataInfos) {
 			return
 		}
 		h.clientLobbyBroadcast(data.Client.GameId, ctx)
-		// close every connection of the kicked player (he may have several tabs open)
+		// close every connection of the kicked player (all tabs open)
 		for client := range h.Clients[data.Client.GameId] {
 			if client.UserId == targetClient.TargetId {
 				client.Connx.Conn.Close()
@@ -422,7 +414,7 @@ func (h *Hub) handleAction(ctx context.Context, data *DataInfos) {
 
 	case "round_timeout":
 		if data.Client != nil {
-			// round_timeout must only ever be generated internally by armTimer
+			// round_timeout can only ever be generated internally by armTimer
 			log.Printf("warning : client %d tried to trigger round_timeout directly, ignored\n", data.Client.UserId)
 			return
 		}
@@ -448,7 +440,7 @@ func (h *Hub) handleAction(ctx context.Context, data *DataInfos) {
 			h.sendError(data.Client, "could not leave the game, try again")
 			return
 		}
-		// close every connection of this player only (he may have several tabs open)
+		// close every connection of this player only (all tabs open)
 		for client := range h.Clients[data.Client.GameId] {
 			if client.UserId == data.Client.UserId {
 				client.Connx.Conn.Close()
@@ -461,15 +453,13 @@ func (h *Hub) handleAction(ctx context.Context, data *DataInfos) {
 
 // handleGuess persists the received guess, then ends the round if all active players in the game have guessed
 func (h *Hub) handleGuess(ctx context.Context, data *DataInfos) {
-	// a guess only counts while a round is running. During a pause the results (so the right location) are on screen,
-	// and a late guess would still earn the XP of a perfect guess (base_score doesn't depend on the time left)
+	// a guess only counts while a round is running
 	if state, ok := h.RoundState[data.Client.GameId]; !ok || state.Phase != phasePlaying {
 		h.sendError(data.Client, "no round is running")
 		return
 	}
 	createdGuess, ok := h.GuessWsHandler.AddGuess(ctx, data.Payload, data.Client.UserId, data.Client.GameId)
 	if !ok {
-		// TODO : renvoyer une erreur ciblée uniquement à data.Client
 		return
 	}
 
@@ -553,7 +543,7 @@ func (h *Hub) handleStartGame(ctx context.Context, client *ClientHub) {
 
 // Handles a "start_round" sent by a client: only accepted in solo, from the host,
 // when the game is waiting for its next round (results of the previous one on screen)
-// (In multiplayer, rounds start automatically after a pause)
+// "start_round" is not permitted in multiplayer
 func (h *Hub) handleStartRound(ctx context.Context, client *ClientHub) {
 	state, ok := h.RoundState[client.GameId]
 	if !ok {
@@ -617,7 +607,7 @@ func (h *Hub) StartRound(ctx context.Context, gameId, roundNb int64) {
 		Solo:        h.isSolo(gameId), // the mode never changes after start_game
 		RoundNb:     roundNb,
 		RoundEndsAt: roundEndsAt,
-		MID:         MID, //TODO should be kept server side if we fetch through the proxy, not sent to clients
+		MID:         MID,
 	}
 	remaining := time.Until(roundEndsAt)
 	if remaining <= 0 {
@@ -638,10 +628,10 @@ func (h *Hub) StartRound(ctx context.Context, gameId, roundNb int64) {
 	})
 }
 
-// armTimer (re)arms THE pending timer of a game: the round timeout while a round is running ("round_timeout"), or the
-// automatic start of the next round during a multiplayer pause ("start_round"). There's never more than one at a time,
-// so arming one stops the previous one. When it fires, the callback doesn't touch the hub's state itself: it sends an
-// internal event (Client nil) on h.Action, handled sequentially in Run like any other action.
+// armTimer (re)arms the pending timer of a game: the round timeout while a round is running ("round_timeout")
+// or the automatic start of the next round during a multiplayer pause ("start_round")
+// There's never more than one at a time, so arming one stops the previous one.
+// When it fires, the callback doesn't touch the hub's state itself: it sends an internal event (Client nil) on h.Action
 func (h *Hub) armTimer(ctx context.Context, gameId int64, delay time.Duration,
 	action string, roundNb int64) {
 	if existing, ok := h.GameTimers[gameId]; ok {
@@ -669,11 +659,10 @@ func closeWithServerError(client *ClientHub) {
 
 // It stops a game that can't go on (EndRound kept failing)
 func (h *Hub) abortGame(ctx context.Context, gameId int64, roundNb int64, solo bool) {
-	// no phase and no results: the game is over and was stopped. The state only lives until the closed connections
-	// are unregistered (they leave it like a finished game, see handleDisconnection and Run)
+	// no phase and no results: the game is over and was stopped
 	h.RoundState[gameId] = &gameRoundState{Solo: solo, RoundNb: roundNb}
-	// every player leaves the game, connected or not (if the database answers again: otherwise each one leaves
-	// when his closed connection is unregistered)
+	// every player leaves the game, connected or not
+	// (if the database answers again: otherwise each one leaves when his closed connection is unregistered)
 	h.LobbyWsHandler.CloseLobby(ctx, gameId, nil)
 	for client := range h.Clients[gameId] {
 		closeWithServerError(client)
@@ -720,14 +709,14 @@ func (h *Hub) roundResults(ctx context.Context, gameId, roundNb int64) ([]ws_han
 // Finalises the round roundNb: broadcasts the results of ALL active players (whether they guessed or not), then,
 // unless it was the last round:
 //   - multiplayer: schedules the automatic start of the next round after a pause of preRoundPause (10sec)
-//   - solo: schedules nothing, the game waits for the player's "start_round" (see handleStartRound)
+//   - solo: schedules nothing, the game waits for the player's "start_round"
 // EndRound is the only way out of a running round. If the database fails, nothing has changed yet (state still
 // "playing", nothing sent): it arms a retry instead of giving up, otherwise the game would stay stuck in this round.
 func (h *Hub) EndRound(ctx context.Context, gameId, roundNb int64) {
 	state, ok := h.RoundState[gameId]
 	if !ok || state.Phase != phasePlaying || state.RoundNb != roundNb {
-		// only the round currently running can be ended. Happens when the last guess of a round is processed at almost
-		// the same instant the round's timer fires: the second event arrives when the round is already over
+		// only the round currently running can be ended
+		// (when the last guess of a round is processed at the same instant the round's timer fires)
 		return
 	}
 	solo := state.Solo
@@ -738,8 +727,7 @@ func (h *Hub) EndRound(ctx context.Context, gameId, roundNb int64) {
 
 	gameResults, isLastRound, err := h.roundResults(ctx, gameId, roundNb)
 	if err == nil && isLastRound {
-		// the game is over: finished_at is set (retried below with the rest for about a minute if it fails;
-		// calling it again changes nothing). The players are updated separately, after this loop.
+		// the game is over
 		err = h.GameRepo.SetFinished(ctx, gameId)
 	}
 	if err != nil {
@@ -762,7 +750,7 @@ func (h *Hub) EndRound(ctx context.Context, gameId, roundNb int64) {
 		// games, once, without retry (if it fails now, their next game or the next start of the server corrects it)
 		h.updatePlayers(ctx, h.connectedPlayers(gameId))
 		// the players who are still disconnected leave the game now, otherwise their lobby would stay open and they
-		// couldn't create or join another one (the connected players leave when they close the game, see Unregister)
+		// couldn't create or join another one (the connected players leave when they close the game)
 		h.LobbyWsHandler.CloseLobby(ctx, gameId, h.connectedPlayers(gameId))
 	}
 
@@ -774,8 +762,7 @@ func (h *Hub) EndRound(ctx context.Context, gameId, roundNb int64) {
 	if !isLastRound {
 		next.Phase = phasePause
 		if !solo {
-			// calculated once: this value is the reference. The timer armed below is based on the remaining time
-			// until this same instant (time.Until), so the next round starts exactly when all clients have seen their countdown reach zero.
+			// calculated once and used as reference for all players
 			next.NextRoundAt = time.Now().Add(preRoundPause)
 			nextRoundAt := next.NextRoundAt
 			broadcastPayload.NextRoundAt = &nextRoundAt
@@ -784,19 +771,17 @@ func (h *Hub) EndRound(ctx context.Context, gameId, roundNb int64) {
 	h.RoundState[gameId] = next
 
 	if isLastRound {
-		// the last round ends the game: the players get the results of every round (this one is the first of them)
 		h.broadcast(gameId, WsMessage{Action: "game_results", Payload: broadcastPayload})
 	} else {
 		h.broadcast(gameId, WsMessage{Action: "round_results", Payload: broadcastPayload})
 	}
 
 	if isLastRound && len(h.Clients[gameId]) == 0 {
-		// the game ended with nobody connected (everyone lost his connection): no disconnection will come
-		// to drop its state later (see Run), so it goes now
+		// the game ended with nobody connected (everyone lost his connection)
 		delete(h.RoundState, gameId)
 	}
 	if isLastRound || solo {
-		// solo: no timer, the next round will be started by the player's "start_round" (see handleStartRound)
+		// solo: no timer, the next round will be started by the player's "start_round"
 		return
 	}
 	h.armTimer(ctx, gameId, time.Until(next.NextRoundAt), "start_round", roundNb+1)
@@ -852,8 +837,7 @@ func JoinLobby(ctx context.Context, hub *Hub, wg *sync.WaitGroup) gin.HandlerFun
             return
         }
         if lobby == nil {
-            // Previously this returned with no response at all: the client's upgrade request was left hanging
-            // so this message avoids a hung connection
+            // to avoid a client's upgrade request to be left hanging (= avoid a hung connection)
             c.JSON(http.StatusForbidden, gin.H{"message": "you are not in a lobby"})
             return
 		}
@@ -891,7 +875,7 @@ func JoinLobby(ctx context.Context, hub *Hub, wg *sync.WaitGroup) gin.HandlerFun
 
 // dropIfAbandoned stops a game that nobody is part of anymore (every player left it with "leave"): its timer
 // would otherwise keep running rounds for nobody, and a solo game would wait forever with its state in memory.
-// A disconnected player still counts as part of the game (he can come back), so this only happens on purpose.
+// A disconnected player still counts as part of the game (this player can come back)
 func (h *Hub) dropIfAbandoned(ctx context.Context, gameId int64) {
 	players, err := h.LobbyRepo.AllPlayers(ctx, gameId)
 	if err != nil || len(players) > 0 {
@@ -907,16 +891,16 @@ func (h *Hub) dropIfAbandoned(ctx context.Context, gameId int64) {
 // handleDisconnection decides what a closed connection means for the player, depending on where the game is
 func (h *Hub) handleDisconnection(ctx context.Context, client *ClientHub) {
 	if h.connectedPlayers(client.GameId)[client.UserId] {
-		// the player still has another tab open on this game: he hasn't left
+		// the player still has another tab open on this game
 		return
 	}
 	if h.inProgress(client.GameId) {
-		// connection lost during the game: the player stays in it and can reconnect (see resyncClient).
-		// He only leaves with a "leave" action, or at the end of the game if he hasn't come back (see EndRound)
+		// connection lost during the game: the player stays in it and can reconnect
+		// The player only leaves with a "leave" action, or at the end of the game (if no comeback in the lobby)
 		return
 	}
 	if h.gameOver(client.GameId) {
-		// after the last round the player just leaves: no host or join code to hand over (see LeaveFinishedGame)
+		// after the last round the player just leaves: no host or join code to hand over
 		h.LobbyWsHandler.LeaveFinishedGame(ctx, client.UserId, client.GameId)
 		return
 	}
@@ -945,8 +929,7 @@ func (h *Hub) Run(ctx context.Context, wg *sync.WaitGroup) {
 		select {
 		case client := <- h.Register:
 			h.safely("register", func() {
-				// only the game's players get here (JoinLobby requires an open lobby row, and nobody can join a started game):
-				// during a game, it's a player coming back after losing his connection
+				// when a player comes back after losing his connection
 				h.registerClient(client)
 				h.clientLobbyBroadcast(client.GameId, ctx)
 				if data, ok := h.LobbyWsHandler.SendInfos(ctx, client.GameId); ok {
@@ -959,7 +942,7 @@ func (h *Hub) Run(ctx context.Context, wg *sync.WaitGroup) {
 			h.safely("unregister", func() {
 				h.unregisterClient(client)
 				h.handleDisconnection(ctx, client)
-				// a finished game keeps its state while players are still on its results (gameOver reads it),
+				// a finished game keeps its state while players are still on its results,
 				// and loses it when the last one is gone: nobody can come back to a finished game
 				if len(h.Clients[client.GameId]) == 0 && h.gameOver(client.GameId) {
 					delete(h.RoundState, client.GameId)
