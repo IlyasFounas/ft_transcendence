@@ -18,8 +18,8 @@ import MultiplayerResultsPage from './pages/results/MultiplayerResultsPage';
 import SummaryResultsPage from './pages/results/SummaryResultsPage';
 import LeaderboardPage from './pages/LeaderboardPage';
 import { ProtectedChatLayout } from "./layouts/ProtectedChatLayout";
-import PrivacyPage from './pages/PrivacyPolicyAndTerms/PrivacyPage';
-import TermsPage from './pages/PrivacyPolicyAndTerms/TermsPage';
+import PrivacyPage from './pages/terms/PrivacyPage';
+import TermsPage from './pages/terms/TermsPage';
 
 function App() {
 	return (

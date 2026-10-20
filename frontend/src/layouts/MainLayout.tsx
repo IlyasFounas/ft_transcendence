@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Outlet } from "react-router-dom"
 import { Navbar } from "../components/navbar/Navbar";
 import ChatPanel from "../components/chat/ChatPanel";
-import { chatlists } from "../data/chatlists";
 import Footer from "../components/routes/Footer";
 
 export function MainLayout () {
@@ -30,8 +29,8 @@ export function MainLayout () {
                 onToggleChat={() => setIsChatOpen((current) => !current)}
                 showChat={true}
             />
-            
-            < Outlet />
+
+			<Outlet />
 			<Footer />
             <div
             className={`
