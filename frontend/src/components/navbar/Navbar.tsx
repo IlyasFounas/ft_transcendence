@@ -30,6 +30,8 @@ export function Navbar({
             className="
                 w-full
                 h-20
+                lg:h-25
+                shrink-0
                 bg-surface-base
                 border
                 border-border-default
@@ -38,18 +40,18 @@ export function Navbar({
             {/* Navbar for desktop */}
             <div className="
                 hidden
-                lg:flex
+                xl:flex
                 h-full
                 items-center
                 px-8
             ">
                 {/* logo */}
-                <div className="w-50 xl:w-60">
+                <div className="w-50 lg:70 xl:w-80">
                     <NavLink to="/home">
                         <img
                             src="/logos/atlas-logo.png"
                             alt="Atlas"
-                            className="h-15"
+                            className="h-15 lg:h-20"
                         />
                     </NavLink>
                 </div>
@@ -63,6 +65,7 @@ export function Navbar({
                     gap-8
                     xl:gap-20
                     text-heading-small
+                    lg:text-heading-medium
                     text-text-primary
                     uppercase
                 ">
@@ -119,7 +122,7 @@ export function Navbar({
                 </div>
 
                 {/* profile */}
-                <div className="w-50 xl:w-60 flex justify-end">
+                <div className="w-50 lg:70 xl:w-80 flex justify-end">
                     <NavbarUser
                         username={`Agent ${user?.Username}`}
                         status={status}
@@ -131,7 +134,7 @@ export function Navbar({
             {/* Navbar for tablet and phone */}
             <div className="
                 flex
-                lg:hidden
+                xl:hidden
                 h-full
                 items-center
                 px-6

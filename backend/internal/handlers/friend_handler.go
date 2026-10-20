@@ -46,6 +46,11 @@ func (h *FriendHandler) AddFriend() gin.HandlerFunc {
 		}
 		exists, err := h.friendRepo.FriendshipExists(c.Request.Context(), RequesterID, user.ID)
 		if err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				c.JSON(http.StatusNotFound,
+					gin.H{"message": "Friendship not found"})
+				return
+			}
 			c.JSON(http.StatusInternalServerError,
 				gin.H{"message": "Failed to get friendship"})
 			return
@@ -239,8 +244,17 @@ func (h *FriendHandler) FriendStatus() gin.HandlerFunc {
 		}
 		user, err := h.userRepo.UserByName(c.Request.Context(), username)
 		if err != nil {
-			c.JSON(http.StatusBadRequest,
-				gin.H{"message": "user not found"})
+			if errors.Is(err, sql.ErrNoRows) {
+				c.JSON(http.StatusOK, 
+					gin.H{
+						"message": "user not found",
+						"friendStatus": nil,
+					})
+				return
+			}
+
+			c.JSON(http.StatusInternalServerError,
+				gin.H{"message": "Failed to find user"})
 			return
 		}
 		searchUserID := user.ID
@@ -250,6 +264,13 @@ func (h *FriendHandler) FriendStatus() gin.HandlerFunc {
 				gin.H{"message": "Failed to get friend status"})
 			return
 		}
+
+		if friendStatus.Status == "none" {
+            friendStatus.Name = user.Username
+            friendStatus.Avatar = user.Avatar
+			friendStatus.Rank = user.Rank
+        }
+
 		c.JSON(http.StatusOK,
 			gin.H{
 				"message": "success",

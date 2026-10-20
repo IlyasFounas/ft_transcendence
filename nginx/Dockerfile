@@ -9,7 +9,7 @@ RUN apk add --no-cache openssl
 RUN mkdir -p /etc/nginx/ssl
 COPY conf/prod.conf /etc/nginx/conf.d/prod.conf
 COPY entrypoint.sh ./
-EXPOSE 80
-EXPOSE 443
+EXPOSE 5130
+EXPOSE 8082
 RUN chmod +x /app/entrypoint.sh
 ENTRYPOINT ["/app/entrypoint.sh"]

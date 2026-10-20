@@ -4,10 +4,11 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
     label: string;
 }
 
-export default function Input({ label, ...props }: InputProps) {
+export default function Input({ label, id, ...props }: InputProps) {
     return (
         <div className="flex flex-col gap-1 sm:gap-3 w-full">
             <label
+                htmlFor={id}
                 className="
                     text-body-primary
                     text-text-secondary
@@ -20,6 +21,7 @@ export default function Input({ label, ...props }: InputProps) {
             </label>
 
             <input
+                id={id}
                 {...props}
                 className="
                     w-full

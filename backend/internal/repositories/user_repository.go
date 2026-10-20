@@ -1,15 +1,20 @@
 package repositories
 
 import (
-	"database/sql"
+	"backend/internal/models/chats"
+	"backend/internal/models/friends"
 	"backend/internal/models/games"
 	"backend/internal/models/guesses"
+	"backend/internal/models/rounds"
 	"backend/internal/models/users"
+	"backend/internal/models/users/tokens"
 	"backend/internal/tools/encryption"
 	"backend/internal/tools/rank_calculation"
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
+
 	"github.com/uptrace/bun"
 )
 
@@ -31,6 +36,13 @@ type Leaderboard struct {
 	Avatar		string	`json:"avatar"`
 	Total		int64	`json:"total"`
 }
+
+// Why DeleteUser can refuse to delete a user
+var (
+	ErrUserNotFound = errors.New("user not found")
+	ErrUserIsAdmin  = errors.New("an admin can't be deleted")
+	ErrUserInGame   = errors.New("the user is in a lobby or a game")
+)
 
 type UserRepository struct {
 	db *bun.DB
@@ -207,10 +219,9 @@ func (r *UserRepository) SetName(ctx context.Context, userId int64, name string)
 	if len(name) == 0 {
 		return false, nil
 	}
-	user := &users.User{Username: name}
 	_, err := r.db.NewUpdate().
-		Model(user).
-		Column("name").
+		Model((*users.User)(nil)).
+		Set("name = ?", name).
 		Where("id = ?", userId).
 		Exec(ctx)
 	if err != nil {
@@ -223,10 +234,9 @@ func (r *UserRepository) SetGoogleId(ctx context.Context, userId int64, googleId
 	if googleId == nil || *googleId == "" {
 		return false, nil
 	}
-	user := &users.User{GoogleId: googleId}
 	_, err := r.db.NewUpdate().
-		Model(user).
-		Column("google_id").
+		Model((*users.User)(nil)).
+		Set("google_id = ?", googleId).
 		Where("id = ?", userId).
 		Exec(ctx)
 	if err != nil {
@@ -239,10 +249,9 @@ func (r *UserRepository) SetLogin(ctx context.Context, userId int64, login strin
 	if len(login) == 0 {
 		return false, nil
 	}
-	user := &users.User{Login: &login}
 	_, err := r.db.NewUpdate().
-		Model(user).
-		Column("login").
+		Model((*users.User)(nil)).
+		Set("login = ?", login).
 		Where("id = ?", userId).
 		Exec(ctx)
 	if err != nil {
@@ -255,10 +264,9 @@ func (r *UserRepository) SetAvatar(ctx context.Context, userId int64, avatar str
 	if len(avatar) == 0 {
 		return false, nil
 	}
-	user := &users.User{Avatar: &avatar}
 	_, err := r.db.NewUpdate().
-		Model(user).
-		Column("avatar").
+		Model((*users.User)(nil)).
+		Set("avatar = ?", avatar).
 		Where("id = ?", userId).
 		Exec(ctx)
 	if err != nil {
@@ -268,10 +276,9 @@ func (r *UserRepository) SetAvatar(ctx context.Context, userId int64, avatar str
 }
 
 func (r *UserRepository) SetIsVerified(ctx context.Context, userId int64) error {
-	user := &users.User{Is_verified: true}
 	_, err := r.db.NewUpdate().
-		Model(user).
-		Column("is_verified").
+		Model((*users.User)(nil)).
+		Set("is_verified = true").
 		Where("id = ?", userId).
 		Exec(ctx)
 	if err != nil {
@@ -309,10 +316,9 @@ func (r *UserRepository) SetXP(ctx context.Context, userId int64, xp int64) (boo
 	if xp < 0 {
 		return false, nil
 	}
-	user := &users.User{XP: xp}
 	_, err := r.db.NewUpdate().
-		Model(user).
-		Column("xp").
+		Model((*users.User)(nil)).
+		Set("xp = ?", xp).
 		Where("id = ?", userId).
 		Exec(ctx)
 	if err != nil {
@@ -415,6 +421,136 @@ func (r *UserRepository) UpdateAllPlayers(ctx context.Context, statsRepo *Statis
 	return errors.Join(errs...)
 }
 
+// Deletes a user and everything related to them, in one transaction (= means either everything is deleted or nothing)
+//	- its guesses
+//	- the games with its rounds :
+// 		-> solo games
+// 		-> multi games where nobody joined this user (even though it should not happen)
+// 		-> multi games whose other players have all been deleted already
+//	- its places in the lobbies (each deletion removes thr lobby rows of the player, so the last one deletes the game)
+// 	- its statistics
+// 	- its friendships (sent and received)
+// 	- the chat messages the user sent or received
+//	- its activation and refresh tokens
+// 	- then the user itself
+// The games other players are still linked to (even if they left or were kicked out) are kept, with their rounds and
+// the guesses of the others: deleting them would change the history and the statistics of other players
+func (r *UserRepository) DeleteUser(ctx context.Context, userId int64) error {
+	return r.db.RunInTx(ctx, nil, func(ctx context.Context, tx bun.Tx) error {
+		user := new(users.User)
+		err := tx.NewSelect().
+			Model(user).
+			Column("id", "is_admin").
+			Where("id = ?", userId).
+			Scan(ctx)
+		if errors.Is(err, sql.ErrNoRows) {
+			return ErrUserNotFound
+		}
+		if err != nil {
+			return err
+		}
+		if user.IsAdmin {
+			return ErrUserIsAdmin
+		}
+		inGame, err := tx.NewSelect().
+			Model((*games.Lobby)(nil)).
+			Where("user_id = ?", userId).
+			Where("left_at IS NULL").
+			Exists(ctx)
+		if err != nil {
+			return err
+		}
+		if inGame {
+			return ErrUserInGame
+		}
+
+		// retrieves all the games no other player is still linked to
+		var ownGameIds []int64
+		err = tx.NewSelect().
+			Model((*games.Lobby)(nil)).
+			Column("lo.game_id").
+			Group("lo.game_id").
+			Having("bool_and(lo.user_id = ?)", userId).
+			Scan(ctx, &ownGameIds)
+		if err != nil {
+			return err
+		}
+
+		// delete guesses
+		if _, err := tx.NewDelete().
+			Model((*guesses.Guess)(nil)).
+			Where("user_id = ?", userId).
+			Exec(ctx); err != nil {
+			return err
+		}
+		// delete rounds
+		if len(ownGameIds) > 0 {
+			if _, err := tx.NewDelete().
+				Model((*rounds.Round)(nil)).
+				Where("game_id IN ?", bun.Tuple(ownGameIds)).
+				Exec(ctx); err != nil {
+				return err
+			}
+		}
+		// delete its place in every lobby
+		if _, err := tx.NewDelete().
+			Model((*games.Lobby)(nil)).
+			Where("user_id = ?", userId).
+			Exec(ctx); err != nil {
+			return err
+		}
+		// delete its games
+		if len(ownGameIds) > 0 {
+			if _, err := tx.NewDelete().
+				Model((*games.Game)(nil)).
+				Where("id IN ?", bun.Tuple(ownGameIds)).
+				Exec(ctx); err != nil {
+				return err
+			}
+		}
+		// delete its statistics
+		if _, err := tx.NewDelete().
+			Model((*users.Statistics)(nil)).
+			Where("user_id = ?", userId).
+			Exec(ctx); err != nil {
+			return err
+		}
+		// delete its friendships
+		if _, err := tx.NewDelete().
+			Model((*friends.Friend)(nil)).
+			Where("requester_id = ? OR receiver_id = ?", userId, userId).
+			Exec(ctx); err != nil {
+			return err
+		}
+		// delete the chat messages
+		if _, err := tx.NewDelete().
+			Model((*chats.Chat)(nil)).
+			Where("src_user_id = ? OR dst_user_id = ?", userId, userId).
+			Exec(ctx); err != nil {
+			return err
+		}
+		// delete its tokens
+		if _, err := tx.NewDelete().
+			Model((*tokens.ActivationToken)(nil)).
+			Where("user_id = ?", userId).
+			Exec(ctx); err != nil {
+			return err
+		}
+		if _, err := tx.NewDelete().
+			Model((*tokens.RefreshToken)(nil)).
+			Where("user_id = ?", userId).
+			Exec(ctx); err != nil {
+			return err
+		}
+		// delete the user at last
+		_, err = tx.NewDelete().
+			Model((*users.User)(nil)).
+			Where("id = ?", userId).
+			Exec(ctx)
+		return err
+	})
+}
+
 // Leaderboard returns the 100 first players ranked by xp
 func (r *UserRepository) Leaderboard(ctx context.Context) ([]Leaderboard, error) {
 	var rows []Leaderboard
@@ -460,14 +596,31 @@ func (r *UserRepository) UserLeaderboard(ctx context.Context, userId int64) ([]L
 }
 
 func (r *UserRepository) SetRank(ctx context.Context, userId int64, rank string) (bool, error) {
-	user := &users.User{Rank: rank}
 	_, err := r.db.NewUpdate().
-		Model(user).
-		Column("rank").
+		Model((*users.User)(nil)).
+		Set("rank = ?", rank).
 		Where("id = ?", userId).
 		Exec(ctx)
 	if err != nil {
 		return false, err
 	}
 	return true, nil
+}
+
+func (r *UserRepository) UpdateUser(ctx context.Context, userId int64, user *users.User) error {
+	_, err := r.db.NewUpdate().
+		Model(user).
+		Column(
+			"name",
+			"login",
+			"email",
+			"password",
+			"is_verified",
+			"avatar",
+			"xp",
+			"rank",
+		).
+		Where("id = ?", userId).
+		Exec(ctx)
+	return err
 }

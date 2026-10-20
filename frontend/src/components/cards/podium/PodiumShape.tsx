@@ -1,4 +1,4 @@
-export function SilverPodium({className} : {className : string})
+export function SilverPodium({className} : {className?: string})
 {
 	return (
 		<svg className={className} width="287" height="372" viewBox="0 0 287 372" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -69,7 +69,7 @@ export function SilverPodium({className} : {className : string})
 	);
 }
 
-export function BronzePodium({className} : {className : string})
+export function BronzePodium({className} : {className?: string})
 {
 	return (
 		<svg className={className} width="287" height="372" viewBox="0 0 287 372" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -140,7 +140,7 @@ export function BronzePodium({className} : {className : string})
 	);
 }
 
-export function GoldPodium({className} : {className : string})
+export function GoldPodium({className} : {className?: string})
 {
 	return (
 		<svg className={className} width="312" height="422" viewBox="0 0 312 422" fill="none" xmlns="http://www.w3.org/2000/svg">

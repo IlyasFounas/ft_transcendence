@@ -2,7 +2,7 @@ package ws_handlers
 
 import (
 	"backend/internal/repositories"
-	"github.com/sams96/rgeo"
+	"backend/internal/tools/rgeo"
 )
 
 type WsHandlers struct {

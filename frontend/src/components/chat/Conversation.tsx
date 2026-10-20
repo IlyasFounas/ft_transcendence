@@ -2,23 +2,36 @@ import { ArrowLeft } from "lucide-react";
 import ChatBoxCard from "../cards/ChatBox";
 import type { Friend } from "../../types/user.types";
 import Avatar from "../primitives/Avatar";
-import { useState, useEffect, useRef, } from "react";
+import { useState, useLayoutEffect, useRef, } from "react";
 import MessageInput from "./MessageInput";
 import type { Message } from "../../types/message.type";
+import { useAuth } from "../../context/AuthContext";
 
 interface ConversationProps {
     friend: Friend;
     conversation: Message[];
+    messageEnd: number;
+    loadingOlderMessages: boolean;
+    fetchMessages: (targetId: number, end?: number) => void;
     onBack: () => void;
     onSendMessage: (message: string) => void;
+    messageError: string;
+    clearMessageError: () => void;
 }
 
 export default function Conversation({
     friend,
     conversation,
+    messageEnd,
+    loadingOlderMessages,
+    fetchMessages,
     onBack,
     onSendMessage,
+    messageError,
+    clearMessageError,
 }: ConversationProps) {
+
+    const { user } = useAuth();
 
     const statusClasses = {
         online: "bg-status-green",
@@ -38,10 +51,37 @@ export default function Conversation({
     };
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
-    useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({
-            behavior: "smooth",
-        });
+    const messagesContainerRef = useRef<HTMLDivElement>(null);
+
+    const prevMessageCountRef = useRef(0);
+    const prevScrollHeightRef = useRef(0);
+
+    useLayoutEffect(() => {
+        const container = messagesContainerRef.current;
+
+        if (!container) {
+            return;
+        }
+
+        const prevCount = prevMessageCountRef.current;
+
+        if (prevCount === 0 && conversation.length > 0) {
+            messagesEndRef.current?.scrollIntoView({
+                behavior: "auto",
+                block: "end",
+            });
+        }
+
+        if (conversation.length > prevCount) {
+            const heightDif = container.scrollHeight - prevScrollHeightRef.current;
+
+            if (prevScrollHeightRef.current > 0) {
+                container.scrollTop += heightDif;
+            }
+        }
+        
+        prevMessageCountRef.current = conversation.length;
+        prevScrollHeightRef.current = container.scrollHeight;
     }, [conversation]);
 
     return (
@@ -81,23 +121,24 @@ export default function Conversation({
                                 h-2.5
                                 w-2.5
                                 rounded-full
-                                ${statusClasses[friend.status]}
+                                ${friend.online ? statusClasses.online : statusClasses.offline}
                             `}
                         />
                     </div>
 
-                    <div>
-                        <div className="text-heading-small text-text-primary uppercase">
+                    <div className="min-w-0">
+                        <div className="text-heading-small text-text-primary uppercase truncate">
                             {friend.username}
                         </div>
                         <div className="text-label-small text-primary uppercase">
-                            {friend.role}
+                            {friend.rank}
                         </div>
                     </div>
                 </div>
             </div>
 
             <div
+                ref={messagesContainerRef}
                 className="
                     min-h-0
                     min-w-0
@@ -117,13 +158,25 @@ export default function Conversation({
                     gap-4
                     custom-scrollbar
                 "
+                onScroll={(event) => {
+                    if (event.currentTarget.scrollTop === 0 && 
+                        messageEnd > 0 && !loadingOlderMessages
+                    ) {
+                        prevScrollHeightRef.current = event.currentTarget.scrollHeight;
+
+                        fetchMessages(friend.userId, messageEnd);
+                    }
+                }}
             >
                 {conversation.map((message) => (
                     <ChatBoxCard
                         key={message.id}
-                        variant={message.variant}
+                        variant={message.user_id === user?.ID ? "sent" : "received"}
                         message={message.message}
-                        time={message.time}
+                        time={new Date(message.date).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                        })}
                     />
                 ))}
 
@@ -131,13 +184,22 @@ export default function Conversation({
             </div>
 
             <div className="shrink-0">
+                {messageError && (
+                    <p className="px-4 pb-2 text-body-primary font-medium text-status-red" role="alert">
+                        {messageError}
+                    </p>
+                )}
+
                 <MessageInput
                     value={message}
-                    onChange={setMessage}
+                    onChange={(value) => {
+                        setMessage(value);
+                        clearMessageError();
+                    }}
                     onSend={handleSend}
                 />
             </div>
-            
+
         </div>
     );
 }

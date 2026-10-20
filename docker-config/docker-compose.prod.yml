@@ -7,22 +7,26 @@ services:
   # For Golang and React, volumes mount the code directories (backend and frontend)
   # since the containers execute the code
   golang:
+    environment:
+      RESEND_API_KEY: ${RESEND_API_KEY}
     container_name: golang_container
     networks:
       - app
       - database
-    environment:
-      RESEND_API_KEY: ${RESEND_API_KEY}
 
   react:
+    build:
+      args:
+        VITE_MAPILLARY_ACCESS_TOKEN: ${VITE_MAPILLARY_ACCESS_TOKEN}
     container_name: react_container
     networks:
       - app
 
   nginx:
+    container_name: nginx_container
     ports:
-      - "443:443"
-      - "80:80"
+      - "5130:5130"
+      - "8082:8082"
     networks:
       - app
 

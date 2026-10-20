@@ -1,6 +1,7 @@
 export interface Message {
     id: number;
-    variant: "received" | "sent";
+    user_id: number;
+    friend_id: number;
     message: string;
-    time: string;
+    date: string;
 }

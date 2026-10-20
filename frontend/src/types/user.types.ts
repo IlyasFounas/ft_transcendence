@@ -7,12 +7,14 @@ export interface UserProps {
 export type UserStatusType = "online" | "in-mission" | "offline";
 
 export interface Friend {
+    userId: number;
     username: string;
     avatar: string;
-    role: string;
+    rank: string;
     status: UserStatusType;
     lastMessage: string;
     timestamp: string;
+    online?: boolean;
 }
 
 export interface User {
@@ -27,4 +29,11 @@ export interface User {
     Rank: string;
     CreatedAt: string;
     Lobby: unknown[] | null;
+}
+
+export interface UserLeaderboard {
+    position: number;
+    username: string;
+    rank: string;
+    total: number;
 }

@@ -10,6 +10,7 @@ interface AuthContextType {
     login: () => Promise<void>;
     logout: () => Promise<void>;
     refreshAccessToken: () => Promise<boolean>;
+    getUser: () => Promise<boolean>;
     authFetch: (url: string, options?: RequestInit) => Promise<{
         status: number,
         data: any,
@@ -23,6 +24,7 @@ const AuthContext = createContext<AuthContextType>({
     login: async () => {},
     logout: async () => {},
     refreshAccessToken: async () => false,
+    getUser: async () => false,
     authFetch: async () => null,
 });
 
@@ -80,24 +82,18 @@ function AuthProvider({children}: {children: ReactNode}) {
         return await apiFetch(url, options);
     }
 
-    const getUser = async () => {
-        const result = await authFetch("/api/user");
-        
-        if (result === null) {
-            return false;
-        }
+    const getUser = async (): Promise<boolean> => {
+        const result = await apiFetch("/api/user");
 
-        if (result.status === 200)
-        {
+        if (result?.status === 200) {
             setUser(result.data.user);
-            console.log(result.data.user);
             return true;
         }
-    
+        
         setUser(null);
         return false;
-        
-    }
+    };
+
     
     const login = async () => {
         await getUser();
@@ -134,6 +130,7 @@ function AuthProvider({children}: {children: ReactNode}) {
                 login,
                 logout,
                 refreshAccessToken,
+                getUser,
                 authFetch,
             }}
         >
