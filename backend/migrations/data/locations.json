@@ -1210,5 +1210,125 @@
     "latitude": 36.214101888667,
     "longitude": 37.195456035417,
     "country_code": "SY"
+  },
+  {
+    "mapillary_id": 2359977041117750,
+    "latitude": -35.3906878,
+    "longitude": -62.4117644,
+    "country_code": "AR"
+  },
+  {
+    "mapillary_id": 926541889397193,
+    "latitude": -34.611940999999966,
+    "longitude": -58.360496100000034,
+    "country_code": "AR"
+  },
+  {
+    "mapillary_id": 999301215287873,
+    "latitude": -34.5363981,
+    "longitude": -58.46655199999998,
+    "country_code": "AR"
+  },
+  {
+    "mapillary_id": 924259768352680,
+    "latitude": -34.16274416666698,
+    "longitude": -58.95870555555598,
+    "country_code": "AR"
+  },
+  {
+    "mapillary_id": 1462331291115469,
+    "latitude": 25.03829420117397,
+    "longitude": -77.350691019794,
+    "country_code": "BS"
+  },
+  {
+    "mapillary_id": 1232735244527556,
+    "latitude": 25.078609799999995,
+    "longitude": -77.35316610000001,
+    "country_code": "BS"
+  },
+   {
+    "mapillary_id": 817282203050632,
+    "latitude": -17.784546399972,
+    "longitude": -63.1814784,
+    "country_code": "BO"
+  },
+   {
+    "mapillary_id": 238106129113399,
+    "latitude": -17.78283549999999,
+    "longitude": -63.182649200000014,
+    "country_code": "BO"
+  },
+  {
+    "mapillary_id": 1784298098654090,
+    "latitude": -16.508419199971982,
+    "longitude": -68.13459790000002,
+    "country_code": "BO"
+  },
+  {
+    "mapillary_id": 806419260985603,
+    "latitude": -17.404294099999987,
+    "longitude": -66.09878550000002,
+    "country_code": "BO"
+  },
+  {
+    "mapillary_id": 1446373406591917,
+    "latitude": -20.026552800000005,
+    "longitude": -44.06509170000004,
+    "country_code": "BR"
+  },
+  {
+    "mapillary_id": 1591990476262707,
+    "latitude": -17.290329099999994,
+    "longitude": -42.79796640000001,
+    "country_code": "BR"
+  },
+   {
+    "mapillary_id": 256144293909728,
+    "latitude": -24.326441400000036,
+    "longitude": -50.632050400000026,
+    "country_code": "BR"
+  },
+   {
+    "mapillary_id": 253304500237775,
+    "latitude": 4.63554583333331,
+    "longitude": -74.166396111111,
+    "country_code": "CO"
+  },
+  {
+    "mapillary_id": 938083782114166,
+    "latitude": 3.44873496000001,
+    "longitude": -76.52591078400002,
+    "country_code": "CO"
+  },
+  {
+    "mapillary_id": 3811226219003126,
+    "latitude": 4.538489166666693,
+    "longitude": -75.67885138888903,
+    "country_code": "CO"
+  },
+  {
+    "mapillary_id": 1026252741515884,
+    "latitude": 23.14343694444402,
+    "longitude": -82.35500083333301,
+    "country_code": "CU"
+  },
+  {
+    "mapillary_id": 1159080981696524,
+    "latitude": 12.325117196026994,
+    "longitude": -69.13794451616002,
+    "country_code": "CW"
+  },
+   {
+    "mapillary_id": 1017130979152256,
+    "latitude": 12.131884741885017,
+    "longitude": -68.88442342022,
+    "country_code": "CW"
+  },
+   {
+    "mapillary_id": 1063581308608973,
+    "latitude": 15.303929699999983,
+    "longitude": -61.389421200000015,
+    "country_code": "DM"
   }
 ]
