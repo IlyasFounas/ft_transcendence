@@ -102,8 +102,10 @@ export default function AuthenticationSignUp ({
                 "
         >
             <Input
+                id="email"
                 label="email"
                 type="email"
+                autoComplete="email"
                 {...register("email")}
             />
             {errors.email && (
@@ -113,8 +115,10 @@ export default function AuthenticationSignUp ({
             )}
 
             <Input
+                id="login-id"
                 label="login id"
                 type="text"
+                autoComplete="login"
                 {...register("loginId")}
             />
 
@@ -125,8 +129,10 @@ export default function AuthenticationSignUp ({
             )}
 
             <Input
+                id="username"
                 label="username"
                 type="text"
+                autoComplete="username"
                 {...register("username")}
             />
 
@@ -137,8 +143,10 @@ export default function AuthenticationSignUp ({
             )}
 
             <Input
+                id="password"
                 label="password"
                 type="password"
+                autoComplete="new-password"
                 {...register("password")}
             />
 

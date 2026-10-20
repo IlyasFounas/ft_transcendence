@@ -78,13 +78,17 @@ export default function AuthenticationLogin ({
                 "
         >
             <Input
+                id="login-id"
                 label="login id"
                 type="text"
+                autoComplete="login"
                 {...register("loginId")}
             />
             <Input
+                id="password"
                 label="password"
                 type="password"
+                autoComplete="current-password"
                 {...register("password")}
             />
             {errors.loginId && (

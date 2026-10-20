@@ -8,7 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { useLobbySocket } from "../context/GameSocketContext";
 
 export default function HomePage() {
-    const { user, authFetch } = useAuth();
+    const { user, authFetch, getUser } = useAuth();
     const [statistics, setStatistics] = useState<UserStatistics | null>(null);
 	const { connect } = useLobbySocket();
 
@@ -16,6 +16,10 @@ export default function HomePage() {
     const rank = CalculateRank(totalScore);
     
     useEffect(() => {
+        const refreshUser = async () => {
+            await getUser();
+        };
+
         const getStatistics = async () => {
             const result = await authFetch("api/user/statistics");
 
@@ -25,7 +29,8 @@ export default function HomePage() {
             
             setStatistics(result.data.statistics);
         };
-
+        
+        refreshUser();
         getStatistics();
     }, []);
 
@@ -72,30 +77,29 @@ export default function HomePage() {
 	const navigate = useNavigate();
 
     return (
+        
         <main
             className="
                 flex-1
-                min-h-0
                 w-full
+                min-w-0
                 bg-surface-base
                 bg-cover
                 bg-center
-                bg-[url('/images/global-bg.png')]
+                bg-[url(/backgrounds/home_background.png)]
                 bg-no-repeat
                 flex
                 flex-col
                 items-center
                 justify-start
                 xl:items-start
-
                 px-5
-                py-12
-                md:py-20
+                py-6
+                md:py-8
                 xl:px-20
-
                 gap-6
-                md:gap-20
-            "
+                md:gap-10
+                "
         >
             <div>
                 <ProfileCard 
