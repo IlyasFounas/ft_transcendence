@@ -12,7 +12,7 @@ export default function NotFoundPage() {
                 bg-surface-base
                 bg-cover
                 bg-center
-                bg-[url('/images/landing-bg.png')]
+                bg-[url('/backgrounds/landing_background.png')]
                 bg-no-repeat
                 flex
                 items-center

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { Message } from "../types/message.type";
+import { useAuth } from "../context/AuthContext";
 
 interface ChatFriend {
     id: number;
@@ -15,11 +16,14 @@ export default function useChatWebSocket() {
     
     const socketRef = useRef<WebSocket | null>(null);
     const loadingOlderRef = useRef(false);
+    const socketTargetIdRef = useRef<number | null>(null);
+    const { user } = useAuth();
 
     const [chatFriends, setChatFriends] = useState<ChatFriend[]>([]);
     const [messages, setMessages] = useState<Message[]>([]);
     const [messageEnd, setMessageEnd] = useState(0);
     const [loadingOlderMessages, setLoadingOlderMessages] = useState(false);
+    const [messageError, setMessageError] = useState("");
 
     const fetchMessages = (targetId: number, end = 0) => {
 
@@ -27,9 +31,11 @@ export default function useChatWebSocket() {
             return;
         }
 
+        if (end === 0) {
+            socketTargetIdRef.current = targetId;
+        }
 
         if (end > 0) {
-            
             if (loadingOlderRef.current) {
                 return;
             }
@@ -53,6 +59,13 @@ export default function useChatWebSocket() {
         if (!socketRef.current) {
             return ;
         }
+
+        if ([...message].length > 1000) {
+            setMessageError("Message is too long. Maximum 2000 characters.");
+            return;
+        }
+
+        setMessageError("");
 
         socketRef.current.send(
             JSON.stringify({
@@ -116,28 +129,36 @@ export default function useChatWebSocket() {
                 const newMessages = data.payload.chats ?? [];
                 const latestMessage = newMessages[newMessages.length - 1];
 
-                setMessages(currentMessages => [
-                    ...currentMessages,
-                    ...newMessages,
-                ]);
+                if (!latestMessage) {
+                    return;
+                }
 
-                if (latestMessage) {
-                    setChatFriends(currentFriends =>
-                        currentFriends.map(friend =>
-                            friend.user_id === latestMessage.user_id ||
-                            friend.user_id === latestMessage.friend_id
-                                ? {
-                                    ...friend,
-                                    last_message: latestMessage.message,
-                                    date: latestMessage.date,
-                                }
-                                : friend
-                        )
-                    );
+                const friendId = 
+                    latestMessage.user_id === user?.ID 
+                        ? latestMessage.friend_id
+                        : latestMessage.user_id;
+
+                setChatFriends(currentFriends =>
+                    currentFriends.map(friend =>
+                        friend.user_id === friendId
+                            ? {
+                                ...friend,
+                                last_message: latestMessage.message,
+                                date: latestMessage.date,
+                            }
+                            : friend
+                    )
+                );
+
+                if (socketTargetIdRef.current === friendId) {
+                    setMessages(currentMessages => [
+                        ...currentMessages,
+                        ...newMessages,
+                    ]);
                 }
             }
         }
-        
+
         return () => {
             socket.close();
             socketRef.current = null;
@@ -150,5 +171,7 @@ export default function useChatWebSocket() {
         sendMessage,
         messageEnd,
         loadingOlderMessages,
+        setMessageError,
+        messageError,
     }
 }

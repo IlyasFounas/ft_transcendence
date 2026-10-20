@@ -1,27 +1,34 @@
 package lobby_ws
 
 import (
+	"os"
 	"backend/internal/repositories"
+	securesend "backend/internal/tools/secure_send"
 	"backend/internal/websockets/client"
 	"backend/internal/websockets/handlers"
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
-	"runtime/debug"
 	"net/http"
+	"runtime/debug"
 	"sync"
 	"time"
-	"fmt"
+
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
-	securesend "backend/internal/tools/secure_send"
 )
 
 var upgrader = websocket.Upgrader {
     ReadBufferSize: 1024,
     WriteBufferSize: 1024,
-    CheckOrigin: func(r *http.Request) bool {return true},
+    CheckOrigin: func(r *http.Request) bool {
+		if r.Header.Get("Origin") != os.Getenv("PUBLIC_URL") {
+			return false
+		}
+		return true
+	},
 }
 
 // multiplayer only: pause before EVERY round, the first one included (to get ready before round 1, then to look at

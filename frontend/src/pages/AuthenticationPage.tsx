@@ -32,7 +32,7 @@ export default function AuthenticationPage () {
                 bg-cover
                 bg-center
                 bg-no-repeat
-                bg-[url('/images/landing-bg.png')]
+                bg-[url('/backgrounds/landing_background.png')]
                 px-8
                 md:px-10
                 md:py-5

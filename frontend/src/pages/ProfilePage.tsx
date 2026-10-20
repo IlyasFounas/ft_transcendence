@@ -93,6 +93,7 @@ export default function ProfilePage() {
             xl:gap-5
             xl:flex
             xl:flex-col
+            custom-scrollbar
           	"
       	>
 			<section
