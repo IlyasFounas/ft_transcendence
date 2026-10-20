@@ -5,11 +5,11 @@ export interface Rank {
 
 export const Ranks: Rank[] = [
     { role: "Junior Agent", minScore: 0 },
-    { role: "Field Analyst", minScore: 5000 },
-    { role: "Senior Analyst", minScore: 15000 },
-    { role: "Intelligence Officer", minScore: 30000 },
-    { role: "Division Commander", minScore: 50000 },
-    { role: "Atlas Director", minScore: 100000 }
+    { role: "Field Analyst", minScore: 20000 },
+    { role: "Senior Analyst", minScore: 50000 },
+    { role: "Intelligence Officer", minScore: 100000 },
+    { role: "Division Commander", minScore: 250000 },
+    { role: "Atlas Director", minScore: 500000 }
 ];
 
 export default function CalculateRank( totalScore: number ) {

@@ -15,6 +15,8 @@ interface ConversationProps {
     fetchMessages: (targetId: number, end?: number) => void;
     onBack: () => void;
     onSendMessage: (message: string) => void;
+    messageError: string;
+    clearMessageError: () => void;
 }
 
 export default function Conversation({
@@ -25,6 +27,8 @@ export default function Conversation({
     fetchMessages,
     onBack,
     onSendMessage,
+    messageError,
+    clearMessageError,
 }: ConversationProps) {
 
     const { user } = useAuth();
@@ -180,13 +184,22 @@ export default function Conversation({
             </div>
 
             <div className="shrink-0">
+                {messageError && (
+                    <p className="px-4 pb-2 text-body-primary font-medium text-status-red" role="alert">
+                        {messageError}
+                    </p>
+                )}
+
                 <MessageInput
                     value={message}
-                    onChange={setMessage}
+                    onChange={(value) => {
+                        setMessage(value);
+                        clearMessageError();
+                    }}
                     onSend={handleSend}
                 />
             </div>
-            
+
         </div>
     );
 }

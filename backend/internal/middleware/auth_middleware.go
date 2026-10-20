@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"time"
 	"context"
 	"os"
 	"fmt"
@@ -43,6 +44,22 @@ func AuthMiddleWare() gin.HandlerFunc {
     // avoids panic error when the token is valid but the "sub" claim is missing or not a string
     sub, ok := claims["sub"].(string)
     if !ok {
+      c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "you have to login"})
+      return
+    }
+	exp, err := claims.GetExpirationTime()
+	if err != nil {
+	  fmt.Printf("%s\n", err)
+      c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "you have to login"})
+      return
+    }
+	if exp == nil {
+      fmt.Println("the claim expiration is malformed")
+      c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "you have to login"})
+      return
+	}
+	if time.Now().After(exp.Time) {
+      fmt.Println("the token has expired")
       c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "you have to login"})
       return
     }

@@ -9,7 +9,7 @@ export default function ChatPanel() {
 
     const { authFetch } = useAuth();
     
-    const { chatFriends, fetchMessages, sendMessage, messages, messageEnd, loadingOlderMessages } = useChatWebSocket();
+    const { chatFriends, fetchMessages, sendMessage, messages, messageEnd, loadingOlderMessages, setMessageError, messageError } = useChatWebSocket();
     
     const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
     const [friendList, setFriendList] = useState<Friend[]>([]);
@@ -134,6 +134,8 @@ export default function ChatPanel() {
                     fetchMessages={fetchMessages}
                     onBack={() => setSelectedFriend(null)}
                     onSendMessage={handleSendMessage}
+                    messageError={messageError}
+                    clearMessageError={() => setMessageError("")}
                 />
             )}
             </div>
