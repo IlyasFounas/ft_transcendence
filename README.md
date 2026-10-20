@@ -127,6 +127,22 @@ make status_mig
 
 ### Access
 
+#### Development
+
+The website is available at http://localhost:5130/ 
+
+Two additional tools are exposed in this environment: 
+- **Adminer** at http://localhost:8082/ to inspect the database
+- **Mailpit** at http://localhost:8025/ to catch the emails sent by the application.
+
+#### Production (campus)
+
+The website is available at https://campus.ocefunding.com:5130/
+
+#### Production (remote server)
+
+The website is available at https://ocefunding.com:5130/
+
 
 ## Resources
 
@@ -158,8 +174,8 @@ List of classic references related to the topic (documentation, articles, tutori
 | Member | Role | Responsibilities |
 |---|---|---|
 | **eelissal** | Product Owner | Feature prioritization, game logic, and backend development |
-| **spunyapr** | Project Manager | Project coordination and frontend/backend development |
-| **ifounas** | Backend / DevOps Tech Lead | Backend architecture, authentication, infrastructure, and deployment |
+| **spunyapr** | Project Manager | Project coordination, Frontend/Backend development, Design System |
+| **ifounas** | Backend / DevOps Tech Lead | Technical direction, Project setup, Backend development, and Production deployment |
 | **lserodon** | Frontend Tech Lead | Frontend architecture/development, and reusable components |
 
 All team members contribute to development, testing, and code review.
