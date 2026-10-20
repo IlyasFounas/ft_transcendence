@@ -32,7 +32,7 @@ services:
       context: ../backend
       target: ${ENV}
     environment:
-      RESEND_API_KEY: ${RESEND_API_KEY}
+      LISTEN_PORT_API: ${LISTEN_PORT_API}
       ACTIVATION_JWT_SECRET: ${ACTIVATION_JWT_SECRET}
       JWT_SECRET: ${JWT_SECRET}
       POSTGRES_USER: ${POSTGRES_USER}
