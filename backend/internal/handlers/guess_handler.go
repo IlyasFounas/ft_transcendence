@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"backend/internal/tools/rgeo"
+	"github.com/sams96/rgeo"
 )
 
 // GuessGetter — methods expected from the repository by the handler

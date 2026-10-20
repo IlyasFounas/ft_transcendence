@@ -12,6 +12,7 @@ require (
 	github.com/gorilla/websocket v1.5.3
 	github.com/iambpn/bun-migrator-cli v1.0.1
 	github.com/resend/resend-go/v3 v3.12.0
+	github.com/sams96/rgeo v1.3.0
 	github.com/twpayne/go-geom v1.6.0
 	github.com/uptrace/bun v1.2.18
 	github.com/uptrace/bun/dialect/pgdialect v1.2.18
@@ -67,3 +68,5 @@ require (
 	google.golang.org/protobuf v1.36.10 // indirect
 	mellium.im/sasl v0.3.2 // indirect
 )
+
+replace github.com/sams96/rgeo v1.3.0 => github.com/lassalade/rgeo v0.0.0-20261013143057-4077354adee0
