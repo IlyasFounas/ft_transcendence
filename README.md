@@ -159,7 +159,6 @@ List of classic references related to the topic (documentation, articles, tutori
 
 All team members contribute to development, testing, and code review.
 
-
 ## Project Management
 
 ### Tools
@@ -444,7 +443,7 @@ Bun uses these tables to manage database schema changes.
 |---|---|---|
 | User Authentication | User registration, login, account verification, and authentication management. | ifounas, spunyapr |
 | Google OAuth | Authentication through Google accounts. | ifounas|
-| User Profiles | User profile information, avatars, and profile management. | ifounas, lserodon , spunyapr |
+| User Profiles | User profile information, avatars, and profile management. |  eelissal, ifounas, lserodon , spunyapr |
 | Friends System | Send, receive, and manage friend requests. | spunyapr |
 | Friend Status | Display friends' online/offline status and availability in real time. | ifounas, spunyapr |
 | Real-Time Chat | Exchange messages with other users. | ifounas, spunyapr |
@@ -462,7 +461,6 @@ Bun uses these tables to manage database schema changes.
 | Containerization & Deployment | Containerize the application and manage development and production environments using Docker Compose and Nginx. | ifounas |
 | Development Environment Setup | Automate common development tasks using Makefile commands, including starting, stopping, and rebuilding services. | ifounas |
 | Infrastructure & Service Management | Configure and manage application services, networking, and deployment infrastructure. | ifounas |
-
 
 ## Modules
 
@@ -532,7 +530,27 @@ This integration improves responsiveness and provides a more interactive experie
 - **`eelissal`**: Used Bun ORM to implement game, .... database models and operations.
 - **`spunyapr`**: Used Bun ORM to implement friend database models and operations.
 
-### 5. Standard User Management and Authentication
+### 5. Custom-Made Design System with Reusable Components
+
+**Minor · Points: confirm from subject**
+
+**Justification:**
+
+A custom design system ensures a consistent visual identity across the application. Reusable components improve maintainability, reduce duplicated code, and provide a cohesive user experience.
+
+**Implementation:**
+
+The process began by establishing the project's visual guidelines, including the color palette, typography, and icons, followed by designing the user interfaces in Figma. Reusable UI elements were selected to be shared across different pages.
+
+Development tasks were then divided to create reusable React components using React and Tailwind CSS. Once these components were ready, they served as building blocks for page development. This component-first approach ensured consistent styling across the application and reduced code duplication.
+
+The module requires at least **10 reusable components**.
+
+**Contributors:**
+- **`lserodon`**: Developed reusable components such as `PrimaryButton`, `SecondaryButton`, `Podium`, `ChatBox`, and `Avatar`. Responsible for the Leaderboard, Game, Lobby, and Result pages.
+- **`spunyapr`**: Developed reusable components such as `AuthenticationCard`, `Navbar`, `Input`, `StatCard`, and `OperationHistoryRow`. Responsible for the Landing, Authentication, Home, and Profile pages.
+
+### 6. Standard User Management and Authentication
 
 **Major · 2 Points**
 
@@ -550,24 +568,5 @@ This integration improves responsiveness and provides a more interactive experie
 - **`ifounas`**: Implemented the user database model and backend Websocket for friend status.
 - **`spunyapr`**: Developed the profile interface, profile update functionality, and friends system (frontend and backend).
 - **`lserodon`**: Implemented the backend functionality for avatar uploads.
-
-### 6. Custom-Made Design System with Reusable Components
-
-**Minor · Points: confirm from subject**
-
-**Justification:**
-
-A custom design system ensures a consistent visual identity across the application. Reusable components improve maintainability, reduce duplicated code, and provide a cohesive user experience.
-
-**Implementation:**
-
-The process began by establishing the project's visual guidelines, including the color palette, typography, and icons, followed by designing the user interfaces in Figma. Reusable UI elements were selected to be shared across different pages.
-
-Development tasks were then divided to create reusable React components using React and Tailwind CSS. Once these components were ready, they served as building blocks for page development. This component-first approach ensured consistent styling across the application and reduced code duplication.
-
-The module requires at least **10 reusable components**.
-
-**Contributors:**
-
 
 ## Individual Contributions
