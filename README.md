@@ -489,23 +489,34 @@ Bun uses these tables to manage database schema changes.
 
 **Major · 2 Points**
 
-**Justification:** Using frameworks for both the frontend and backend provides a structured, maintainable architecture and simplifies the development of a full-stack web application.
+**Justification:**
 
-**Implementation:** The frontend is built with React and TypeScript, with Tailwind CSS for styling and Vite for development and builds. The backend uses Go and the Gin framework to handle HTTP requests, application logic, and API endpoints.
+Using frameworks for both the frontend and backend provides a structured, maintainable architecture and simplifies the development of a full-stack web application.
+
+**Implementation:**
+
+The frontend is built with React and TypeScript, bundled with Vite and styled using Tailwind CSS. React components and pages are connected to the backend API to provide an interactive user experience.
+
+The backend uses Go and the Gin framework to handle HTTP requests and application logic. Its architecture includes models, repositories, handlers, routes, and authentication middleware to manage database operations, API endpoints, and access to protected resources.
 
 **Contributors:**
-- **`lserodon`**: Frontend architecture and development.
-- **`spunyapr`**: Frontend architecture and full-stack development.
-- **`ifounas`**: Backend architecture and development.
-- **`eelissal`**: Backend development and game logic.
+
+- **`lserodon`**: Developed React pages and reusable components and integrated the frontend with the backend API.
+- **`spunyapr`**: Developed React pages and reusable components, integrated the frontend with the backend API, and developed handlers for the friends system.
+- **`ifounas`**: Set up the Gin server and route structure, implemented authentication middleware, and developed handlers for authentication, users, and lobbies.
+- **`eelissal`**: Implemented and modified Go models, repositories, handlers, and routes for locations, guesses, rounds, games, and statistics.
 
 ### 2. Real-Time Features
 
 **Major · 2 Points**
 
-**Justification:** Real-time communication allows users to interact and receive updates without repeatedly refreshing the application. It is essential for keeping multiplayer lobbies synchronized, enabling live chat, and displaying up-to-date friend statuses.
+**Justification:** 
 
-**Implementation:** WebSockets are implemented to support real-time communication between the server and connected clients across three main features:
+Real-time communication allows users to interact and receive updates without repeatedly refreshing the application. It is essential for keeping multiplayer lobbies synchronized, enabling live chat, and displaying up-to-date friend statuses.
+
+**Implementation:** 
+
+WebSockets are implemented to support real-time communication between the server and connected clients across three main features:
 
 - **Game Lobby:** Support real-time communication for lobby interactions and updates.
 - **Real-Time Chat:** Allow users to send and receive messages without refreshing the page.
@@ -523,9 +534,13 @@ This integration improves responsiveness and provides a more interactive experie
 
 **Major · 2 Points**
 
-**Justification:** Social interaction makes the application more engaging by allowing users to communicate, view each other's profiles, build connections, and see which friends are currently online.
+**Justification:** 
 
-**Implementation:** The application implements the core components required for user interaction:
+Social interaction makes the application more engaging by allowing users to communicate, view each other's profiles, build connections, and see which friends are currently online.
+
+**Implementation:**
+
+The application implements the core components required for user interaction:
 
 - **Chat System:** Users can send and receive messages through a chat interface. The backend manages chat data, while WebSockets enable real-time message exchange.
 - **User Profiles:** Users can view thier profile information.
@@ -541,9 +556,13 @@ This integration improves responsiveness and provides a more interactive experie
 
 **Minor · 1 Point**
 
-**Justification:** An Object-Relational Mapping (ORM) simplifies database interactions by mapping database tables to application models. It reduces repetitive SQL code and makes database operations easier to maintain.
+**Justification:** 
 
-**Implementation:** Bun ORM is used in the Go backend to interact with the PostgreSQL database. Database models represent entities such as users, games, lobbies, rounds, guesses, locations, and statistics. Bun ORM handles database queries and CRUD operations between the application and the database.
+An Object-Relational Mapping (ORM) simplifies database interactions by mapping database tables to application models. It reduces repetitive SQL code and makes database operations easier to maintain.
+
+**Implementation:** 
+
+Bun ORM is used in the Go backend to interact with the PostgreSQL database. Database models represent entities such as users, games, lobbies, rounds, guesses, locations, and statistics. Bun ORM handles database queries and CRUD operations between the application and the database.
 
 **Contributors:**
 
@@ -575,7 +594,9 @@ The module requires at least **10 reusable components**.
 
 **Major · 2 Points**
 
-**Justification:** User management allows users to maintain their personal information, customize their profiles, and connect with other players. It provides a personalized experience and supports social interaction within the application.
+**Justification:** 
+
+User management allows users to maintain their personal information, customize their profiles, and connect with other players. It provides a personalized experience and supports social interaction within the application.
 
 **Implementation:**
 
@@ -589,5 +610,44 @@ The module requires at least **10 reusable components**.
 - **`ifounas`**: Implemented the user database model and backend Websocket for friend status.
 - **`spunyapr`**: Developed the profile interface, profile update functionality, and friends system (frontend and backend).
 - **`lserodon`**: Implemented the backend functionality for avatar uploads.
+
+### 7. Game Statistics and Match History
+
+**Minor · 1 Points**
+
+**Justification:**
+
+Game statistics help players track their performance and progression, while the leaderboard allows them to compare their results with other players.
+
+**Implementation:**
+
+A statistics table was created in the database to store player statistics. Backend routes, handlers, and repository functions were implemented to manage and retrieve statistical data. The frontend displays player statistics and leaderboard information.
+
+**Contributors:**
+
+- **`eelissal`**: Implemented the statistics database table, backend routes, actions, handlers, and repository functions.
+- **`lserodon`**: Developed the leaderboard frontend.
+- **`spunyapr`**: Developed the statistics frontend.
+
+
+### 8. OAuth 2.0 Authentication — Google
+
+**Minor · 1 Points**
+
+**Justification:**
+
+Google OAuth 2.0 allows users to sign in with an existing Google account without creating a separate password. It also provides access to the user's email address, which is verified by Google when the provider confirms it.
+
+**Implementation:**
+
+The full server-side authorization code flow is implemented. A random `state` value is generated and stored in a short-lived cookie, then compared during the callback using a constant-time comparison to prevent CSRF attacks. The authorization code is exchanged for a token, and the Google user information endpoint is queried.
+
+Account resolution follows three steps: lookup by Google ID, lookup by email (linking the Google ID to an existing local account), or creation of a new account. Username collisions are resolved by appending a random suffix, and accounts with unverified Google email addresses are rejected. Finally, the flow issues the same JWT token pair as a standard login.
+
+**Contributors:**
+
+- **`ifounas`**: Implemented the Google OAuth 2.0 authorization flow, account resolution and linking, user creation, and JWT issuance.
+- **`spunyapr`**: Integrated Google OAuth login with the frontend.
+
 
 ## Individual Contributions
