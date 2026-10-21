@@ -89,7 +89,6 @@ export default function useChatWebSocket() {
             const data = JSON.parse(event.data);
             
             if (data.action === "friend_list") {
-                console.log("HERE")
                 if (Array.isArray(data.payload)) {
                     
                     const payload = data.payload as ChatFriend[];
