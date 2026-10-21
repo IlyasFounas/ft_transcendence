@@ -623,7 +623,7 @@ Bun ORM is used in the Go backend to interact with the PostgreSQL database. Data
 
 ### 5. Custom-Made Design System with Reusable Components
 
-**Minor · Points: confirm from subject**
+**Minor · 1 Points**
 
 **Justification:**
 
