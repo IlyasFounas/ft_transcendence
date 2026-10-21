@@ -17,7 +17,7 @@ services:
   react:
     build:
       args:
-        VITE_MAPILLARY_ACCESS_TOKEN: ${VITE_MAPILLARY_ACCESS_TOKEN}
+        MAPILLARY_ACCESS_TOKEN: ${MAPILLARY_ACCESS_TOKEN}
     container_name: react_container
     networks:
       - app
