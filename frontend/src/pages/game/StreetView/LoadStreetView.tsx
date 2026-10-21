@@ -1,19 +1,32 @@
 import 'mapillary-js/dist/mapillary.css';
 
 import { useEffect, useRef } from 'react';
-import { Viewer } from 'mapillary-js';
+import { Viewer, CancelMapillaryError } from 'mapillary-js';
 
 type Props = {
     id: string;
     interactive?: boolean;
+    reloadKey?: number; // changes when the server asks to load the image again (round_started received again)
+    onLoadError?: () => void; // the image can't be loaded (black screen)
 };
+
+// an image still not displayed after this time counts as failed: a request can also hang without ever failing
+const LOAD_TIMEOUT_MS = 15000;
 
 export default function LoadStreetView({
     id,
     interactive = true,
+    reloadKey = 0,
+    onLoadError,
 }: Props) {
     const containerRef = useRef<HTMLDivElement>(null);
     const viewerRef = useRef<Viewer | null>(null);
+    // the latest callback, without restarting the loading each time the parent renders again
+    const onLoadErrorRef = useRef(onLoadError);
+
+    useEffect(() => {
+        onLoadErrorRef.current = onLoadError;
+    });
 
     useEffect(() => {
 		const viewer = new Viewer({
@@ -70,10 +83,34 @@ export default function LoadStreetView({
 
 		if (!viewer) return;
 
-		viewer.moveTo(id).catch((error) => {
-			console.error('Failed to move to Mapillary image:', error);
-		});
-	}, [id]);
+		// becomes true once this attempt is over: loaded, failed, or abandoned (new image, reload, unmount,
+		// or effects run twice by StrictMode in development). An abandoned attempt never reports anything
+		let settled = false;
+		const fail = (reason: unknown) => {
+			if (settled) return;
+			settled = true;
+			console.error('Failed to load Mapillary image:', id, reason);
+			onLoadErrorRef.current?.();
+		};
+		const timeout = setTimeout(() => fail('timeout'), LOAD_TIMEOUT_MS);
+
+		viewer.moveTo(id)
+			.then(() => {
+				settled = true;
+				clearTimeout(timeout);
+			})
+			.catch((error) => {
+				clearTimeout(timeout);
+				// another moveTo started before this one ended (new image, reload): it is not a failure
+				if (error instanceof CancelMapillaryError) return;
+				fail(error);
+			});
+
+		return () => {
+			settled = true;
+			clearTimeout(timeout);
+		};
+	}, [id, reloadKey]);
 
     // Enable / disable interaction
     useEffect(() => {
