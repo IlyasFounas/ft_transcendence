@@ -20,7 +20,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"backend/internal/tools/rgeo"
+	"github.com/sams96/rgeo"
 )
 
 func run() error {

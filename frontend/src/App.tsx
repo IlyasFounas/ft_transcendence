@@ -1,10 +1,11 @@
 import { BrowserRouter as Router, Routes, Route} from 'react-router-dom'
-import LandingPage from './pages/LandingPage';
-import HomePage from './pages/HomePage';
-import ProfilePage from './pages/ProfilePage';
 import { ChatLayout } from './layouts/ChatLayout';
 import { MainLayout } from './layouts/MainLayout';
 import { GameSessionLayout } from './layouts/GameSessionLayout';
+import { GameSocketProvider } from './context/GameSocketContext';
+import LandingPage from './pages/LandingPage';
+import HomePage from './pages/HomePage';
+import ProfilePage from './pages/ProfilePage';
 import LobbyPage from './pages/lobby/LobbyPage';
 import LobbyRoomPage from './pages/lobby/LobbyRoomPage';
 import AuthenticationPage from './pages/AuthenticationPage';
@@ -12,7 +13,6 @@ import ProtectedRoute from './components/routes/ProtectedRoute';
 import PublicRoute from './components/routes/PublicRoute';
 import NotFoundPage from './pages/errors/404';
 import GamePlayPage from './pages/game/GamePlayPage';
-import { GameSocketProvider } from './context/GameSocketContext';
 import SoloResultPage from './pages/results/SoloResultsPage';
 import MultiplayerResultsPage from './pages/results/MultiplayerResultsPage';
 import SummaryResultsPage from './pages/results/SummaryResultsPage';

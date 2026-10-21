@@ -116,7 +116,7 @@ export default function LobbyPage()
 			<div className="flex min-h-[50px] items-center justify-center gap-4 lg:gap-12">
 				<SecondaryButton
 					active={mode === "create"}
-					className="px-[12px] text-heading-small lg:text-heading-large"
+					className="px-[12px] text-heading-small xl:text-heading-large"
 					onClick={() => setMode("create")}
 				>
 					Create Operation
@@ -124,7 +124,7 @@ export default function LobbyPage()
 
 				<SecondaryButton
 					active={mode === "join"}
-					className="text-heading-small lg:text-heading-large"
+					className="text-heading-small xl:text-heading-large"
 					onClick={() => setMode("join")}
 				>
 					Join Operation
@@ -132,7 +132,7 @@ export default function LobbyPage()
 			</div>
 			<div className="
 						flex
-						h-50 lg:h-[300px]
+						h-50 md:h-[300px]
 						w-[calc(100%-2rem)]
 						max-w-[500px]
 						mx-auto m-8
