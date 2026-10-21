@@ -494,7 +494,13 @@ Bun uses these tables to manage database schema changes.
 ### Relationships Overview
 
 <p align="center">
-  <img src="docs/database-schema.png" alt="Database schema" width="100%">
+  <a href="docs/database-schema.pdf">
+    <img src="docs/database-schema.png" alt="Database schema preview" width="100%">
+  </a>
+</p>
+
+<p align="center">
+  <a href="docs/database-schema.pdf">View full database schema (PDF)</a>
 </p>
 
 ## Features List
