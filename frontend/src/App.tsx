@@ -18,6 +18,8 @@ import MultiplayerResultsPage from './pages/results/MultiplayerResultsPage';
 import SummaryResultsPage from './pages/results/SummaryResultsPage';
 import LeaderboardPage from './pages/LeaderboardPage';
 import { ProtectedChatLayout } from "./layouts/ProtectedChatLayout";
+import PrivacyPage from './pages/terms/PrivacyPage';
+import TermsPage from './pages/terms/TermsPage';
 
 function App() {
 	return (
@@ -29,6 +31,8 @@ function App() {
                     	<Route path="*" element={<NotFoundPage />} />
 						<Route path="/login" element={<AuthenticationPage/>} />
 					</Route>
+				<Route path="/privacy" element={<PrivacyPage />} />
+  				<Route path="/terms" element={<TermsPage />} />
 					<Route element={<ProtectedRoute />}>
 						<Route element={<ProtectedChatLayout />}>
 							<Route element={<GameSessionLayout />}>

@@ -105,8 +105,15 @@ export default function LobbyPage()
 	}, [lobbyInfos, round, navigate]);
 
 	return (
-		<div className="min-h-[calc(100vh-5rem)] w-full bg-cover bg-no-repeat bg-center bg-[url(/backgrounds/earth_background.png)] py-24 xl:pr-[27rem] flex flex-col justify-center">
-			<div className="flex min-h-[50px] items-center justify-center gap-4 xl:gap-12">
+		<div className="
+			flex-1
+			w-full 
+			bg-cover bg-no-repeat bg-center bg-[url(/backgrounds/earth_background.png)] 
+			py-24 
+			lg:pr-[27rem] 
+			flex flex-col 
+			justify-center">
+			<div className="flex min-h-[50px] items-center justify-center gap-4 lg:gap-12">
 				<SecondaryButton
 					active={mode === "create"}
 					className="px-[12px] text-heading-small xl:text-heading-large"
