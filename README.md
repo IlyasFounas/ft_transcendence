@@ -499,8 +499,12 @@ Bun uses these tables to manage database schema changes.
   </a>
 </p>
 
+[View full database schema (PDF)](docs/database-schema.pdf)
+
 <p align="center">
-  <a href="docs/database-schema.pdf">View full database schema (PDF)</a>
+  <a href="docs/database-schema.pdf" target="_blank">
+    View full database schema (PDF)
+  </a>
 </p>
 
 ## Features List
