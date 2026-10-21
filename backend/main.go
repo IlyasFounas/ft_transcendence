@@ -62,15 +62,16 @@ func run() error {
 	defer stop()
 	var wg sync.WaitGroup
 	wg.Add(1)
+	acceptFriend := make(chan *int64)
 	hub := lobby_ws.NewHub(repo, wh)
 	go hub.Run(signalCtx, &wg)
 
 	wg.Add(1)
 	chat := chat_ws.NewChat(repo, wh)
-	go chat.Run(signalCtx, &wg)
+	go chat.Run(signalCtx, &wg, acceptFriend)
 
 	// 6. Router setup
-	r := router.NewRouter(signalCtx, h, hub, chat, &wg)
+	r := router.NewRouter(signalCtx, h, hub, chat, &wg, acceptFriend)
 	srv := &http.Server{
 		Addr:         os.Getenv("LISTEN_PORT_API"),
 		Handler:      r,

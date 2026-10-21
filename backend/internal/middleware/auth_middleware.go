@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"time"
+	// "time"
 	"context"
 	"os"
 	"fmt"
@@ -23,8 +23,7 @@ import (
 
 func AuthMiddleWare() gin.HandlerFunc {
   return func(c *gin.Context) {
-    // tokenString := c.GetHeader("Authorization")
-		tokenString, err := c.Cookie("Authorization")
+	tokenString, err := c.Cookie("Authorization")
     if err != nil {
       c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "you have to login"})
       return 
@@ -47,22 +46,22 @@ func AuthMiddleWare() gin.HandlerFunc {
       c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "you have to login"})
       return
     }
-	exp, err := claims.GetExpirationTime()
-	if err != nil {
-	  fmt.Printf("%s\n", err)
-      c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "you have to login"})
-      return
-    }
-	if exp == nil {
-      fmt.Println("the claim expiration is malformed")
-      c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "you have to login"})
-      return
-	}
-	if time.Now().After(exp.Time) {
-      fmt.Println("the token has expired")
-      c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "you have to login"})
-      return
-    }
+	// exp, err := claims.GetExpirationTime()
+	// if err != nil {
+	//   fmt.Printf("%s\n", err)
+    //   c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "you have to login"})
+    //   return
+    // }
+	// if exp == nil {
+    //   fmt.Println("the claim expiration is malformed")
+    //   c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "you have to login"})
+    //   return
+	// }
+	// if time.Now().After(exp.Time) {
+    //   fmt.Println("the token has expired")
+    //   c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "you have to login"})
+    //   return
+    // }
     id, err := strconv.ParseInt(sub, 10, 64)
     if err != nil {
       c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"message": "you have to login"})

@@ -1,15 +1,17 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
-	"errors"
+
+	"database/sql"
 
 	"github.com/gin-gonic/gin"
-	"database/sql"
 
 	"backend/internal/models/friends"
 	"backend/internal/repositories"
+	securesend "backend/internal/tools/secure_send"
 )
 
 type FriendHandler struct {
@@ -80,7 +82,7 @@ func (h *FriendHandler) AddFriend() gin.HandlerFunc {
 	}
 }
 
-func (h *FriendHandler) AcceptRequest() gin.HandlerFunc {
+func (h *FriendHandler) AcceptRequest(acceptFriend chan *int64) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userId, ok := c.Get("userId")
 		if !ok {
@@ -104,6 +106,20 @@ func (h *FriendHandler) AcceptRequest() gin.HandlerFunc {
 		if !updated {
 			c.JSON(http.StatusNotFound,
 				gin.H{"message": "No matching request"})
+			return
+		}
+		first := requesterIDInt
+		if !securesend.SecureSend(c.Request.Context(), acceptFriend,
+		&first, "HTTP handler : the chan is closed") {
+			c.JSON(http.StatusUnprocessableEntity,
+				gin.H{"message": "Failed to process the info to the websocket"})
+			return
+		}
+		second := userId.(int64)
+		if !securesend.SecureSend(c.Request.Context(), acceptFriend,
+		&second, "HTTP handler : the chan is closed") {
+			c.JSON(http.StatusUnprocessableEntity,
+				gin.H{"message": "Failed to process the info to the websocket"})
 			return
 		}
 		c.JSON(http.StatusOK,
