@@ -89,10 +89,6 @@ func (h *GameHandler) CreateGame() gin.HandlerFunc {
 		
 		c.JSON(http.StatusOK,
 			gin.H{"message": "the game is launching", "game_id": game.ID})
-
-		// TO CHECK LOCATIONS IDS ARE CORRECTLY STORED IN THE GAME TABLE //TODO to remove
-		fmt.Printf("Game created with ID: %d\n", game.ID)
-		fmt.Printf("Location IDs: %v\n", game.LocationIDs)
 	}
 }
 

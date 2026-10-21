@@ -15,8 +15,11 @@ export default function LobbyRoomPage() {
 	const navigate = useNavigate();
 
 	useEffect(() => {
-  		if (isClosed) navigate("/home");
-	}, [isClosed, navigate]);
+	if (isClosed) {
+		resetGame();
+		navigate("/home");
+	}
+}, [isClosed, navigate]);
 
 	useEffect(() => {
 		if (round) {
