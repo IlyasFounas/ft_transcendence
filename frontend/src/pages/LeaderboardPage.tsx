@@ -37,16 +37,15 @@ export default function LeaderboardPage() {
 	);
 
 	return (
-		<div>
-		<div className="
-					absolute 
-					inset-0 
-					-z-10
-					opacity-50
-					bg-[url(/backgrounds/leaderboard_background.png)]
-					bg-cover bg-center bg-no-repeat
-					h-screen">
-		</div>
+		<div className="relative flex-1">
+			<div className="
+				absolute 
+				inset-0 
+				-z-10
+				opacity-50
+				bg-[url(/backgrounds/leaderboard_background.png)]
+				bg-cover bg-center bg-no-repeat">
+			</div>
 		<div className="
 				border py-[12px] md:py-[24px] px-8
 				flex md:flex-row 
@@ -117,7 +116,7 @@ export default function LeaderboardPage() {
 				/>
 			</div>
 			</div>
-			<div className="px-[20px] md:px-[50px] pb-10 lg:w-1/2">
+			<div className="px-[20px] md:px-[50px] pb-4 lg:w-1/2">
 			<LeaderBoardList
 				players={rest}
 				currentPlayerResult={currentPlayerResult}

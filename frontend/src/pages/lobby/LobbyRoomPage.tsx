@@ -15,8 +15,11 @@ export default function LobbyRoomPage() {
 	const navigate = useNavigate();
 
 	useEffect(() => {
-  		if (isClosed) navigate("/home");
-	}, [isClosed, navigate]);
+	if (isClosed) {
+		resetGame();
+		navigate("/home");
+	}
+}, [isClosed, navigate]);
 
 	useEffect(() => {
 		if (round) {
@@ -31,7 +34,12 @@ export default function LobbyRoomPage() {
   	}
 
 	return (
-		<div className="shrink-0 min-h-[calc(100vh-5rem)] w-full bg-cover bg-no-repeat bg-center bg-[url(/backgrounds/earth_background.png)] xl:pr-[27rem]">
+		<div className="
+			shrink-0 
+			min-h-[calc(100vh-5rem)] 
+			w-full 
+			bg-cover bg-no-repeat bg-center bg-[url(/backgrounds/earth_background.png)] 
+			xl:pr-[27rem]">
 		<div className="mx-auto w-full max-w-[1400px] grid grid-cols-1 px-6 py-8 gap-6 xl:grid-cols-[minmax(0,1fr)_394px] xl:items-start xl:gap-8">
 			<div className="order-1 xl:col-start-2 xl:row-start-1">
 			<RoomCodeCard code={lobbyInfos?.join_code ?? ""} />

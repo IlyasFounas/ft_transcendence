@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Outlet } from "react-router-dom"
 import ChatPanel from "../components/chat/ChatPanel";
 import { Navbar } from "../components/navbar/Navbar";
+import Footer from "../components/routes/Footer";
 
 export function ChatLayout () {
 
@@ -28,9 +29,10 @@ export function ChatLayout () {
                     onToggleChat={() => setIsChatOpen((current) => !current)}
                     showChat={true}
                 />
-                
-                < Outlet />
-        
+               	<main className="flex-1 flex flex-col">
+					<Outlet />
+				</main>
+				<Footer />
                 <div
                 className={`
                     fixed
@@ -49,7 +51,7 @@ export function ChatLayout () {
         
                     md:left-auto
                     md:right-5
-                    md:bottom-5
+                    md:bottom-10
                     md:w-2/5
                     xl:w-100
         
