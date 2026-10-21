@@ -53,15 +53,17 @@ export default function Avatar({
 				<path d={HEXAGON_PATH} stroke={borderColor} strokeWidth="5" />
 			</g>
 
-			<image
-				href={avatar}
-				x="10.5"
-				y="10.5"
-				width="119"
-				height="133"
-				preserveAspectRatio="xMidYMid slice"
-				clipPath={`url(#${clipId})`}
-			/>
+			{avatar && (
+				<image
+						href={avatar}
+						x="10.5"
+						y="10.5"
+						width="119"
+						height="133"
+						preserveAspectRatio="xMidYMid slice"
+						clipPath={`url(#${clipId})`}
+				/>
+			)}
 
 			<path d={HEXAGON_PATH} stroke={borderColor} strokeWidth="5" shapeRendering="crispEdges" />
 		</svg>

@@ -46,7 +46,6 @@ export default function LobbyPage()
 		}
 
 		const cur = await authFetch("/api/lobby/current");
-		console.log("current après create :", cur?.data);
 		const gameId = cur?.data?.game_id;
 		if (gameId) {
 			await authFetch(`/api/game/${gameId}/mode`, {
