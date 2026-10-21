@@ -842,7 +842,7 @@ The application provides administrative user management, including viewing, upda
 
 ### Team Contributions Summary
 
-### `eelissal`
+#### `eelissal`
 - **Backend Development:** Implemented Go models, repositories, handlers, and routes for game features and statistics.
 - **Game Logic:** Developed gameplay rules, rounds, guesses, location integration, and scoring.
 - **Real-Time Multiplayer:** Implemented lobby WebSocket actions and player reconnection handling.
@@ -850,7 +850,7 @@ The application provides administrative user management, including viewing, upda
 - **Gamification:** Implemented backend scoring, XP, and leaderboard logic.
 - **Administration:** Implemented admin middleware and user viewing and deletion functionality.
 
-### `ifounas`
+#### `ifounas`
 - **Backend Infrastructure:** Set up the Gin server, routing structure, authentication middleware, and Bun ORM with PostgreSQL.
 - **Backend Development:** Implemented Go models, repositories, handlers, and routes for users, activation_tokens, refresh_tokens, lobby and game
 - **Authentication & Security:** Implemented email/password authentication, JWT access and refresh tokens, token rotation, reuse detection, and secure cookies.
@@ -858,7 +858,7 @@ The application provides administrative user management, including viewing, upda
 - **Real-Time Communication:** Developed backend WebSocket infrastructure for the lobby, chat, and friend status.
 - **Deployment:** Set up Docker Compose, Nginx, and Makefile commands.
 
-### `lserodon`
+#### `lserodon`
 - **Frontend Development:** Built reusable React components and pages for the game, lobby, leaderboard, and results.
 - **Multiplayer Gameplay:** Implemented the live lobby player list, host controls, automatic round progression, and multiplayer rankings.
 - **Real-Time Communication:** Integrated the frontend lobby WebSocket and game-state updates.
@@ -866,7 +866,7 @@ The application provides administrative user management, including viewing, upda
 - **Gamification:** Developed the leaderboard interface and connected it to the backend API.
 - **Design System:** Created reusable UI components using React and Tailwind CSS.
 
-### `spunyapr`
+#### `spunyapr`
 - **Frontend Development:** Built reusable React components and pages for authentication, landing page, home page, and profiles.
 - **Friends System:** Implemented friend management features and backend API routes.
 - **Real-Time Communication:** Integrated frontend WebSockets for chat and friend status.
@@ -876,11 +876,11 @@ The application provides administrative user management, including viewing, upda
 
 ### Technical Challenges and Solutions
 
-**`eelissal`**: 
+#### `eelissal`: 
 
 My main tasks and responsabilities were game feature prioritization, game logic and backend development. Firstly, the goal of feature prioritization was to choose which feature to create and implement first to provide a smoother tackling of both the modules and the game's development. Secondly, the objective regarding game logic was to define the rules for both solo and multiplayer modes, which were very similar to the base Geoguessr game, but with a few twists, followed by the scoring rules. I also tackled the 2D and 3D map loading on both the frontend and backend. Lastly, to implement this game and scoring logic, I created all the tables and functions for locations, guesses, rounds, and games (modifying the model and adding various CRUD functions with related repository functions linked to the timer and random locations for each game), as well as statistics tables. I also implemented admin routes and actions using middleware, handlers, and repository functions (for GET and DELETE). Since the tables are highly interconnected, I also had a significant impact on the user table and its functions (for actions related to XP and leaderboards). The main challenges I faced during this project were learning new languages (Go, TypeScript) and deepening my knowledge of technologies I had rarely used (SQL, HTML, CSS). I also had to adapt to new frameworks (Gin, React). Furthermore, working with such an interconnected database was a major challenge: the table relationships were complex (guesses, rounds, games, locations, statistics, and users were all linked to one another in the backend tasks I handled). As for the problems I faced, one was linked to our decision to use open-source data instead of paying for Google APIs. This decision introduced another problem: the quality of the data we could retrieve. On Mapillary, any user can upload their own street-view images, so the quality can be very poor. Many are simple photos rather than true 360° views, and finding a random, high-quality 360° image through a script was mostly a matter of luck (otherwise, it would mean very long loading times to find just one, or a much less random search). Additionally, most of the data retrieved was from European countries or the US, where coverage is much higher. Therefore, we decided to find a more balanced set of high-quality locations by ourselves and store them in a database table instead of making live APIs calls to get a random one. As a result, we now have locations that are much more geographically balanced and of significantly higher quality (recent 360° images). Furthermore, there is no longer a need to wait to retrieve and check each random game location—only a single database query is required.
 
-**`ifounas`**:
+#### `ifounas`:
 
 1. Moving Tokens from Headers to Cookies
 
@@ -917,13 +917,13 @@ This approach inverts the dependency: the lobby package injects its behavior int
 Two important details emerged after my initial implementation. First, `ReadPump` must block within the handler rather than run in a separate goroutine; otherwise, Gin cancels the request context while the connection is still active. Second, a handler that refuses a WebSocket upgrade must still send an HTTP response. Returning silently leaves the client waiting for the handshake to complete.
 
 
-**`lserodon`**:
+#### `lserodon`:
 
 WebSockets: Real-time communication was the hardest part of the frontend. The WebSocket protocol evolved while the backend was being developed, and at one point two separate connections were opened for the same game. I solved this by centralizing all the WebSocket logic in a single shared context used by every page, then rewriting it from the documented protocol rather than patching it message by message.
 
 Connecting the frontend to the backend: This was the first time I had connected a frontend to a backend, and I struggled at first to understand how to do it and where to find what I needed in the backend code. I started by building the pages with mock data so I could keep making progress, then learned to read the backend routes and WebSocket handlers, asked my teammates when the data formats were unclear, and tested each connection step by step with the real data.
 
-**`spunyapr`**:
+#### `spunyapr`:
 
 1. Learning New Languages and Technologies in a Short Time
 
