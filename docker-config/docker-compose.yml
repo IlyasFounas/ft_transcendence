@@ -65,7 +65,7 @@ services:
       target: ${ENV}
     environment:
       ENV: ${ENV}
-      MAPILLARY_ACCESS_TOKEN: ${MAPILLARY_ACCESS_TOKEN}
+      VITE_MAPILLARY_ACCESS_TOKEN: ${MAPILLARY_ACCESS_TOKEN}
     depends_on:
       - golang
 

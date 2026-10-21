@@ -31,7 +31,7 @@ export default function LoadStreetView({
     useEffect(() => {
 		const viewer = new Viewer({
 			container: 'mapillary-viewer',
-			accessToken: import.meta.env.MAPILLARY_ACCESS_TOKEN,
+			accessToken: import.meta.env.VITE_MAPILLARY_ACCESS_TOKEN,
 
 			component: {
 				cover: false,
