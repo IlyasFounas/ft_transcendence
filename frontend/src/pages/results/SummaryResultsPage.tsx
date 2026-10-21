@@ -90,8 +90,8 @@ export default function SummaryResultsPage()
 	}, [fullHistory, players, totalRounds, user]);
 
 	const roundLocations = useMemo(() => {
+		if (!fullHistory) return {};
 		const locations: Record<number, { latitude: number; longitude: number }> = {};
-		if (!fullHistory) return locations;
 		fullHistory.forEach((round: any) => {
 			locations[round.round_nb] = {
 				latitude: round.base.lat,

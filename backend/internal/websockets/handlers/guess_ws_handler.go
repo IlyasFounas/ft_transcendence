@@ -14,7 +14,7 @@ import (
 	"math"
 	"time"
 
-	"backend/internal/tools/rgeo"
+	"github.com/sams96/rgeo"
 )
 
 type GuessWsHandler struct {
@@ -360,7 +360,6 @@ func (h *GuessWsHandler) IsLastRound(ctx context.Context, gameID, roundNb int64)
 }
 
 // Finds the round for gameID and roundNb, or creates it if it doesn't exist yet. 
-// Returns the full round (not just its ID) because we need to retrieve StartedAt as well.
 func (h *GuessWsHandler) EnsureRound(ctx context.Context, gameID, roundNb int64) (*rounds.Round, error) {
 	// check if the round already exists
 	roundID, err := h.roundRepo.GetIDByGameIDAndRoundNb(ctx, gameID, roundNb)
@@ -368,12 +367,12 @@ func (h *GuessWsHandler) EnsureRound(ctx context.Context, gameID, roundNb int64)
 	if err == nil {
 		return h.roundRepo.GetByID(ctx, roundID)
 	}
-	// if any other error than "round not found" occurs, return it
+	// if any other error than "round not found" occurs, returns it
 	if !errors.Is(err, repositories.ErrRoundNotFound) {
 		return nil, err
 	}
 
-	// never create a round beyond game.round_total (CheckLastRound returns an error in that case)
+	// never create a round beyond game.round_total
 	if _, err := h.roundRepo.CheckLastRound(ctx, gameID, roundNb); err != nil {
 		return nil, err
 	}

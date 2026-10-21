@@ -1,7 +1,6 @@
 package repositories
 
 import (
-	"database/sql"
 	"backend/internal/models/chats"
 	"backend/internal/models/friends"
 	"backend/internal/models/games"
@@ -12,8 +11,10 @@ import (
 	"backend/internal/tools/encryption"
 	"backend/internal/tools/rank_calculation"
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
+
 	"github.com/uptrace/bun"
 )
 
@@ -218,10 +219,9 @@ func (r *UserRepository) SetName(ctx context.Context, userId int64, name string)
 	if len(name) == 0 {
 		return false, nil
 	}
-	user := &users.User{Username: name}
 	_, err := r.db.NewUpdate().
-		Model(user).
-		Column("name").
+		Model((*users.User)(nil)).
+		Set("name = ?", name).
 		Where("id = ?", userId).
 		Exec(ctx)
 	if err != nil {
@@ -234,10 +234,9 @@ func (r *UserRepository) SetGoogleId(ctx context.Context, userId int64, googleId
 	if googleId == nil || *googleId == "" {
 		return false, nil
 	}
-	user := &users.User{GoogleId: googleId}
 	_, err := r.db.NewUpdate().
-		Model(user).
-		Column("google_id").
+		Model((*users.User)(nil)).
+		Set("google_id = ?", googleId).
 		Where("id = ?", userId).
 		Exec(ctx)
 	if err != nil {
@@ -250,10 +249,9 @@ func (r *UserRepository) SetLogin(ctx context.Context, userId int64, login strin
 	if len(login) == 0 {
 		return false, nil
 	}
-	user := &users.User{Login: &login}
 	_, err := r.db.NewUpdate().
-		Model(user).
-		Column("login").
+		Model((*users.User)(nil)).
+		Set("login = ?", login).
 		Where("id = ?", userId).
 		Exec(ctx)
 	if err != nil {
@@ -266,10 +264,9 @@ func (r *UserRepository) SetAvatar(ctx context.Context, userId int64, avatar str
 	if len(avatar) == 0 {
 		return false, nil
 	}
-	user := &users.User{Avatar: &avatar}
 	_, err := r.db.NewUpdate().
-		Model(user).
-		Column("avatar").
+		Model((*users.User)(nil)).
+		Set("avatar = ?", avatar).
 		Where("id = ?", userId).
 		Exec(ctx)
 	if err != nil {
@@ -279,10 +276,9 @@ func (r *UserRepository) SetAvatar(ctx context.Context, userId int64, avatar str
 }
 
 func (r *UserRepository) SetIsVerified(ctx context.Context, userId int64) error {
-	user := &users.User{Is_verified: true}
 	_, err := r.db.NewUpdate().
-		Model(user).
-		Column("is_verified").
+		Model((*users.User)(nil)).
+		Set("is_verified = true").
 		Where("id = ?", userId).
 		Exec(ctx)
 	if err != nil {
@@ -320,10 +316,9 @@ func (r *UserRepository) SetXP(ctx context.Context, userId int64, xp int64) (boo
 	if xp < 0 {
 		return false, nil
 	}
-	user := &users.User{XP: xp}
 	_, err := r.db.NewUpdate().
-		Model(user).
-		Column("xp").
+		Model((*users.User)(nil)).
+		Set("xp = ?", xp).
 		Where("id = ?", userId).
 		Exec(ctx)
 	if err != nil {
@@ -601,10 +596,9 @@ func (r *UserRepository) UserLeaderboard(ctx context.Context, userId int64) ([]L
 }
 
 func (r *UserRepository) SetRank(ctx context.Context, userId int64, rank string) (bool, error) {
-	user := &users.User{Rank: rank}
 	_, err := r.db.NewUpdate().
-		Model(user).
-		Column("rank").
+		Model((*users.User)(nil)).
+		Set("rank = ?", rank).
 		Where("id = ?", userId).
 		Exec(ctx)
 	if err != nil {

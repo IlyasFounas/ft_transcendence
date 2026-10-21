@@ -60,10 +60,9 @@ func (tr *ActivationTokenRepository) DeleteActivationToken(ctx context.Context,
 
 func (tr *ActivationTokenRepository) SetUsedAt(ctx context.Context, userId int64) error {
 	usedAt := time.Now()
-	aToken := &tokens.ActivationToken{UsedAt: &usedAt}
 	_, err := tr.db.NewUpdate().
-		Model(aToken).
-		Column("used_at").
+		Model((*tokens.ActivationToken)(nil)).
+		Set("used_at = ?", &usedAt).
 		Where("user_id = ?", userId).
 		Exec(ctx)
 	if err != nil {

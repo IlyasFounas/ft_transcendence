@@ -1,17 +1,18 @@
 package handlers
 
 import (
-	"strings"
 	"crypto/sha256"
-	"log"
+	"crypto/subtle"
+	"encoding/json"
+	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
-	"errors"
-	"encoding/json"
-	"crypto/subtle"
+
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"golang.org/x/oauth2"
@@ -20,14 +21,14 @@ import (
 	"database/sql"
 
 	"backend/internal/models/users"
+	"backend/internal/models/users/tokens"
 	"backend/internal/repositories"
 	"backend/internal/tools/code_generation"
 	"backend/internal/tools/cookie"
 	"backend/internal/tools/encryption"
 	"backend/internal/tools/mailing"
-	"backend/internal/tools/token_generation"
-	"backend/internal/models/users/tokens"
 	"backend/internal/tools/rank_calculation"
+	"backend/internal/tools/token_generation"
 	"backend/internal/tools/validation"
 )
 
@@ -95,9 +96,12 @@ func (h *UserHandler) createActivationToken(c *gin.Context, expiresAt time.Time,
 	email := c.PostForm("email")
 	if len(email) == 0 {
 		emailString, err := h.userRepo.Email(c.Request.Context(), userId)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError,
-				gin.H{"message": "Can't find your email. Please try again."})
+		if err != nil{
+			code := http.StatusInternalServerError
+			if errors.Is(err, sql.ErrNoRows) {
+				code = http.StatusNotFound
+			}
+			c.JSON(code, gin.H{"message": "Can't find your email. Please try again."})
 			return err
 		}
 		err = mailing.SendActivationEmail(*emailString, tokenObj.Token);
@@ -105,9 +109,13 @@ func (h *UserHandler) createActivationToken(c *gin.Context, expiresAt time.Time,
 		err = mailing.SendActivationEmail(email, tokenObj.Token);
 	}
 	if err != nil {
-		c.JSON(http.StatusInternalServerError,
-			gin.H{"message": "The activation link sending went wrong. Please try again."})
 		fmt.Printf("\n%s\n", err)
+		code := http.StatusInternalServerError
+		if errors.Is(err, sql.ErrNoRows) {
+			code = http.StatusNotFound
+		}
+		c.JSON(code,
+			gin.H{"message": "The activation link sending went wrong. Please try again."})
 		return err
 	}
 	return nil
@@ -118,13 +126,13 @@ func (h *UserHandler) jwtGeneration(c *gin.Context, userId int64) (*tokens.Activ
 	tokenObj, tokenErr := token_generation.GenerateToken(userId, expiresAt,
 		[]byte(os.Getenv("JWT_SECRET")))
 	if tokenErr != nil {
-        c.JSON(http.StatusInternalServerError,
+        c.JSON(http.StatusUnauthorized,
             gin.H{"message": "token creation went wrong."})
 		return nil, false
 	}
 	encodedKey, rTokenErr := h.tokenHandler.CreateRefreshToken(c.Request.Context(), userId)
 	if rTokenErr != nil {
-        c.JSON(http.StatusInternalServerError,
+        c.JSON(http.StatusUnauthorized,
             gin.H{"message": "Try to login again."})
 		return nil, false
 	}
@@ -158,8 +166,8 @@ func (h *UserHandler) CreateUser() gin.HandlerFunc {
 		}
 		hashpassword, hashErr := encryption.HashPassword(input.Password)
 		if hashErr != nil {
-            c.JSON(http.StatusInternalServerError,
-                gin.H{"message": "Something went wrong. Please try again."})
+            c.JSON(http.StatusUnauthorized,
+                gin.H{"message": "The hash password failed. Please try again."})
 			return
 		}
 		existingLogin, err := h.userRepo.ExistingLogin(c.Request.Context(), input.Login)
@@ -169,7 +177,7 @@ func (h *UserHandler) CreateUser() gin.HandlerFunc {
 			return
 		}
 		if existingLogin != nil && *existingLogin != "" {
-            c.JSON(http.StatusBadRequest,
+            c.JSON(http.StatusConflict,
                 gin.H{"message": "This login or this username are unavailable. Please try another one."})
 			return
 		}
@@ -180,7 +188,7 @@ func (h *UserHandler) CreateUser() gin.HandlerFunc {
 			return
 		}
 		if existingUsername {
-            c.JSON(http.StatusBadRequest,
+            c.JSON(http.StatusConflict,
                 gin.H{"message": "This username is unavailable. Please try another one."})
 			return
 		}		 
@@ -191,8 +199,8 @@ func (h *UserHandler) CreateUser() gin.HandlerFunc {
 			Is_verified: false}
 		user, err := h.userRepo.CreateUser(c.Request.Context(), userObj)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError,
-				gin.H{"message": "The account creation failed"})
+			c.JSON(http.StatusUnauthorized,
+				gin.H{"message": "The account creation failed. Please try again."})
 			return
 		} else {
 			expiresAt := time.Now().Add(24 * time.Hour)
@@ -258,7 +266,7 @@ func (h *UserHandler) GoogleLogin() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		state, err := code_generation.RandGenerate(32)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, 
+			c.JSON(http.StatusUnprocessableEntity,
 				gin.H{"message": "failed"})
 			return
 		}
@@ -422,7 +430,11 @@ func (h *UserHandler) User() gin.HandlerFunc {
 		}
 		userData, err := h.userRepo.User(c.Request.Context(), userId.(int64))
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "Something went wrong"})
+			code := http.StatusInternalServerError
+			if errors.Is(err, sql.ErrNoRows) {
+				code = http.StatusNotFound
+			}
+			c.JSON(code, gin.H{"message": "failed"})
 			return
 		}
 		if userData == nil {
@@ -444,8 +456,12 @@ func (h *UserHandler) Name() gin.HandlerFunc {
 				gin.H{"message": "The user id is empty"})
 		}
 		name, err := h.userRepo.Name(c.Request.Context(), userId.(int64))
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "Something went wrong"})
+		if err != nil {			
+			code := http.StatusInternalServerError
+			if errors.Is(err, sql.ErrNoRows) {
+				code = http.StatusNotFound
+			}
+			c.JSON(code, gin.H{"message": "failed"})
 			return
 		}
 		if name == nil {
@@ -466,7 +482,11 @@ func (h *UserHandler) GetLogin() gin.HandlerFunc {
 		}
 		login, err := h.userRepo.Login(c.Request.Context(), userId.(int64))
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "Something went wrong"})
+			code := http.StatusInternalServerError
+			if errors.Is(err, sql.ErrNoRows) {
+				code = http.StatusNotFound
+			}
+			c.JSON(code, gin.H{"message": "failed"})
 			return
 		}
 		if login == nil {
@@ -487,7 +507,11 @@ func (h *UserHandler) Email() gin.HandlerFunc {
 		}
 		email, err := h.userRepo.Email(c.Request.Context(), userId.(int64))
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "failed"})
+			code := http.StatusInternalServerError
+			if errors.Is(err, sql.ErrNoRows) {
+				code = http.StatusNotFound
+			}
+			c.JSON(code, gin.H{"message": "failed"})
 			return
 		}
 		if email == nil {
@@ -617,9 +641,12 @@ func (h *UserHandler) SetAvatar() gin.HandlerFunc {
 			userId.(int64),
 		)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"message": "failed to fetch user",
-			})
+			code := http.StatusInternalServerError
+			if errors.Is(err, sql.ErrNoRows) {
+				code = http.StatusNotFound
+			}
+			c.JSON(code, 
+				gin.H{"message": "failed to fetch user"})
 			return
 		}
 
@@ -650,7 +677,12 @@ func (h *UserHandler) UploadAvatar() gin.HandlerFunc {
 
 		oldUser, err := h.userRepo.User(c.Request.Context(), userId.(int64))
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "failed to fetch user"})
+			code := http.StatusInternalServerError
+			if errors.Is(err, sql.ErrNoRows) {
+				code = http.StatusNotFound
+			}
+			c.JSON(code, 
+				gin.H{"message": "failed to fetch user"})
 			return
 		}
 
@@ -676,7 +708,7 @@ func (h *UserHandler) UploadAvatar() gin.HandlerFunc {
 
 		err = c.SaveUploadedFile(file, savePath)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "failed to save file"})
+			c.JSON(http.StatusUnprocessableEntity, gin.H{"message": "failed to save file"})
 			return
 		}
 
@@ -705,7 +737,12 @@ func (h *UserHandler) XPByName() gin.HandlerFunc {
 		user, err := h.userRepo.UserByName(c.Request.Context(), username)
 		if err != nil {
 			log.Printf("error : %s\n", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "failed"})
+			code := http.StatusNotFound
+			if err != sql.ErrNoRows {
+				code = http.StatusInternalServerError
+			}
+			
+			c.JSON(code, gin.H{"message": "failed"})
 			return
 		}
 		c.JSON(http.StatusOK,
@@ -719,7 +756,11 @@ func (h *UserHandler) Leaderboard() gin.HandlerFunc {
 		leaderboard, err := h.userRepo.Leaderboard(c.Request.Context())
 		if err != nil {
 			log.Printf("error : %s\n", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "Something went wrong"})
+			code := http.StatusInternalServerError
+			if errors.Is(err, sql.ErrNoRows) {
+				code = http.StatusNotFound
+			}
+			c.JSON(code, gin.H{"message": "Something went wrong"})
 			return
 		}
 		c.JSON(http.StatusOK,
@@ -739,7 +780,11 @@ func (h *UserHandler) UserLeaderboard() gin.HandlerFunc {
 		leaderboard, err := h.userRepo.UserLeaderboard(c.Request.Context(), userId.(int64))
 		if err != nil {
 			log.Printf("error : %s\n", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"message": "Something went wrong"})
+			code := http.StatusInternalServerError
+			if errors.Is(err, sql.ErrNoRows) {
+				code = http.StatusNotFound
+			}
+			c.JSON(code, gin.H{"message": "Something went wrong"})
 			return
 		}
 		c.JSON(http.StatusOK,
@@ -857,7 +902,11 @@ func (h *UserHandler) UpdateUser() gin.HandlerFunc {
         }
         existingLogin, err := h.userRepo.ExistingLogin(c.Request.Context(), input.Login)
         if err != nil {
-            c.JSON(http.StatusInternalServerError, 
+			code := http.StatusInternalServerError
+			if errors.Is(err, sql.ErrNoRows) {
+				code = http.StatusNotFound
+			}
+            c.JSON(code, 
 				gin.H{"message": "Something went wrong. Please try again."})
             return
         }
@@ -868,7 +917,11 @@ func (h *UserHandler) UpdateUser() gin.HandlerFunc {
         }
         existingUsername, err := h.userRepo.ExistingName(c.Request.Context(), input.Username)
         if err != nil {
-            c.JSON(http.StatusInternalServerError, 
+			code := http.StatusInternalServerError
+			if errors.Is(err, sql.ErrNoRows) {
+				code = http.StatusNotFound
+			}
+            c.JSON(code, 
 				gin.H{"message": "Something went wrong. Please try again."})
             return
         }
@@ -919,7 +972,11 @@ func (h *UserHandler) UpdateUser() gin.HandlerFunc {
 
 			err := c.SaveUploadedFile(file, savedAvatarPath)
 			if  err != nil {
-				c.JSON(http.StatusInternalServerError, 
+				code := http.StatusInternalServerError
+				if errors.Is(err, sql.ErrNoRows) {
+					code = http.StatusUnprocessableEntity
+				}
+				c.JSON(code, 
 					gin.H{"message": "Failed to save file."})
 				return
 			}
@@ -930,7 +987,7 @@ func (h *UserHandler) UpdateUser() gin.HandlerFunc {
 			if savedAvatarPath != "" {
 				_ = os.Remove(savedAvatarPath)
 			}
-			c.JSON(http.StatusInternalServerError, 
+			c.JSON(http.StatusUnprocessableEntity, 
 				gin.H{"message": "Something went wrong. Please try again."})
 			return
 		}

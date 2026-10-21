@@ -2,8 +2,6 @@ FROM golang:1.25-alpine AS base
 # Adds /go/bin to PATH to access Go-installed binaries like air
 ENV PATH=$PATH:/go/bin
 WORKDIR /app
-COPY go.mod go.sum ./
-COPY entrypoint.sh ./
 COPY . .
 
 FROM base AS dev
@@ -16,7 +14,7 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
 RUN --mount=type=cache,target=/root/.cache/go-build \
     go mod download
 EXPOSE 8080
-CMD ["sh", "-c", "air"]
+CMD ["air"]
 
 FROM base AS build
 RUN go mod download
