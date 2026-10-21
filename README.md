@@ -171,6 +171,10 @@ List of classic references related to the topic (documentation, articles, tutori
 - [MDN: Set-Cookie](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Set-Cookie): Cookie attributes and security.
 - [MDN: SameSite Cookies](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Set-Cookie#samesitesamesite-value): Cookie behavior and cross-site request considerations.
 
+### Validation
+- [Zod Documentation](https://zod.dev/): Documentation for TypeScript schema validation, used to validate data on the frontend.
+- [go-playground/validator](https://pkg.go.dev/github.com/go-playground/validator/v10): Go validation library documentation, used to validate backend request data and struct fields.
+
 ### OAuth 2.0 & Google Sign-In
 - [RFC 9700: OAuth 2.0 Security Best Current Practice](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-security-topics): OAuth security recommendations.
 - [Google Identity: OAuth 2.0 for Web Server Applications](https://developers.google.com/identity/protocols/oauth2/web-server): Google's server-side OAuth flow.
@@ -181,7 +185,6 @@ List of classic references related to the topic (documentation, articles, tutori
 - [Gorilla WebSocket](https://pkg.go.dev/github.com/gorilla/websocket): WebSocket implementation for Go.
 - [Gorilla WebSocket Chat Example](https://github.com/gorilla/websocket/tree/main/examples/chat): Example of the hub and read/write pump architecture.
 - [MDN: Writing WebSocket Client Applications](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API/Writing_WebSocket_client_applications): WebSocket client communication.
-
 
 ### Mapping & Geolocation
 - [Leaflet Documentation](https://leafletjs.com/reference.html): Reference for the interactive maps used for location guesses and game results.
@@ -652,11 +655,12 @@ User management allows users to maintain their personal information, customize t
 - **Avatar Management:** Users can upload a custom avatar, with a default avatar provided when none is uploaded.
 - **Friends System:** Users can add and manage friends and view their online status.
 - **Profile Page:** Each user has a profile page displaying their information.
+- **Input Validation:** Validates email, usernames, login, and passwords during user registration, checks usernames when users update their profiles, and validates user information when administrators modify accounts.
 
 **Contributors:**
 
 - **`ifounas`**: Implemented email/password authentication, bcrypt password hashing, server-side input validation, JWT access and refresh token management, token rotation and reuse detection, secure cookie handling, and the user database model. Also implemented the backend WebSocket mechanism for real-time friend status.
-- **`spunyapr`**: Developed the profile interface and profile update functionality, implemented the friends system (frontend and backend), and developed the AuthContext to manage authentication state and refresh-token handling on the frontend.
+- **`spunyapr`**: Developed the profile interface and profile update functionality, implemented the friends system (frontend and backend), developed the AuthContext to manage authentication state and refresh-token handling on the frontend, and implemented input validation using Zod on the frontend and Go's validator library on the backend.
 - **`lserodon`**: Implemented the avatar upload backend, including the API route for receiving uploaded images, storing them, and making them available for display in the application.
 
 ### 7. Game Statistics and Match History
