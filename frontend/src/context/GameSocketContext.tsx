@@ -39,6 +39,11 @@ interface RoundResultBroadcast {
 	next_round_at: string | null;
 }
 
+interface RoundResultsPayload {
+	rounds: RoundResultBroadcast[];
+	next_round_at?: string | null;
+}
+
 interface GameSocketContextType {
 	players: Player[];
 	lobbyInfos: LobbyInfos | null;
@@ -84,6 +89,22 @@ const GameSocketContext = createContext<GameSocketContextType>({
 	lastRoundResult: null,
 	gameStartAt: null,
 });
+
+function toRoundHistory(rounds: RoundResultBroadcast[], userId: number): RoundResult[] {
+	return [...rounds]
+		.sort((a, b) => a.round_nb - b.round_nb)
+		.map((r) => {
+			const infos = r.results.find((res) => res.user_id === userId)?.round_infos;
+			return {
+				round: r.round_nb,
+				points: infos?.score ?? 0,
+				distance: infos?.distance ?? 0,
+				guessLocation: infos
+					? { latitude: infos.guess.lat, longitude: infos.guess.long }
+					: { latitude: 0, longitude: 0 },
+			};
+		});
+}
 
 export function GameSocketProvider({ children }: { children: ReactNode }) {
 	const { user, isAuthLoading } = useAuth();
@@ -145,82 +166,42 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
 				setGameStartAt(null);
 			}
 			else if (message.action === "round_results") {
-				const data = message.payload as RoundResultBroadcast;
-				const own = data.results.find((r) => r.user_id === user.ID);
-				
-				if (own && own.has_guessed && own.round_infos) {
-					const infos = own.round_infos;
-					setRoundHistory((prev) => [
-						...prev,
-						{
-							round: data.round_nb,
-							points: infos.score,
-							distance: infos.distance,
-							guessLocation: {
-								latitude: infos.guess.lat,
-								longitude: infos.guess.long,
-							},
-						},
-					]);
-				} else {
-					setRoundHistory((prev) => [
-						...prev,
-						{
-							round: data.round_nb,
-							points: 0,
-							distance: 0,
-							guessLocation: { latitude: 0, longitude: 0 }, 
-						},
-					]);
-				}
-				setLastRoundResult({
-					isLastRound: data.is_last_round,
-					nextRoundAt: data.next_round_at,
-					actualLocation: {
-						latitude: data.base.lat,
-						longitude: data.base.long,
-					},
-					allResults: data.results,
-				});
-			}
+			const data = message.payload as RoundResultsPayload;
+			const current = data.rounds[0];
+
+			setRoundHistory(toRoundHistory(data.rounds, user.ID));
+			setLastRoundResult({
+				isLastRound: false,
+				nextRoundAt: data.next_round_at ?? null,
+				actualLocation: {
+					latitude: current.base.lat,
+					longitude: current.base.long,
+				},
+				allResults: current.results,
+			});
+		}
 			else if (message.action === "error") {
 				if (message.payload?.message === "the game has already started") {
 					socket.send(JSON.stringify({ action: "start_round", payload: "" }));
 				}
 			}
 			else if (message.action === "game_results") {
-				const rounds = message.payload.rounds as RoundResultBroadcast[];
-				
-				const lastRoundData = rounds.reduce((prev, current) => 
-					(prev.round_nb > current.round_nb) ? prev : current
-				);
-				const finalRoundHistory = rounds.map((r: any) => {
-					const own = r.results.find((res: any) => res.user_id === user.ID);
-					return {
-						round: r.round_nb,
-						points: own?.round_infos?.score ?? 0,
-						distance: own?.round_infos?.distance ?? 0,
-						guessLocation: own?.has_guessed && own.round_infos ? {
-							latitude: own.round_infos.guess.lat,
-							longitude: own.round_infos.guess.long,
-						} : { latitude: 0, longitude: 0 }
-					};
-				});
-				setRoundHistory(finalRoundHistory);
-			   
+				const data = message.payload as RoundResultsPayload;
+				const last = data.rounds[0];
+
+				setRoundHistory(toRoundHistory(data.rounds, user.ID));
 				setLastRoundResult({
 					isLastRound: true,
 					nextRoundAt: null,
 					actualLocation: {
-						latitude: lastRoundData.base.lat,
-						longitude: lastRoundData.base.long,
+						latitude: last.base.lat,
+						longitude: last.base.long,
 					},
-					allResults: lastRoundData.results,
-					fullHistory: rounds,
-				}
-			);
-		}	
-	}
+					allResults: last.results,
+					fullHistory: data.rounds,
+				});
+			}
+		}
 
 		socket.onerror = (err) => console.log("WS error:", err);
 
