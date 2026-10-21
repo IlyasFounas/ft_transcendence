@@ -1319,16 +1319,59 @@
     "longitude": -69.13794451616002,
     "country_code": "CW"
   },
-   {
+  {
     "mapillary_id": 1017130979152256,
     "latitude": 12.131884741885017,
     "longitude": -68.88442342022,
     "country_code": "CW"
   },
-   {
+  {
     "mapillary_id": 1063581308608973,
     "latitude": 15.303929699999983,
     "longitude": -61.389421200000015,
     "country_code": "DM"
-  }
+  },
+  {
+    "mapillary_id": 625652386504690,
+    "latitude": 15.266986499999987,
+    "longitude": -61.34511880000002,
+    "country_code": "DM"
+  },
+  {
+    "mapillary_id": 490293055501573,
+    "latitude": 16.223956630000004,
+    "longitude": -61.38304578999998,
+    "country_code": "GP"
+  },
+  {
+    "mapillary_id": 756398816374805,
+    "latitude": 18.452436612450015,
+    "longitude": -77.90879077835001,
+    "country_code": "JM"
+  },
+  {
+    "mapillary_id": 1438014300293195,
+    "latitude": 14.636099399999992,
+    "longitude": -61.03938389999996,
+    "country_code": "MQ"
+  },
+  {
+    "mapillary_id": 197809508830309,
+    "latitude": 14.762772169999991,
+    "longitude": -60.90767675000001,
+    "country_code": "MQ"
+  },
+  {
+    "mapillary_id": 2590249607823083,
+    "latitude": -23.413358333332994,
+    "longitude": -57.446363611110996,
+    "country_code": "PY"
+  },
+  {
+    "mapillary_id": 1095402326782966,
+    "latitude": -13.73095580547998,
+    "longitude": -74.31149996986704,
+    "country_code": "PE"
+  },
+  
 ]
