@@ -64,7 +64,7 @@ function AuthProvider({children}: {children: ReactNode}) {
         url: string,
         options: RequestInit = {}
     ) => {
-
+        
         const result = await apiFetch(url, options);
         if (result === null) {
             return null;
@@ -94,7 +94,6 @@ function AuthProvider({children}: {children: ReactNode}) {
         return false;
     };
 
-    
     const login = async () => {
         await getUser();
     };
@@ -112,15 +111,25 @@ function AuthProvider({children}: {children: ReactNode}) {
             setUser(null);
         }
     };
-
+    
     useEffect(() => {
         const checkAuth = async () => {
-            await getUser();
-            setIsAuthLoading(false);
+            try {
+                const refreshed = await refreshAccessToken();
+
+                if (refreshed) {
+                    await getUser();
+                } else {
+                    setUser(null);
+                }
+            } finally {
+                setIsAuthLoading(false);
+            }
         };
+
         checkAuth();
     }, []);
-    
+
     return (
         <AuthContext.Provider 
             value={{
