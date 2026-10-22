@@ -3,11 +3,15 @@ package repositories
 import (
 	"backend/internal/models/games"
 	"context"
+	"database/sql"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/uptrace/bun"
 )
+
+var ErrNoLocationLeft = errors.New("no location left to replace a broken one")
 
 type GameRepository struct {
 	db *bun.DB
@@ -214,11 +218,91 @@ func (r *GameRepository) SetPlayerNb(ctx context.Context, game_id int64,
 	return nil
 }
 
-// Check if round_total is smaller than the number of available locations (else error)
+// Transaction that eplaces the location of the round roundNb of gameId by a random one
+// that is neither used in this game nor disabled, and restarts the round with it:
+//   - the old location is disabled so that it is never drawn again. It isn't deleted: the rounds already
+//     played with it still point to it
+//   - the new one takes its place in game.location_ids and in rounds.loc_id
+//   - the round starts again from now (rounds.started_at), and its guesses (made without seeing anything) are deleted
+// Returns the id of the old location and the id of the new one.
+func (r *GameRepository) ReplaceRoundLocation(ctx context.Context, gameId, roundNb int64) (int64, int64, error) {
+	var roundId, oldLocationId, newLocationId int64
+	err := r.db.RunInTx(ctx, nil, func(ctx context.Context, tx bun.Tx) error {
+		if err := tx.NewSelect().
+			TableExpr("rounds").
+			Column("id", "loc_id").
+			Where("game_id = ? AND round_nb = ?", gameId, roundNb).
+			Scan(ctx, &roundId, &oldLocationId); err != nil {
+			return err
+		}
+		game := new(games.Game)
+		if err := tx.NewSelect().
+			Model(game).
+			Column("location_ids").
+			Where("id = ?", gameId).
+			Scan(ctx); err != nil {
+			return err
+		}
+		index := roundNb - 1 // because the array is 0-indexed, but round_nb starts at 1
+		if index < 0 || index >= int64(len(game.LocationIDs)) {
+			return fmt.Errorf("game %d has no location for round %d", gameId, roundNb)
+		}
+		// a random location, neither used in this game (the broken one included) nor disabled
+		if err := tx.NewSelect().
+			TableExpr("locations").
+			Column("location_id").
+			Where("disabled_at IS NULL").
+			Where("location_id NOT IN (?)", bun.In(game.LocationIDs)).
+			OrderExpr("RANDOM()").
+			Limit(1).
+			Scan(ctx, &newLocationId); err != nil {
+			if errors.Is(err, sql.ErrNoRows) {
+				return ErrNoLocationLeft
+			}
+			return err
+		}
+		if _, err := tx.NewUpdate().
+			TableExpr("locations").
+			Set("disabled_at = ?", time.Now()).
+			Where("location_id = ?", oldLocationId).
+			Where("disabled_at IS NULL"). // already disabled by another game: it keeps its first date
+			Exec(ctx); err != nil {
+			return err
+		}
+		game.LocationIDs[index] = newLocationId
+		if _, err := tx.NewUpdate().
+			Model(game).
+			Column("location_ids").
+			Where("id = ?", gameId).
+			Exec(ctx); err != nil {
+			return err
+		}
+		if _, err := tx.NewUpdate().
+			TableExpr("rounds").
+			Set("loc_id = ?", newLocationId).
+			Set("started_at = ?", time.Now()).
+			Where("id = ?", roundId).
+			Exec(ctx); err != nil {
+			return err
+		}
+		_, err := tx.NewDelete().
+			TableExpr("guesses").
+			Where("round_id = ?", roundId).
+			Exec(ctx)
+		return err
+	})
+	if err != nil {
+		return 0, 0, err
+	}
+	return oldLocationId, newLocationId, nil
+}
+
+// Check if round_total is smaller than the number of available locations, the disabled ones excluded (else error)
 func (r *LocationRepository) CheckEnoughLocations(ctx context.Context, round_total int64) (error) {
 	var count int
 	count, err := r.db.NewSelect().
 		TableExpr("locations").
+		Where("disabled_at IS NULL").
 		Count(ctx)
 	if err != nil {
 		return err
@@ -235,6 +319,7 @@ func (r *LocationRepository) GetRandomLocations(ctx context.Context, round_total
 	err := r.db.NewSelect().
 		Model(&locations).
 		TableExpr("locations").
+		Where("disabled_at IS NULL").
 		OrderExpr("RANDOM()").
 		Limit(int(round_total)). // limits to the exact number of rounds
 		Group("location_id"). // ensures unique locations by grouping same location_id

@@ -23,38 +23,34 @@ export function MainLayout () {
             />
         )}
         <div className="min-h-dvh flex flex-col">
-            <Navbar
-                status="online"
-                isChatOpen={isChatOpen}
-                onToggleChat={() => setIsChatOpen((current) => !current)}
-                showChat={true}
-            />
+            <div className="sticky top-0 z-60 w-full shrink-0">
+                <Navbar
+                    status="online"
+                    isChatOpen={isChatOpen}
+                    onToggleChat={() => setIsChatOpen((current) => !current)}
+                    showChat={true}
+                />
+            </div>
 
 			<Outlet />
 			<Footer />
+
             <div
-            className={`
+                className={`
                 fixed
-                right-5
-                top-20
-                lg:top-30
+                top-28
                 bottom-5
                 left-5
+                right-5
                 z-50
                 rounded-xl
                 overflow-hidden
                 border
                 border-border-default
                 bg-surface-base
-    
                 md:left-auto
-                md:right-5
-                md:bottom-5
-                md:w-2/5
-                xl:w-100
-    
+                md:w-[min(26rem,calc(100vw-2.5rem))]
                 ${isChatOpen ? "block" : "hidden"}
-
                 `}
             >
                 <ChatPanel />

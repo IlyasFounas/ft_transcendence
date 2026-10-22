@@ -110,7 +110,7 @@ export default function LobbyPage()
 			w-full 
 			bg-cover bg-no-repeat bg-center bg-[url(/backgrounds/earth_background.png)] 
 			py-24 
-			lg:pr-[27rem] 
+			xl:pr-[27rem] 
 			flex flex-col 
 			justify-center">
 			<div className="flex min-h-[50px] items-center justify-center gap-4 lg:gap-12">

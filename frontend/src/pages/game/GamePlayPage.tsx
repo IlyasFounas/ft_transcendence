@@ -12,7 +12,7 @@ import TutorialCarousel from "../../components/carousels/TutorialCarousel";
 export default function GamePlayPage() {
 	const [countdown, setCountDown] = useState(0);
 	const [isMapMain, setIsMapMain] = useState(false);
-	const { round, roundHistory, lastRoundResult, sendGuess, startGame, leaveGame, resetGame, lobbyInfos, players, isConnected, connect } = useLobbySocket();
+	const { round, roundHistory, lastRoundResult, sendGuess, startGame, leaveGame, resetGame, lobbyInfos, players, isConnected, connect, reportLocationError, roundReload } = useLobbySocket();
 	const [guess, setGuess] = useState<{ lat: number; lng: number } | null>(null);
 	const navigate = useNavigate();
 	const [hasGuessed, setHasGuessed] = useState(false);
@@ -22,10 +22,12 @@ export default function GamePlayPage() {
 	const [mode, setMode] = useState<"solo" | "multi" | null>(null);
 	const isLeavingRef = useRef(false);
 
+	// new round, or new location in the same round (the old one couldn't be loaded): the server deleted the guesses
+	// made on the old one, so the player guesses again
 	useEffect(() => {
 		setHasGuessed(false);
 		setGuess(null);
-	}, [round?.round_nb]);
+	}, [round?.round_nb, round?.mid]);
 
 	useEffect(() => {
 		if (isLeavingRef.current) return;
@@ -194,7 +196,9 @@ export default function GamePlayPage() {
 						<div className={isMapMain ? "absolute inset-0" : "w-full h-full"}>
 							<LoadStreetView
 								id={String(round.mid)}
+								reloadKey={roundReload}
 								interactive={!isMapMain}
+								onLoadError={() => reportLocationError(round.round_nb)}
 							/>
 						</div>
 						{isMapMain && (

@@ -39,8 +39,11 @@ export default function JoinOperationCard({ code, onChange, onSubmit, isChecking
 
 			<input
 			ref={inputRef}
+			id="room-code"
+			name="roomCode"
 			type="text"
 			inputMode="numeric"
+			autoComplete="off"
 			maxLength={7}
 			value={code}
 			onChange={handleChange}
@@ -48,6 +51,7 @@ export default function JoinOperationCard({ code, onChange, onSubmit, isChecking
 			onFocus={() => setIsFocused(true)}
 			onBlur={() => setIsFocused(false)}
 			disabled={isChecking}
+			aria-label="Room code"
 			className="absolute inset-0 h-full w-full opacity-0"
 			/>
 
