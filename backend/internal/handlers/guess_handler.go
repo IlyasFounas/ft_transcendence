@@ -30,16 +30,7 @@ type GuessGetter interface {
 	GetScoreByRoundAndUserID(ctx context.Context, round_id int64, user_id int64) (int64, error)
 	GetTotalScoreByGameAndUserID(ctx context.Context, game_id int64, user_id int64) (int64, error)
 	GetResultsByGameID(ctx context.Context, game_id int64) ([][2]int64, error)
-	// GetUserIDByID(ctx context.Context, guess_id int64) (int64, error)
-	// GetRoundIDByID(ctx context.Context, guess_id int64) (int64, error)
-	GetByRoundID(ctx context.Context, round_id int64) ([]*guesses.Guess, error)
-	// GetByUserID(ctx context.Context, user_id int64) ([]*guesses.Guess, error)
-
-	// PatchByID(ctx context.Context, guess_id int64, patch *guesses.Guess) error
-
 	DeleteByID(ctx context.Context, guess_id int64) error
-	// DeleteByRoundID(ctx context.Context, round_id int64) error
-	// DeleteByUserID(ctx context.Context, user_id int64) error
 }
 
 // RoundGetter — methods expected from the repository by the handler
@@ -53,7 +44,6 @@ type RoundGetter interface {
 	GetCoordinatesByLocationID(ctx context.Context, location_id int64) (float64, float64, error)
 	GetCCByLocationID(ctx context.Context, location_id int64) (string, error)
 	GetIDByGameIDAndRoundNb(ctx context.Context, game_id int64, round_nb int64) (int64, error)
-	// DeleteByID(ctx context.Context, round_id int64) error
 }
 
 type GuessHandler struct {
@@ -92,7 +82,7 @@ func CalculateScore(createdGuess *guesses.Guess, totalTime time.Duration) {
 		return
 	}
 
-		if createdGuess.Distance > haversine.MaxDistanceMeters {
+	if createdGuess.Distance > haversine.MaxDistanceMeters {
 		log.Printf("Error: distance %d exceeds Earth's diameter for guess", createdGuess.Distance)
 		createdGuess.Score = 0
 		return
@@ -128,13 +118,13 @@ func CalculateScore(createdGuess *guesses.Guess, totalTime time.Duration) {
 func (h *GuessHandler) GetGuessByID(c *gin.Context) {
 	ctx := c.Request.Context()
 
-	guessID, err := strconv.ParseInt(c.Param("guess_id"), 10, 64)
+	guessID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid guess id"})
 		return
 	}
 
-	loc, err := h.guessRepo.GetByID(ctx, guessID)
+	guess, err := h.guessRepo.GetByID(ctx, guessID)
 	if err != nil {
 		if errors.Is(err, repositories.ErrGuessNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "guess not found"})
@@ -145,14 +135,14 @@ func (h *GuessHandler) GetGuessByID(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, loc)
+	c.JSON(http.StatusOK, guess)
 }
 
 // GET /guesses/:id/coordinates
 func (h *GuessHandler) GetGuessCoordinates(c *gin.Context) {
 	ctx := c.Request.Context()
 
-	guessID, err := strconv.ParseInt(c.Param("guess_id"), 10, 64)
+	guessID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid guess id"})
 		return
@@ -187,7 +177,7 @@ func (h *GuessHandler) GetGuessCoordinates(c *gin.Context) {
 func (h *GuessHandler) GetGuessLatitude(c *gin.Context) {
 	ctx := c.Request.Context()
 
-	guessID, err := strconv.ParseInt(c.Param("guess_id"), 10, 64)
+	guessID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid guess id"})
 		return
@@ -211,7 +201,7 @@ func (h *GuessHandler) GetGuessLatitude(c *gin.Context) {
 func (h *GuessHandler) GetGuessLongitude(c *gin.Context) {
 	ctx := c.Request.Context()
 
-	guessID, err := strconv.ParseInt(c.Param("guess_id"), 10, 64)
+	guessID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid guess id"})
 		return
@@ -235,7 +225,7 @@ func (h *GuessHandler) GetGuessLongitude(c *gin.Context) {
 func (h *GuessHandler) GetGuessCountryCode(c *gin.Context) {
 	ctx := c.Request.Context()
 
-	guessID, err := strconv.ParseInt(c.Param("guess_id"), 10, 64)
+	guessID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid guess id"})
 		return
@@ -259,7 +249,7 @@ func (h *GuessHandler) GetGuessCountryCode(c *gin.Context) {
 func (h *GuessHandler) GetGuessDistance(c *gin.Context) {
 	ctx := c.Request.Context()
 
-	guessID, err := strconv.ParseInt(c.Param("guess_id"), 10, 64)
+	guessID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid guess id"})
 		return
@@ -283,7 +273,7 @@ func (h *GuessHandler) GetGuessDistance(c *gin.Context) {
 func (h *GuessHandler) GetGuessScore(c *gin.Context) {
 	ctx := c.Request.Context()
 
-	guessID, err := strconv.ParseInt(c.Param("guess_id"), 10, 64)
+	guessID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid guess id"})
 		return
@@ -305,13 +295,6 @@ func (h *GuessHandler) GetGuessScore(c *gin.Context) {
 
 // GET /guesses/score/:round_id/:user_id //by round and and user
 func (h *GuessHandler) GetGuessScoreByRoundAndUser(c *gin.Context) {
-	userID, ok := c.Get("userId")
-	if !ok {
-		c.JSON(http.StatusUnauthorized,
-			gin.H{"message": "The userId is empty"})
-		return
-	}
-
 	ctx := c.Request.Context()
 
 	round_id, err := strconv.ParseInt(c.Param("round_id"), 10, 64)
@@ -319,14 +302,20 @@ func (h *GuessHandler) GetGuessScoreByRoundAndUser(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid round id"})
 		return
 	}
+	// the player whose score is asked for (from the URL), not the admin who asks
+	user_id, err := strconv.ParseInt(c.Param("user_id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user id"})
+		return
+	}
 
-	score, err := h.guessRepo.GetScoreByRoundAndUserID(ctx, round_id, userID.(int64))
+	score, err := h.guessRepo.GetScoreByRoundAndUserID(ctx, round_id, user_id)
 	if err != nil {
 		if errors.Is(err, repositories.ErrGuessNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "guess not found for this round and user"})
 			return
 		}
-		log.Printf("Error getting score for round %d and user %d: %v", round_id, userID.(int64), err)
+		log.Printf("Error getting score for round %d and user %d: %v", round_id, user_id, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get score for this round and user"})
 		return
 	}
@@ -336,13 +325,6 @@ func (h *GuessHandler) GetGuessScoreByRoundAndUser(c *gin.Context) {
 
 // GET /guesses/total_score/:game_id/:user_id //by game and user
 func (h *GuessHandler) GetTotalScoreByGameAndUser(c *gin.Context) {
-	userID, ok := c.Get("userId")
-	if !ok {
-		c.JSON(http.StatusUnauthorized,
-			gin.H{"message": "The userId is empty"})
-		return
-	}
-
 	ctx := c.Request.Context()
 
 	game_id, err := strconv.ParseInt(c.Param("game_id"), 10, 64)
@@ -350,10 +332,20 @@ func (h *GuessHandler) GetTotalScoreByGameAndUser(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid game id"})
 		return
 	}
-
-	totalScore, err := h.guessRepo.GetTotalScoreByGameAndUserID(ctx, game_id, userID.(int64))
+	
+	user_id, err := strconv.ParseInt(c.Param("user_id"), 10, 64)
 	if err != nil {
-		log.Printf("Error getting total score for game %d and user %d: %v", game_id, userID.(int64), err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user id"})
+		return
+	}
+
+	totalScore, err := h.guessRepo.GetTotalScoreByGameAndUserID(ctx, game_id, user_id)
+	if err != nil {
+		if errors.Is(err, repositories.ErrGuessNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "could not found total score for this game and user"})
+			return
+		}
+		log.Printf("Error getting total score for game %d and user %d: %v", game_id, user_id, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get total score for this game and user"})
 		return
 	}
@@ -373,6 +365,10 @@ func (h *GuessHandler) GetGameResults(c *gin.Context) {
 
 	results, err := h.guessRepo.GetResultsByGameID(ctx, game_id)
 	if err != nil {
+		if errors.Is(err, repositories.ErrGuessNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "could not found results for this game"})
+			return
+		}
 		log.Printf("Error getting results for game %d: %v", game_id, err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get results for this game"})
 		return
@@ -381,31 +377,11 @@ func (h *GuessHandler) GetGameResults(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"results": results})
 }
 
-// // GET /guesses/round/:round_id
-// func (h *GuessHandler) GetGuessesByRoundID(c *gin.Context) {
-// 	ctx := c.Request.Context()
-
-// 	round_id, err := strconv.ParseInt(c.Param("round_id"), 10, 64)
-// 	if err != nil {
-// 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid round id"})
-// 		return
-// 	}
-
-// 	guesses, err := h.guessRepo.GetByRoundID(ctx, round_id)
-// 	if err != nil {
-// 		log.Printf("Error getting guesses for round %d: %v", round_id, err)
-// 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not get guesses for this round"})
-// 		return
-// 	}
-
-// 	c.JSON(http.StatusOK, gin.H{"guesses": guesses})
-// }
-
 // DELETE /guesses/:id
 func (h *GuessHandler) DeleteGuessByID(c *gin.Context) {
 	ctx := c.Request.Context()
 
-	guessID, err := strconv.ParseInt(c.Param("guess_id"), 10, 64)
+	guessID, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid guess id"})
 		return
