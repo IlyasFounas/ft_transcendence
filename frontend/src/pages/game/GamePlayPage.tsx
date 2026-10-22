@@ -189,9 +189,9 @@ export default function GamePlayPage() {
 								active:scale-[0.98]
 								rounded-[10px]
 							`
-							: "w-full h-full"
+							: "w-full h-full rounded-lg"
 					}>
-						<div className={isMapMain ? "absolute inset-0" : "w-full h-full"}>
+						<div className={isMapMain ? "absolute inset-0" : "w-full h-full rounded-lg"}>
 							<LoadStreetView
 								id={String(round.mid)}
 								interactive={!isMapMain}

@@ -49,6 +49,7 @@ export default function LoadStreetView({
 			trackResize: true,
 		});
         viewerRef.current = viewer;
+        viewer.deactivateComponent("attribution");
 
         const resizeObserver = new ResizeObserver(() => {
             viewer.resize();
