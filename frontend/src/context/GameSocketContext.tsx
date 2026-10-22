@@ -54,11 +54,13 @@ interface GameSocketContextType {
 	leaveGame: () => void;
 	kickPlayer: (targetId: number) => void;
 	sendGuess: (guess: { lat: number; lng: number }) => void;
+	reportLocationError: (roundNb: number) => void;
 	startGame: () => void;
 	startNextRound: () => void;
 	connect: () => void;
 	resetGame: () => void;
 	round: RoundInfo | null;
+	roundReload: number;
 	roundHistory: RoundResult[];
 	lastRoundResult: {
 		isLastRound: boolean;
@@ -80,11 +82,13 @@ const GameSocketContext = createContext<GameSocketContextType>({
 	leaveGame: () => {},
 	kickPlayer: () => {},
 	sendGuess: () => {},
+	reportLocationError: () => {},
 	startGame: () => {},
 	startNextRound: () => {},
 	connect: () => {},
 	resetGame: () => {},
 	round: null,
+	roundReload: 0,
 	roundHistory: [],
 	lastRoundResult: null,
 	gameStartAt: null,
@@ -114,6 +118,9 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
 	const socketRef = useRef<WebSocket | null>(null);
 	const [isClosed, setIsClosed] = useState(false);
 	const [round, setRound] = useState<RoundInfo | null>(null);
+	// incremented at each round_started: the image of the round is loaded again even when the server resends the same
+	// one (a player who couldn't load it, see reportLocationError)
+	const [roundReload, setRoundReload] = useState(0);
 	const [roundHistory, setRoundHistory] = useState<RoundResult[]>([]);
 	const [lastRoundResult, setLastRoundResult] = useState<{
 		isLastRound: boolean;
@@ -162,6 +169,7 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
 					mid: data.mid,
 					round_ends_at: data.round_ends_at,
 				});
+				setRoundReload((n) => n + 1);
 				setLastRoundResult(null);
 				setGameStartAt(null);
 			}
@@ -250,6 +258,15 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
 		}));
 	}
 
+	// the image of the round can't be loaded (black screen): the server checks it on Mapillary, then either resends
+	// the same round to this player only (reload), or replaces the location and restarts the round for everyone
+	function reportLocationError(roundNb: number) {
+		socketRef.current?.send(JSON.stringify({
+			action: "location_error",
+			payload: { round_nb: roundNb },
+		}));
+	}
+
 	function kickPlayer(targetId: number) {
 		socketRef.current?.send(JSON.stringify({
 			action: "kick_player",
@@ -292,7 +309,7 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
 
 	return (
 		<GameSocketContext.Provider
-		value={{ players, lobbyInfos, isConnected, isClosed, isCurrentUserHost, leaveLobby, leaveGame, kickPlayer, startGame, startNextRound, round, roundHistory, lastRoundResult, sendGuess, connect, resetGame, gameStartAt}}
+		value={{ players, lobbyInfos, isConnected, isClosed, isCurrentUserHost, leaveLobby, leaveGame, kickPlayer, startGame, startNextRound, round, roundReload, roundHistory, lastRoundResult, sendGuess, reportLocationError, connect, resetGame, gameStartAt}}
 		>
 		{children}
 		</GameSocketContext.Provider>

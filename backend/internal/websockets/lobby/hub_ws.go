@@ -3,6 +3,7 @@ package lobby_ws
 import (
 	"os"
 	"backend/internal/repositories"
+	"backend/internal/tools/mapillary"
 	securesend "backend/internal/tools/secure_send"
 	"backend/internal/websockets/client"
 	"backend/internal/websockets/handlers"
@@ -39,6 +40,10 @@ const preRoundPause = 10 * time.Second
 const endRoundRetryDelay = 2 * time.Second
 const endRoundMaxRetries = 30
 
+// the image of a round that players can't load is checked on Mapillary at most maxLocationChecks times per round:
+// a front that keeps failing on its side (connection, browser) would otherwise ask again after each reload
+const maxLocationChecks = 3
+
 type kickPlayer struct {
 	TargetId int64 `json:"target_id"`
 }
@@ -61,6 +66,24 @@ type ClientHub struct {
 type internalRoundEvent struct {
 	GameId  int64 `json:"game_id"`
 	RoundNb int64 `json:"round_nb"`
+}
+
+// Sent by a player whose front can't load the image of the running round (black screen)
+type locationErrorPayload struct {
+	RoundNb int64 `json:"round_nb"`
+}
+
+// Sent back to the hub by the goroutine that asked Mapillary about the image of a round (see handleLocationError)
+type locationCheckedEvent struct {
+	GameId	int64	`json:"game_id"`
+	RoundNb	int64	`json:"round_nb"`
+	MID		int64	`json:"mid"`
+	Broken	bool	`json:"broken"`
+}
+
+// What the hub needs from Mapillary (see tools/mapillary)
+type imageChecker interface {
+	ImageExists(ctx context.Context, mid int64) (bool, error)
 }
 
 // Sent to all clients when the host starts the game
@@ -111,6 +134,9 @@ type gameRoundState struct {
 	NextRoundAt	time.Time // multiplayer only, valid when Phase == Pause: when the next round starts (zero otherwise)
 	GameResults	[]ws_handlers.RoundResult // results of every round played so far, newest first
 	MID			int64 // the Mapillary ID of the location for the current round, valid when Phase == Playing
+	CheckingLocation	bool // Mapillary is being asked whether MID still exists (see handleLocationError)
+	WaitingReload		map[*ClientHub]bool // clients that couldn't load MID, waiting for the answer of Mapillary
+	LocationChecks		int // Mapillary checks already done for this round (at most maxLocationChecks)
 }
 
 // Carries one action through the hubw
@@ -136,13 +162,14 @@ type Hub struct {
 	StatsRepo		*repositories.StatisticsRepository
 	LobbyWsHandler	*ws_handlers.LobbyWsHandler
 	GuessWsHandler	*ws_handlers.GuessWsHandler
+	Mapillary		imageChecker // nil without MAPILLARY_ACCESS_TOKEN: an image that can't be loaded is then only reloaded
 }
 
 func NewHub(
 	repo *repositories.Repositories,
 	wsHandlers *ws_handlers.WsHandlers,
 ) *Hub {
-	return &Hub{Clients:	make(map[int64]map[*ClientHub]bool),
+	hub := &Hub{Clients:	make(map[int64]map[*ClientHub]bool),
 		Register:			make(chan *ClientHub),
 		Unregister:			make(chan *ClientHub),
 		Action:				make(chan *DataInfos),
@@ -156,6 +183,14 @@ func NewHub(
 		LobbyWsHandler:		wsHandlers.Lobby,
 		GuessWsHandler:		wsHandlers.Guess,
 	}
+	// only set when there is a token: a nil *mapillary.Checker stored in the interface wouldn't be nil anymore
+	checker, err := mapillary.NewChecker()
+	if err != nil {
+		log.Printf("warning : %s, an image that a player can't load will be reloaded, never replaced\n", err)
+		return hub
+	}
+	hub.Mapillary = checker
+	return hub
 }
 
 func NewClientHub(connx *client_ws.Connexion,
@@ -430,7 +465,31 @@ func (h *Hub) handleAction(ctx context.Context, data *DataInfos) {
 			log.Printf("error : %s\n", err)
 			return
 		}
+		// when a round starts again with a new location (see handleLocationChecked), the timer of the old one can fire
+		// right before being stopped: its event arrives before the new end of the round. A real timeout never comes
+		// early (and the retries of EndRound are counted in EndRetries), so an early one only re-arms the timer
+		if state, ok := h.RoundState[evt.GameId]; ok && state.Phase == phasePlaying && state.RoundNb == evt.RoundNb &&
+			state.EndRetries == 0 && time.Until(state.RoundEndsAt) > 0 {
+			h.armTimer(ctx, evt.GameId, time.Until(state.RoundEndsAt), "round_timeout", evt.RoundNb)
+			return
+		}
 		h.EndRound(ctx, evt.GameId, evt.RoundNb)
+
+	case "location_error":
+		// the front of this player can't load the image of the running round
+		if data.Client == nil {
+			return
+		}
+		h.handleLocationError(ctx, data)
+
+	case "location_checked":
+		if data.Client != nil {
+			// location_checked can only ever be generated internally (see handleLocationError):
+			// a client could otherwise have any location replaced
+			log.Printf("warning : client %d tried to trigger location_checked directly, ignored\n", data.Client.UserId)
+			return
+		}
+		h.handleLocationChecked(ctx, data.Payload)
 
 	case "finished":
 		// each player leaves the finished game on his own
@@ -633,6 +692,109 @@ func (h *Hub) StartRound(ctx context.Context, gameId, roundNb int64) {
 			MID:			MID,
 		},
 	})
+}
+
+// A player can't load the image of the running round (black screen). Mapillary is asked whether the image still exists,
+// once at a time however many players report it (the others wait for the same answer), at most maxLocationChecks times
+// per round. The call can take a few seconds: it never runs in the hub's goroutine, which would freeze every game
+// meanwhile. Like a timer, the goroutine doesn't touch the hub's state: it sends the answer back as an internal event
+func (h *Hub) handleLocationError(ctx context.Context, data *DataInfos) {
+	var report locationErrorPayload
+	if err := json.Unmarshal(data.Payload, &report); err != nil {
+		log.Printf("error : %s\n", err)
+		return
+	}
+	state, ok := h.RoundState[data.Client.GameId]
+	// only for the round running now: a report sent just before the end of the round is ignored
+	if !ok || state.Phase != phasePlaying || state.RoundNb != report.RoundNb {
+		return
+	}
+	if !state.CheckingLocation && state.LocationChecks >= maxLocationChecks {
+		log.Printf("warning : the image of game %d round %d was already checked %d times, report of client %d ignored\n",
+			data.Client.GameId, state.RoundNb, state.LocationChecks, data.Client.UserId)
+		return
+	}
+	if state.WaitingReload == nil {
+		state.WaitingReload = make(map[*ClientHub]bool)
+	}
+	state.WaitingReload[data.Client] = true
+	if state.CheckingLocation {
+		// already being checked: this client gets the same answer as the others
+		return
+	}
+	state.CheckingLocation = true
+	state.LocationChecks++
+
+	evt := locationCheckedEvent{GameId: data.Client.GameId, RoundNb: state.RoundNb, MID: state.MID}
+	checker := h.Mapillary
+	go func() {
+		defer func() {
+			// out of the hub's goroutine, safely doesn't protect this one: a panic here would stop the whole server
+			if r := recover(); r != nil {
+				log.Printf("panic in the location check of game %d: %v\n%s", evt.GameId, r, debug.Stack())
+			}
+		}()
+		if checker != nil {
+			exists, err := checker.ImageExists(ctx, evt.MID)
+			if err != nil {
+				log.Printf("error : could not check the mapillary image %d (game %d round %d): %s\n",
+					evt.MID, evt.GameId, evt.RoundNb, err)
+			}
+			evt.Broken = err == nil && !exists
+		}
+		payload, err := json.Marshal(evt)
+		if err != nil {
+			log.Printf("error : %s\n", err)
+			return
+		}
+		securesend.SecureSend(ctx, h.Action, &DataInfos{Action: "location_checked", Payload: payload},
+			fmt.Sprintf("Hub : the location check of game %d can't be delivered", evt.GameId))
+	}()
+}
+
+// Answer of Mapillary about the image of a round (see handleLocationError):
+//   - the image exists (or Mapillary couldn't tell): the problem is on the side of the players who reported it,
+//     only them reload the round, with the same location
+//   - the image doesn't exist anymore: the location is disabled and replaced by a new one, and the round starts
+//     again from the beginning for every player
+func (h *Hub) handleLocationChecked(ctx context.Context, payload json.RawMessage) {
+	var evt locationCheckedEvent
+	if err := json.Unmarshal(payload, &evt); err != nil {
+		log.Printf("error : %s\n", err)
+		return
+	}
+	state, ok := h.RoundState[evt.GameId]
+	// the round ended, or its location already changed, while Mapillary was answering: nothing left to do
+	if !ok || state.Phase != phasePlaying || state.RoundNb != evt.RoundNb || state.MID != evt.MID {
+		return
+	}
+	waiting := state.WaitingReload
+	state.CheckingLocation = false
+	state.WaitingReload = nil
+
+	if !evt.Broken {
+		log.Printf("the image of game %d round %d (mapillary %d) can't be loaded by %d client(s) but isn't known as broken: they reload it\n",
+			evt.GameId, evt.RoundNb, evt.MID, len(waiting))
+		for client := range waiting {
+			// a client disconnected meanwhile is unregistered: its channel is closed, nothing can be sent to it anymore
+			if _, ok := h.Clients[evt.GameId][client]; ok {
+				h.resyncClient(ctx, client)
+			}
+		}
+		return
+	}
+
+	oldLocationId, newLocationId, err := h.GameRepo.ReplaceRoundLocation(ctx, evt.GameId, evt.RoundNb)
+	if err != nil {
+		// the players keep their black screen until the end of the round, the game goes on with the next one
+		log.Printf("error : the location of game %d round %d (mapillary %d) is broken but could not be replaced: %s\n",
+			evt.GameId, evt.RoundNb, evt.MID, err)
+		return
+	}
+	log.Printf("location %d (mapillary %d) can't be loaded anymore: disabled, and replaced by location %d in game %d round %d\n",
+		oldLocationId, evt.MID, newLocationId, evt.GameId, evt.RoundNb)
+	// the round starts again: new end, new timer, new MID in the state, and round_started to every player
+	h.StartRound(ctx, evt.GameId, evt.RoundNb)
 }
 
 // armTimer (re)arms the pending timer of a game: the round timeout while a round is running ("round_timeout")
