@@ -398,5 +398,5 @@ func (h *GuessHandler) DeleteGuessByID(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "guess deleted successfully"}) // or no content ?
+	c.JSON(http.StatusNoContent, gin.H{"message": "guess deleted successfully"})
 }
