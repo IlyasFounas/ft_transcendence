@@ -189,7 +189,7 @@ func (h *FriendHandler) CancelRequest() gin.HandlerFunc {
 	}
 }
 
-func (h *FriendHandler) RemoveFriend() gin.HandlerFunc {
+func (h *FriendHandler) RemoveFriend(acceptFriend chan *int64) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userId, ok := c.Get("userId")
 		if !ok {
@@ -213,6 +213,20 @@ func (h *FriendHandler) RemoveFriend() gin.HandlerFunc {
 		if !updated {
 			c.JSON(http.StatusNotFound,
 				gin.H{"message": "No matching request"})
+			return
+		}
+		first := removeIDInt
+		if !securesend.SecureSend(c.Request.Context(), acceptFriend,
+		&first, "HTTP handler : the chan is closed") {
+			c.JSON(http.StatusUnprocessableEntity,
+				gin.H{"message": "Failed to process the info to the websocket"})
+			return
+		}
+		second := userId.(int64)
+		if !securesend.SecureSend(c.Request.Context(), acceptFriend,
+		&second, "HTTP handler : the chan is closed") {
+			c.JSON(http.StatusUnprocessableEntity,
+				gin.H{"message": "Failed to process the info to the websocket"})
 			return
 		}
 		c.JSON(http.StatusOK,

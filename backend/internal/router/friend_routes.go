@@ -22,6 +22,6 @@ func registerFriendRoutes(r *gin.Engine, h *handlers.FriendHandler,
 
 		private.DELETE("/friend/requests/:id/reject", h.RejectRequest())
 		private.DELETE("/friend/requests/:id/cancel", h.CancelRequest())
-		private.DELETE("/friend/:id/remove", h.RemoveFriend())
+		private.DELETE("/friend/:id/remove", h.RemoveFriend(acceptFriend))
 	}
 }
