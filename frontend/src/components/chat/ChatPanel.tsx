@@ -2,54 +2,23 @@ import { useState, useEffect } from "react";
 import type { Friend } from "../../types/user.types";
 import FriendsList from "./FriendList";
 import Conversation from "./Conversation";
-import useChatWebSocket from "../../hooks/useChatWebSocket";
-import { useAuth } from "../../context/AuthContext";
+import { useChat } from "../../context/ChatContext";
 
 export default function ChatPanel() {
 
-    const { authFetch } = useAuth();
-    
-    const { chatFriends, fetchMessages, sendMessage, messages, messageEnd, loadingOlderMessages, setMessageError, messageError } = useChatWebSocket();
-    
+    const { chatFriends, fetchMessages, sendMessage, messages, messageEnd, loadingOlderMessages, setMessageError, messageError } = useChat();
     const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
-    const [friendList, setFriendList] = useState<Friend[]>([]);
     
-    useEffect(() => {
-        const getFriends = async () => {
-            const result = await authFetch("api/friend");
-
-            if (!result) {
-                return;
-            }
-
-            const formattedFriends: Friend[] = (result.data.friends ?? []).map(
-                (friend: any) => ({
-                    userId: friend.user_id,
-                    username: friend.name,
-                    avatar: friend.avatar || "/avatars/avatar1.png",
-                    rank: friend.rank,
-                })
-            );
-
-            setFriendList(formattedFriends);
-        };
-
-        getFriends();
-    }, []);
-
-    const friendsWithOnlineStatus = friendList.map(friend => {
-        const chatFriend = chatFriends.find(
-            chatFriend => chatFriend.user_id === friend.userId
-        );
-        
-        return {
-            ...friend,
-            online: chatFriend?.online ?? false,
-            lastMessage: chatFriend?.last_message ?? "",
-            timestamp: chatFriend?.date ?? "",
-            rank: friend.rank,
-        };
-    });
+    const friendsWithOnlineStatus: Friend[] = chatFriends.map(friend => ({
+        userId: friend.user_id,
+        username: friend.name,
+        avatar: friend.avatar || "/avatars/avatar1.png",
+        rank: friend.rank,
+        status: friend.online ? "online" : "offline",
+        online: friend.online,
+        lastMessage: friend.last_message ?? "",
+        timestamp: friend.date ?? "",
+    }));
 
     useEffect(() => {
         if (!selectedFriend) {

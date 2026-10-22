@@ -14,7 +14,7 @@ import (
 )
 
 func NewRouter(ctx context.Context, h *handlers.Handlers, hub *lobby_ws.Hub, 
-	chat *chat_ws.Chat, wg *sync.WaitGroup) *gin.Engine {
+	chat *chat_ws.Chat, wg *sync.WaitGroup, acceptFriend chan *int64) *gin.Engine {
 	r := gin.Default()    //when you first create a var :=
 	if os.Getenv("ENV") == "prod" {
 		config := cors.Config{
@@ -38,7 +38,7 @@ func NewRouter(ctx context.Context, h *handlers.Handlers, hub *lobby_ws.Hub,
 	registerGameRoutes(r, h.Game)
 	registerLobbyRoutes(ctx, r, h.Game, h.Lobby, hub, wg)
 	registerGuessRoutes(r, h.Guess)
-	registerFriendRoutes(r, h.Friend)
+	registerFriendRoutes(r, h.Friend, acceptFriend)
 	registerChatRoutes(ctx, r, chat, wg)
 	return r
 }
