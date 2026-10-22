@@ -17,8 +17,8 @@ type Guess struct {
 	CountryFound 	bool			`bun:"country_found,default:false"`
 	TimeLeft		time.Duration	`bun:"time_left,default:0"` // duration are stored in nanoseconds, but can be shown in any type
 	Streak			int64			`bun:"streak,default:0"`
-	BaseScore		int64			`bun:"base_score,notnull"` // score avant multiplicateurs (streak, cc), utilisé pour l'XP
-	Score			int64			`bun:"score,notnull"` // score final avec multiplicateurs, utilisé pour le classement de la partie
+	BaseScore		int64			`bun:"base_score,notnull"` // score without multipliers, used for XP
+	Score			int64			`bun:"score,notnull"` // final score with multipliers, used for best games and game general scores
 	RoundNb 		int64			`bun:"round_nb,notnull" json:"round_nb,omitempty"`
 	RoundID			int64			`bun:"round_id,notnull,unique:idx_guess_user_round"`
 	UserID			int64			`bun:"user_id,notnull,unique:idx_guess_user_round"`
