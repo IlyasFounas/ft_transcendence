@@ -1373,5 +1373,160 @@
     "longitude": -74.31149996986704,
     "country_code": "PE"
   },
-  
+  {
+    "mapillary_id": 1266576441945217,
+    "latitude": 41.33075305836499,
+    "longitude": 19.84024558017495,
+    "country_code": "AL"
+  },
+  {
+    "mapillary_id": 2675641249311737,
+    "latitude": 43.855717330111,
+    "longitude": 18.399894056315,
+    "country_code": "BA"
+  },
+  {
+    "mapillary_id": 1510876533878584,
+    "latitude": 43.2303052,
+    "longitude": 17.0915919,
+    "country_code": "HR"
+  },
+  {
+    "mapillary_id": 391236955927027,
+    "latitude": 43.297839609953,
+    "longitude": 17.016153870339,
+    "country_code": "HR"
+  },
+  {
+    "mapillary_id": 809412022216658,
+    "latitude": 43.455401957619,
+    "longitude": 17.254964356077,
+    "country_code": "HR"
+  },
+  {
+    "mapillary_id": 1620120169256784,
+    "latitude": 43.5817835,
+    "longitude": 16.0155668,
+    "country_code": "HR"
+  },
+  {
+    "mapillary_id": 1859514218049204,
+    "latitude": 43.5896461,
+    "longitude": 15.921765,
+    "country_code": "HR"
+  },
+  {
+    "mapillary_id": 1710444603424428,
+    "latitude": 43.588132,
+    "longitude": 15.9258049,
+    "country_code": "HR"
+  },
+  {
+    "mapillary_id": 1042891810179335,
+    "latitude": 50.5100074,
+    "longitude": 14.1493267,
+    "country_code": "CZ"
+  },
+  {
+    "mapillary_id": 1551364260093352,
+    "latitude": 49.195347948667,
+    "longitude": 16.594739958917,
+    "country_code": "CZ"
+  },
+  {
+    "mapillary_id": 1654512948597501,
+    "latitude": 49.5817936,
+    "longitude": 13.5402213,
+    "country_code": "CZ"
+  },
+  {
+    "mapillary_id": 1390788479137077,
+    "latitude": 56.457890903148,
+    "longitude": 10.038242221289,
+    "country_code": "DK"
+  },
+  {
+    "mapillary_id": 813706784839638,
+    "latitude": 54.963436,
+    "longitude": 9.3234648,
+    "country_code": "DK"
+  },
+  {
+    "mapillary_id": 1063415332870430,
+    "latitude": 55.397450530383,
+    "longitude": 10.375110961282,
+    "country_code": "DK"
+  },
+  {
+    "mapillary_id": 1471676681660403,
+    "latitude": 55.3430801,
+    "longitude": 11.1407797,
+    "country_code": "DK"
+  },
+  {
+    "mapillary_id": 415248364585855,
+    "latitude": 55.6641076,
+    "longitude": 12.5434793,
+    "country_code": "DK"
+  },
+  {
+    "mapillary_id": 463138013270345,
+    "latitude": 55.6834851,
+    "longitude": 12.5782449,
+    "country_code": "DK"
+  },
+  {
+    "mapillary_id": 1528279008115941,
+    "latitude": 59.463176098649,
+    "longitude": 25.688820284054,
+    "country_code": "EE"
+  },
+  {
+    "mapillary_id": 4082727801774138,
+    "latitude": 59.436047222222,
+    "longitude": 24.744358333333,
+    "country_code": "EE"
+  },
+  {
+    "mapillary_id": 3936454733099771,
+    "latitude": 59.343793074144344,
+    "longitude": 24.774044557788102,
+    "country_code": "EE"
+  },
+  {
+    "mapillary_id": 3698808080432341,
+    "latitude": 58.2448397,
+    "longitude": 24.5153473,
+    "country_code": "EE"
+  },
+  {
+    "mapillary_id": 522109773532732,
+    "latitude": 58.0717058,
+    "longitude": 24.5114398,
+    "country_code": "EE"
+  },
+  {
+    "mapillary_id": 251228966792132,
+    "latitude": 60.1666869,
+    "longitude": 24.9406369,
+    "country_code": "FI"
+  },
+  {
+    "mapillary_id": 123151330107263,
+    "latitude": 60.1498168,
+    "longitude": 24.655379299972,
+    "country_code": "FI"
+  },
+  {
+    "mapillary_id": 1134531341169296,
+    "latitude": 60.447966301564,
+    "longitude": 22.253987470588,
+    "country_code": "FI"
+  },
+  {
+    "mapillary_id": 1187739430065066,
+    "latitude": 63.0818367,
+    "longitude": 25.864517,
+    "country_code": "FI"
+  }
 ]
