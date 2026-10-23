@@ -341,7 +341,7 @@ func (h *LocationHandler) DeleteLocation(c *gin.Context) {
 		return
 	}
 
-	c.Status(http.StatusNoContent)
+	c.JSON(http.StatusNoContent, gin.H{"message": "location successfully deleted"})
 }
 
 // DELETE /locations/mapillary/:mid
@@ -364,5 +364,5 @@ func (h *LocationHandler) DeleteLocationByMID(c *gin.Context) {
 		return
 	}
 
-	c.Status(http.StatusNoContent)
+	c.JSON(http.StatusNoContent, gin.H{"message": "location successfully deleted"})
 }
