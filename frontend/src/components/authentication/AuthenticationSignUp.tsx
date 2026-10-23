@@ -47,7 +47,7 @@ export default function AuthenticationSignUp ({
             return;
         }
 
-        if (result.status === 400 || result.status === 500) {
+        if (result.status !== 201) {
             setError(result.data.message);
             return ;
         }

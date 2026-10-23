@@ -33,7 +33,7 @@ export default function LeaderBoardList({ players, currentPlayerResult, currentU
 				return player ? (
 				<LeaderboardRow
 					key={player.username}
-					position={player.position}
+					position={index + 4}
 					username={player.username}
 					points={player.total}
 					rank={player.rank}

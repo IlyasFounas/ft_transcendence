@@ -3,10 +3,14 @@ import 'leaflet/dist/leaflet.css';
 import { useEffect } from 'react';
 import L from 'leaflet';
 
+type Props = {
+  view?: { center: L.LatLngTuple, zoom: number } | null,
+}
+
+export default function Preview2DMap({ view }: Props) {
 
 const WORLD_CENTER: L.LatLngTuple = [20, 0];
 
-export default function Preview2DMap() {
   useEffect(() => {
     const map = L.map('leaflet-map', {
       zoomControl: false,
@@ -16,7 +20,7 @@ export default function Preview2DMap() {
       touchZoom: false,
       boxZoom: false,
       keyboard: false,
-    }).setView(WORLD_CENTER, 3);
+    }).setView(view?.center ?? WORLD_CENTER, view?.zoom ?? 3);
 
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,

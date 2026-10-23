@@ -42,6 +42,70 @@ cp .env.exemple .env
 
 Open `.env` and fill in the required values, such as database credentials, authentication secrets, and OAuth credentials if applicable.
 
+To retrieve Mapillary token, connect to your developer account on [mapillary.com](https://www.mapillary.com/dashboard/developers).
+
+## Prerequisites: domain name & third-party services
+
+Google OAuth and Resend both require a **real domain name** — neither works with
+`localhost` or a bare IP.
+
+### 1. Domain name (Scaleway)
+
+I registered mine on [Scaleway Domains](https://www.scaleway.com/en/domains-and-dns/),
+a French provider — around 12 €/year.
+
+Create an account, register the domain, then go to **Domains and DNS → DNS zones** and
+add an `A` record pointing to your server's public IP. Check with
+`dig yourdomain.com +short`.
+
+A Scaleway API key is only needed for programmatic DNS management. **Never commit it.**
+
+### 2. Google OAuth
+
+1. In the [Google Cloud Console](https://console.cloud.google.com/), create a project.
+2. **APIs & Services → OAuth consent screen**: user type *External*, fill in the app
+   name and contact emails, and set the home page, privacy policy and terms URLs —
+   they must be publicly reachable. Scopes: `openid`, `email`, `profile`. While in
+   *Testing* mode, only listed test users can sign in.
+3. **Credentials → Create credentials → OAuth client ID**, type *Web application*:
+   - Authorized JavaScript origins: `https://yourdomain.com`
+   - Authorized redirect URIs: `https://yourdomain.com/api/auth/google/callback`
+
+   The redirect URI must match exactly what the backend sends, or Google returns
+   `redirect_uri_mismatch`.
+4. Copy the credentials into your env file:
+
+GOOGLE_CLIENT_ID=...
+GOOGLE_CLIENT_SECRET=...
+GOOGLE_REDIRECT_URL=https://yourdomain.com/api/auth/google/callback
+
+
+> Behind a TLS-terminating reverse proxy, the backend must read `X-Forwarded-Proto`,
+> otherwise it builds the callback with `http://` and the URI no longer matches.
+
+### 3. Resend (transactional email)
+
+Resend sends the account activation emails.
+
+1. Create an account, then **Domains → Add domain**.
+2. Resend gives you a set of DNS records (SPF, DKIM, DMARC). Add them all in your
+   Scaleway DNS zone, then click **Verify**. Nothing is sent until the domain shows as
+   *Verified*.
+3. Create an API key with *Sending access* only:
+
+RESEND_API_KEY=re_...
+RESEND_FROM=noreply@yourdomain.com
+
+
+   The `from` address must belong to the verified domain.
+
+### Security notes
+
+Secrets live in `docker-config/.env.prod`, which is gitignored — only `.env.example` is
+committed. If a key is ever pushed by accident, revoke it from the provider's dashboard;
+removing it in a later commit leaves it in the history.
+
+
 For production, configure `docker-config/.env.prod` with the required production environment variables.
 
 #### 3. Start the application
@@ -141,7 +205,7 @@ The website is available at https://campus.ocefunding.com:5130/
 
 #### Production (remote server)
 
-The website is available at https://ocefunding.com:5130/
+The website is available at https://atlas.ocefunding.com
 
 
 ## Resources
@@ -553,7 +617,7 @@ The backend uses Go and the Gin framework to handle HTTP requests and applicatio
 - **`lserodon`**: Developed React pages and reusable components and integrated the frontend with the backend API.
 - **`spunyapr`**: Developed React pages and reusable components, integrated the frontend with the backend API, and developed handlers for the friends system.
 - **`ifounas`**: Set up the Gin server and route structure, implemented authentication middleware, and developed handlers for authentication, users, and lobbies.
-- **`eelissal`**: Implemented and modified Go models, repositories, handlers, and routes for locations, guesses, rounds, games, and statistics.
+- **`eelissal`**: Used Go with Gin framework to create/modify models, repositories, handlers, and routes functions for location, guess, round, game and statistics tables. Used React for implementating game logic and loading 2D and 3D maps using Mapillary and Leaflet APIs.
 
 ### 2. Real-Time Features
 
@@ -814,29 +878,44 @@ The application provides administrative user management, including viewing, upda
 
 **Contributors:**
 
-- **`eelissal`**: Implemented admin middleware and user viewing and deletion functionality.
+- **`eelissal`**: Implemented admin middleware and CRUD to view and edit users as an admin, which gives a larger view over the data and more possible actions to the admin
 - **`spunyapr`**: Implemented the admin functionality for updating user information.
 
 ## Module Summary
 
+### Mandatory Modules = 14 Points
+
 | Type | Module | Points |
-|---|---|:-:|
+|---|---|:---:|
 | Major | Frontend and Backend Frameworks | 2 |
 | Major | Real-Time Features | 2 |
 | Major | User Interaction | 2 |
 | Minor | Use an ORM for the Database | 1 |
 | Minor | Custom-Made Design System with Reusable Components | 1 |
-| Major | Standard User Management and Authentication | 2 |
-| Minor | Game Statistics and Match History | 1 |
-| Minor | OAuth 2.0 Authentication (Google) | 1 |
 | Major | Complete Web-Based Game | 2 |
 | Major | Remote Players | 2 |
 | Major | Multiplayer Game (More Than Two Players) | 2 |
+| **Total** | **Mandatory Modules** | **14** |
+
+### Bonus Modules = 9 Points
+
+| Type | Module | Points |
+|---|---|:---:|
+| Major | Standard User Management and Authentication | 2 |
+| Minor | Game Statistics and Match History | 1 |
+| Minor | OAuth 2.0 Authentication (Google) | 1 |
 | Minor | Gamification System | 1 |
 | Major | Public REST API | 2 |
 | Major | Advanced Permissions System | 2 |
-| | **Total** | **23 points** |
+| **Total** | **Bonus Modules** | **9** |
 
+### Overall Summary
+
+| Category | Points |
+|---|:---:|
+| Mandatory Modules | 14 |
+| Bonus Modules | 9 |
+| **Grand Total** | **23** |
 
 ## Individual Contributions
 

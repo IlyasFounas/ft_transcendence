@@ -58,7 +58,6 @@ func initGameObj(c *gin.Context, locationRepo *repositories.LocationRepository) 
 		return nil, err;
 	}
 
-	// c.PostForm("mode")
 	gameObj := &games.Game{Title: "default",
 		Mode: "Default",
 		Difficulty: "Default",
@@ -411,30 +410,6 @@ func (h *GameHandler) SetFinished() gin.HandlerFunc {
 				gin.H{"success": false})
 			return ;
 		}
-		// lobbies, err := h.lobbyRepo.AllPlayers(c.Request.Context(), id)
-		// if err != nil {
-		// 	c.JSON(http.StatusUnauthorized,
-		// 		gin.H{"success": false})
-		// 	return ;
-		// }
-		// for _, lobby := range lobbies {
-		// 	if lobby.JoinCode != nil {
-		// 		err = h.lobbyRepo.SetJoinCode(c.Request.Context(), lobby.ID, nil)
-		// 		if err != nil {
-		// 			c.JSON(http.StatusUnauthorized, 
-		// 				gin.H{"success": false})
-		// 			return
-		// 		}
-		// 	}
-		// 	if lobby.LeftAt == nil {
-		// 		err = h.lobbyRepo.SetLeftAt(c.Request.Context(), lobby.ID)
-		// 		if err != nil {
-		// 			c.JSON(http.StatusUnauthorized, 
-		// 				gin.H{"success": false})
-		// 			return
-		// 		}
-		// 	}
-		// }
 		c.JSON(http.StatusOK,
 			gin.H{"success": true})
 	}

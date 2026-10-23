@@ -31,8 +31,6 @@ function App() {
                     	<Route path="*" element={<NotFoundPage />} />
 						<Route path="/login" element={<AuthenticationPage/>} />
 					</Route>
-				<Route path="/privacy" element={<PrivacyPage />} />
-  				<Route path="/terms" element={<TermsPage />} />
 					<Route element={<ProtectedRoute />}>
 						<Route element={<ProtectedChatLayout />}>
 							<Route element={<GameSessionLayout />}>
@@ -49,6 +47,8 @@ function App() {
 								<Route path="/results/solo" element={<SoloResultPage />} />
 								<Route path="/results/multiplayers" element={<MultiplayerResultsPage />} />
 								<Route path="/results/summary" element={<SummaryResultsPage />} />
+							<Route path="/privacy" element={<PrivacyPage />} />
+							<Route path="/terms" element={<TermsPage />} />
 							</Route>
 						</Route>
 					</Route>

@@ -170,7 +170,7 @@ func (r *UserRepository) UserByName(ctx context.Context,
 	user := new(users.User)
 	err := r.db.NewSelect().
 		Model(user).
-		Column("id", "name", "email", "is_verified", "avatar", "xp", "rank", "created_at").
+		Column("id", "login", "name", "email", "is_verified", "avatar", "xp", "rank", "created_at").
 		Where("name = ?", username).
 		Where("NOT u.is_admin").
 		Scan(ctx)
