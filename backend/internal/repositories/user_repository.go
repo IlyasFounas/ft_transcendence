@@ -30,11 +30,11 @@ import (
 
 // Leaderboard is a line of the leaderboard: the position of a player, his name and his xp
 type Leaderboard struct {
-	Position	int64	`json:"position"`
-	Username	string	`json:"username"`
-	Rank		string	`json:"rank"`
-	Avatar		string	`json:"avatar"`
-	Total		int64	`json:"total"`
+	Position int64  `json:"position"`
+	Username string `json:"username"`
+	Rank     string `json:"rank"`
+	Avatar   string `json:"avatar"`
+	Total    int64  `json:"total"`
 }
 
 // Why DeleteUser can refuse to delete a user
@@ -112,7 +112,6 @@ func (r *UserRepository) Name(ctx context.Context, userId int64) (*string, error
 	return &user.Username, nil
 }
 
-// 
 func (r *UserRepository) ExistingName(ctx context.Context, name string) (bool, error) {
 	exists, err := r.db.NewSelect().
 		Model((*users.User)(nil)).
@@ -184,10 +183,10 @@ func (r *UserRepository) UserByEmail(ctx context.Context,
 	email string) (*users.User, error) {
 	user := new(users.User)
 	err := r.db.NewSelect().
-	Model(user).
-	Column("id", "name", "email", "is_verified", "avatar", "xp", "rank", "created_at").
-	Where("email = ?", email).
-	Scan(ctx)
+		Model(user).
+		Column("id", "name", "email", "is_verified", "avatar", "xp", "rank", "created_at").
+		Where("email = ?", email).
+		Scan(ctx)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	}
@@ -201,10 +200,10 @@ func (r *UserRepository) UserByGoogleId(ctx context.Context,
 	googleId *string) (*users.User, error) {
 	user := new(users.User)
 	err := r.db.NewSelect().
-	Model(user).
-	Column("id", "name", "email", "is_verified", "avatar", "xp", "rank", "created_at").
-	Where("google_id = ?", googleId).
-	Scan(ctx)
+		Model(user).
+		Column("id", "name", "email", "is_verified", "avatar", "xp", "rank", "created_at").
+		Where("google_id = ?", googleId).
+		Scan(ctx)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	}
@@ -422,17 +421,18 @@ func (r *UserRepository) UpdateAllPlayers(ctx context.Context, statsRepo *Statis
 }
 
 // Deletes a user and everything related to them, in one transaction (= means either everything is deleted or nothing)
-//	- its guesses
-//	- the games with its rounds :
-// 		-> solo games
-// 		-> multi games where nobody joined this user (even though it should not happen)
-// 		-> multi games whose other players have all been deleted already
-//	- its places in the lobbies (each deletion removes thr lobby rows of the player, so the last one deletes the game)
-// 	- its statistics
-// 	- its friendships (sent and received)
-// 	- the chat messages the user sent or received
-//	- its activation and refresh tokens
-// 	- then the user itself
+//   - its guesses
+//   - the games with its rounds :
+//     -> solo games
+//     -> multi games where nobody joined this user (even though it should not happen)
+//     -> multi games whose other players have all been deleted already
+//   - its places in the lobbies (each deletion removes thr lobby rows of the player, so the last one deletes the game)
+//   - its statistics
+//   - its friendships (sent and received)
+//   - the chat messages the user sent or received
+//   - its activation and refresh tokens
+//   - then the user itself
+//
 // The games other players are still linked to (even if they left or were kicked out) are kept, with their rounds and
 // the guesses of the others: deleting them would change the history and the statistics of other players
 func (r *UserRepository) DeleteUser(ctx context.Context, userId int64) error {

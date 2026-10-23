@@ -1,32 +1,32 @@
 package handlers
 
 import (
+	"context"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"time"
-	"log"
-	"context"
 
 	"github.com/gin-gonic/gin"
 
 	"backend/internal/models/users/tokens"
 	"backend/internal/repositories"
-	"backend/internal/tools/token_generation"
 	"backend/internal/tools/cookie"
+	"backend/internal/tools/token_generation"
 )
 
 type TokenHandler struct {
-	userRepo  *repositories.UserRepository
+	userRepo   *repositories.UserRepository
 	aTokenRepo *repositories.ActivationTokenRepository
 	rTokenRepo *repositories.RefreshTokenRepository
 }
 
-func NewTokenHandler(userRepo *repositories.UserRepository, 
-	aTokenRepo *repositories.ActivationTokenRepository, 
+func NewTokenHandler(userRepo *repositories.UserRepository,
+	aTokenRepo *repositories.ActivationTokenRepository,
 	rTokenRepo *repositories.RefreshTokenRepository) *TokenHandler {
 	return &TokenHandler{userRepo: userRepo,
 		aTokenRepo: aTokenRepo,
@@ -98,7 +98,7 @@ func (h *TokenHandler) RefreshToken() gin.HandlerFunc {
 			if err != nil {
 				c.JSON(http.StatusUnauthorized,
 					gin.H{"message": "Contact the support"})
-				return 
+				return
 			}
 			c.JSON(http.StatusUnauthorized,
 				gin.H{"message": "This refresh token has been used, you have to login"})
@@ -114,7 +114,7 @@ func (h *TokenHandler) RefreshToken() gin.HandlerFunc {
 		if rTokenErr != nil {
 			c.JSON(http.StatusUnauthorized,
 				gin.H{"message": "You have to login"})
-				return
+			return
 		}
 		cookie.Set(c, "/api/auth", "refresh_token",
 			newEncodedKey, 7*24*time.Hour, true)
@@ -128,8 +128,8 @@ func (h *TokenHandler) RefreshToken() gin.HandlerFunc {
 			return
 		}
 		cookie.Set(c, "/api", "Authorization",
-			newToken.Token, 15 * time.Minute, true)
-        c.JSON(http.StatusOK,gin.H{
+			newToken.Token, 15*time.Minute, true)
+		c.JSON(http.StatusOK, gin.H{
 			"message": "success"})
 	}
 }

@@ -11,7 +11,7 @@ func RandGenerate(nb_octets int) (string, error) {
 		return "", err
 	}
 	encodedKey := base32.StdEncoding.
-	WithPadding(base32.NoPadding).
-	EncodeToString(key)
+		WithPadding(base32.NoPadding).
+		EncodeToString(key)
 	return encodedKey, nil
 }

@@ -1,9 +1,9 @@
 package router
 
 import (
-	"github.com/gin-gonic/gin"
 	"backend/internal/handlers"
 	"backend/internal/middleware"
+	"github.com/gin-gonic/gin"
 )
 
 func registerFriendRoutes(r *gin.Engine, h *handlers.FriendHandler,

@@ -53,9 +53,9 @@ type LogEvent struct {
 // Method to call when shutting down the server
 func (r *LocationRepository) Close() {
 	// disable new sends and signal the end of the stream
-	close(r.logChannel) 
+	close(r.logChannel)
 	// then block until all remaining events are written
-	r.wg.Wait()         
+	r.wg.Wait()
 }
 
 func (r *LocationRepository) startLogWorker() {

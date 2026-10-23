@@ -1,11 +1,11 @@
 package router
 
 import (
-	"context"
-	"sync"
-	"backend/internal/websockets/chat"
-	"github.com/gin-gonic/gin"
 	"backend/internal/middleware"
+	"backend/internal/websockets/chat"
+	"context"
+	"github.com/gin-gonic/gin"
+	"sync"
 )
 
 func registerChatRoutes(ctx context.Context, r *gin.Engine, chat *chat_ws.Chat,

@@ -1,12 +1,12 @@
 package repositories
 
 import (
-	"time"
-	"errors"
+	"backend/internal/models/games"
 	"context"
 	"database/sql"
+	"errors"
 	"github.com/uptrace/bun"
-	"backend/internal/models/games"
+	"time"
 )
 
 type LobbyRepository struct {
@@ -19,7 +19,7 @@ func NewLobbyRepository(db *bun.DB) *LobbyRepository {
 
 // Specific functions
 func (r *LobbyRepository) CreateLobby(ctx context.Context,
-	lobby *games.Lobby) (*games.Lobby, error){
+	lobby *games.Lobby) (*games.Lobby, error) {
 	_, err := r.db.NewInsert().
 		Model(lobby).
 		Exec(ctx)
@@ -30,7 +30,7 @@ func (r *LobbyRepository) CreateLobby(ctx context.Context,
 }
 
 func (r *LobbyRepository) JoinLobby(ctx context.Context,
-	lobby *games.Lobby) error{
+	lobby *games.Lobby) error {
 	_, err := r.db.NewInsert().
 		Model(lobby).
 		Exec(ctx)
@@ -145,7 +145,7 @@ func (r *LobbyRepository) AllPlayers(ctx context.Context,
 }
 
 func (r *LobbyRepository) NbGames(ctx context.Context,
-	userId int64) (int, error){
+	userId int64) (int, error) {
 	count, err := r.db.NewSelect().
 		Model((*games.Lobby)(nil)).
 		Relation("Game", func(q *bun.SelectQuery) *bun.SelectQuery {
@@ -174,7 +174,7 @@ func (r *LobbyRepository) historicSubquery(userId int64) *bun.SelectQuery {
 }
 
 func (r *LobbyRepository) Historic(ctx context.Context,
-	userId int64) ([]*games.HistoricGames, error){
+	userId int64) ([]*games.HistoricGames, error) {
 	var gameHistoric []*games.HistoricGames
 	err := r.db.NewSelect().
 		Model((*games.Lobby)(nil)).
@@ -185,7 +185,7 @@ func (r *LobbyRepository) Historic(ctx context.Context,
 		ModelTableExpr("sub AS lo").
 		Join("JOIN game AS g on g.id = lo.game_id").
 		Join("JOIN rounds AS r on r.game_id = g.id").
-    	Join("LEFT JOIN guesses AS gu ON gu.round_id = r.id AND gu.user_id = ?", userId).
+		Join("LEFT JOIN guesses AS gu ON gu.round_id = r.id AND gu.user_id = ?", userId).
 		GroupExpr("g.id, g.finished_at").
 		Order("g.finished_at DESC").
 		Limit(20).
@@ -212,7 +212,7 @@ func (r *LobbyRepository) JoinCode(ctx context.Context,
 }
 
 // Setters
-func (r *LobbyRepository) SetGameId(ctx context.Context, lobby_id int64, 
+func (r *LobbyRepository) SetGameId(ctx context.Context, lobby_id int64,
 	game_id int64) error {
 	lobby := &games.Lobby{GameId: game_id}
 	_, err := r.db.NewUpdate().
@@ -297,7 +297,7 @@ func (r *LobbyRepository) SetJoinCode(ctx context.Context,
 }
 
 // Delete
-func (r *LobbyRepository) RemoveLobby(ctx context.Context, 
+func (r *LobbyRepository) RemoveLobby(ctx context.Context,
 	lobby *games.Lobby) error {
 	res, err := r.db.NewDelete().
 		Model(lobby).

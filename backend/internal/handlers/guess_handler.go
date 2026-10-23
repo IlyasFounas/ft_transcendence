@@ -48,21 +48,21 @@ type RoundGetter interface {
 }
 
 type GuessHandler struct {
-	guessRepo	GuessGetter
-	roundRepo	RoundGetter
-	lobbyRepo	*repositories.LobbyRepository
-	gameRepo	*repositories.GameRepository
-	reverser	*rgeo.Rgeo
+	guessRepo GuessGetter
+	roundRepo RoundGetter
+	lobbyRepo *repositories.LobbyRepository
+	gameRepo  *repositories.GameRepository
+	reverser  *rgeo.Rgeo
 }
 
 func NewGuessHandler(guessRepo GuessGetter, roundRepo RoundGetter, lobbyRepo *repositories.LobbyRepository,
 	gameRepo *repositories.GameRepository, reverser *rgeo.Rgeo) *GuessHandler {
 	return &GuessHandler{
-		guessRepo:	guessRepo,
-		roundRepo:	roundRepo,
-		lobbyRepo:	lobbyRepo,
-		gameRepo:	gameRepo,
-		reverser:	reverser}
+		guessRepo: guessRepo,
+		roundRepo: roundRepo,
+		lobbyRepo: lobbyRepo,
+		gameRepo:  gameRepo,
+		reverser:  reverser}
 }
 
 // Calculates distance based on lat + long compared to actual location
@@ -96,7 +96,7 @@ func CalculateScore(createdGuess *guesses.Guess, totalTime time.Duration) {
 
 	distance := haversine.MaxDistanceMeters - createdGuess.Distance
 	createdGuess.Score = distance * 1000 / haversine.MaxDistanceMeters //put score on base 1000 (ex: if the distance is 0, the score is 1000, if the guess is at the antipode, the score is 0)
-	createdGuess.BaseScore = createdGuess.Score // store the base score before multipliers for XP calculation
+	createdGuess.BaseScore = createdGuess.Score                        // store the base score before multipliers for XP calculation
 
 	// multiplier time left, between 1 - timeWeight (guess at the last second) and 1 (instant guess)
 	// the speed only adds a little to the distance: a far guess can't beat a close one by being fast
@@ -115,7 +115,7 @@ func CalculateScore(createdGuess *guesses.Guess, totalTime time.Duration) {
 	if createdGuess.Distance < 1000 {
 		createdGuess.Streak += 1
 		createdGuess.Score *= createdGuess.Streak
-	} else if createdGuess.Distance >= 1000{
+	} else if createdGuess.Distance >= 1000 {
 		createdGuess.Streak = 0
 	}
 }
@@ -338,7 +338,7 @@ func (h *GuessHandler) GetTotalScoreByGameAndUser(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid game id"})
 		return
 	}
-	
+
 	user_id, err := strconv.ParseInt(c.Param("user_id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user id"})

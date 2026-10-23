@@ -1,9 +1,10 @@
 package securesend
 
 import (
-	"log"
 	"context"
+	"log"
 )
+
 // SecureSend sends data on c, unless ctx is cancelled first.
 //
 // The hub channels have a single reader: the Run()'s loops. Once Run()'s returns on

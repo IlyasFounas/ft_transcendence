@@ -16,8 +16,8 @@ type LobbyWsHandler struct {
 
 type lobbyInfos struct {
 	JoinCode   *string `json:"join_code"`
-	RoundTotal int64  `json:"round_total"`
-	Timer      int64  `json:"timer"`
+	RoundTotal int64   `json:"round_total"`
+	Timer      int64   `json:"timer"`
 }
 
 func NewLobbyWsHandler(lobbyRepo *repositories.LobbyRepository,

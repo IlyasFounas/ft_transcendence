@@ -12,9 +12,9 @@ type Coordinates struct {
 // Constants for the radius of the Earth in meters and feet
 const (
 	EarthDiameterMeters = 12742176 // median diameter of the Earth in meters
-	EarthRadiusMeters = 6371088 // median radius of the Earth in meters
-	EarthRadiusFeet = 20902520 // 6371088 * 3.28084 > meters to feet conversion
-	MaxDistanceMeters = 20015364 // max distance between two points on Earth (antipodes): half the circumference, Pi * EarthRadiusMeters (the radius used by Distance)
+	EarthRadiusMeters   = 6371088  // median radius of the Earth in meters
+	EarthRadiusFeet     = 20902520 // 6371088 * 3.28084 > meters to feet conversion
+	MaxDistanceMeters   = 20015364 // max distance between two points on Earth (antipodes): half the circumference, Pi * EarthRadiusMeters (the radius used by Distance)
 )
 
 // Converts from degrees to radians
@@ -34,17 +34,17 @@ func Distance(p1, p2 Coordinates) (m, ft float64) {
 	// Haversine formula
 	// hav0 = sin²(Δφ/2) + cos φ1 * cos φ2 * sin²(Δλ/2)
 	sinHalfLat := math.Sin(latDiff / 2)
-	sinHalfLon := math.Sin(lonDiff/2)
-	hav0 := (sinHalfLat * sinHalfLat) + math.Cos(lat1)*math.Cos(lat2)*(sinHalfLon * sinHalfLon)
-	
+	sinHalfLon := math.Sin(lonDiff / 2)
+	hav0 := (sinHalfLat * sinHalfLat) + math.Cos(lat1)*math.Cos(lat2)*(sinHalfLon*sinHalfLon)
+
 	// for two exactly opposite points, rounding can give hav0 a bit above 1: math.Sqrt(1-hav0) would be NaN
 	if hav0 > 1 {
 		hav0 = 1
 	}
 
-	// radians to central angle: 
+	// radians to central angle:
 	centralAngle := 2 * math.Atan2(math.Sqrt(hav0), math.Sqrt(1-hav0))
- 
+
 	m = centralAngle * EarthRadiusMeters
 	ft = centralAngle * EarthRadiusFeet
 

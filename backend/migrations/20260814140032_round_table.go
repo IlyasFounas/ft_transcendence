@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/uptrace/bun"
 	"backend/internal/models/rounds"
+	"github.com/uptrace/bun"
 )
 
 func init() {
@@ -33,4 +33,3 @@ func init() {
 		return nil
 	})
 }
-

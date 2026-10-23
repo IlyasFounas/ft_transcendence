@@ -18,9 +18,9 @@ const graphURL = "https://graph.mapillary.com/"
 
 // Asks the Mapillary API whether an image can still be served (used by the hub when a player can't load a location)
 type Checker struct {
-	token	string
-	baseURL	string
-	client	*http.Client
+	token   string
+	baseURL string
+	client  *http.Client
 }
 
 func NewChecker() (*Checker, error) {
@@ -54,8 +54,8 @@ func (c *Checker) ImageExists(ctx context.Context, mid int64) (bool, error) {
 	}
 	var body struct {
 		Error struct {
-			Message	string	`json:"message"`
-			Code	int		`json:"code"`
+			Message string `json:"message"`
+			Code    int    `json:"code"`
 		} `json:"error"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {

@@ -97,7 +97,7 @@ func (h *GuessWsHandler) AddGuess(ctx context.Context, payload json.RawMessage, 
 	}
 	if *guess.Lat > 90 || *guess.Lat < -90 {
 		*guess.Lat = math.Mod(*guess.Lat+90, 180) // works between 0 and 180
-		if *guess.Lat < 0 { //set back to normal coordinates
+		if *guess.Lat < 0 {                       //set back to normal coordinates
 			*guess.Lat += 90
 		} else {
 			*guess.Lat -= 90
@@ -105,7 +105,7 @@ func (h *GuessWsHandler) AddGuess(ctx context.Context, payload json.RawMessage, 
 	}
 	if *guess.Long > 180 || *guess.Long < -180 {
 		*guess.Long = math.Mod(*guess.Long+180, 360) // works between 0 and 360
-		if *guess.Long < 0 { //set back to normal coordinates
+		if *guess.Long < 0 {                         //set back to normal coordinates
 			*guess.Long += 180
 		} else {
 			*guess.Long -= 180
@@ -358,7 +358,7 @@ func (h *GuessWsHandler) IsLastRound(ctx context.Context, gameID, roundNb int64)
 	return h.roundRepo.CheckLastRound(ctx, gameID, roundNb)
 }
 
-// Finds the round for gameID and roundNb, or creates it if it doesn't exist yet. 
+// Finds the round for gameID and roundNb, or creates it if it doesn't exist yet.
 func (h *GuessWsHandler) EnsureRound(ctx context.Context, gameID, roundNb int64) (*rounds.Round, error) {
 	// check if the round already exists
 	roundID, err := h.roundRepo.GetIDByGameIDAndRoundNb(ctx, gameID, roundNb)

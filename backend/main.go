@@ -35,7 +35,7 @@ func run() error {
 		log.Printf("Unable to reach the database: %v", err)
 		return err
 	}
-	
+
 	// 2. Instanciation of repositories
 	repo, err := repositories.NewRepositories(db)
 	if err != nil {
@@ -58,7 +58,7 @@ func run() error {
 
 	// 5. Run the hub websocket
 	signalCtx, stop := signal.NotifyContext(context.Background(),
-		os.Interrupt, syscall.SIGTERM) 
+		os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -79,7 +79,7 @@ func run() error {
 		WriteTimeout: 15 * time.Second,
 		IdleTimeout:  120 * time.Second,
 	}
-	
+
 	// 7. Run the server in a goroutine to allow graceful shutdown
 	go func() {
 		log.Println("Starting server and listening on :8080...")
@@ -92,7 +92,7 @@ func run() error {
 
 	// 8. Graceful shutdown
 	<-signalCtx.Done()
-	
+
 	// 9. Shutdown the server with a timeout context
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -108,9 +108,9 @@ func run() error {
 	}()
 
 	select {
-	case <- done:
+	case <-done:
 		log.Println("All connection have been closed")
-	case <-time.After(3*time.Second):
+	case <-time.After(3 * time.Second):
 		log.Println("timeout occurred to shutdown the server")
 	}
 	// 11. Final cleanup of the asynchronous logs buffer
@@ -133,9 +133,9 @@ func main() {
 		log.Fatalf("error : PUBLIC_URL is empty")
 	}
 	env := os.Getenv("ENV")
-    if (env == "prod") {
+	if env == "prod" {
 		gin.SetMode(gin.ReleaseMode)
-    }
+	}
 	if run() != nil {
 		os.Exit(1)
 	}
