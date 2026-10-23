@@ -42,6 +42,68 @@ cp .env.exemple .env
 
 Open `.env` and fill in the required values, such as database credentials, authentication secrets, and OAuth credentials if applicable.
 
+## Prerequisites: domain name & third-party services
+
+Google OAuth and Resend both require a **real domain name** — neither works with
+`localhost` or a bare IP.
+
+### 1. Domain name (Scaleway)
+
+I registered mine on [Scaleway Domains](https://www.scaleway.com/en/domains-and-dns/),
+a French provider — around 12 €/year.
+
+Create an account, register the domain, then go to **Domains and DNS → DNS zones** and
+add an `A` record pointing to your server's public IP. Check with
+`dig yourdomain.com +short`.
+
+A Scaleway API key is only needed for programmatic DNS management. **Never commit it.**
+
+### 2. Google OAuth
+
+1. In the [Google Cloud Console](https://console.cloud.google.com/), create a project.
+2. **APIs & Services → OAuth consent screen**: user type *External*, fill in the app
+   name and contact emails, and set the home page, privacy policy and terms URLs —
+   they must be publicly reachable. Scopes: `openid`, `email`, `profile`. While in
+   *Testing* mode, only listed test users can sign in.
+3. **Credentials → Create credentials → OAuth client ID**, type *Web application*:
+   - Authorized JavaScript origins: `https://yourdomain.com`
+   - Authorized redirect URIs: `https://yourdomain.com/api/auth/google/callback`
+
+   The redirect URI must match exactly what the backend sends, or Google returns
+   `redirect_uri_mismatch`.
+4. Copy the credentials into your env file:
+
+GOOGLE_CLIENT_ID=...
+GOOGLE_CLIENT_SECRET=...
+GOOGLE_REDIRECT_URL=https://yourdomain.com/api/auth/google/callback
+
+
+> Behind a TLS-terminating reverse proxy, the backend must read `X-Forwarded-Proto`,
+> otherwise it builds the callback with `http://` and the URI no longer matches.
+
+### 3. Resend (transactional email)
+
+Resend sends the account activation emails.
+
+1. Create an account, then **Domains → Add domain**.
+2. Resend gives you a set of DNS records (SPF, DKIM, DMARC). Add them all in your
+   Scaleway DNS zone, then click **Verify**. Nothing is sent until the domain shows as
+   *Verified*.
+3. Create an API key with *Sending access* only:
+
+RESEND_API_KEY=re_...
+RESEND_FROM=noreply@yourdomain.com
+
+
+   The `from` address must belong to the verified domain.
+
+### Security notes
+
+Secrets live in `docker-config/.env.prod`, which is gitignored — only `.env.example` is
+committed. If a key is ever pushed by accident, revoke it from the provider's dashboard;
+removing it in a later commit leaves it in the history.
+
+
 For production, configure `docker-config/.env.prod` with the required production environment variables.
 
 #### 3. Start the application
@@ -141,7 +203,7 @@ The website is available at https://campus.ocefunding.com:5130/
 
 #### Production (remote server)
 
-The website is available at https://ocefunding.com:5130/
+The website is available at https://atlas.ocefunding.com
 
 
 ## Resources

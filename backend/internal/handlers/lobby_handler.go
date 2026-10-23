@@ -24,7 +24,6 @@ func NewLobbyHandler(gameRepo *repositories.GameRepository,
 		userRepo: userRepo}
 }
 
-// id, err := strconv.ParseInt(c.Param("Join"), 10, 64)
 func (h *LobbyHandler) JoinLobby() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userId, ok := c.Get("userId")
