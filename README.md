@@ -553,7 +553,7 @@ The backend uses Go and the Gin framework to handle HTTP requests and applicatio
 - **`lserodon`**: Developed React pages and reusable components and integrated the frontend with the backend API.
 - **`spunyapr`**: Developed React pages and reusable components, integrated the frontend with the backend API, and developed handlers for the friends system.
 - **`ifounas`**: Set up the Gin server and route structure, implemented authentication middleware, and developed handlers for authentication, users, and lobbies.
-- **`eelissal`**: Implemented and modified Go models, repositories, handlers, and routes for locations, guesses, rounds, games, and statistics.
+- **`eelissal`**: Used Go with Gin framework to create/modify models, repositories, handlers, and routes functions for location, guess, round, game and statistics tables. Used React for implementating game logic and loading 2D and 3D maps using Mapillary and Leaflet APIs.
 
 ### 2. Real-Time Features
 
@@ -814,7 +814,7 @@ The application provides administrative user management, including viewing, upda
 
 **Contributors:**
 
-- **`eelissal`**: Implemented admin middleware and user viewing and deletion functionality.
+- **`eelissal`**: Implemented admin middleware and CRUD to view and edit users as an admin, which gives a larger view over the data and more possible actions to the admin
 - **`spunyapr`**: Implemented the admin functionality for updating user information.
 
 ## Module Summary
