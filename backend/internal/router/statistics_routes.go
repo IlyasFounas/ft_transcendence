@@ -17,13 +17,4 @@ func registerStatisticsRoutes(r *gin.Engine, h *handlers.StatisticsHandler) {
 		private.GET("/user/statistics/bestscore", h.BestScore())
 		private.GET("/user/statistics/closestguess", h.ClosestGuess())
 	}
-
-	admin := r.Group("/")
-	admin.Use(middleware.AuthMiddleWare(), middleware.AdminMiddleWare())
-	{
-		admin.PATCH("/admin/user/:id/statistics/finishedgames", h.SetFinishedGames())
-		admin.PATCH("/admin/user/:id/statistics/accuracy", h.SetAccuracy())
-		admin.PATCH("/admin/user/:id/statistics/bestscore", h.SetBestScore())
-		admin.PATCH("/admin/user/:id/statistics/closestguess", h.SetClosestGuess())
-	}
 }

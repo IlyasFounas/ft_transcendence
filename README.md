@@ -42,6 +42,8 @@ cp .env.exemple .env
 
 Open `.env` and fill in the required values, such as database credentials, authentication secrets, and OAuth credentials if applicable.
 
+To retrieve Mapillary token, connect to your developer account on [mapillary.com](https://www.mapillary.com/dashboard/developers).
+
 ## Prerequisites: domain name & third-party services
 
 Google OAuth and Resend both require a **real domain name** — neither works with
