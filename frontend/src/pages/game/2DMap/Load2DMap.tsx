@@ -50,11 +50,12 @@ export default function Load2DMap({initialGuess, onGuess, initialView, onViewCha
 			onGuess?.(e.latlng.lat, e.latlng.lng);
 		};
 
-		map.on('moveend', () => {
-			const c = map.getCenter();
-			onViewChange?.([c.lat, c.lng], map.getZoom());
-			});
+		map.on('click', onMapClick);
 
+		map.on('moveend', () => {
+		const c = map.getCenter();
+		onViewChange?.([c.lat, c.lng], map.getZoom());
+		});
 		return () => {
 			map.remove();
 		};
