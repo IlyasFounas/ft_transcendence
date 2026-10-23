@@ -43,7 +43,10 @@ export default function LeaderBoardList({ players, currentPlayerResult, currentU
 					onMouseLeave={() => onHoverPlayer?.(null)}
 			  />
 				) : (
-					<LeaderboardEmptyRow key={`empty-${index}`} position={index + 4}></LeaderboardEmptyRow>
+					<LeaderboardEmptyRow
+						key={`empty-row-${index + 4}`}
+						position={index + 4}
+					/>
 				)
 			})} 
 		  </div>

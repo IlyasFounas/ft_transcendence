@@ -6,7 +6,7 @@ type AvatarHexagonProps = {
 };
 
 export function BronzeAvatarHexagon({
-	avatar = "avatars/avatar1.png",
+	avatar,
 	className,
 	}: AvatarHexagonProps)
 {
@@ -42,8 +42,8 @@ export function BronzeAvatarHexagon({
         	</clipPath>
 			</defs>
 
-		{avatar && (
-			<image
+			{avatar?.trim() && (
+				<image
 					href={avatar}
 					x="17"
 					y="17"
@@ -51,7 +51,7 @@ export function BronzeAvatarHexagon({
 					height="75.4"
 					preserveAspectRatio="xMidYMid slice"
 					clipPath={`url(#${clipId})`}
-			/>
+				/>
 			)}
 
 			<g filter={`url(#${filterId})`}>
@@ -67,7 +67,7 @@ export function BronzeAvatarHexagon({
 }
 
 export function SilverAvatarHexagon({
-	avatar = "avatars/avatar1.png",
+	avatar,
 	className,
 	}: AvatarHexagonProps)
 {
@@ -101,8 +101,8 @@ export function SilverAvatarHexagon({
         	</clipPath>
 			</defs>
 
-		{avatar && (
-			<image
+			{avatar?.trim() && (
+				<image
 					href={avatar}
 					x="17"
 					y="17"
@@ -110,8 +110,8 @@ export function SilverAvatarHexagon({
 					height="75.4"
 					preserveAspectRatio="xMidYMid slice"
 					clipPath={`url(#${clipId})`}
-			/>
-		)}
+				/>
+			)}
 
 			<g filter={`url(#${filterId})`}>
 				<path
@@ -126,7 +126,7 @@ export function SilverAvatarHexagon({
 }
 
 export function GoldAvatarHexagon({
-  avatar = "avatars/avatar1.png",
+  avatar,
   className,
 }: AvatarHexagonProps) {
   const uid = useId().replace(/:/g, "");
@@ -134,43 +134,41 @@ export function GoldAvatarHexagon({
   const clipId = `hex-avatar-clip-${uid}`;
 
   return (
-    <svg className={className} width="104" height="115" viewBox="0 0 104 115" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <filter id={filterId} x="0" y="0" width="103.612" height="115" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
-          <feFlood floodOpacity="0" result="BackgroundImageFix" />
-          <feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha" />
-          <feOffset />
-          <feGaussianBlur stdDeviation="7.5" />
-          <feComposite in2="hardAlpha" operator="out" />
-          <feColorMatrix type="matrix" values="0 0 0 0 1 0 0 0 0 0.905155 0 0 0 0 0.38782 0 0 0 1 0" />
-          <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_412_462" />
-          <feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_412_462" result="shape" />
-        </filter>
+	<svg className={className} width="104" height="115" viewBox="0 0 104 115" fill="none" xmlns="http://www.w3.org/2000/svg">
+		<defs>
+			<filter id={filterId} x="0" y="0" width="103.612" height="115" filterUnits="userSpaceOnUse" colorInterpolationFilters="sRGB">
+			<feFlood floodOpacity="0" result="BackgroundImageFix" />
+			<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha" />
+			<feOffset />
+			<feGaussianBlur stdDeviation="7.5" />
+			<feComposite in2="hardAlpha" operator="out" />
+			<feColorMatrix type="matrix" values="0 0 0 0 1 0 0 0 0 0.905155 0 0 0 0 0.38782 0 0 0 1 0" />
+			<feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_412_462" />
+			<feBlend mode="normal" in="SourceGraphic" in2="effect1_dropShadow_412_462" result="shape" />
+			</filter>
 
         <clipPath id={clipId}>
-          <path d="M86.6118 37.4043V77.5947L51.8061 97.6895L17.0004 77.5947V37.4043L51.8061 17.3096L86.6118 37.4043Z" />
+          	<path d="M86.6118 37.4043V77.5947L51.8061 97.6895L17.0004 77.5947V37.4043L51.8061 17.3096L86.6118 37.4043Z" />
         </clipPath>
-      </defs>
-
-      {avatar && (
-		<image
+		</defs>
+		{avatar?.trim() && (
+			<image
 				href={avatar}
 				x="17"
-				y="17"
-				width="65.28"
-				height="75.4"
+				y="17.3096"
+				width="69.61"
+				height="80.38"
 				preserveAspectRatio="xMidYMid slice"
 				clipPath={`url(#${clipId})`}
-		/>
+			/>
 		)}
-
-      <g filter={`url(#${filterId})`}>
-        <path
-          d="M86.6118 37.4043V77.5947L51.8061 97.6895L17.0004 77.5947V37.4043L51.8061 17.3096L86.6118 37.4043Z"
-          stroke="#DDB74E"
-          strokeWidth="4"
-          shapeRendering="crispEdges"
-        />
+    	<g filter={`url(#${filterId})`}>
+			<path
+				d="M86.6118 37.4043V77.5947L51.8061 97.6895L17.0004 77.5947V37.4043L51.8061 17.3096L86.6118 37.4043Z"
+				stroke="#DDB74E"
+				strokeWidth="4"
+				shapeRendering="crispEdges"
+			/>
       </g>
     </svg>
   );

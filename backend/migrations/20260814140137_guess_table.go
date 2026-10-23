@@ -14,6 +14,7 @@ func init() {
 		_, err := db.NewCreateTable().
 			IfNotExists().
 			Model((*guesses.Guess)(nil)).
+			WithForeignKeys().
 			Exec(ctx)
 		if err != nil {
 			return err

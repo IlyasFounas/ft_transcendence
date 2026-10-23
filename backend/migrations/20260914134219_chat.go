@@ -13,6 +13,8 @@ func init() {
 		_, err := db.NewCreateTable().
 			IfNotExists().
 			Model((*chats.Chat)(nil)).
+			ForeignKey(`("src_user_id") REFERENCES "users" ("id") ON DELETE CASCADE`).
+			ForeignKey(`("dst_user_id") REFERENCES "users" ("id") ON DELETE CASCADE`).
 			Exec(ctx)
 		if err != nil {
 			return err

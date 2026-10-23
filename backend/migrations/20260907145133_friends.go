@@ -13,6 +13,8 @@ func init() {
 		_, err := db.NewCreateTable().
 			IfNotExists().
 			Model((*friends.Friend)(nil)).
+			ForeignKey(`("requester_id") REFERENCES "users" ("id") ON DELETE CASCADE`).
+			ForeignKey(`("receiver_id") REFERENCES "users" ("id") ON DELETE CASCADE`).
 			Exec(ctx)
 		if err != nil {
 			return err

@@ -2,6 +2,7 @@ package locations
 
 import (
 	"errors"
+	"time"
 
 	"github.com/uptrace/bun"
 )
@@ -23,6 +24,7 @@ type Location struct {
 	Lat  *float64 `bun:"latitude,notnull" json:"latitude,omitempty"`
 	Long *float64 `bun:"longitude,notnull" json:"longitude,omitempty"`
 	CC   *string  `bun:"country_code,type:varchar(2),notnull" json:"country_code,omitempty"`
+	DisabledAt *time.Time `bun:"disabled_at" json:"disabled_at,omitempty"`
 }
 
 // ValidateForCreate : used for POST — all fields must be present and valid

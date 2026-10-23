@@ -6,7 +6,8 @@ import (
 	"backend/internal/middleware"
 )
 
-func registerFriendRoutes(r *gin.Engine, h *handlers.FriendHandler) {
+func registerFriendRoutes(r *gin.Engine, h *handlers.FriendHandler,
+	acceptFriend chan *int64) {
 	private := r.Group("/")
 	private.Use(middleware.AuthMiddleWare())
 	{
@@ -17,10 +18,10 @@ func registerFriendRoutes(r *gin.Engine, h *handlers.FriendHandler) {
 		private.GET("/friend/requests/pending", h.FriendPending())
 		private.GET("/friend/status/:username", h.FriendStatus())
 
-		private.PATCH("/friend/requests/:id/accept", h.AcceptRequest())
+		private.PATCH("/friend/requests/:id/accept", h.AcceptRequest(acceptFriend))
 
 		private.DELETE("/friend/requests/:id/reject", h.RejectRequest())
 		private.DELETE("/friend/requests/:id/cancel", h.CancelRequest())
-		private.DELETE("/friend/:id/remove", h.RemoveFriend())
+		private.DELETE("/friend/:id/remove", h.RemoveFriend(acceptFriend))
 	}
 }

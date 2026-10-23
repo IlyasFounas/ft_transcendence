@@ -7,6 +7,7 @@ interface ChatFriend {
     user_id: number;
     name: string;
     avatar: string | null;
+    rank: string;
     online: boolean;
     last_message: string;
     date: string;
@@ -88,22 +89,33 @@ export default function useChatWebSocket() {
         socket.onmessage = (event) => {
             const data = JSON.parse(event.data);
             
+            
             if (data.action === "friend_list") {
                 if (Array.isArray(data.payload)) {
-                    
+
                     const payload = data.payload as ChatFriend[];
                     setChatFriends(payload);
 
                 } else {
-                    const payload = data.payload as ChatFriend;
+                    const payload = data.payload as ChatFriend[];
 
-                    setChatFriends(currentFriends =>
-                        currentFriends.map(friend =>
-                            friend.user_id === payload.user_id
-                                ? { ...friend, online: payload.online }
-                                : friend
-                        )
-                    );
+                    setChatFriends(currentFriends => {
+                        const incomingFriend = payload as unknown as ChatFriend;
+                        
+                        const existingFriend = currentFriends.find(
+                            friend => friend.user_id === incomingFriend.user_id
+                        );
+
+                        if (!existingFriend) {
+                            return [...currentFriends, incomingFriend];
+                        }
+
+                        return currentFriends.map(friend =>
+                            friend.user_id === incomingFriend.user_id
+                            ? { ...friend, ...incomingFriend }
+                            : friend
+                        );
+                    });
                 }
             }
 

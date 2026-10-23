@@ -89,10 +89,6 @@ func (h *GameHandler) CreateGame() gin.HandlerFunc {
 		
 		c.JSON(http.StatusOK,
 			gin.H{"message": "the game is launching", "game_id": game.ID})
-
-		// TO CHECK LOCATIONS IDS ARE CORRECTLY STORED IN THE GAME TABLE //TODO to remove
-		fmt.Printf("Game created with ID: %d\n", game.ID)
-		fmt.Printf("Location IDs: %v\n", game.LocationIDs)
 	}
 }
 
@@ -118,6 +114,19 @@ func (h *GameHandler) CreateLobby() gin.HandlerFunc {
 		}
 		lobbyObj := &games.Lobby{UserId: userId.(int64),
 								 IsCreator: true}
+		gameObj, err := initGameObj(c, h.locationRepo)
+		if err != nil {
+			log.Printf("error : %s\n", err)
+			c.JSON(http.StatusUnauthorized,
+				gin.H{"message": "the game initiation failed"})
+			return
+		}
+		game, err := h.gameRepo.CreateGame(c.Request.Context(), gameObj)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized,
+				gin.H{"message": "the creation of the game failed, try again"})
+			return
+		}
 		for i := 0; i < 50; i++ {
 			joinCode, err := code_generation.RandGenerate(4)
 			if err != nil {
@@ -126,30 +135,9 @@ func (h *GameHandler) CreateLobby() gin.HandlerFunc {
 				return
 			}
 			lobbyObj.JoinCode = &joinCode
+			lobbyObj.GameId = game.ID
 			lobby, err := h.lobbyRepo.CreateLobby(c.Request.Context(), lobbyObj)
 			if err == nil {
-				gameObj, err := initGameObj(c, h.locationRepo)
-				if err != nil {
-					log.Printf("error : %s\n", err)
-					h.lobbyRepo.RemoveLobby(c.Request.Context(), lobby)
-					c.JSON(http.StatusUnauthorized,
-						gin.H{"message": "the game initiation failed"})
-					return
-				}
-				game, err := h.gameRepo.CreateGame(c.Request.Context(), gameObj)
-				if err != nil {
-					h.lobbyRepo.RemoveLobby(c.Request.Context(), lobby)
-					c.JSON(http.StatusUnauthorized,
-						gin.H{"message": "the creation of the game failed, try again"})
-					return
-				}
-				err = h.lobbyRepo.SetGameId(c.Request.Context(), lobby.ID, game.ID)
-				if err != nil {
-					h.lobbyRepo.RemoveLobby(c.Request.Context(), lobby)
-					c.JSON(http.StatusUnauthorized,
-						gin.H{"message": "the lobby can not be updated, try again"})
-					return
-				}
 				c.JSON(http.StatusOK,
 					gin.H{"message": "success", "lobby_id": lobby.ID})
 				return
