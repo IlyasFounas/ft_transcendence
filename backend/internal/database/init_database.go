@@ -23,8 +23,6 @@ func buildDSN() string {
 }
 
 func InitDatabase() *bun.DB {
-	// ctx := context.Background()
-
 	// Specify the information for the connection
 	dsn := buildDSN()
 	// Connect to the PostgreSQL database
@@ -35,10 +33,5 @@ func InitDatabase() *bun.DB {
 
 	// Optional: Print queries during development
 	db.AddQueryHook(bundebug.NewQueryHook(bundebug.WithVerbose(true)))
-
-	// Ping test to check the connection with the db
-	// if err := db.Ping(context.Background()); err != nil {
-	//     panic(fmt.Sprintf("Impossible to connect to PostgreSQL: %v", err))
-	// }
 	return db
 }

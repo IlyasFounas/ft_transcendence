@@ -1,7 +1,7 @@
 # Best practices for Docker management are to use separate docker-compose.yml files:
 # - one for base services that creates the basic containers
-# - one for the dev environment to set up the network, initialize containers with hot reloading, etc. (docker-compose.override.yml)
-# - one for production with compiled code, and nginx listening on ports 443 and 80 (docker-compose.prod.yml)
+# - one for the dev environment to set up the network, initialize containers with hot reloading, etc. (docker-compose.dev.yml)
+# - one for production with compiled code, and nginx listening on ports 5130 and 8082 (docker-compose.prod.yml)
 services:
 
   # Basic PostgreSQL container
