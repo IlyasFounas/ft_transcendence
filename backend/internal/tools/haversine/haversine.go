@@ -14,7 +14,7 @@ const (
 	EarthDiameterMeters = 12742176 // median diameter of the Earth in meters
 	EarthRadiusMeters = 6371088 // median radius of the Earth in meters
 	EarthRadiusFeet = 20902520 // 6371088 * 3.28084 > meters to feet conversion
-	MaxDistanceMeters = 40075017 // max distance between two points on Earth (Pi * max earth diameter) / 2 (max earth diamerter = 12756274)
+	MaxDistanceMeters = 20015364 // max distance between two points on Earth (antipodes): half the circumference, Pi * EarthRadiusMeters (the radius used by Distance)
 )
 
 // Converts from degrees to radians
@@ -36,6 +36,11 @@ func Distance(p1, p2 Coordinates) (m, ft float64) {
 	sinHalfLat := math.Sin(latDiff / 2)
 	sinHalfLon := math.Sin(lonDiff/2)
 	hav0 := (sinHalfLat * sinHalfLat) + math.Cos(lat1)*math.Cos(lat2)*(sinHalfLon * sinHalfLon)
+	
+	// for two exactly opposite points, rounding can give hav0 a bit above 1: math.Sqrt(1-hav0) would be NaN
+	if hav0 > 1 {
+		hav0 = 1
+	}
 
 	// radians to central angle: 
 	centralAngle := 2 * math.Atan2(math.Sqrt(hav0), math.Sqrt(1-hav0))
