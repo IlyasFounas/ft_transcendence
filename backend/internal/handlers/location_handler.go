@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"log"
 	"net/http"
@@ -21,8 +22,8 @@ type LocationGetter interface {
 	GetCountryCodeByID(ctx context.Context, location_id int64) (string, error)
 	GetRandom(ctx context.Context) (*locations.Location, error)
 	GetRandomByCountryCode(ctx context.Context, cc string) (*locations.Location, error)
-	PatchByID(ctx context.Context, location_id int64, patch *locations.Location) error
-	PatchByMapillaryID(ctx context.Context, mid int64, patch *locations.Location) error
+	PatchByID(ctx context.Context, location_id int64, patch *locations.Location, setDisabledAt bool) error
+	PatchByMapillaryID(ctx context.Context, mid int64, patch *locations.Location, setDisabledAt bool) error
 	BulkCreate(ctx context.Context, locations []*locations.Location) (int, error)
 	DeleteByID(ctx context.Context, location_id int64) error
 	DeleteByMapillaryID(ctx context.Context, mid int64) error
@@ -191,6 +192,28 @@ func (h *LocationHandler) GetRandomLocationByCC(c *gin.Context) {
 	c.JSON(http.StatusOK, loc)
 }
 
+// bindPatch decodes the body of a PATCH request
+// For Disabled_at, because we need to check if the client wants to set it back to null
+// A pointer gives nil both when a field is absent and when it is null
+// For disabled_at the two differ: absent = unchanged, null = the location can be drawn again
+// So the keys of the body are read too: setDisabledAt is true when the key "disabled_at" is in the body, whether its value is null or a date
+func bindPatch(c *gin.Context) (*locations.Location, bool, error) {
+	body, err := c.GetRawData()
+	if err != nil {
+		return nil, false, err
+	}
+	var patch locations.Location
+	if err := json.Unmarshal(body, &patch); err != nil {
+		return nil, false, err
+	}
+	var fields map[string]json.RawMessage
+	if err := json.Unmarshal(body, &fields); err != nil {
+		return nil, false, err
+	}
+	_, setDisabledAt := fields["disabled_at"]
+	return &patch, setDisabledAt, nil
+}
+
 // PATCH /locations/:location_id
 func (h *LocationHandler) UpdateLocationByID(c *gin.Context) {
 	ctx := c.Request.Context()
@@ -201,8 +224,8 @@ func (h *LocationHandler) UpdateLocationByID(c *gin.Context) {
 		return
 	}
 
-	var patch locations.Location
-	if err := c.ShouldBindJSON(&patch); err != nil {
+	patch, setDisabledAt, err := bindPatch(c)
+	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid payload"})
 		return
 	}
@@ -213,7 +236,7 @@ func (h *LocationHandler) UpdateLocationByID(c *gin.Context) {
 		return
 	}
 
-	if err := h.repo.PatchByID(ctx, location_id, &patch); err != nil {
+	if err := h.repo.PatchByID(ctx, location_id, patch, setDisabledAt); err != nil {
 		if errors.Is(err, repositories.ErrLocationNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "location not found"})
 			return
@@ -236,8 +259,8 @@ func (h *LocationHandler) UpdateLocationByMID(c *gin.Context) {
 		return
 	}
 
-	var patch locations.Location
-	if err := c.ShouldBindJSON(&patch); err != nil {
+	patch, setDisabledAt, err := bindPatch(c)
+	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid payload"})
 		return
 	}
@@ -248,7 +271,7 @@ func (h *LocationHandler) UpdateLocationByMID(c *gin.Context) {
 		return
 	}
 
-	if err := h.repo.PatchByMapillaryID(ctx, mid, &patch); err != nil {
+	if err := h.repo.PatchByMapillaryID(ctx, mid, patch, setDisabledAt); err != nil {
 		if errors.Is(err, repositories.ErrLocationNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "location not found"})
 			return
@@ -258,7 +281,7 @@ func (h *LocationHandler) UpdateLocationByMID(c *gin.Context) {
 		return
 	}
 
-	c.Status(http.StatusOK)
+	c.JSON(http.StatusOK, gin.H{"message": "location updated"})
 }
 
 // POST /locations
