@@ -1516,5 +1516,311 @@
     "latitude": 63.0818367,
     "longitude": 25.864517,
     "country_code": "FI"
+  },
+   {
+    "mapillary_id": 776332261121709,
+    "latitude": -35.4766733,
+    "longitude": 174.3786891,
+    "country_code": "NZ"
+  },
+  {
+    "mapillary_id": 398038365919960,
+    "latitude": -43.499279253767,
+    "longitude": 172.69955170876,
+    "country_code": "NZ"
+  },
+  {
+    "mapillary_id": 1379906763682555,
+    "latitude": -36.2311271,
+    "longitude": 174.5076916,
+    "country_code": "NZ"
+  },
+  {
+    "mapillary_id": 1196908421982892,
+    "latitude": -37.8050105,
+    "longitude": 175.2880609,
+    "country_code": "NZ"
+  },
+  {
+    "mapillary_id": 1509606893329466,
+    "latitude": -40.926441148878,
+    "longitude": 174.99927239126,
+    "country_code": "NZ"
+  },
+  {
+    "mapillary_id": 1337064607377473,
+    "latitude": -39.1771377,
+    "longitude": 175.4024896,
+    "country_code": "NZ"
+  },
+  {
+    "mapillary_id": 1655761378208255,
+    "latitude": -37.9428748,
+    "longitude": 177.506908,
+    "country_code": "NZ"
+  },
+  {
+    "mapillary_id": 137277245091386,
+    "latitude": -38.473954042222,
+    "longitude": 174.68052120861,
+    "country_code": "NZ"
+  },
+  {
+    "mapillary_id": 1826753464194427,
+    "latitude": -38.303322222222,
+    "longitude": 176.36783055556,
+    "country_code": "NZ"
+  },
+  {
+    "mapillary_id": 740419311702986,
+    "latitude": -35.751943342305,
+    "longitude": 173.99507368772,
+    "country_code": "NZ"
+  },
+  {
+    "mapillary_id": 1409198797824565,
+    "latitude": -41.516094,
+    "longitude": 173.978101,
+    "country_code": "NZ"
+  },
+  {
+    "mapillary_id": 1273421781228349,
+    "latitude": -41.106085176167,
+    "longitude": 175.146324614,
+    "country_code": "NZ"
+  },
+  {
+    "mapillary_id": 533085432362393,
+    "latitude": -37.412793377874,
+    "longitude": 175.80542400788,
+    "country_code": "NZ"
+  },
+  {
+    "mapillary_id": 1166594240600179,
+    "latitude": -39.0974,
+    "longitude": 177.01056209997,
+    "country_code": "NZ"
+  },
+  {
+    "mapillary_id": 1517163545949931,
+    "latitude": -36.1038078,
+    "longitude": 174.5815286,
+    "country_code": "NZ"
+  },
+  {
+    "mapillary_id": 1713474756494884,
+    "latitude": -44.9416575248,
+    "longitude": 168.8383173068,
+    "country_code": "NZ"
+  },
+  {
+    "mapillary_id": 1257661841692585,
+    "latitude": -39.412058299972,
+    "longitude": 176.69272939997,
+    "country_code": "NZ"
+  },
+  {
+    "mapillary_id": 1231090132488242,
+    "latitude": 36.394446179266,
+    "longitude": 9.0089865792662,
+    "country_code": "TN"
+  },
+  {
+    "mapillary_id": 1974678633119504,
+    "latitude": 36.183057106405,
+    "longitude": 10.184839709194,
+    "country_code": "TN"
+  },
+  {
+    "mapillary_id": 1856473521691107,
+    "latitude": 35.939294358789,
+    "longitude": 9.8654001137148,
+    "country_code": "TN"
+  },
+  {
+    "mapillary_id": 1586732155721626,
+    "latitude": 33.022206714705,
+    "longitude": 10.16299500254,
+    "country_code": "TN"
+  },
+  {
+    "mapillary_id": 789520547572094,
+    "latitude": 34.482858880295,
+    "longitude": 8.0547340901475,
+    "country_code": "TN"
+  },
+  {
+    "mapillary_id": 1593095961905538,
+    "latitude": 36.948353074042,
+    "longitude": 9.5023331736938,
+    "country_code": "TN"
+  },
+  {
+    "mapillary_id": 1522492339463213,
+    "latitude": 36.65799829876,
+    "longitude": 8.5253396399444,
+    "country_code": "TN"
+  },
+  {
+    "mapillary_id": 1476056347269134,
+    "latitude": 36.748593475278,
+    "longitude": 9.3926735752778,
+    "country_code": "TN"
+  },
+  {
+    "mapillary_id": 1467458831488234,
+    "latitude": 34.38669261174,
+    "longitude": 7.9341296224894,
+    "country_code": "TN"
+  },
+  {
+    "mapillary_id": 981815157616966,
+    "latitude": 36.015496065832,
+    "longitude": 9.9155397044453,
+    "country_code": "TN"
+  },
+  {
+    "mapillary_id": 1572398980483977,
+    "latitude": 36.620927604938,
+    "longitude": 9.5599942497354,
+    "country_code": "TN"
+  },
+  {
+    "mapillary_id": 1478539107630344,
+    "latitude": 36.922881288212,
+    "longitude": 9.2876677270887,
+    "country_code": "TN"
+  },
+  {
+    "mapillary_id": 1872662770055078,
+    "latitude": 34.456553698012,
+    "longitude": 8.0806452980338,
+    "country_code": "TN"
+  },
+  {
+    "mapillary_id": 1990457655009979,
+    "latitude": 34.399999608323,
+    "longitude": 7.9994176354343,
+    "country_code": "TN"
+  },
+  {
+    "mapillary_id": 891977097036615,
+    "latitude": 33.094370488325,
+    "longitude": 10.191743749418,
+    "country_code": "TN"
+  },
+  {
+    "mapillary_id": 1298518455541904,
+    "latitude": 35.8399626109,
+    "longitude": 9.8481381851037,
+    "country_code": "TN"
+  },
+  {
+    "mapillary_id": 1467607118234594,
+    "latitude": 36.741500572311,
+    "longitude": 8.5633738292334,
+    "country_code": "TN"
+  },
+  {
+    "mapillary_id": 322849785884719,
+    "latitude": 33.168444833306,
+    "longitude": -7.3963855,
+    "country_code": "MA"
+  },
+  {
+    "mapillary_id": 803970130557919,
+    "latitude": 32.828183499972,
+    "longitude": -7.6241208333333,
+    "country_code": "MA"
+  },
+  {
+    "mapillary_id": 288560962908738,
+    "latitude": 33.487775666667,
+    "longitude": -7.8171561666667,
+    "country_code": "MA"
+  },
+  {
+    "mapillary_id": 1185804688536309,
+    "latitude": 31.045791699973,
+    "longitude": -8.3964805999831,
+    "country_code": "MA"
+  },
+  {
+    "mapillary_id": 382680907118499,
+    "latitude": 32.698604833306,
+    "longitude": -8.9948975,
+    "country_code": "MA"
+  },
+  {
+    "mapillary_id": 872357250330389,
+    "latitude": 33.907806090833,
+    "longitude": -5.7171419261111,
+    "country_code": "MA"
+  },
+  {
+    "mapillary_id": 242189351024286,
+    "latitude": 35.026234200072,
+    "longitude": -5.390944,
+    "country_code": "MA"
+  },
+  {
+    "mapillary_id": 511753566532708,
+    "latitude": 32.058996967778,
+    "longitude": -7.9381703305556,
+    "country_code": "MA"
+  },
+  {
+    "mapillary_id": 487557059062046,
+    "latitude": 33.248250833306,
+    "longitude": -8.4487398333056,
+    "country_code": "MA"
+  },
+  {
+    "mapillary_id": 801017957229906,
+    "latitude": 33.974174454807,
+    "longitude": -5.000104377998,
+    "country_code": "MA"
+  },
+  {
+    "mapillary_id": 714249446575841,
+    "latitude": 34.064634265278,
+    "longitude": -5.8118710105556,
+    "country_code": "MA"
+  },
+  {
+    "mapillary_id": 2986543878244602,
+    "latitude": 30.587928116597,
+    "longitude": -9.5319099151179,
+    "country_code": "MA"
+  },
+  {
+    "mapillary_id": 375886107082608,
+    "latitude": 35.208121226733,
+    "longitude": -4.6640700164356,
+    "country_code": "MA"
+  },
+  {
+    "mapillary_id": 1916195768534910,
+    "latitude": 31.072756399979,
+    "longitude": -7.9616986999627,
+    "country_code": "MA"
+  },
+  {
+    "mapillary_id": 2751471785165249,
+    "latitude": 33.484656,
+    "longitude": -6.8488826666667,
+    "country_code": "MA"
+  },
+  {
+    "mapillary_id": 306193904409512,
+    "latitude": 34.005833333333,
+    "longitude": -6.8166555555556,
+    "country_code": "MA"
+  },
+  {
+    "mapillary_id": 771173466918302,
+    "latitude": 33.532376205278,
+    "longitude": -6.62060732,
+    "country_code": "MA"
   }
 ]
