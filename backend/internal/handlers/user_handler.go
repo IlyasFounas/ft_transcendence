@@ -13,12 +13,12 @@ import (
 	"strings"
 	"time"
 
+	"database/sql"
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"golang.org/x/oauth2"
 	"path/filepath"
-	"github.com/go-playground/validator/v10"
-	"database/sql"
 
 	"backend/internal/models/users"
 	"backend/internal/models/users/tokens"
@@ -41,13 +41,13 @@ import (
  * Basically, the handlers call the repository functions, manage any errors,
  * and return the result to the frontend (in JSON, plain text, etc.).
  */
- type UserHandler struct {
+type UserHandler struct {
 	userRepo     *repositories.UserRepository
 	aTokenRepo   *repositories.ActivationTokenRepository
 	rTokenRepo   *repositories.RefreshTokenRepository
 	tokenHandler *TokenHandler
 	googleConf   *oauth2.Config
-	validate	 *validator.Validate
+	validate     *validator.Validate
 }
 
 func NewUserHandler(
@@ -67,7 +67,7 @@ func NewUserHandler(
 		rTokenRepo:   rTokenRepo,
 		tokenHandler: tokenHandler,
 		googleConf:   googleConf,
-		validate:	  validate,
+		validate:     validate,
 	}
 }
 
@@ -76,27 +76,27 @@ func (h *UserHandler) createActivationToken(c *gin.Context, expiresAt time.Time,
 	tokenObj, tokenErr := token_generation.GenerateToken(userId, expiresAt,
 		[]byte(os.Getenv("ACTIVATION_JWT_SECRET")))
 	if tokenErr != nil {
-        c.JSON(http.StatusUnauthorized,
+		c.JSON(http.StatusUnauthorized,
 			gin.H{"message": "The activation link sending went wrong. Please try again."})
 		return tokenErr
 	}
 	err := h.aTokenRepo.DeleteActivationToken(c.Request.Context(), userId)
 	if err != nil {
-        c.JSON(http.StatusInternalServerError,
+		c.JSON(http.StatusInternalServerError,
 			gin.H{"message": "The activation link sending went wrong. Please try again."})
 		return err
 	}
 	err = h.aTokenRepo.CreateAToken(c.Request.Context(), tokenObj, expiresAt)
 	if err != nil {
-        fmt.Printf("Token creation error message : %s\n", err)
-        c.JSON(http.StatusInternalServerError,
+		fmt.Printf("Token creation error message : %s\n", err)
+		c.JSON(http.StatusInternalServerError,
 			gin.H{"message": "The activation link sending went wrong. Please try again."})
 		return err
 	}
 	email := c.PostForm("email")
 	if len(email) == 0 {
 		emailString, err := h.userRepo.Email(c.Request.Context(), userId)
-		if err != nil{
+		if err != nil {
 			code := http.StatusInternalServerError
 			if errors.Is(err, sql.ErrNoRows) {
 				code = http.StatusNotFound
@@ -104,9 +104,9 @@ func (h *UserHandler) createActivationToken(c *gin.Context, expiresAt time.Time,
 			c.JSON(code, gin.H{"message": "Can't find your email. Please try again."})
 			return err
 		}
-		err = mailing.SendActivationEmail(*emailString, tokenObj.Token);
+		err = mailing.SendActivationEmail(*emailString, tokenObj.Token)
 	} else {
-		err = mailing.SendActivationEmail(email, tokenObj.Token);
+		err = mailing.SendActivationEmail(email, tokenObj.Token)
 	}
 	if err != nil {
 		fmt.Printf("\n%s\n", err)
@@ -126,37 +126,37 @@ func (h *UserHandler) jwtGeneration(c *gin.Context, userId int64) (*tokens.Activ
 	tokenObj, tokenErr := token_generation.GenerateToken(userId, expiresAt,
 		[]byte(os.Getenv("JWT_SECRET")))
 	if tokenErr != nil {
-        c.JSON(http.StatusUnauthorized,
-            gin.H{"message": "token creation went wrong."})
+		c.JSON(http.StatusUnauthorized,
+			gin.H{"message": "token creation went wrong."})
 		return nil, false
 	}
 	encodedKey, rTokenErr := h.tokenHandler.CreateRefreshToken(c.Request.Context(), userId)
 	if rTokenErr != nil {
-        c.JSON(http.StatusUnauthorized,
-            gin.H{"message": "Try to login again."})
+		c.JSON(http.StatusUnauthorized,
+			gin.H{"message": "Try to login again."})
 		return nil, false
 	}
 	cookie.Set(c, "/api/auth", "refresh_token",
 		encodedKey, 7*24*time.Hour, true)
 	cookie.Set(c, "/api", "Authorization",
-		tokenObj.Token, 15 * time.Minute, true)
+		tokenObj.Token, 15*time.Minute, true)
 	return tokenObj, true
 }
 
 type CreateUserValidation struct {
-	Email   	string `validate:"required,max=254,email"`
-	Login	  	string `validate:"required,min=3,max=30,acceptChar"`
-	Username	string `validate:"required,min=3,max=30,acceptChar"`
-	Password	string `validate:"required,strongpwd"`
+	Email    string `validate:"required,max=254,email"`
+	Login    string `validate:"required,min=3,max=30,acceptChar"`
+	Username string `validate:"required,min=3,max=30,acceptChar"`
+	Password string `validate:"required,strongpwd"`
 }
 
 func (h *UserHandler) CreateUser() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		input := CreateUserValidation{
-			Email:		strings.ToLower(strings.TrimSpace(c.PostForm("email"))),
-			Login:		strings.ToLower(strings.TrimSpace(c.PostForm("login"))),
-			Username:	strings.ToLower(strings.TrimSpace(c.PostForm("username"))),
-			Password:	c.PostForm("password"),
+			Email:    strings.ToLower(strings.TrimSpace(c.PostForm("email"))),
+			Login:    strings.ToLower(strings.TrimSpace(c.PostForm("login"))),
+			Username: strings.ToLower(strings.TrimSpace(c.PostForm("username"))),
+			Password: c.PostForm("password"),
 		}
 		err := h.validate.Struct(input)
 		if err != nil {
@@ -166,32 +166,32 @@ func (h *UserHandler) CreateUser() gin.HandlerFunc {
 		}
 		hashpassword, hashErr := encryption.HashPassword(input.Password)
 		if hashErr != nil {
-            c.JSON(http.StatusUnauthorized,
-                gin.H{"message": "The hash password failed. Please try again."})
+			c.JSON(http.StatusUnauthorized,
+				gin.H{"message": "The hash password failed. Please try again."})
 			return
 		}
 		existingLogin, err := h.userRepo.ExistingLogin(c.Request.Context(), input.Login)
 		if err != nil {
-            c.JSON(http.StatusUnauthorized,
-                gin.H{"message": "Something went wrong. Please try again."})
+			c.JSON(http.StatusUnauthorized,
+				gin.H{"message": "Something went wrong. Please try again."})
 			return
 		}
 		if existingLogin != nil && *existingLogin != "" {
-            c.JSON(http.StatusConflict,
-                gin.H{"message": "This login or this username are unavailable. Please try another one."})
+			c.JSON(http.StatusConflict,
+				gin.H{"message": "This login or this username are unavailable. Please try another one."})
 			return
 		}
 		existingUsername, err := h.userRepo.ExistingName(c.Request.Context(), input.Username)
 		if err != nil {
-            c.JSON(http.StatusUnauthorized,
-                gin.H{"message": "Something went wrong. Please try again."})
+			c.JSON(http.StatusUnauthorized,
+				gin.H{"message": "Something went wrong. Please try again."})
 			return
 		}
 		if existingUsername {
-            c.JSON(http.StatusConflict,
-                gin.H{"message": "This username is unavailable. Please try another one."})
+			c.JSON(http.StatusConflict,
+				gin.H{"message": "This username is unavailable. Please try another one."})
 			return
-		}		 
+		}
 		userObj := &users.User{Login: &input.Login,
 			Password:    &hashpassword,
 			Username:    input.Username,
@@ -214,15 +214,15 @@ func (h *UserHandler) CreateUser() gin.HandlerFunc {
 }
 
 type LoginValidation struct {
-	Login	  	string `validate:"required"`
-	Password	string `validate:"required"`
+	Login    string `validate:"required"`
+	Password string `validate:"required"`
 }
 
 func (h *UserHandler) Login() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		input := LoginValidation {
-			Login:		strings.ToLower(strings.TrimSpace(c.PostForm("login"))),
-			Password:	c.PostForm("password"),
+		input := LoginValidation{
+			Login:    strings.ToLower(strings.TrimSpace(c.PostForm("login"))),
+			Password: c.PostForm("password"),
 		}
 		err := h.validate.Struct(input)
 		if err != nil {
@@ -239,16 +239,16 @@ func (h *UserHandler) Login() gin.HandlerFunc {
 			}
 			log.Printf("error : %s\n", err)
 			c.JSON(http.StatusUnauthorized,
-                gin.H{"message": "The activation link has been resent on your email"})
-            return
+				gin.H{"message": "The activation link has been resent on your email"})
+			return
 		} else if err != nil {
 			c.JSON(http.StatusUnauthorized,
 				gin.H{"message": "Invalid login ID or password. Please try again."})
 			return
 		}
 		if !state {
-            c.JSON(http.StatusBadRequest,
-                gin.H{"message": "Invalid login ID or password. Please try again."})
+			c.JSON(http.StatusBadRequest,
+				gin.H{"message": "Invalid login ID or password. Please try again."})
 			return
 		} else {
 			// generate the jwt token in the cookies
@@ -256,8 +256,8 @@ func (h *UserHandler) Login() gin.HandlerFunc {
 			if !ok {
 				return
 			}
-            c.JSON(http.StatusOK,
-                gin.H{"message": "success"})
+			c.JSON(http.StatusOK,
+				gin.H{"message": "success"})
 		}
 	}
 }
@@ -271,7 +271,7 @@ func (h *UserHandler) GoogleLogin() gin.HandlerFunc {
 			return
 		}
 		cookie.Set(c, "/api/auth/google", "oauth_state",
-		state, 10*time.Minute, false)
+			state, 10*time.Minute, false)
 		url := h.googleConf.AuthCodeURL(state)
 		c.Redirect(http.StatusFound, url)
 	}
@@ -324,12 +324,12 @@ func (h *UserHandler) resolveGoogleUser(c *gin.Context, info *users.GoogleUserIn
 	checkUsername := info.Name
 	for i := 0; i < 50; i++ {
 		existingName, err := h.userRepo.ExistingName(c.Request.Context(), checkUsername)
-		if err != nil  {
+		if err != nil {
 			log.Printf("error : %s\n", err)
 			return nil, errors.New("failed")
 		}
 		if existingName == false {
-			break 
+			break
 		}
 		code, err := code_generation.RandGenerate(4)
 		if err != nil {
@@ -339,11 +339,11 @@ func (h *UserHandler) resolveGoogleUser(c *gin.Context, info *users.GoogleUserIn
 		checkUsername = fmt.Sprintf("%s_%s", info.Name, code)
 	}
 	userObj := &users.User{Login: nil,
-			Password:    nil,
-			Username:    strings.ToLower(checkUsername),
-			Email:       strings.ToLower(info.Email),
-			Is_verified: true,
-			GoogleId: 	 &info.Sub,}
+		Password:    nil,
+		Username:    strings.ToLower(checkUsername),
+		Email:       strings.ToLower(info.Email),
+		Is_verified: true,
+		GoogleId:    &info.Sub}
 	user, err = h.userRepo.CreateUser(c.Request.Context(), userObj)
 	if err != nil {
 		log.Printf("error : The account creation failed\n")
@@ -377,7 +377,7 @@ func (h *UserHandler) GoogleCallback() gin.HandlerFunc {
 		userInfo, err := h.fetchGoogleUser(c, c.Query("code"))
 		if err != nil {
 			c.Redirect(http.StatusFound, loginUrl)
-			return 
+			return
 		}
 		if !userInfo.EmailVerified {
 			c.Redirect(http.StatusFound, loginUrl)
@@ -443,7 +443,7 @@ func (h *UserHandler) User() gin.HandlerFunc {
 			return
 		} else {
 			c.JSON(http.StatusOK,
-				gin.H{"message": "success", "user":  userData})
+				gin.H{"message": "success", "user": userData})
 			return
 		}
 	}
@@ -456,7 +456,7 @@ func (h *UserHandler) Name() gin.HandlerFunc {
 				gin.H{"message": "The user id is empty"})
 		}
 		name, err := h.userRepo.Name(c.Request.Context(), userId.(int64))
-		if err != nil {			
+		if err != nil {
 			code := http.StatusInternalServerError
 			if errors.Is(err, sql.ErrNoRows) {
 				code = http.StatusNotFound
@@ -466,10 +466,10 @@ func (h *UserHandler) Name() gin.HandlerFunc {
 		}
 		if name == nil {
 			c.JSON(http.StatusNotFound, gin.H{"message": "The user doesn't have a name"})
-			return 
+			return
 		} else {
 			c.JSON(http.StatusOK,
-				gin.H{"message": "success", "name":  name})
+				gin.H{"message": "success", "name": name})
 		}
 	}
 }
@@ -493,7 +493,7 @@ func (h *UserHandler) GetLogin() gin.HandlerFunc {
 			c.JSON(http.StatusNotFound, gin.H{"message": "The user doesn't have a login"})
 			return
 		} else {
-			c.JSON(http.StatusOK, gin.H{"message": "success", "login":  login})
+			c.JSON(http.StatusOK, gin.H{"message": "success", "login": login})
 		}
 	}
 }
@@ -518,7 +518,7 @@ func (h *UserHandler) Email() gin.HandlerFunc {
 			c.JSON(http.StatusNotFound, gin.H{"message": "The user doesn't have a email"})
 			return
 		} else {
-			c.JSON(http.StatusOK, gin.H{"message": "success", "email":  email})
+			c.JSON(http.StatusOK, gin.H{"message": "success", "email": email})
 		}
 	}
 }
@@ -530,7 +530,7 @@ func (h *UserHandler) UserByName() gin.HandlerFunc {
 		if err != nil {
 			c.JSON(http.StatusBadRequest,
 				gin.H{"message": "failed"})
-			return		
+			return
 		}
 		c.JSON(http.StatusOK,
 			gin.H{"message": "success", "user": user})
@@ -540,7 +540,7 @@ func (h *UserHandler) UserByName() gin.HandlerFunc {
 // Setters
 
 type SetNameValidation struct {
-	Username	string `validate:"required,min=3,max=30,acceptChar"`
+	Username string `validate:"required,min=3,max=30,acceptChar"`
 }
 
 func (h *UserHandler) SetName() gin.HandlerFunc {
@@ -551,7 +551,7 @@ func (h *UserHandler) SetName() gin.HandlerFunc {
 				gin.H{"message": "The user id is empty"})
 			return
 		}
-		input := SetNameValidation {
+		input := SetNameValidation{
 			Username: strings.ToLower(strings.TrimSpace(c.PostForm("name"))),
 		}
 		err := h.validate.Struct(input)
@@ -611,20 +611,20 @@ func (h *UserHandler) SetLogin() gin.HandlerFunc {
 }
 
 func removeUploadedAvatar(avatar *string) {
-    if avatar == nil {
-        return
-    }
+	if avatar == nil {
+		return
+	}
 
-    if !strings.HasPrefix(*avatar, "/api/uploads/avatars/") {
-        return
-    }
+	if !strings.HasPrefix(*avatar, "/api/uploads/avatars/") {
+		return
+	}
 
-    oldFilename := filepath.Base(*avatar)
-    oldPath := filepath.Join("uploads/avatars", oldFilename)
+	oldFilename := filepath.Base(*avatar)
+	oldPath := filepath.Join("uploads/avatars", oldFilename)
 
-    if err := os.Remove(oldPath); err != nil && !os.IsNotExist(err) {
-        log.Printf("failed to remove old avatar: %v", err)
-    }
+	if err := os.Remove(oldPath); err != nil && !os.IsNotExist(err) {
+		log.Printf("failed to remove old avatar: %v", err)
+	}
 }
 
 func (h *UserHandler) SetAvatar() gin.HandlerFunc {
@@ -645,7 +645,7 @@ func (h *UserHandler) SetAvatar() gin.HandlerFunc {
 			if errors.Is(err, sql.ErrNoRows) {
 				code = http.StatusNotFound
 			}
-			c.JSON(code, 
+			c.JSON(code,
 				gin.H{"message": "failed to fetch user"})
 			return
 		}
@@ -681,7 +681,7 @@ func (h *UserHandler) UploadAvatar() gin.HandlerFunc {
 			if errors.Is(err, sql.ErrNoRows) {
 				code = http.StatusNotFound
 			}
-			c.JSON(code, 
+			c.JSON(code,
 				gin.H{"message": "failed to fetch user"})
 			return
 		}
@@ -741,7 +741,7 @@ func (h *UserHandler) XPByName() gin.HandlerFunc {
 			if err != sql.ErrNoRows {
 				code = http.StatusInternalServerError
 			}
-			
+
 			c.JSON(code, gin.H{"message": "failed"})
 			return
 		}
@@ -837,100 +837,100 @@ func (h *UserHandler) DeleteUser() gin.HandlerFunc {
 }
 
 type UpdateUserValidation struct {
-	Email   	string `validate:"required,max=254,email"`
-	Login	  	string `validate:"required,min=3,max=30,acceptChar"`
-	Username	string `validate:"required,min=3,max=30,acceptChar"`
-	Password	string `validate:"required,strongpwd"`
+	Email    string `validate:"required,max=254,email"`
+	Login    string `validate:"required,min=3,max=30,acceptChar"`
+	Username string `validate:"required,min=3,max=30,acceptChar"`
+	Password string `validate:"required,strongpwd"`
 }
 
 func isPresetAvatar(filename string) bool {
-    if filepath.Base(filename) != filename {
-        return false
-    }
-    if !strings.HasPrefix(filename, "avatar") || !strings.HasSuffix(filename, ".png") {
-        return false
-    }
-    numberStr := strings.TrimSuffix(strings.TrimPrefix(filename, "avatar"),".png")
-    number, err := strconv.Atoi(numberStr)
-    return err == nil && number >= 1 && number <= 18
+	if filepath.Base(filename) != filename {
+		return false
+	}
+	if !strings.HasPrefix(filename, "avatar") || !strings.HasSuffix(filename, ".png") {
+		return false
+	}
+	numberStr := strings.TrimSuffix(strings.TrimPrefix(filename, "avatar"), ".png")
+	number, err := strconv.Atoi(numberStr)
+	return err == nil && number >= 1 && number <= 18
 }
 
 func (h *UserHandler) UpdateUser() gin.HandlerFunc {
-    return func(c *gin.Context) {
+	return func(c *gin.Context) {
 		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, 5<<20)
-        input := UpdateUserValidation{
-            Email:    strings.ToLower(strings.TrimSpace(c.PostForm("email"))),
-            Login:    strings.ToLower(strings.TrimSpace(c.PostForm("login"))),
-            Username: strings.ToLower(strings.TrimSpace(c.PostForm("username"))),
-            Password: c.PostForm("password"),
-        }
-        err := h.validate.Struct(input)
+		input := UpdateUserValidation{
+			Email:    strings.ToLower(strings.TrimSpace(c.PostForm("email"))),
+			Login:    strings.ToLower(strings.TrimSpace(c.PostForm("login"))),
+			Username: strings.ToLower(strings.TrimSpace(c.PostForm("username"))),
+			Password: c.PostForm("password"),
+		}
+		err := h.validate.Struct(input)
 		if err != nil {
-            c.JSON(http.StatusBadRequest,
-				gin.H{"message": validation.FormatErrors(err),})
-            return
-        }
-        isVerified, err := strconv.ParseBool(c.PostForm("is_verified"))
-        if err != nil {
-            c.JSON(http.StatusBadRequest,
+			c.JSON(http.StatusBadRequest,
+				gin.H{"message": validation.FormatErrors(err)})
+			return
+		}
+		isVerified, err := strconv.ParseBool(c.PostForm("is_verified"))
+		if err != nil {
+			c.JSON(http.StatusBadRequest,
 				gin.H{"message": "invalid is_verified."})
-            return
-        }
-        xp, err := strconv.ParseInt(c.PostForm("xp"), 10, 64)
-        if err != nil || xp < 0 {
-            c.JSON(http.StatusBadRequest, 
+			return
+		}
+		xp, err := strconv.ParseInt(c.PostForm("xp"), 10, 64)
+		if err != nil || xp < 0 {
+			c.JSON(http.StatusBadRequest,
 				gin.H{"message": "invalid xp."})
-            return
-        }
-        username := c.Param("username")
-        user, err := h.userRepo.UserByName(c.Request.Context(), username)
+			return
+		}
+		username := c.Param("username")
+		user, err := h.userRepo.UserByName(c.Request.Context(), username)
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
-				c.JSON(http.StatusNotFound, 
+				c.JSON(http.StatusNotFound,
 					gin.H{"message": "User not found."})
 				return
 			}
 
-			c.JSON(http.StatusInternalServerError, 
+			c.JSON(http.StatusInternalServerError,
 				gin.H{"message": "Something went wrong. Please try again."})
 			return
 		}
-        if user.IsAdmin {
-            c.JSON(http.StatusForbidden, 
+		if user.IsAdmin {
+			c.JSON(http.StatusForbidden,
 				gin.H{"message": "Cannot modify admin."})
-            return
-        }
-        existingLogin, err := h.userRepo.ExistingLogin(c.Request.Context(), input.Login)
-        if err != nil {
+			return
+		}
+		existingLogin, err := h.userRepo.ExistingLogin(c.Request.Context(), input.Login)
+		if err != nil {
 			code := http.StatusInternalServerError
 			if errors.Is(err, sql.ErrNoRows) {
 				code = http.StatusNotFound
 			}
-            c.JSON(code, 
+			c.JSON(code,
 				gin.H{"message": "Something went wrong. Please try again."})
-            return
-        }
-        if existingLogin != nil && *existingLogin != "" {
-            c.JSON(http.StatusBadRequest, 
+			return
+		}
+		if existingLogin != nil && *existingLogin != "" {
+			c.JSON(http.StatusBadRequest,
 				gin.H{"message": "This login is unavailable. Please try another one."})
-            return
-        }
-        existingUsername, err := h.userRepo.ExistingName(c.Request.Context(), input.Username)
-        if err != nil {
+			return
+		}
+		existingUsername, err := h.userRepo.ExistingName(c.Request.Context(), input.Username)
+		if err != nil {
 			code := http.StatusInternalServerError
 			if errors.Is(err, sql.ErrNoRows) {
 				code = http.StatusNotFound
 			}
-            c.JSON(code, 
+			c.JSON(code,
 				gin.H{"message": "Something went wrong. Please try again."})
-            return
-        }
-        if existingUsername {
-            c.JSON(http.StatusBadRequest, 
+			return
+		}
+		if existingUsername {
+			c.JSON(http.StatusBadRequest,
 				gin.H{"message": "This username is unavailable. Please try another one."})
-            return
-        }
-        oldAvatar := user.Avatar
+			return
+		}
+		oldAvatar := user.Avatar
 		preset := strings.TrimSpace(c.PostForm("avatar"))
 		savedAvatarPath := ""
 		// upload avatar
@@ -945,24 +945,24 @@ func (h *UserHandler) UpdateUser() gin.HandlerFunc {
 		}
 		// put both avatar input
 		if preset != "" && fileErr == nil {
-			c.JSON(http.StatusBadRequest, 
+			c.JSON(http.StatusBadRequest,
 				gin.H{"message": "Choose a preset or upload a file."})
 			return
 		}
 		if preset != "" {
 			// select a preset avatar
 			if !isPresetAvatar(preset) {
-				c.JSON(http.StatusBadRequest, 
+				c.JSON(http.StatusBadRequest,
 					gin.H{"message": "Invalid preset avatar."})
 				return
 			}
 			avatarURL := "/avatars/" + preset
 			user.Avatar = &avatarURL
-			
+
 		} else if fileErr == nil {
 			ext := strings.ToLower(filepath.Ext(file.Filename))
 			if ext != ".jpg" && ext != ".jpeg" && ext != ".png" {
-				c.JSON(http.StatusBadRequest, 
+				c.JSON(http.StatusBadRequest,
 					gin.H{"message": "Invalid file type."})
 				return
 			}
@@ -971,12 +971,12 @@ func (h *UserHandler) UpdateUser() gin.HandlerFunc {
 			avatarURL := "/api/uploads/avatars/" + filename
 
 			err := c.SaveUploadedFile(file, savedAvatarPath)
-			if  err != nil {
+			if err != nil {
 				code := http.StatusInternalServerError
 				if errors.Is(err, sql.ErrNoRows) {
 					code = http.StatusUnprocessableEntity
 				}
-				c.JSON(code, 
+				c.JSON(code,
 					gin.H{"message": "Failed to save file."})
 				return
 			}
@@ -987,19 +987,19 @@ func (h *UserHandler) UpdateUser() gin.HandlerFunc {
 			if savedAvatarPath != "" {
 				_ = os.Remove(savedAvatarPath)
 			}
-			c.JSON(http.StatusUnprocessableEntity, 
+			c.JSON(http.StatusUnprocessableEntity,
 				gin.H{"message": "Something went wrong. Please try again."})
 			return
 		}
-        rank := rank_calculation.CalculateRank(xp)
-        user.Username = input.Username
-        user.Login = &input.Login
-        user.Email = input.Email
-        user.Password = &hashPassword
-        user.Is_verified = isVerified
-        user.XP = xp
-        user.Rank = rank
-        err = h.userRepo.UpdateUser(c.Request.Context(), user.ID, user)
+		rank := rank_calculation.CalculateRank(xp)
+		user.Username = input.Username
+		user.Login = &input.Login
+		user.Email = input.Email
+		user.Password = &hashPassword
+		user.Is_verified = isVerified
+		user.XP = xp
+		user.Rank = rank
+		err = h.userRepo.UpdateUser(c.Request.Context(), user.ID, user)
 		if err != nil {
 			// delete the new upload if the database update failed
 			if savedAvatarPath != "" {
@@ -1018,5 +1018,5 @@ func (h *UserHandler) UpdateUser() gin.HandlerFunc {
 		}
 		c.JSON(http.StatusOK,
 			gin.H{"message": "user updated successfully"})
-    }
+	}
 }

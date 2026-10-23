@@ -5,8 +5,8 @@ import (
 	// "net/http" // TEMPORARY TEST SHUTDOWN
 	// "time" // TEMPORARY TEST SHUTDOWN
 
-	"backend/internal/middleware"
 	"backend/internal/handlers"
+	"backend/internal/middleware"
 	"github.com/gin-gonic/gin"
 )
 
@@ -14,13 +14,13 @@ func registerLocationRoutes(r *gin.Engine, h *handlers.LocationHandler) {
 	// Public user
 	// public := r.Group("/")
 	// {
-		// // TEMPORARY TEST ROUTE FOR GRACEFUL SHUTDOWN
-		// public.GET("locations/slow", func(c *gin.Context) {
-		// 	log.Println("[Request] Started processing slow endpoint...")
-		// 	time.Sleep(5 * time.Second) // Simulates heavy work
-		// 	c.String(http.StatusOK, "Finished!")
-		// 	log.Println("[Request] Completed slow endpoint.")
-		// })
+	// // TEMPORARY TEST ROUTE FOR GRACEFUL SHUTDOWN
+	// public.GET("locations/slow", func(c *gin.Context) {
+	// 	log.Println("[Request] Started processing slow endpoint...")
+	// 	time.Sleep(5 * time.Second) // Simulates heavy work
+	// 	c.String(http.StatusOK, "Finished!")
+	// 	log.Println("[Request] Completed slow endpoint.")
+	// })
 	// }
 
 	admin := r.Group("/")

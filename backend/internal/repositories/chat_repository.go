@@ -5,8 +5,8 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"time"
 	"github.com/uptrace/bun"
+	"time"
 )
 
 type ChatRepository struct {
@@ -48,7 +48,7 @@ func (r *ChatRepository) Receive(ctx context.Context, userId int64,
 	return chatsMessage, nil
 }
 
-func (r *ChatRepository) LastFriendMessage(ctx context.Context, 
+func (r *ChatRepository) LastFriendMessage(ctx context.Context,
 	userId, friendId int64) (string, time.Time, error) {
 	var date time.Time
 	var lastMessage string
@@ -56,7 +56,7 @@ func (r *ChatRepository) LastFriendMessage(ctx context.Context,
 		Model((*chats.Chat)(nil)).
 		Column("message", "created_at").
 		Where("src_user_id = ? AND dst_user_id = ?", userId, friendId).
-    	WhereOr("src_user_id = ? AND dst_user_id = ?", friendId, userId).
+		WhereOr("src_user_id = ? AND dst_user_id = ?", friendId, userId).
 		Order("id DESC").
 		Limit(1).
 		Scan(ctx, &lastMessage, &date)

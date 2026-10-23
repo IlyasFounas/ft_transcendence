@@ -6,9 +6,9 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/uptrace/bun"
-	"backend/internal/models/rounds"
 	"backend/internal/models/games"
+	"backend/internal/models/rounds"
+	"github.com/uptrace/bun"
 )
 
 var ErrRoundNotFound = errors.New("round not found")
@@ -61,14 +61,14 @@ func (r *RoundRepository) GetGame(ctx context.Context, game_id int64) error {
 	return nil
 }
 
-//READ - get the number of rounds already created for this game_id
+// READ - get the number of rounds already created for this game_id
 func (r *RoundRepository) GetNextRoundNb(ctx context.Context, game_id int64) (int64, error) {
 	var nextRound int64
 	err := r.db.NewSelect().
-        ColumnExpr("COALESCE(MAX(round_nb), 0) + 1 AS next_round").
-        Table("rounds").
-        Where("game_id = ?", game_id).
-        Scan(ctx, &nextRound)
+		ColumnExpr("COALESCE(MAX(round_nb), 0) + 1 AS next_round").
+		Table("rounds").
+		Where("game_id = ?", game_id).
+		Scan(ctx, &nextRound)
 	if err != nil {
 		return 0, fmt.Errorf("failed to count rounds for game_id %d: %w", game_id, err)
 	}
@@ -102,9 +102,9 @@ func (r *RoundRepository) GetLocationID(ctx context.Context, game_id int64, roun
 	err := r.db.NewSelect().
 		Model((*games.Game)(nil)).
 		ColumnExpr("location_ids[?] AS location_id", index).
-        Where("id = ?", game_id).
-        Limit(1).
-        Scan(ctx, &location_id)
+		Where("id = ?", game_id).
+		Limit(1).
+		Scan(ctx, &location_id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return 0, ErrRoundNotFound

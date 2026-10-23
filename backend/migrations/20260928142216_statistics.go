@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/uptrace/bun"
 	"backend/internal/models/users"
+	"github.com/uptrace/bun"
 )
 
 func init() {

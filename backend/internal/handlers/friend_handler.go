@@ -15,12 +15,12 @@ import (
 )
 
 type FriendHandler struct {
-	friendRepo	*repositories.FriendRepository
-	userRepo	*repositories.UserRepository
+	friendRepo *repositories.FriendRepository
+	userRepo   *repositories.UserRepository
 }
 
-func NewFriendHandler (friendRepo *repositories.FriendRepository,
-	userRepo	*repositories.UserRepository) *FriendHandler {
+func NewFriendHandler(friendRepo *repositories.FriendRepository,
+	userRepo *repositories.UserRepository) *FriendHandler {
 	return &FriendHandler{friendRepo: friendRepo,
 		userRepo: userRepo}
 }
@@ -31,8 +31,8 @@ func (h *FriendHandler) AddFriend() gin.HandlerFunc {
 		if !ok {
 			c.JSON(http.StatusUnauthorized,
 				gin.H{"message": "The userId is empty"})
-				return
-			}
+			return
+		}
 		RequesterID := userId.(int64)
 		username := c.PostForm("username")
 		user, err := h.userRepo.UserByName(c.Request.Context(), username)
@@ -64,7 +64,7 @@ func (h *FriendHandler) AddFriend() gin.HandlerFunc {
 		}
 		friendObj := &friends.Friend{
 			Requester_ID: RequesterID,
-			Receiver_ID: user.ID,
+			Receiver_ID:  user.ID,
 		}
 		_, err = h.friendRepo.AddFriend(c.Request.Context(), friendObj)
 		if err != nil {
@@ -74,8 +74,8 @@ func (h *FriendHandler) AddFriend() gin.HandlerFunc {
 				return
 			}
 			c.JSON(http.StatusInternalServerError,
-					gin.H{"message": "Failed to add friend"})
-				return
+				gin.H{"message": "Failed to add friend"})
+			return
 		}
 		c.JSON(http.StatusCreated,
 			gin.H{"message": "friend request sent"})
@@ -110,14 +110,14 @@ func (h *FriendHandler) AcceptRequest(acceptFriend chan *int64) gin.HandlerFunc 
 		}
 		first := requesterIDInt
 		if !securesend.SecureSend(c.Request.Context(), acceptFriend,
-		&first, "HTTP handler : the chan is closed") {
+			&first, "HTTP handler : the chan is closed") {
 			c.JSON(http.StatusUnprocessableEntity,
 				gin.H{"message": "Failed to process the info to the websocket"})
 			return
 		}
 		second := userId.(int64)
 		if !securesend.SecureSend(c.Request.Context(), acceptFriend,
-		&second, "HTTP handler : the chan is closed") {
+			&second, "HTTP handler : the chan is closed") {
 			c.JSON(http.StatusUnprocessableEntity,
 				gin.H{"message": "Failed to process the info to the websocket"})
 			return
@@ -217,14 +217,14 @@ func (h *FriendHandler) RemoveFriend(acceptFriend chan *int64) gin.HandlerFunc {
 		}
 		first := removeIDInt
 		if !securesend.SecureSend(c.Request.Context(), acceptFriend,
-		&first, "HTTP handler : the chan is closed") {
+			&first, "HTTP handler : the chan is closed") {
 			c.JSON(http.StatusUnprocessableEntity,
 				gin.H{"message": "Failed to process the info to the websocket"})
 			return
 		}
 		second := userId.(int64)
 		if !securesend.SecureSend(c.Request.Context(), acceptFriend,
-		&second, "HTTP handler : the chan is closed") {
+			&second, "HTTP handler : the chan is closed") {
 			c.JSON(http.StatusUnprocessableEntity,
 				gin.H{"message": "Failed to process the info to the websocket"})
 			return
@@ -275,9 +275,9 @@ func (h *FriendHandler) FriendStatus() gin.HandlerFunc {
 		user, err := h.userRepo.UserByName(c.Request.Context(), username)
 		if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
-				c.JSON(http.StatusOK, 
+				c.JSON(http.StatusOK,
 					gin.H{
-						"message": "user not found",
+						"message":      "user not found",
 						"friendStatus": nil,
 					})
 				return
@@ -296,14 +296,14 @@ func (h *FriendHandler) FriendStatus() gin.HandlerFunc {
 		}
 
 		if friendStatus.Status == "none" {
-            friendStatus.Name = user.Username
-            friendStatus.Avatar = user.Avatar
+			friendStatus.Name = user.Username
+			friendStatus.Avatar = user.Avatar
 			friendStatus.Rank = user.Rank
-        }
+		}
 
 		c.JSON(http.StatusOK,
 			gin.H{
-				"message": "success",
+				"message":      "success",
 				"friendStatus": friendStatus,
 			})
 	}
@@ -321,11 +321,11 @@ func (h *FriendHandler) FriendRequests() gin.HandlerFunc {
 		if err != nil {
 			c.JSON(http.StatusInternalServerError,
 				gin.H{"message": "Failed to get friend requests"})
-			return 
+			return
 		}
 		c.JSON(http.StatusOK,
 			gin.H{
-				"message": "success",
+				"message":        "success",
 				"friendRequests": friendRequests,
 			})
 	}
@@ -343,11 +343,11 @@ func (h *FriendHandler) FriendPending() gin.HandlerFunc {
 		if err != nil {
 			c.JSON(http.StatusInternalServerError,
 				gin.H{"message": "Failed to get friend pending list"})
-			return 
+			return
 		}
 		c.JSON(http.StatusOK,
 			gin.H{
-				"message": "success",
+				"message":       "success",
 				"friendPending": friendPending,
 			})
 	}

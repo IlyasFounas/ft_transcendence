@@ -1,7 +1,6 @@
 package lobby_ws
 
 import (
-	"os"
 	"backend/internal/repositories"
 	"backend/internal/tools/mapillary"
 	securesend "backend/internal/tools/secure_send"
@@ -13,6 +12,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"runtime/debug"
 	"sync"
 	"time"
@@ -21,10 +21,10 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-var upgrader = websocket.Upgrader {
-    ReadBufferSize: 1024,
-    WriteBufferSize: 1024,
-    CheckOrigin: func(r *http.Request) bool {
+var upgrader = websocket.Upgrader{
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
+	CheckOrigin: func(r *http.Request) bool {
 		if r.Header.Get("Origin") != os.Getenv("PUBLIC_URL") {
 			return false
 		}
@@ -49,16 +49,16 @@ type kickPlayer struct {
 }
 
 type playerInfos struct {
-	ID			int64	`json:"id"`
-	Username	string	`json:"username"`
-	Avatar		*string	`json:"avatar"`
-	Host		bool	`json:"host"`
+	ID       int64   `json:"id"`
+	Username string  `json:"username"`
+	Avatar   *string `json:"avatar"`
+	Host     bool    `json:"host"`
 }
 
 type ClientHub struct {
-    Connx     *client_ws.Connexion
-    UserId  int64
-    LobbyId int64
+	Connx   *client_ws.Connexion
+	UserId  int64
+	LobbyId int64
 	GameId  int64
 }
 
@@ -75,10 +75,10 @@ type locationErrorPayload struct {
 
 // Sent back to the hub by the goroutine that asked Mapillary about the image of a round (see handleLocationError)
 type locationCheckedEvent struct {
-	GameId	int64	`json:"game_id"`
-	RoundNb	int64	`json:"round_nb"`
-	MID		int64	`json:"mid"`
-	Broken	bool	`json:"broken"`
+	GameId  int64 `json:"game_id"`
+	RoundNb int64 `json:"round_nb"`
+	MID     int64 `json:"mid"`
+	Broken  bool  `json:"broken"`
 }
 
 // What the hub needs from Mapillary (see tools/mapillary)
@@ -95,16 +95,16 @@ type GameStartedBroadcast struct {
 
 // Sent to all clients when a round starts
 type RoundStartedBroadcast struct {
-	RoundNb     int64		`json:"round_nb"`
-	RoundEndsAt time.Time	`json:"round_ends_at"`
-	MID			int64		`json:"mid"`
-	HasGuessed  bool		`json:"has_guessed"`
+	RoundNb     int64     `json:"round_nb"`
+	RoundEndsAt time.Time `json:"round_ends_at"`
+	MID         int64     `json:"mid"`
+	HasGuessed  bool      `json:"has_guessed"`
 }
 
 // Shares the results of EVERY round played so far, in decreasing order
 type GameResultsBroadcast struct {
-	Rounds		[]ws_handlers.RoundResult	`json:"rounds"`
-	NextRoundAt	*time.Time					`json:"next_round_at,omitempty"`
+	Rounds      []ws_handlers.RoundResult `json:"rounds"`
+	NextRoundAt *time.Time                `json:"next_round_at,omitempty"`
 }
 
 // encapsulation of the message sent to the client, with an action and a payload interface{}
@@ -126,62 +126,62 @@ const (
 // to be checked when a client reconnects mid-game - refresh, dropped wifi, joining a game already in progress
 // It exists from the moment the host's start_game is accepted: no state = the game hasn't started yet or is finished
 type gameRoundState struct {
-	Phase		roundPhase // phasePlaying, phasePause, or ""
-	Solo		bool // decided once by start_game (only one player connected to the WS), carried over by every state change
-	RoundNb		int64 // round running (Playing) or last round ended (Pause, game over); 0 in the pause before round 1
-	RoundEndsAt	time.Time // valid when Phase == Playing
-	EndRetries	int // failed attempts to end the running round so far
-	NextRoundAt	time.Time // multiplayer only, valid when Phase == Pause: when the next round starts (zero otherwise)
-	GameResults	[]ws_handlers.RoundResult // results of every round played so far, newest first
-	MID			int64 // the Mapillary ID of the location for the current round, valid when Phase == Playing
-	CheckingLocation	bool // Mapillary is being asked whether MID still exists (see handleLocationError)
-	WaitingReload		map[*ClientHub]bool // clients that couldn't load MID, waiting for the answer of Mapillary
-	LocationChecks		int // Mapillary checks already done for this round (at most maxLocationChecks)
+	Phase            roundPhase                // phasePlaying, phasePause, or ""
+	Solo             bool                      // decided once by start_game (only one player connected to the WS), carried over by every state change
+	RoundNb          int64                     // round running (Playing) or last round ended (Pause, game over); 0 in the pause before round 1
+	RoundEndsAt      time.Time                 // valid when Phase == Playing
+	EndRetries       int                       // failed attempts to end the running round so far
+	NextRoundAt      time.Time                 // multiplayer only, valid when Phase == Pause: when the next round starts (zero otherwise)
+	GameResults      []ws_handlers.RoundResult // results of every round played so far, newest first
+	MID              int64                     // the Mapillary ID of the location for the current round, valid when Phase == Playing
+	CheckingLocation bool                      // Mapillary is being asked whether MID still exists (see handleLocationError)
+	WaitingReload    map[*ClientHub]bool       // clients that couldn't load MID, waiting for the answer of Mapillary
+	LocationChecks   int                       // Mapillary checks already done for this round (at most maxLocationChecks)
 }
 
 // Carries one action through the hubw
 // it can comes from a real client or be generated internally by a timer callback
 // Client is nil for events generated internally by the hub
 type DataInfos struct {
-	Action	string
+	Action  string
 	Payload json.RawMessage
-	Client *ClientHub
+	Client  *ClientHub
 }
 
 type Hub struct {
-	Clients			map[int64]map[*ClientHub]bool
-	Register		chan *ClientHub
-	Unregister		chan *ClientHub
-	Action			chan *DataInfos
-	GameTimers		map[int64]*time.Timer
-	RoundState		map[int64]*gameRoundState // means map[gameId]currentState, used to resync reconnecting players
-	LocationRepo	*repositories.LocationRepository
-	LobbyRepo		*repositories.LobbyRepository
-	GameRepo		*repositories.GameRepository
-	UserRepo		*repositories.UserRepository
-	StatsRepo		*repositories.StatisticsRepository
-	LobbyWsHandler	*ws_handlers.LobbyWsHandler
-	GuessWsHandler	*ws_handlers.GuessWsHandler
-	Mapillary		imageChecker // nil without MAPILLARY_ACCESS_TOKEN: an image that can't be loaded is then only reloaded
+	Clients        map[int64]map[*ClientHub]bool
+	Register       chan *ClientHub
+	Unregister     chan *ClientHub
+	Action         chan *DataInfos
+	GameTimers     map[int64]*time.Timer
+	RoundState     map[int64]*gameRoundState // means map[gameId]currentState, used to resync reconnecting players
+	LocationRepo   *repositories.LocationRepository
+	LobbyRepo      *repositories.LobbyRepository
+	GameRepo       *repositories.GameRepository
+	UserRepo       *repositories.UserRepository
+	StatsRepo      *repositories.StatisticsRepository
+	LobbyWsHandler *ws_handlers.LobbyWsHandler
+	GuessWsHandler *ws_handlers.GuessWsHandler
+	Mapillary      imageChecker // nil without MAPILLARY_ACCESS_TOKEN: an image that can't be loaded is then only reloaded
 }
 
 func NewHub(
 	repo *repositories.Repositories,
 	wsHandlers *ws_handlers.WsHandlers,
 ) *Hub {
-	hub := &Hub{Clients:	make(map[int64]map[*ClientHub]bool),
-		Register:			make(chan *ClientHub),
-		Unregister:			make(chan *ClientHub),
-		Action:				make(chan *DataInfos),
-		GameTimers:			make(map[int64]*time.Timer),
-		RoundState:			make(map[int64]*gameRoundState),
-		LocationRepo:		repo.Location,
-		LobbyRepo:			repo.Lobby,
-		GameRepo:			repo.Game,
-		UserRepo:			repo.User,
-		StatsRepo:			repo.Statistics,
-		LobbyWsHandler:		wsHandlers.Lobby,
-		GuessWsHandler:		wsHandlers.Guess,
+	hub := &Hub{Clients: make(map[int64]map[*ClientHub]bool),
+		Register:       make(chan *ClientHub),
+		Unregister:     make(chan *ClientHub),
+		Action:         make(chan *DataInfos),
+		GameTimers:     make(map[int64]*time.Timer),
+		RoundState:     make(map[int64]*gameRoundState),
+		LocationRepo:   repo.Location,
+		LobbyRepo:      repo.Lobby,
+		GameRepo:       repo.Game,
+		UserRepo:       repo.User,
+		StatsRepo:      repo.Statistics,
+		LobbyWsHandler: wsHandlers.Lobby,
+		GuessWsHandler: wsHandlers.Guess,
 	}
 	// only set when there is a token: a nil *mapillary.Checker stored in the interface wouldn't be nil anymore
 	checker, err := mapillary.NewChecker()
@@ -194,11 +194,11 @@ func NewHub(
 }
 
 func NewClientHub(connx *client_ws.Connexion,
-    userId int64, lobbyId int64, gameId int64) *ClientHub {
-    return &ClientHub{Connx: connx,
-    UserId: userId,
-    LobbyId: lobbyId,
-    GameId: gameId}
+	userId int64, lobbyId int64, gameId int64) *ClientHub {
+	return &ClientHub{Connx: connx,
+		UserId:  userId,
+		LobbyId: lobbyId,
+		GameId:  gameId}
 }
 
 // broadcast serializes the payload once and sends it to all currently connected clients for gameId
@@ -219,7 +219,7 @@ func (h *Hub) broadcast(gameId int64, payload interface{}) {
 	}
 }
 
-// sendToClient serializes the payload once and sends it to ONE single client 
+// sendToClient serializes the payload once and sends it to ONE single client
 // unlike broadcast, it is used for messages that only concern this client (errors, resync of a reconnecting player)
 func (h *Hub) sendToClient(client *ClientHub, payload interface{}) {
 	serializedData, err := json.Marshal(payload)
@@ -235,11 +235,11 @@ func (h *Hub) sendToClient(client *ClientHub, payload interface{}) {
 }
 
 func (h *Hub) sendToClientByUserID(gameId int64, userId int64, payload interface{}) {
-    serializedData, err := json.Marshal(payload)
-    if err != nil {
-        log.Printf("error : %s\n", err)
-        return
-    }
+	serializedData, err := json.Marshal(payload)
+	if err != nil {
+		log.Printf("error : %s\n", err)
+		return
+	}
 	for client := range h.Clients[gameId] {
 		if client.UserId == userId {
 			select {
@@ -247,7 +247,7 @@ func (h *Hub) sendToClientByUserID(gameId int64, userId int64, payload interface
 			default:
 				log.Printf("client_error : the client %d can't read\n", client.UserId)
 			}
-		}	
+		}
 	}
 }
 
@@ -295,10 +295,10 @@ func (h *Hub) resyncClient(ctx context.Context, client *ClientHub) {
 		h.sendToClient(client, WsMessage{
 			Action: "round_started",
 			Payload: RoundStartedBroadcast{
-				RoundNb:		state.RoundNb,
-				RoundEndsAt:	state.RoundEndsAt.UTC(),
-				MID:			state.MID,
-				HasGuessed:		hasGuessed,
+				RoundNb:     state.RoundNb,
+				RoundEndsAt: state.RoundEndsAt.UTC(),
+				MID:         state.MID,
+				HasGuessed:  hasGuessed,
 			},
 		})
 	case phasePause:
@@ -572,6 +572,7 @@ func (h *Hub) connectedPlayers(gameId int64) map[int64]bool {
 // of players connected to the game's WS, and never changes afterwards (even if someone joins or leaves during the game):
 //   - solo (only one player connected): round 1 starts right away, then each next round is started by the player ("start_round")
 //   - multiplayer: every round, the first one included, starts automatically after a pause of preRoundPause
+//
 // The lobby closes at the same time: nobody can join the game afterwards (its players can still reconnect).
 func (h *Hub) handleStartGame(ctx context.Context, client *ClientHub) {
 	gameId := client.GameId
@@ -687,9 +688,9 @@ func (h *Hub) StartRound(ctx context.Context, gameId, roundNb int64) {
 	h.broadcast(gameId, WsMessage{
 		Action: "round_started",
 		Payload: RoundStartedBroadcast{
-			RoundNb:		roundNb,
-			RoundEndsAt:	roundEndsAt.UTC(),
-			MID:			MID,
+			RoundNb:     roundNb,
+			RoundEndsAt: roundEndsAt.UTC(),
+			MID:         MID,
 		},
 	})
 }
@@ -842,9 +843,9 @@ func (h *Hub) abortGame(ctx context.Context, gameId int64, roundNb int64, solo b
 }
 
 // Retrieves from the database everything EndRound needs:
-// 	- the results of every round played so far, for every player still in the game:
-// 	the round specified first, then the rounds before it, down to round 1
-// 	- whether it was the last round
+//   - the results of every round played so far, for every player still in the game:
+//     the round specified first, then the rounds before it, down to round 1
+//   - whether it was the last round
 func (h *Hub) roundResults(ctx context.Context, gameId, roundNb int64) ([]ws_handlers.RoundResult, bool, error) {
 	roundID, err := h.GuessWsHandler.ResolveRoundID(ctx, gameId, roundNb)
 	if err != nil {
@@ -879,6 +880,7 @@ func (h *Hub) roundResults(ctx context.Context, gameId, roundNb int64) ([]ws_han
 // unless it was the last round:
 //   - multiplayer: schedules the automatic start of the next round after a pause of preRoundPause (10sec)
 //   - solo: schedules nothing, the game waits for the player's "start_round"
+//
 // EndRound is the only way out of a running round. If the database fails, nothing has changed yet (state still
 // "playing", nothing sent): it arms a retry instead of giving up, otherwise the game would stay stuck in this round.
 func (h *Hub) EndRound(ctx context.Context, gameId, roundNb int64) {
@@ -966,7 +968,7 @@ func (h *Hub) closeClients(ctx context.Context) {
 	for _, client := range clientsCpy {
 		h.unregisterClient(client)
 		if !h.LobbyWsHandler.LeaveLobby(ctx, client.UserId) {
-			log.Printf("error : the client %d can't leave the lobby in the database\n", 
+			log.Printf("error : the client %d can't leave the lobby in the database\n",
 				client.UserId)
 			continue
 		}
@@ -994,26 +996,26 @@ func JoinLobby(ctx context.Context, hub *Hub, wg *sync.WaitGroup) gin.HandlerFun
 	return func(c *gin.Context) {
 		userId, ok := c.Get("userId")
 		if !ok {
-			c.JSON(http.StatusUnauthorized, 
+			c.JSON(http.StatusUnauthorized,
 				gin.H{"message": "The userId is empty"})
 			return
-		}        
+		}
 		// Check if the player is in the right lobby
-        lobby, err := hub.LobbyRepo.ActualLobby(c.Request.Context(), userId.(int64))
+		lobby, err := hub.LobbyRepo.ActualLobby(c.Request.Context(), userId.(int64))
 		if err != nil {
-            log.Printf("error : %s\n", err)
-            c.JSON(http.StatusInternalServerError, gin.H{"message": "could not verify lobby"})
-            return
-        }
-        if lobby == nil {
-            // to avoid a client's upgrade request to be left hanging (= avoid a hung connection)
-            c.JSON(http.StatusForbidden, gin.H{"message": "you are not in a lobby"})
-            return
+			log.Printf("error : %s\n", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"message": "could not verify lobby"})
+			return
+		}
+		if lobby == nil {
+			// to avoid a client's upgrade request to be left hanging (= avoid a hung connection)
+			c.JSON(http.StatusForbidden, gin.H{"message": "you are not in a lobby"})
+			return
 		}
 		conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 		if err != nil {
 			log.Printf("error : %s\n", err)
-			return 
+			return
 		}
 		connx := client_ws.NewConnexion(conn)
 		clientHub := NewClientHub(connx, userId.(int64),
@@ -1096,7 +1098,7 @@ func (h *Hub) Run(ctx context.Context, wg *sync.WaitGroup) {
 	defer wg.Done()
 	for {
 		select {
-		case client := <- h.Register:
+		case client := <-h.Register:
 			h.safely("register", func() {
 				// when a player comes back after losing his connection
 				h.registerClient(client)
@@ -1117,11 +1119,11 @@ func (h *Hub) Run(ctx context.Context, wg *sync.WaitGroup) {
 					delete(h.RoundState, client.GameId)
 				}
 			})
-		case serializedData := <- h.Action:
+		case serializedData := <-h.Action:
 			h.safely("action "+serializedData.Action, func() {
 				h.handleAction(ctx, serializedData)
 			})
-		case <- ctx.Done():
+		case <-ctx.Done():
 			cleanupCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 2*time.Second)
 			defer cancel()
 			h.closeClients(cleanupCtx)
@@ -1129,4 +1131,4 @@ func (h *Hub) Run(ctx context.Context, wg *sync.WaitGroup) {
 			return
 		}
 	}
-} 
+}

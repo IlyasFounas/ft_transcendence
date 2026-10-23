@@ -1,9 +1,9 @@
 package ws_handlers
 
 import (
-	"backend/internal/models/users"
 	"backend/internal/models/chats"
 	"backend/internal/models/friends"
+	"backend/internal/models/users"
 	"backend/internal/repositories"
 	"context"
 	"log"
@@ -12,20 +12,20 @@ import (
 )
 
 type ChatHandler struct {
-	chatRepo	*repositories.ChatRepository
-	friendRepo	*repositories.FriendRepository
-	userRepo	*repositories.UserRepository
+	chatRepo   *repositories.ChatRepository
+	friendRepo *repositories.FriendRepository
+	userRepo   *repositories.UserRepository
 }
 
-func NewChatHandler (chatRepo *repositories.ChatRepository,
-	friendRepo	*repositories.FriendRepository,
-	userRepo	*repositories.UserRepository) *ChatHandler {
+func NewChatHandler(chatRepo *repositories.ChatRepository,
+	friendRepo *repositories.FriendRepository,
+	userRepo *repositories.UserRepository) *ChatHandler {
 	return &ChatHandler{chatRepo: chatRepo,
 		friendRepo: friendRepo,
-		userRepo: userRepo}
+		userRepo:   userRepo}
 }
 
-func (h *ChatHandler) Send(ctx context.Context, 
+func (h *ChatHandler) Send(ctx context.Context,
 	userId int64, targetId int64, message string) (*chats.Chat, bool) {
 	if strings.TrimSpace(message) == "" {
 		log.Printf("error : empty message")
@@ -56,8 +56,8 @@ func (h *ChatHandler) Send(ctx context.Context,
 	chatObj := &chats.Chat{
 		SRC_user_ID: userId,
 		DST_user_ID: targetId,
-		Message: message,
-		CreatedAt: time.Now(),
+		Message:     message,
+		CreatedAt:   time.Now(),
 	}
 	_, err = h.chatRepo.Send(ctx, chatObj)
 	if err != nil {
@@ -112,9 +112,9 @@ func (h *ChatHandler) FriendList(ctx context.Context,
 
 func (h *ChatHandler) GetUser(ctx context.Context,
 	userId int64) (*users.User, bool) {
-	user, err := h.userRepo.User(ctx, userId);
+	user, err := h.userRepo.User(ctx, userId)
 	if err != nil {
-		log.Printf("error : %s\n", err);
+		log.Printf("error : %s\n", err)
 		return nil, false
 	}
 	if user == nil {

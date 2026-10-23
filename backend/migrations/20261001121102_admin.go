@@ -7,9 +7,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/uptrace/bun"
 	"backend/internal/models/users"
 	"backend/internal/tools/encryption"
+	"github.com/uptrace/bun"
 )
 
 // Sets up admin user, and the admin account
