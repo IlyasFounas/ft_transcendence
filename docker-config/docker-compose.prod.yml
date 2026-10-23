@@ -27,8 +27,8 @@ services:
   nginx:
     container_name: nginx_container
     ports:
-      - "5130:5130"
-      - "8082:8082"
+      - "443:443"
+      - "80:80"
     networks:
       - app
 
