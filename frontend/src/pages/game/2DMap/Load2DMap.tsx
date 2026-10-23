@@ -7,17 +7,21 @@ import { useEffect } from 'react';
 import L from 'leaflet';
 
 type Props = {
-	onGuess?: (lat: number, lng: number) => void,
-	initialGuess?: { lat: number, lng: number } | null,
+  onGuess?: (lat: number, lng: number) => void,
+  initialGuess?: { lat: number, lng: number } | null,
+  initialView?: { center: L.LatLngTuple, zoom: number } | null,
+  onViewChange?: (center: L.LatLngTuple, zoom: number) => void,
 }
 
 const WORLD_CENTER: L.LatLngTuple = [20, 0];
 
-export default function Load2DMap({initialGuess, onGuess}: Props) {
+export default function Load2DMap({initialGuess, onGuess, initialView, onViewChange}: Props) {
   useEffect(() => {
-	// Initializes the map and sets the view to the specified latitude and longitude with a zoom level
-	const map = L.map('leaflet-map').setView(WORLD_CENTER, 2.5);
 
+	const map = L.map('leaflet-map').setView(
+		initialView?.center ?? WORLD_CENTER,
+		initialView?.zoom ?? 2.5
+		);
 	// Adds the OpenStreetMap tile layer to the map with attribution and maximum zoom level
 	L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
 		maxZoom: 19,
@@ -46,7 +50,10 @@ export default function Load2DMap({initialGuess, onGuess}: Props) {
 			onGuess?.(e.latlng.lat, e.latlng.lng);
 		};
 
-		map.on('click', onMapClick);
+		map.on('moveend', () => {
+			const c = map.getCenter();
+			onViewChange?.([c.lat, c.lng], map.getZoom());
+			});
 
 		return () => {
 			map.remove();
