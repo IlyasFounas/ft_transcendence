@@ -215,17 +215,17 @@ func (r *LocationRepository) GetRandomByCountryCode(ctx context.Context, cc stri
 }
 
 // PATCH (using internal ID)
-func (r *LocationRepository) PatchByID(ctx context.Context, location_id int64, patch *locations.Location) error {
-	return r.patch(ctx, "location_id = ?", location_id, patch)
+func (r *LocationRepository) PatchByID(ctx context.Context, location_id int64, patch *locations.Location, setDisabledAt bool) error {
+	return r.patch(ctx, "location_id = ?", location_id, patch, setDisabledAt)
 }
 
 // PATCH (using Mapillary ID)
-func (r *LocationRepository) PatchByMapillaryID(ctx context.Context, mid int64, patch *locations.Location) error {
-	return r.patch(ctx, "mapillary_id = ?", mid, patch)
+func (r *LocationRepository) PatchByMapillaryID(ctx context.Context, mid int64, patch *locations.Location, setDisabledAt bool) error {
+	return r.patch(ctx, "mapillary_id = ?", mid, patch, setDisabledAt)
 }
 
 // patch — private helper function to update a location based on a where clause and patch data. Only updates fields that are not null.
-func (r *LocationRepository) patch(ctx context.Context, whereClause string, whereArg any, patch *locations.Location) error {
+func (r *LocationRepository) patch(ctx context.Context, whereClause string, whereArg any, patch *locations.Location, setDisabledAt bool) error {
 	query := r.db.NewUpdate().
 		Model((*locations.Location)(nil)).
 		Where(whereClause, whereArg)
@@ -241,6 +241,10 @@ func (r *LocationRepository) patch(ctx context.Context, whereClause string, wher
 	}
 	if patch.CC != nil {
 		query.Set("country_code = ?", *patch.CC)
+		hasChange = true
+	}
+	if setDisabledAt {
+		query.Set("disabled_at = ?", patch.DisabledAt)
 		hasChange = true
 	}
 

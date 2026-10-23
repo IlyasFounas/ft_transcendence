@@ -34,7 +34,10 @@ func (r *GuessRepository) Create(ctx context.Context, guess *guesses.Guess) (*gu
 // READ all - using guess ID
 func (r *GuessRepository) GetByID(ctx context.Context, guess_id int64) (*guesses.Guess, error) {
 	guess := new(guesses.Guess)
-	err := r.db.NewSelect().Model(guess).Where("guess_id = ?", guess_id).Scan(ctx)
+	err := r.db.NewSelect().
+		Model(guess).
+		Where("guess_id = ?", guess_id).
+		Scan(ctx)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrGuessNotFound
@@ -169,11 +172,14 @@ func (r *GuessRepository) GetTotalScoreByGameAndUserID(ctx context.Context, game
 	var total int64
 	err := r.db.NewSelect().
 		Model((*guesses.Guess)(nil)).
-		ColumnExpr("COALESCE(SUM(g.score), 0)"). // COALESCE(..., 0) Ã©vite un NULL si l'utilisateur n'a encore aucun guess pour cette game (au lieu de creer une erreur)
+		ColumnExpr("COALESCE(SUM(g.score), 0)"). // COALESCE(..., 0) avoids a NULL if has no guess yet for this game
 		Join("JOIN rounds AS r ON r.id = g.round_id").
 		Where("r.game_id = ? AND g.user_id = ?", game_id, user_id).
 		Scan(ctx, &total)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return 0, ErrGuessNotFound
+		}
 		return 0, fmt.Errorf("failed to get total score for game %d and user %d: %w", game_id, user_id, err)
 	}
 	return total, nil
@@ -199,6 +205,11 @@ func (r *GuessRepository) GetResultsByGameID(ctx context.Context, game_id int64)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get results for game %d: %w", game_id, err)
 	}
+
+	if len(rows) == 0 {
+		return nil, ErrGuessNotFound
+	}
+
 	res := make([][2]int64, 0, len(rows))
 	for _, row := range rows {
 		res = append(res, [2]int64{row.UserID, row.Total})

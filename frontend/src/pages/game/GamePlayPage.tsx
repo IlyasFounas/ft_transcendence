@@ -8,6 +8,7 @@ import LoadStreetView from "./StreetView/LoadStreetView";
 import Load2DMap from "./2DMap/Load2DMap";
 import Preview2DMap from "./2DMap/Preview2DMap";
 import TutorialCarousel from "../../components/carousels/TutorialCarousel";
+import type { LatLngTuple } from "leaflet";
 
 export default function GamePlayPage() {
 	const [countdown, setCountDown] = useState(0);
@@ -21,12 +22,13 @@ export default function GamePlayPage() {
 	const {authFetch, user} = useAuth();
 	const [mode, setMode] = useState<"solo" | "multi" | null>(null);
 	const isLeavingRef = useRef(false);
-
+	const [mapView, setMapView] = useState<{ center: LatLngTuple; zoom: number } | null>(null);
 	// new round, or new location in the same round (the old one couldn't be loaded): the server deleted the guesses
 	// made on the old one, so the player guesses again
 	useEffect(() => {
 		setHasGuessed(false);
 		setGuess(null);
+		setMapView(null);
 	}, [round?.round_nb, round?.mid]);
 
 	useEffect(() => {
@@ -154,6 +156,8 @@ export default function GamePlayPage() {
 								}
 							}} 
 							initialGuess={guess} 
+							initialView={mapView}
+							onViewChange={(center, zoom) => setMapView({ center, zoom })}
 						/>
 					</div>
 				)}
@@ -246,7 +250,7 @@ export default function GamePlayPage() {
 							"
 							onClick={() => setIsMapMain(true)}
 						>
-							<Preview2DMap />
+							<Preview2DMap view={mapView} />
 						</div>
 					</div>
 				)}
