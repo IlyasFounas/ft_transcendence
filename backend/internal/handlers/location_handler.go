@@ -246,7 +246,7 @@ func (h *LocationHandler) UpdateLocationByID(c *gin.Context) {
 		return
 	}
 
-	c.Status(http.StatusOK)
+	c.JSON(http.StatusOK, gin.H{"message": "location updated"})
 }
 
 // PATCH /locations/mapillary/:mid
