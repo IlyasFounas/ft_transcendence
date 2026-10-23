@@ -13,6 +13,7 @@ func init() {
 		_, err := db.NewCreateTable().
 			IfNotExists().
 			Model((*tokens.RefreshToken)(nil)).
+			WithForeignKeys().
 			Exec(ctx)
 		if err != nil {
 			return err

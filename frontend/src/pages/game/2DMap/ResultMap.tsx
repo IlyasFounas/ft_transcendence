@@ -43,12 +43,12 @@ function createTargetIcon(color: string) {
 	  <div class="relative w-8 h-8 flex items-center justify-center">
 		<div class="absolute w-4 h-4 rounded-full opacity-60 animate-ping" style="background:${color}"></div>
 		<svg viewBox="0 0 32 32" class="relative w-8 h-8">
-		  <circle cx="16" cy="16" r="10" fill="none" stroke="${color}" stroke-width="2"/>
+		  <circle cx="16" cy="16" r="10" fill="none" stroke="${color}" strokeWidth="2"/>
 		  <circle cx="16" cy="16" r="3" fill="${color}"/>
-		  <line x1="16" y1="0" x2="16" y2="6" stroke="${color}" stroke-width="2"/>
-		  <line x1="16" y1="26" x2="16" y2="32" stroke="${color}" stroke-width="2"/>
-		  <line x1="0" y1="16" x2="6" y2="16" stroke="${color}" stroke-width="2"/>
-		  <line x1="26" y1="16" x2="32" y2="16" stroke="${color}" stroke-width="2"/>
+		  <line x1="16" y1="0" x2="16" y2="6" stroke="${color}" strokeWidth="2"/>
+		  <line x1="16" y1="26" x2="16" y2="32" stroke="${color}" strokeWidth="2"/>
+		  <line x1="0" y1="16" x2="6" y2="16" stroke="${color}" strokeWidth="2"/>
+		  <line x1="26" y1="16" x2="32" y2="16" stroke="${color}" strokeWidth="2"/>
 		</svg>
 	  </div>
 	`,

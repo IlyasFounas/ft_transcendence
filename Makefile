@@ -27,8 +27,8 @@ fclean:
 	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_DEV) down -v --rmi all
 
 restart:
-	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_DEV) restart
-	make print_posgres_ip
+	docker compose -f $(DOCKER_COMPOSE) -f $(DOCKER_COMPOSE_DEV) up -d --force-recreate
+	$(MAKE) print_posgres_ip
 
 clean-images: clean
 	@echo "Cleaning images..."

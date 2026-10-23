@@ -222,13 +222,13 @@ export function GameSocketProvider({ children }: { children: ReactNode }) {
 
 	useEffect(() => {
 		return () => {
-			if (socketRef.current) {
+		if (socketRef.current) {
 				socketRef.current.onclose = null;
 				socketRef.current.close();
 				socketRef.current = null;
 			}
 		};
-	}, [user]);
+	}, [user?.ID]);
 
 	function leaveLobby() {
 		socketRef.current?.send(JSON.stringify({ action: "leave", payload: "" }));

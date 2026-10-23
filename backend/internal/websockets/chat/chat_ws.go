@@ -1,7 +1,6 @@
 package chat_ws
 
 import (
-	"os"
 	"backend/internal/models/chats"
 	"backend/internal/models/friends"
 	"backend/internal/models/users"
@@ -12,18 +11,19 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
-	"net/http"
-	"sync"
-	"time"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+	"log"
+	"net/http"
+	"os"
+	"sync"
+	"time"
 )
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
-    CheckOrigin: func(r *http.Request) bool {
+	CheckOrigin: func(r *http.Request) bool {
 		if r.Header.Get("Origin") != os.Getenv("PUBLIC_URL") {
 			return false
 		}
@@ -42,8 +42,8 @@ type Chat struct {
 }
 
 type Response struct {
-	Action 		string `json:"action"`
-	Payload 	any    `json:"payload"`
+	Action  string `json:"action"`
+	Payload any    `json:"payload"`
 }
 
 type ClientInfo struct {
@@ -78,13 +78,13 @@ type DataInfos struct {
 }
 
 type ChatFriend struct {
-	ID     		int64   	`json:"id"`
-	UserID 		int64   	`json:"user_id"`
-	Name   		string  	`json:"name"`
-	Avatar 		*string 	`json:"avatar"`
-	Online 		bool    	`json:"online"`
-	LastMessage string  	`json:"last_message"`
-	Date 		time.Time  	`json:"date"`
+	ID          int64     `json:"id"`
+	UserID      int64     `json:"user_id"`
+	Name        string    `json:"name"`
+	Avatar      *string   `json:"avatar"`
+	Online      bool      `json:"online"`
+	LastMessage string    `json:"last_message"`
+	Date        time.Time `json:"date"`
 }
 
 func NewChat(
@@ -122,17 +122,17 @@ func (c *Chat) sendToClient(ctx context.Context, userId int64, friends []*friend
 	for _, friend := range friends {
 		lMessage, date := c.ChatHandler.LastFriendMessage(ctx, userId, friend.UserID)
 		friendsList = append(friendsList, ChatFriend{
-			ID:     friend.ID,
-			UserID: friend.UserID,
-			Name:   friend.Name,
-			Avatar: friend.Avatar,
-			Online: c.IsOnline(friend.UserID),
+			ID:          friend.ID,
+			UserID:      friend.UserID,
+			Name:        friend.Name,
+			Avatar:      friend.Avatar,
+			Online:      c.IsOnline(friend.UserID),
 			LastMessage: lMessage,
-			Date: date,
+			Date:        date,
 		})
 	}
 	response := &Response{
-		Action: "friend_list",
+		Action:  "friend_list",
 		Payload: friendsList,
 	}
 	data, err := json.Marshal(response)
@@ -165,10 +165,10 @@ func (c *Chat) sendClientState(user *users.User, ctx context.Context) {
 			}
 			for _, friend := range friends {
 				if friend.UserID == friendLeft.ID {
-					friendLeft.LastMessage, 
+					friendLeft.LastMessage,
 						friendLeft.Date = c.ChatHandler.LastFriendMessage(ctx, client.UserId, friend.UserID)
 					response := &Response{
-						Action: "friend_list",
+						Action:  "friend_list",
 						Payload: friendLeft,
 					}
 					data, err := json.Marshal(response)
@@ -195,7 +195,7 @@ func (c *Chat) sendToClientMessages(chatsList []*chats.Chat,
 		TargetId: targetId,
 	}
 	response := &Response{
-		Action: "chats",
+		Action:  "chats",
 		Payload: chatsMessage,
 	}
 	data, err := json.Marshal(response)
@@ -218,7 +218,7 @@ func (c *Chat) sendNewChats(chatsList []*chats.Chat,
 		TargetId: targetId,
 	}
 	response := &Response{
-		Action: "new_message",
+		Action:  "new_message",
 		Payload: chatsMessage,
 	}
 	data, err := json.Marshal(response)
@@ -227,8 +227,6 @@ func (c *Chat) sendNewChats(chatsList []*chats.Chat,
 		return
 	}
 	for client := range c.Clients[targetId] {
-		// todo erase this line if, there's no need of a specific send struct for the front
-		// if client.UserId == targetId && client.TargetId == userId {
 		if client.UserId == targetId {
 			select {
 			case client.Connx.Send <- data:
@@ -339,8 +337,8 @@ func JoinChat(ctx context.Context, chat *Chat, wg *sync.WaitGroup) gin.HandlerFu
 		clientChat := NewClientChat(connx, userId.(int64))
 		if ok := securesend.SecureSend(ctx, chat.Register, clientChat,
 			fmt.Sprintf("Chat : Client %d can't be registered", clientChat.UserId)); !ok {
-				clientChat.Connx.Conn.Close()
-				return
+			clientChat.Connx.Conn.Close()
+			return
 		}
 		wg.Add(1)
 		go clientChat.Connx.WritePump(wg)
@@ -365,7 +363,8 @@ func JoinChat(ctx context.Context, chat *Chat, wg *sync.WaitGroup) gin.HandlerFu
 	}
 }
 
-func (c *Chat) Run(ctx context.Context, wg *sync.WaitGroup) {
+func (c *Chat) Run(ctx context.Context, wg *sync.WaitGroup,
+	acceptFriend chan *int64) {
 	defer wg.Done()
 	for {
 		select {
@@ -390,6 +389,12 @@ func (c *Chat) Run(ctx context.Context, wg *sync.WaitGroup) {
 			c.sendClientState(user, ctx)
 		case data := <-c.Action:
 			c.handleAction(ctx, data)
+		case userId := <-acceptFriend:
+			friends, ok := c.ChatHandler.FriendList(ctx, *userId)
+			if !ok {
+				continue
+			}
+			c.sendToClient(ctx, *userId, friends)
 		case <-ctx.Done():
 			c.closeClients()
 			log.Println("The program is finished")

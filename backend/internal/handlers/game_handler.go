@@ -58,7 +58,6 @@ func initGameObj(c *gin.Context, locationRepo *repositories.LocationRepository) 
 		return nil, err;
 	}
 
-	// c.PostForm("mode")
 	gameObj := &games.Game{Title: "default",
 		Mode: "Default",
 		Difficulty: "Default",
@@ -114,6 +113,19 @@ func (h *GameHandler) CreateLobby() gin.HandlerFunc {
 		}
 		lobbyObj := &games.Lobby{UserId: userId.(int64),
 								 IsCreator: true}
+		gameObj, err := initGameObj(c, h.locationRepo)
+		if err != nil {
+			log.Printf("error : %s\n", err)
+			c.JSON(http.StatusUnauthorized,
+				gin.H{"message": "the game initiation failed"})
+			return
+		}
+		game, err := h.gameRepo.CreateGame(c.Request.Context(), gameObj)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized,
+				gin.H{"message": "the creation of the game failed, try again"})
+			return
+		}
 		for i := 0; i < 50; i++ {
 			joinCode, err := code_generation.RandGenerate(4)
 			if err != nil {
@@ -122,30 +134,9 @@ func (h *GameHandler) CreateLobby() gin.HandlerFunc {
 				return
 			}
 			lobbyObj.JoinCode = &joinCode
+			lobbyObj.GameId = game.ID
 			lobby, err := h.lobbyRepo.CreateLobby(c.Request.Context(), lobbyObj)
 			if err == nil {
-				gameObj, err := initGameObj(c, h.locationRepo)
-				if err != nil {
-					log.Printf("error : %s\n", err)
-					h.lobbyRepo.RemoveLobby(c.Request.Context(), lobby)
-					c.JSON(http.StatusUnauthorized,
-						gin.H{"message": "the game initiation failed"})
-					return
-				}
-				game, err := h.gameRepo.CreateGame(c.Request.Context(), gameObj)
-				if err != nil {
-					h.lobbyRepo.RemoveLobby(c.Request.Context(), lobby)
-					c.JSON(http.StatusUnauthorized,
-						gin.H{"message": "the creation of the game failed, try again"})
-					return
-				}
-				err = h.lobbyRepo.SetGameId(c.Request.Context(), lobby.ID, game.ID)
-				if err != nil {
-					h.lobbyRepo.RemoveLobby(c.Request.Context(), lobby)
-					c.JSON(http.StatusUnauthorized,
-						gin.H{"message": "the lobby can not be updated, try again"})
-					return
-				}
 				c.JSON(http.StatusOK,
 					gin.H{"message": "success", "lobby_id": lobby.ID})
 				return
@@ -419,30 +410,6 @@ func (h *GameHandler) SetFinished() gin.HandlerFunc {
 				gin.H{"success": false})
 			return ;
 		}
-		// lobbies, err := h.lobbyRepo.AllPlayers(c.Request.Context(), id)
-		// if err != nil {
-		// 	c.JSON(http.StatusUnauthorized,
-		// 		gin.H{"success": false})
-		// 	return ;
-		// }
-		// for _, lobby := range lobbies {
-		// 	if lobby.JoinCode != nil {
-		// 		err = h.lobbyRepo.SetJoinCode(c.Request.Context(), lobby.ID, nil)
-		// 		if err != nil {
-		// 			c.JSON(http.StatusUnauthorized, 
-		// 				gin.H{"success": false})
-		// 			return
-		// 		}
-		// 	}
-		// 	if lobby.LeftAt == nil {
-		// 		err = h.lobbyRepo.SetLeftAt(c.Request.Context(), lobby.ID)
-		// 		if err != nil {
-		// 			c.JSON(http.StatusUnauthorized, 
-		// 				gin.H{"success": false})
-		// 			return
-		// 		}
-		// 	}
-		// }
 		c.JSON(http.StatusOK,
 			gin.H{"success": true})
 	}
