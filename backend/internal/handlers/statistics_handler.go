@@ -22,7 +22,7 @@ func NewStatisticsHandler(statsRepo *repositories.StatisticsRepository) *Statist
 
 type statisticsResponse struct {
 	FinishedGames int64           `json:"finished_games"`
-	Accuracy      float64         `json:"accuracy"`      // percentage, rounded to 2 decimals
+	Accuracy      float64         `json:"accuracy"` // percentage, rounded to 2 decimals
 	BestScore     int64           `json:"best_score"`
 	ClosestGuess  *users.Distance `json:"closest_guess"` // struct{value, unit: "m" or "km"} OR null if no guess yet
 }
@@ -47,7 +47,7 @@ func (h *StatisticsHandler) Statistics() gin.HandlerFunc {
 		userId, ok := c.Get("userId")
 		if !ok {
 			c.JSON(http.StatusUnauthorized,
-			gin.H{"message": "The userId is empty"})
+				gin.H{"message": "The userId is empty"})
 			return
 		}
 		stats, err := h.statsRepo.Statistics(c.Request.Context(), userId.(int64))
@@ -70,7 +70,7 @@ func (h *StatisticsHandler) FinishedGames() gin.HandlerFunc {
 		userId, ok := c.Get("userId")
 		if !ok {
 			c.JSON(http.StatusUnauthorized,
-			gin.H{"message": "The userId is empty"})
+				gin.H{"message": "The userId is empty"})
 			return
 		}
 		finishedGames, err := h.statsRepo.FinishedGames(c.Request.Context(), userId.(int64))
@@ -88,7 +88,7 @@ func (h *StatisticsHandler) Accuracy() gin.HandlerFunc {
 		userId, ok := c.Get("userId")
 		if !ok {
 			c.JSON(http.StatusUnauthorized,
-			gin.H{"message": "The userId is empty"})
+				gin.H{"message": "The userId is empty"})
 			return
 		}
 		accuracy, err := h.statsRepo.Accuracy(c.Request.Context(), userId.(int64))
@@ -106,7 +106,7 @@ func (h *StatisticsHandler) BestScore() gin.HandlerFunc {
 		userId, ok := c.Get("userId")
 		if !ok {
 			c.JSON(http.StatusUnauthorized,
-			gin.H{"message": "The userId is empty"})
+				gin.H{"message": "The userId is empty"})
 			return
 		}
 		bestScore, err := h.statsRepo.BestScore(c.Request.Context(), userId.(int64))
@@ -124,7 +124,7 @@ func (h *StatisticsHandler) ClosestGuess() gin.HandlerFunc {
 		userId, ok := c.Get("userId")
 		if !ok {
 			c.JSON(http.StatusUnauthorized,
-			gin.H{"message": "The userId is empty"})
+				gin.H{"message": "The userId is empty"})
 			return
 		}
 		meters, err := h.statsRepo.ClosestGuess(c.Request.Context(), userId.(int64))

@@ -1,12 +1,12 @@
 package router
 
 import (
-	"context"
-	"sync"
 	"backend/internal/handlers"
-	"backend/internal/websockets/lobby"
-	"github.com/gin-gonic/gin"
 	"backend/internal/middleware"
+	"backend/internal/websockets/lobby"
+	"context"
+	"github.com/gin-gonic/gin"
+	"sync"
 )
 
 func registerLobbyRoutes(ctx context.Context, r *gin.Engine, h *handlers.GameHandler,

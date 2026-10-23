@@ -52,7 +52,7 @@ func registerUserRoutes(r *gin.Engine, h *handlers.UserHandler, ht *handlers.Tok
 		private.GET("/user/xp/:username", h.XPByName())
 		private.GET("/leaderboard/user", h.UserLeaderboard()) // position, name and xp of the connected user
 	}
-	
+
 	admin := r.Group("/")
 	admin.Use(middleware.AuthMiddleWare(), middleware.AdminMiddleWare())
 	{

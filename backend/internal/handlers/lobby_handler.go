@@ -3,17 +3,17 @@ package handlers
 import (
 	"backend/internal/models/games"
 	"backend/internal/repositories"
+	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
 	"strconv"
-	"github.com/gin-gonic/gin"
 )
 
 type LobbyHandler struct {
-	gameRepo *repositories.GameRepository
+	gameRepo  *repositories.GameRepository
 	guessRepo *repositories.GuessRepository
 	lobbyRepo *repositories.LobbyRepository
-	userRepo *repositories.UserRepository
+	userRepo  *repositories.UserRepository
 }
 
 func NewLobbyHandler(gameRepo *repositories.GameRepository,
@@ -32,7 +32,7 @@ func (h *LobbyHandler) JoinLobby() gin.HandlerFunc {
 				gin.H{"message": "The userId is empty"})
 			return
 		}
-		actualLobby, err := h.lobbyRepo.ActualLobby(c.Request.Context(), 
+		actualLobby, err := h.lobbyRepo.ActualLobby(c.Request.Context(),
 			userId.(int64))
 		if err != nil {
 			c.JSON(http.StatusUnauthorized,
@@ -77,21 +77,21 @@ func (h *LobbyHandler) JoinLobby() gin.HandlerFunc {
 			return
 		}
 		playerNb, err := h.lobbyRepo.LobbyPlayerNb(c.Request.Context(), gameId)
-		if err != nil{
+		if err != nil {
 			c.JSON(http.StatusUnauthorized,
 				gin.H{"message": "failed"})
 			return
 		}
 		gamePlayerNb, err := h.gameRepo.PlayerNb(c.Request.Context(), gameId)
-		if playerNb + 1 > int(gamePlayerNb) {
+		if playerNb+1 > int(gamePlayerNb) {
 			c.JSON(http.StatusUnauthorized,
 				gin.H{"message": "The lobby is full"})
 			return
 		}
 		lobbyObj := &games.Lobby{UserId: userId.(int64),
-								GameId: gameId,
-								JoinCode: nil,
-								IsCreator: false}
+			GameId:    gameId,
+			JoinCode:  nil,
+			IsCreator: false}
 		err = h.lobbyRepo.JoinLobby(c.Request.Context(), lobbyObj)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized,
@@ -135,14 +135,14 @@ func (h *LobbyHandler) LeaveLobby() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userId, ok := c.Get("userId")
 		if !ok {
-			c.JSON(http.StatusUnauthorized, 
+			c.JSON(http.StatusUnauthorized,
 				gin.H{"message": "failed"})
 			return
 		}
 		lobby, err := h.lobbyRepo.ActualLobby(c.Request.Context(),
-			userId.(int64));
+			userId.(int64))
 		if err != nil {
-			c.JSON(http.StatusUnauthorized, 
+			c.JSON(http.StatusUnauthorized,
 				gin.H{"message": "failed"})
 			return
 		}
@@ -198,7 +198,7 @@ func (h *LobbyHandler) LeaveLobby() gin.HandlerFunc {
 				break
 			}
 		}
-		c.JSON(http.StatusOK, 
+		c.JSON(http.StatusOK,
 			gin.H{"message": "success"})
 	}
 }
@@ -253,7 +253,7 @@ func (h *LobbyHandler) RemovePlayer() gin.HandlerFunc {
 				gin.H{"message": "failed"})
 			return
 		}
-		c.JSON(http.StatusOK, 
+		c.JSON(http.StatusOK,
 			gin.H{"message": "success"})
 	}
 }
@@ -271,14 +271,14 @@ func (h *LobbyHandler) AllPlayers() gin.HandlerFunc {
 		if err != nil || lobby == nil {
 			c.JSON(http.StatusNotFound,
 				gin.H{"message": "You are not in a lobby"})
-			return 
+			return
 		}
 		lobbies, err := h.lobbyRepo.AllPlayers(c.Request.Context(),
 			lobby.GameId)
 		if err != nil {
 			c.JSON(http.StatusNotFound,
 				gin.H{"message": "There's none in the lobby"})
-			return 
+			return
 		}
 		c.JSON(http.StatusOK,
 			gin.H{"message": "success", "lobbies": lobbies})
@@ -290,14 +290,14 @@ func (h *LobbyHandler) NbGames() gin.HandlerFunc {
 		userId, err := strconv.ParseInt(c.Param("userid"), 10, 64)
 		if err != nil {
 			log.Printf("error : %s\n", err)
-			c.JSON(http.StatusUnauthorized, 
+			c.JSON(http.StatusUnauthorized,
 				gin.H{"message": "An error occured. Please try again."})
 			return
-		} 
+		}
 		nbGames, err := h.lobbyRepo.NbGames(c.Request.Context(), userId)
 		if err != nil {
 			log.Printf("error : %s\n", err)
-			c.JSON(http.StatusUnauthorized, 
+			c.JSON(http.StatusUnauthorized,
 				gin.H{"message": "An error occured. Please try again."})
 			return
 		}
@@ -311,14 +311,14 @@ func (h *LobbyHandler) Historic() gin.HandlerFunc {
 		userId, err := strconv.ParseInt(c.Param("userid"), 10, 64)
 		if err != nil {
 			log.Printf("error : %s\n", err)
-			c.JSON(http.StatusBadRequest, 
+			c.JSON(http.StatusBadRequest,
 				gin.H{"message": "An error occured. Please try again."})
 			return
-		} 
+		}
 		historicGames, err := h.lobbyRepo.Historic(c.Request.Context(), userId)
 		if err != nil {
 			log.Printf("error : %s\n", err)
-			c.JSON(http.StatusInternalServerError, 
+			c.JSON(http.StatusInternalServerError,
 				gin.H{"message": "An error occured. Please try again."})
 			return
 		}

@@ -21,7 +21,7 @@ func NewGameRepository(db *bun.DB) *GameRepository {
 	return &GameRepository{db: db}
 }
 
-func (r *GameRepository) CreateGame(ctx context.Context, game *games.Game) (*games.Game, error){
+func (r *GameRepository) CreateGame(ctx context.Context, game *games.Game) (*games.Game, error) {
 	_, err := r.db.NewInsert().
 		Model(game).
 		Exec(ctx)
@@ -32,7 +32,7 @@ func (r *GameRepository) CreateGame(ctx context.Context, game *games.Game) (*gam
 }
 
 // Getters
-func (r *GameRepository) Game(ctx context.Context, gameId int64) (*games.Game, error){
+func (r *GameRepository) Game(ctx context.Context, gameId int64) (*games.Game, error) {
 	game := new(games.Game)
 	err := r.db.NewSelect().
 		Model(game).
@@ -44,7 +44,7 @@ func (r *GameRepository) Game(ctx context.Context, gameId int64) (*games.Game, e
 	return game, nil
 }
 
-func (r *GameRepository) Title(ctx context.Context, gameId int64) (string, error){
+func (r *GameRepository) Title(ctx context.Context, gameId int64) (string, error) {
 	game := new(games.Game)
 	err := r.db.NewSelect().
 		Model(game).
@@ -57,7 +57,7 @@ func (r *GameRepository) Title(ctx context.Context, gameId int64) (string, error
 	return game.Title, nil
 }
 
-func (r *GameRepository) Mode(ctx context.Context, gameId int64) (string, error){
+func (r *GameRepository) Mode(ctx context.Context, gameId int64) (string, error) {
 	game := new(games.Game)
 	err := r.db.NewSelect().
 		Model(game).
@@ -70,7 +70,7 @@ func (r *GameRepository) Mode(ctx context.Context, gameId int64) (string, error)
 	return game.Mode, nil
 }
 
-func (r *GameRepository) Difficulty(ctx context.Context, gameId int64) (string, error){
+func (r *GameRepository) Difficulty(ctx context.Context, gameId int64) (string, error) {
 	game := new(games.Game)
 	err := r.db.NewSelect().
 		Model(game).
@@ -83,7 +83,7 @@ func (r *GameRepository) Difficulty(ctx context.Context, gameId int64) (string, 
 	return game.Difficulty, nil
 }
 
-func (r *GameRepository) Timer(ctx context.Context, gameId int64) (int64, error){
+func (r *GameRepository) Timer(ctx context.Context, gameId int64) (int64, error) {
 	game := new(games.Game)
 	err := r.db.NewSelect().
 		Model(game).
@@ -96,7 +96,7 @@ func (r *GameRepository) Timer(ctx context.Context, gameId int64) (int64, error)
 	return game.Timer, nil
 }
 
-func (r *GameRepository) RoundTotal(ctx context.Context, gameId int64) (int64, error){
+func (r *GameRepository) RoundTotal(ctx context.Context, gameId int64) (int64, error) {
 	game := new(games.Game)
 	err := r.db.NewSelect().
 		Model(game).
@@ -109,7 +109,7 @@ func (r *GameRepository) RoundTotal(ctx context.Context, gameId int64) (int64, e
 	return game.RoundTotal, nil
 }
 
-func (r *GameRepository) FinishedAt(ctx context.Context, gameId int64) (*time.Time, error){
+func (r *GameRepository) FinishedAt(ctx context.Context, gameId int64) (*time.Time, error) {
 	game := new(games.Game)
 	err := r.db.NewSelect().
 		Model(game).
@@ -122,7 +122,7 @@ func (r *GameRepository) FinishedAt(ctx context.Context, gameId int64) (*time.Ti
 	return game.FinishedAt, nil
 }
 
-func (r *GameRepository) PlayerNb(ctx context.Context, gameId int64) (int64, error){
+func (r *GameRepository) PlayerNb(ctx context.Context, gameId int64) (int64, error) {
 	game := new(games.Game)
 	err := r.db.NewSelect().
 		Model(game).
@@ -135,7 +135,7 @@ func (r *GameRepository) PlayerNb(ctx context.Context, gameId int64) (int64, err
 	return game.PlayerNb, nil
 }
 
-func (r *GameRepository) CreatedAt(ctx context.Context, gameId int64) (time.Time, error){
+func (r *GameRepository) CreatedAt(ctx context.Context, gameId int64) (time.Time, error) {
 	game := new(games.Game)
 	err := r.db.NewSelect().
 		Model(game).
@@ -149,7 +149,7 @@ func (r *GameRepository) CreatedAt(ctx context.Context, gameId int64) (time.Time
 }
 
 // Setters
-func (r *GameRepository) SetTitle(ctx context.Context, gameId int64, 
+func (r *GameRepository) SetTitle(ctx context.Context, gameId int64,
 	title string) error {
 	game := &games.Game{Title: title}
 	_, err := r.db.NewUpdate().
@@ -163,7 +163,7 @@ func (r *GameRepository) SetTitle(ctx context.Context, gameId int64,
 	return nil
 }
 
-func (r *GameRepository) SetMode(ctx context.Context, gameId int64, 
+func (r *GameRepository) SetMode(ctx context.Context, gameId int64,
 	mode string) error {
 	game := &games.Game{Mode: mode}
 	_, err := r.db.NewUpdate().
@@ -177,7 +177,7 @@ func (r *GameRepository) SetMode(ctx context.Context, gameId int64,
 	return nil
 }
 
-func (r *GameRepository) SetDifficulty(ctx context.Context, gameId int64, 
+func (r *GameRepository) SetDifficulty(ctx context.Context, gameId int64,
 	difficulty string) error {
 	game := &games.Game{Difficulty: difficulty}
 	_, err := r.db.NewUpdate().
@@ -204,7 +204,7 @@ func (r *GameRepository) SetFinished(ctx context.Context,
 	return err
 }
 
-func (r *GameRepository) SetPlayerNb(ctx context.Context, game_id int64, 
+func (r *GameRepository) SetPlayerNb(ctx context.Context, game_id int64,
 	player_nb int64) error {
 	game := &games.Game{PlayerNb: player_nb}
 	_, err := r.db.NewUpdate().
@@ -224,6 +224,7 @@ func (r *GameRepository) SetPlayerNb(ctx context.Context, game_id int64,
 //     played with it still point to it
 //   - the new one takes its place in game.location_ids and in rounds.loc_id
 //   - the round starts again from now (rounds.started_at), and its guesses (made without seeing anything) are deleted
+//
 // Returns the id of the old location and the id of the new one.
 func (r *GameRepository) ReplaceRoundLocation(ctx context.Context, gameId, roundNb int64) (int64, int64, error) {
 	var roundId, oldLocationId, newLocationId int64
@@ -298,7 +299,7 @@ func (r *GameRepository) ReplaceRoundLocation(ctx context.Context, gameId, round
 }
 
 // Check if round_total is smaller than the number of available locations, the disabled ones excluded (else error)
-func (r *LocationRepository) CheckEnoughLocations(ctx context.Context, round_total int64) (error) {
+func (r *LocationRepository) CheckEnoughLocations(ctx context.Context, round_total int64) error {
 	var count int
 	count, err := r.db.NewSelect().
 		TableExpr("locations").
@@ -322,8 +323,8 @@ func (r *LocationRepository) GetRandomLocations(ctx context.Context, round_total
 		Where("disabled_at IS NULL").
 		OrderExpr("RANDOM()").
 		Limit(int(round_total)). // limits to the exact number of rounds
-		Group("location_id"). // ensures unique locations by grouping same location_id
-		Column("location_id"). // select only the location id column
+		Group("location_id").    // ensures unique locations by grouping same location_id
+		Column("location_id").   // select only the location id column
 		Scan(ctx)
 	if err != nil {
 		return nil, err

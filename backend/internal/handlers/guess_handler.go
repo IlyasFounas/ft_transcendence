@@ -8,6 +8,7 @@ import (
 	"context"
 	"errors"
 	"log"
+	"math"
 	"net/http"
 	"strconv"
 	"time"
@@ -47,21 +48,21 @@ type RoundGetter interface {
 }
 
 type GuessHandler struct {
-	guessRepo	GuessGetter
-	roundRepo	RoundGetter
-	lobbyRepo	*repositories.LobbyRepository
-	gameRepo	*repositories.GameRepository
-	reverser	*rgeo.Rgeo
+	guessRepo GuessGetter
+	roundRepo RoundGetter
+	lobbyRepo *repositories.LobbyRepository
+	gameRepo  *repositories.GameRepository
+	reverser  *rgeo.Rgeo
 }
 
 func NewGuessHandler(guessRepo GuessGetter, roundRepo RoundGetter, lobbyRepo *repositories.LobbyRepository,
 	gameRepo *repositories.GameRepository, reverser *rgeo.Rgeo) *GuessHandler {
 	return &GuessHandler{
-		guessRepo:	guessRepo,
-		roundRepo:	roundRepo,
-		lobbyRepo:	lobbyRepo,
-		gameRepo:	gameRepo,
-		reverser:	reverser}
+		guessRepo: guessRepo,
+		roundRepo: roundRepo,
+		lobbyRepo: lobbyRepo,
+		gameRepo:  gameRepo,
+		reverser:  reverser}
 }
 
 // Calculates distance based on lat + long compared to actual location
@@ -74,6 +75,11 @@ func CalculateDistance(location, guessCoords haversine.Coordinates) int64 {
 	return dist
 }
 
+// Total score depends on the speed: a guess sent at the last second keeps 90 % of its points.
+// The base score loses 1 point every 40 km, so the speed is worth at most 100 points, about 2000 km:
+// a very fast guess can never beat a very slow one that is more than around 2000 km closer
+const timeWeight = 0.1
+
 // Calculate score based on distance and multipliers/dividers (time, cc, streaks)
 func CalculateScore(createdGuess *guesses.Guess, totalTime time.Duration) {
 	if createdGuess.Distance < 0 {
@@ -83,21 +89,21 @@ func CalculateScore(createdGuess *guesses.Guess, totalTime time.Duration) {
 	}
 
 	if createdGuess.Distance > haversine.MaxDistanceMeters {
-		log.Printf("Error: distance %d exceeds Earth's diameter for guess", createdGuess.Distance)
+		log.Printf("Error: distance %d exceeds the max distance on Earth for guess", createdGuess.Distance)
 		createdGuess.Score = 0
 		return
 	}
 
 	distance := haversine.MaxDistanceMeters - createdGuess.Distance
-	createdGuess.Score = distance * 1000 / haversine.MaxDistanceMeters //put score on base 1000 (ex: if the distance is 0, the score is 1000, if the distance is 12742176, the score is 0)
-	createdGuess.BaseScore = createdGuess.Score // store the base score before multipliers for XP calculation
+	createdGuess.Score = distance * 1000 / haversine.MaxDistanceMeters //put score on base 1000 (ex: if the distance is 0, the score is 1000, if the guess is at the antipode, the score is 0)
+	createdGuess.BaseScore = createdGuess.Score                        // store the base score before multipliers for XP calculation
 
-	// multiplier time left (0 to 1, based on time max being one, and time min being zero), and time left being the difference between the time the time at the moment of validating guess and the time max)
-	log.Printf("Score before time left multiplier: %d (TimeLeft: %v, totalTime: %v)\n", createdGuess.Score, createdGuess.TimeLeft, totalTime)
-	createdGuess.Score *= createdGuess.TimeLeft.Nanoseconds() // not in one line because it is not a float64, and does not handle decimals
-	log.Printf("Score after time left multiplier: %d (TimeLeft: %v, totalTime: %v)\n", createdGuess.Score, createdGuess.TimeLeft, totalTime)
+	// multiplier time left, between 1 - timeWeight (guess at the last second) and 1 (instant guess)
+	// the speed only adds a little to the distance: a far guess can't beat a close one by being fast
 	if totalTime > 0 {
-		createdGuess.Score /= totalTime.Nanoseconds()
+		timeLeft := min(max(createdGuess.TimeLeft, 0), totalTime)
+		timeFactor := 1 - timeWeight + timeWeight*timeLeft.Seconds()/totalTime.Seconds()
+		createdGuess.Score = int64(math.Round(float64(createdGuess.Score) * timeFactor))
 	}
 
 	// multiplier correct country code
@@ -105,11 +111,11 @@ func CalculateScore(createdGuess *guesses.Guess, totalTime time.Duration) {
 		createdGuess.Score *= 2
 	}
 
-	// multiplier for streaks (if less than 1000 meters and country found, then add 1 to the streak, if more than 1000 meters, if at least one is true, then keep streak, if none then reset the streak to 0)
-	if createdGuess.Distance < 1000 && createdGuess.CountryFound == true {
+	// multiplier for streaks (if less than 1000 meters, then add 1 to the streak, if next guess is less than 1000 meters, then keep streak, if none then reset the streak to 0)
+	if createdGuess.Distance < 1000 {
 		createdGuess.Streak += 1
 		createdGuess.Score *= createdGuess.Streak
-	} else if createdGuess.Distance >= 1000 || createdGuess.CountryFound == false {
+	} else if createdGuess.Distance >= 1000 {
 		createdGuess.Streak = 0
 	}
 }
@@ -332,7 +338,7 @@ func (h *GuessHandler) GetTotalScoreByGameAndUser(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid game id"})
 		return
 	}
-	
+
 	user_id, err := strconv.ParseInt(c.Param("user_id"), 10, 64)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user id"})

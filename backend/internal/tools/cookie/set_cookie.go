@@ -1,13 +1,13 @@
 package cookie
 
 import (
-	"time"
+	"github.com/gin-gonic/gin"
 	"net/http"
 	"os"
-	"github.com/gin-gonic/gin"
+	"time"
 )
 
-func Set(c *gin.Context, path string, 
+func Set(c *gin.Context, path string,
 	name string, token string, ttl time.Duration, strict bool) {
 	sameSite := http.SameSiteLaxMode
 	if strict {

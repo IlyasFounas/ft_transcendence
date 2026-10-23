@@ -3,9 +3,9 @@ package repositories
 import (
 	"backend/internal/models/friends"
 	"context"
-	"github.com/uptrace/bun"
-	"errors"
 	"database/sql"
+	"errors"
+	"github.com/uptrace/bun"
 )
 
 type FriendRepository struct {
@@ -108,32 +108,32 @@ func (r *FriendRepository) RemoveFriend(ctx context.Context, userId int64, remov
 }
 
 func (r *FriendRepository) Friends(ctx context.Context, userId int64) ([]*friends.FriendResponse, error) {
-    friendList := make([]*friends.FriendResponse, 0)
-    err := r.db.NewSelect().
-        TableExpr("friends AS f").
-        Join(`
+	friendList := make([]*friends.FriendResponse, 0)
+	err := r.db.NewSelect().
+		TableExpr("friends AS f").
+		Join(`
             JOIN users AS u ON u.id =
             CASE
                 WHEN f.requester_id = ? THEN f.receiver_id
                 ELSE f.requester_id
             END
         `, userId).
-        ColumnExpr(`
+		ColumnExpr(`
             CASE
                 WHEN f.requester_id = ? THEN f.receiver_id
                 ELSE f.requester_id
             END AS user_id
         `, userId).
-        Column("f.id", "u.name", "u.avatar", "u.rank").
+		Column("f.id", "u.name", "u.avatar", "u.rank").
 		Where("(f.requester_id = ? OR f.receiver_id = ?)", userId, userId).
 		Where("f.status = ?", "accepted").
-        Order("f.created_at DESC").
-        Scan(ctx, &friendList)
+		Order("f.created_at DESC").
+		Scan(ctx, &friendList)
 
-    if err != nil {
-        return nil, err
-    }
-    return friendList, nil
+	if err != nil {
+		return nil, err
+	}
+	return friendList, nil
 }
 
 func (r *FriendRepository) FriendStatus(ctx context.Context, userId int64, searchUserID int64) (*friends.FriendStatusResponse, error) {
@@ -145,28 +145,28 @@ func (r *FriendRepository) FriendStatus(ctx context.Context, userId int64, searc
 		Column("u.name", "u.avatar", "u.rank", "f.status", "f.requester_id").
 		Where("(requester_id = ? AND receiver_id = ?)", userId, searchUserID).
 		WhereOr("(requester_id = ? AND receiver_id = ?)", searchUserID, userId).
-        Scan(ctx, &friendStatus)
-	
+		Scan(ctx, &friendStatus)
+
 	if err != nil {
-        if errors.Is(err, sql.ErrNoRows) {
-            return &friends.FriendStatusResponse{
-                UserID: searchUserID,
-                Status: "none",
-            }, nil
-        }
-        return nil, err
-    }
-	
+		if errors.Is(err, sql.ErrNoRows) {
+			return &friends.FriendStatusResponse{
+				UserID: searchUserID,
+				Status: "none",
+			}, nil
+		}
+		return nil, err
+	}
+
 	if friendStatus.Status == "accepted" {
-        friendStatus.Status = "friends"
-    } else if friendStatus.Status == "pending" {
-        if friendStatus.RequesterID == userId {
-            friendStatus.Status = "pending_sent"
-        } else {
-            friendStatus.Status = "pending_received"
-        }
-    }
-    return &friendStatus, nil
+		friendStatus.Status = "friends"
+	} else if friendStatus.Status == "pending" {
+		if friendStatus.RequesterID == userId {
+			friendStatus.Status = "pending_sent"
+		} else {
+			friendStatus.Status = "pending_received"
+		}
+	}
+	return &friendStatus, nil
 }
 
 func (r *FriendRepository) FriendshipExists(ctx context.Context, userId int64, searchID int64) (bool, error) {
@@ -179,7 +179,7 @@ func (r *FriendRepository) FriendshipExists(ctx context.Context, userId int64, s
 	if err != nil {
 		return false, err
 	}
-	
+
 	return exist, nil
 }
 
@@ -187,7 +187,7 @@ func (r *FriendRepository) FriendRequests(ctx context.Context, userId int64) ([]
 	friendRequests := make([]*friends.FriendResponse, 0)
 	err := r.db.NewSelect().
 		TableExpr("friends AS f").
-        Join("JOIN users AS u ON u.id = f.requester_id").
+		Join("JOIN users AS u ON u.id = f.requester_id").
 		Column("f.id", "u.name", "u.avatar", "u.rank", "f.created_at").
 		ColumnExpr("f.requester_id AS user_id").
 		Where("f.receiver_id = ?", userId).
@@ -205,7 +205,7 @@ func (r *FriendRepository) FriendPending(ctx context.Context, userId int64) ([]*
 	friendPending := make([]*friends.FriendResponse, 0)
 	err := r.db.NewSelect().
 		TableExpr("friends AS f").
-        Join("JOIN users AS u ON u.id = f.receiver_id").
+		Join("JOIN users AS u ON u.id = f.receiver_id").
 		Column("f.id", "u.name", "u.avatar", "u.rank", "f.created_at").
 		ColumnExpr("f.receiver_id AS user_id").
 		Where("f.requester_id = ?", userId).

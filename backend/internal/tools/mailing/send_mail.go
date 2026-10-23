@@ -1,34 +1,34 @@
 package mailing
 
 import (
-	"os"
 	"fmt"
-	"github.com/wneessen/go-mail"
 	"github.com/resend/resend-go/v3"
+	"github.com/wneessen/go-mail"
+	"os"
 )
 
 func SendEmailProd(toEmail string, subject string, html string) error {
-    client := resend.NewClient(os.Getenv("RESEND_API_KEY"))
+	client := resend.NewClient(os.Getenv("RESEND_API_KEY"))
 
-    params := &resend.SendEmailRequest{
-        From:    "Atlas <atlas-no-reply@ocefunding.com>",
-        To:      []string{toEmail},
-        Html:    html,
-        Subject: subject,
-    }
+	params := &resend.SendEmailRequest{
+		From:    "Atlas <atlas-no-reply@ocefunding.com>",
+		To:      []string{toEmail},
+		Html:    html,
+		Subject: subject,
+	}
 
-    _, err := client.Emails.Send(params)
-    if err != nil {
-        return err
-    }
+	_, err := client.Emails.Send(params)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
 func returnActivationLink(activationJWT string) string {
-    return fmt.Sprintf(
-        "<div>This is your activation link: <a href='%s/api/user/activation?token=%s'>Activation link</a><br />%s</div>",
+	return fmt.Sprintf(
+		"<div>This is your activation link: <a href='%s/api/user/activation?token=%s'>Activation link</a><br />%s</div>",
 		os.Getenv("PUBLIC_URL"),
-        activationJWT,
+		activationJWT,
 		"This link expires in 24 hours. If it does, you can request a new one from the login page.",
 	)
 }
