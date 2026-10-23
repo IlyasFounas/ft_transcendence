@@ -1,7 +1,3 @@
-import { mockLeaderboard } from "../mocks/mock.leaderboard";
-
-const USE_MOCK = false;
-
 export type LeaderboardEntry = {
 	position: number;
 	username: string;
@@ -15,9 +11,6 @@ type ApiFetch = (url: string, options?: RequestInit) => Promise<{ status: number
 export async function getGlobalLeaderboard(
   apiFetch: ApiFetch
 ): Promise<LeaderboardEntry[]> {
-
-	if (USE_MOCK) 
-		return mockLeaderboard;
 
 	const result = await apiFetch("/api/leaderboard");
 
