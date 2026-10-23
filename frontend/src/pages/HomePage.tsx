@@ -126,7 +126,9 @@ export default function HomePage() {
                 lg:space-y-6
                 lg:px-20
                 lg:pb-12
-                xl:pr-0
+                xl:mr-[20%]
+                xl:px-0
+                2xl:mr-0
                 "
             >
                 <div className="
