@@ -150,7 +150,6 @@ func (h *LocationHandler) GetLocationByMID(c *gin.Context) {
 }
 
 // GET /locations/random
-//TODO no need > game gets a list of random locations at creation
 func (h *LocationHandler) GetRandomLocation(c *gin.Context) {
 	ctx := c.Request.Context()
 

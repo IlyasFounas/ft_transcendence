@@ -180,7 +180,6 @@ func (h *GuessWsHandler) AddGuess(ctx context.Context, payload json.RawMessage, 
 	)
 
 	// Time left is calculated here to avoid discrepancies between players in multiplayer
-	// TODO put it all in one function
 	round, err := h.roundRepo.GetByID(ctx, guess.RoundID)
 	if err != nil {
 		log.Printf("error getting round %d: %s\n", guess.RoundID, err)
