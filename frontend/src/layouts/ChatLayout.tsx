@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Outlet } from "react-router-dom"
+import { Outlet, useLocation } from "react-router-dom"
 import ChatPanel from "../components/chat/ChatPanel";
 import { Navbar } from "../components/navbar/Navbar";
 import Footer from "../components/routes/Footer";
@@ -7,7 +7,9 @@ import Footer from "../components/routes/Footer";
 export function ChatLayout () {
 
     const [isChatOpen, setIsChatOpen] = useState(false);
-    
+    const { pathname } = useLocation();
+    const hideFooter = pathname === "/lobby";
+
         return (
             <>
             { isChatOpen && (
@@ -34,7 +36,7 @@ export function ChatLayout () {
                	<main className="flex-1 flex flex-col">
 					<Outlet />
 				</main>
-				<Footer />
+				{!hideFooter && <Footer />}
                 <div
                     className={`
                         fixed
