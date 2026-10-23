@@ -881,24 +881,39 @@ The application provides administrative user management, including viewing, upda
 
 ## Module Summary
 
+### Mandatory Modules = 14 Points
+
 | Type | Module | Points |
-|---|---|:-:|
+|---|---|:---:|
 | Major | Frontend and Backend Frameworks | 2 |
 | Major | Real-Time Features | 2 |
 | Major | User Interaction | 2 |
 | Minor | Use an ORM for the Database | 1 |
 | Minor | Custom-Made Design System with Reusable Components | 1 |
-| Major | Standard User Management and Authentication | 2 |
-| Minor | Game Statistics and Match History | 1 |
-| Minor | OAuth 2.0 Authentication (Google) | 1 |
 | Major | Complete Web-Based Game | 2 |
 | Major | Remote Players | 2 |
 | Major | Multiplayer Game (More Than Two Players) | 2 |
+| **Total** | **Mandatory Modules** | **14** |
+
+### Bonus Modules = 9 Points
+
+| Type | Module | Points |
+|---|---|:---:|
+| Major | Standard User Management and Authentication | 2 |
+| Minor | Game Statistics and Match History | 1 |
+| Minor | OAuth 2.0 Authentication (Google) | 1 |
 | Minor | Gamification System | 1 |
 | Major | Public REST API | 2 |
 | Major | Advanced Permissions System | 2 |
-| | **Total** | **23 points** |
+| **Total** | **Bonus Modules** | **9** |
 
+### Overall Summary
+
+| Category | Points |
+|---|:---:|
+| Mandatory Modules | 14 |
+| Bonus Modules | 9 |
+| **Grand Total** | **23** |
 
 ## Individual Contributions
 
