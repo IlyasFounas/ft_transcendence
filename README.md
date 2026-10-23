@@ -42,6 +42,8 @@ cp .env.exemple .env
 
 Open `.env` and fill in the required values, such as database credentials, authentication secrets, and OAuth credentials if applicable.
 
+To retrieve Mapillary token, connect to your developer account on [mapillary.com](https://www.mapillary.com/dashboard/developers).
+
 For production, configure `docker-config/.env.prod` with the required production environment variables.
 
 #### 3. Start the application
